@@ -57,6 +57,18 @@ export const adminApi = {
     return response.data.data;
   },
 
+  /** סריקת dry-run — מחזיר כמה יתומים ב-Cloudinary (לא מוחק). */
+  async scanCloudinaryOrphans(): Promise<{ dryRun: true; totalCloudinaryResources: number; referencedCount: number; orphanCount: number; orphanPublicIds: string[] }> {
+    const response = await apiClient.get<{ data: { dryRun: true; totalCloudinaryResources: number; referencedCount: number; orphanCount: number; orphanPublicIds: string[] } }>('/admin/cloudinary-orphans');
+    return response.data.data;
+  },
+
+  /** מוחק בפועל את כל היתומים מ-Cloudinary. בלתי הפיך. */
+  async deleteCloudinaryOrphans(): Promise<{ dryRun: false; orphanCount: number; deleted: number; failed: number }> {
+    const response = await apiClient.post<{ data: { dryRun: false; orphanCount: number; deleted: number; failed: number } }>('/admin/cloudinary-orphans', { confirm: true });
+    return response.data.data;
+  },
+
   /** מחיקת משתמש לצמיתות (רשימות פרטיות, קבוצות בבעלותו, מנויי push, התראות...). בלתי הפיך. */
   async deleteUser(userId: string): Promise<void> {
     await apiClient.delete(`/admin/users/${userId}`);

@@ -5,6 +5,7 @@ import { statusInfo, formatMB, CLOUDINARY_METRIC_META } from '../helpers/dbHealt
 import { DbHealthCircularGauge } from './DbHealthCircularGauge';
 import { CloudinaryMetricRow } from './CloudinaryMetricRow';
 import { LocalImagesWarningCard } from './LocalImagesWarningCard';
+import { CloudinaryOrphanCard } from './CloudinaryOrphanCard';
 
 interface Props {
   data: CloudinaryHealth | null;
@@ -124,6 +125,9 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
       {/* תמונות שבכל זאת נשארו ב-DB (Cloudinary כן מוגדר, אבל העלאה
           ספציפית נכשלה) - ראו LocalImagesWarningCard. */}
       <LocalImagesWarningCard isDark={isDark} />
+
+      {/* ניקוי יתומים — תמונות ב-Cloudinary שלא מוכרות ל-DB */}
+      <CloudinaryOrphanCard isDark={isDark} />
     </>
   );
 };

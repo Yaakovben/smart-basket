@@ -82,18 +82,37 @@ export async function listLatestMatchingFile(
   return null;
 }
 
-export async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string, chainId: string): Promise<string | null> {
+// תבנית שם קובץ אחיד בפורטל: PriceFull<ChainID>-<SubChainID>-<StoreID>-<YYYYMMDD>-<HHMMSS>.(gz|xml)
+// הפורטל מפרסם קובץ PriceFull נפרד לכל סניף (לא קובץ מאוחד אחד לכל הרשת) -
+// גם ברשתות גדולות כמו רמי לוי (מאות קבצים). לכן לא מספיק לקחת את הקובץ
+// "האחרון" לפי מיון lexicographic (זה נותן סניף אחד בלבד, אקראי למעשה) -
+// צריך את הקובץ העדכני ביותר *לכל סניף בנפרד*, ולהוריד את כולם.
+const PRICE_FULL_PATTERN = /^PriceFull(\d+)-(\d+)-(\d+)-(\d{8})-(\d{6})\.(gz|xml)$/i;
+
+// ממפה רשימת קבצים לקובץ העדכני ביותר של כל סניף (מפתח: chainId-subChainId-storeId).
+function pickLatestPriceFullPerStore(files: FileEntry[], pathPrefix = ''): string[] {
+  const byStore = new Map<string, { name: string; stamp: string }>();
+  for (const f of files) {
+    const name = f.fname || f.name || f.DT_RowId || '';
+    const m = name.match(PRICE_FULL_PATTERN);
+    if (!m) continue;
+    const storeKey = `${m[1]}-${m[2]}-${m[3]}`;
+    const stamp = `${m[4]}${m[5]}`;
+    const existing = byStore.get(storeKey);
+    if (!existing || stamp > existing.stamp) byStore.set(storeKey, { name: `${pathPrefix}${name}`, stamp });
+  }
+  return [...byStore.values()].map(v => v.name);
+}
+
+// מאתר את קבצי ה-PriceFull העדכניים ביותר - אחד לכל סניף - כדי שהמחירים
+// ישקפו את כל הרשת ולא רק סניף אחד שנבחר כמעט באקראי.
+export async function listAllLatestPriceFullFiles(client: AxiosInstance, csrftoken: string, chainId: string): Promise<string[]> {
   // 1) נסיון ראשון: PriceFull ברוט
   const rootFiles = await listDir(client, csrftoken, '/', 'PriceFull');
-  const rootPriceFull = rootFiles
-    .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
-    .filter(f => /PriceFull.*\.(gz|xml)/i.test(f.name))
-    .sort((a, b) => b.name.localeCompare(a.name));
-
-  if (rootPriceFull.length > 0) return rootPriceFull[0].name;
+  const rootMatches = pickLatestPriceFullPerStore(rootFiles);
+  if (rootMatches.length > 0) return rootMatches;
 
   // 2) Fallback: חלק מהרשתות מפרסמות בתת-תיקיות (למשל /2025-04-24).
-  // נאתר תיקיות שנראות כמו תאריך ונחפש בהן את ה-PriceFull החדש ביותר.
   const allFiles = await listDir(client, csrftoken, '/', '');
   const subDirs = allFiles
     .map(f => ({ name: f.fname || f.name || f.DT_RowId || '', type: f.type }))
@@ -102,18 +121,15 @@ export async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: 
 
   for (const dir of subDirs.slice(0, 7)) { // הוגדל מ-3 ל-7 - ראה הסבר ב-listLatestMatchingFile
     const subFiles = await listDir(client, csrftoken, `/${dir.name}`, 'PriceFull');
-    const matches = subFiles
-      .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
-      .filter(f => /PriceFull.*\.(gz|xml)/i.test(f.name))
-      .sort((a, b) => b.name.localeCompare(a.name));
-    if (matches.length > 0) return `${dir.name}/${matches[0].name}`;
+    const matches = pickLatestPriceFullPerStore(subFiles, `${dir.name}/`);
+    if (matches.length > 0) return matches;
   }
 
   // אבחון: אם לא מצאנו, מציגים בלוג מה כן הופיע - חוסך זמן בחקירה.
   const sampleFiles = allFiles.slice(0, 5).map(f => f.fname || f.name || '?').join(', ');
   const sampleDirs = subDirs.slice(0, 5).map(d => d.name).join(', ');
   logger.warn(`[chain:${chainId}] no PriceFull found. root sample=[${sampleFiles}] dirs=[${sampleDirs}]`);
-  return null;
+  return [];
 }
 
 // תקרת 150MB לקובץ דחוס בודד - הגנה נוספת לפני decompression (ראו MAX_DECOMPRESSED_BYTES

@@ -1,10 +1,9 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import LockResetRoundedIcon from '@mui/icons-material/LockResetRounded';
 import type { List } from '../../../../global/types';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, accentBarSx, expandedAreaSx, pinFieldSx, actionBtnSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx, actionBtnSx } from './listSettingsCardSx';
 
 interface ChangePasswordSectionProps {
   list: List;
@@ -16,9 +15,19 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
   const [open, setOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  const expandedRef = useRef<HTMLDivElement | null>(null);
+
+  // גולל את השדה לתצוגה אחרי שאנימציית הפתיחה מסתיימת
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 260);
+    return () => clearTimeout(timer);
+  }, [open]);
 
   return (
-    <Paper sx={{ ...accentBarSx('accent'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2 }}>
+    <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2, border: '1px solid', borderColor: 'divider' }}>
       <Box sx={settingsRowSx} onClick={() => setOpen(v => !v)}>
         <Box component="span" sx={{ fontSize: 22 }}>🔑</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -33,14 +42,10 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
       </Box>
 
       <Collapse in={open} unmountOnExit>
-        <Box sx={expandedAreaSx}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
-            <LockResetRoundedIcon sx={{ fontSize: 15, color: 'text.disabled' }} />
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 500 }}>
-              {t('newPasswordLabel')}
-            </Typography>
-          </Box>
-
+        <Box ref={expandedRef} sx={expandedAreaSx}>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1.25 }}>
+            {t('newPasswordLabel')}
+          </Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <TextField
               value={newPassword}
@@ -48,12 +53,7 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
               placeholder="• • • •"
               size="small"
               fullWidth
-              inputProps={{ inputMode: 'numeric', maxLength: 4, readOnly: true, style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
-              onFocus={e => {
-                // מסיר readOnly בלחיצה ישירה כדי שהמקלדת לא תיפתח בפתיחת ה-Collapse
-                const input = e.target as HTMLInputElement;
-                input.removeAttribute('readonly');
-              }}
+              inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
               sx={pinFieldSx}
             />
             <Button
