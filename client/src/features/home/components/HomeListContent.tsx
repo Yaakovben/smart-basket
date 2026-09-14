@@ -1,13 +1,14 @@
 import { useMemo, type RefObject } from 'react';
-import { Box, Typography, Button, IconButton } from '@mui/material';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
+import { Box, Typography, Button } from '@mui/material';
+import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
-import DoneIcon from '@mui/icons-material/Done';
+import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import type { List, User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { ShimmerBlock } from '../../../global/components';
+import { getReorderEntrySx } from '../../../global/constants';
 import { useConnectionStatus } from '../../../global/hooks/useConnectionStatus';
 import type { HomeTab } from '../types/home-types';
 import { ListCard } from './ListCard';
@@ -305,20 +306,25 @@ export const HomeListContent = ({
                     variant="contained"
                     onClick={onSaveOrder}
                     disabled={!hasOrderChanges}
-                    startIcon={<DoneIcon sx={{ fontSize: 16 }} />}
+                    startIcon={<DoneRoundedIcon sx={{ fontSize: 16 }} />}
                     sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', gap: 0.75, boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
                   >
                     {t('reorderDone')}
                   </Button>
                 </Box>
               ) : (
-                <IconButton
-                  size="small"
+                // אותו כפתור בדיוק כמו "סדר מוצרים" ברשימה (getReorderEntrySx) -
+                // עיצוב אחיד לפעולת סידור בכל האפליקציה, לא כפתור-אייקון אפור סתמי.
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('reorderLists')}
                   onClick={onEnterReorder}
-                  sx={{ color: 'text.secondary', p: 0.5 }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onEnterReorder(); }}
+                  sx={getReorderEntrySx(isDark)}
                 >
-                  <SwapVertIcon sx={{ fontSize: 20 }} />
-                </IconButton>
+                  <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                </Box>
               )
             )}
           </Box>

@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, memo } from 'react';
 import { Box, Typography, Card, Chip, IconButton } from '@mui/material';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import type { List, Product } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
@@ -133,7 +133,7 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
             '&:active': { animation: 'none', transform: 'scale(0.92)' },
           }}
         >
-          <DragIndicatorIcon sx={{
+          <DragIndicatorRoundedIcon sx={{
             color: isDragging ? 'primary.main' : 'text.disabled',
             fontSize: isDragging ? 24 : 22,
             transition: 'color 0.15s, font-size 0.15s',

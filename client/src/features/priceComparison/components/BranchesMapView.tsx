@@ -375,6 +375,20 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           center={ISRAEL_CENTER}
           zoom={ISRAEL_ZOOM}
           zoomControl={false}
+          // אינטראקטיביות מלאה ומפורשת - בלי שום הגבלת תזוזה/זום (אין
+          // maxBounds) כדי שאפשר יהיה לגרור ולשחק עם המפה חופשי לגמרי,
+          // לא רק בתוך גבולות ישראל. inertia עם friction נמוך יותר
+          // (ברירת המחדל 23) - "החלקה" נעימה יותר אחרי גרירה מהירה.
+          dragging={true}
+          touchZoom={true}
+          doubleClickZoom={true}
+          scrollWheelZoom={true}
+          boxZoom={true}
+          keyboard={true}
+          inertia={true}
+          inertiaDeceleration={2600}
+          minZoom={2}
+          maxZoom={19}
           style={{ width: '100%', height: '100%' }}
         >
           <TileLayer

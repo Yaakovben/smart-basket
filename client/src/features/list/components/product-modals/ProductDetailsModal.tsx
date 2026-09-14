@@ -98,6 +98,13 @@ export const ProductDetailsModal = memo(({
     setShowPhoto(false);
     setNameExpanded(false);
     setImageFailed(false);
+    // Prefetch שקט — ברגע שנפתחים פרטי המוצר, מתחיל לטעון את גרסת
+    // המסך המלא ברקע. עד שהמשתמש ילחץ להגדיל (בדרך כלל כמה שניות אחרי)
+    // הדפדפן כבר יספיק לשמור אותה ב-cache — הפתיחה תרגיש מיידית.
+    if (product?.image) {
+      const img = new Image();
+      img.src = cldFull(product.image);
+    }
   }
 
   if (!product) return null;
@@ -204,16 +211,21 @@ export const ProductDetailsModal = memo(({
               </Box>
             </Box>
           ) : (
-            <IconTile
-              emoji={CATEGORY_ICONS[product.category]}
-              color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
-              seedId={product.id}
-              size={76}
-              fontSize={38}
-              ariaLabel={product.category}
-              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem).
-              variant="light"
-            />
+            <Box sx={{
+              animation: imageFailed ? 'none' : undefined,
+              opacity: 1,
+              transition: 'opacity 0.2s ease',
+            }}>
+              <IconTile
+                emoji={CATEGORY_ICONS[product.category]}
+                color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+                seedId={product.id}
+                size={76}
+                fontSize={38}
+                ariaLabel={product.category}
+                variant="light"
+              />
+            </Box>
           )}
         </Box>
         {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;
@@ -435,6 +447,12 @@ export const ProductDetailsModal = memo(({
       {showPhoto && product.image && (
         <ImageLightbox
           src={cldFull(product.image)}
+          // cldThumb, לא cldPreview - זו בדיוק הגרסה שכבר מוצגת/בקאש בתמונה
+          // הקטנה של פרטי המוצר (למטה, cldThumb(product.image)), כך
+          // שה-placeholder באמת מופיע מיידית מהקאש בלי בקשת רשת נוספת.
+          // cldPreview הוא URL/טרנספורם שונה (w_800) שאף מסך אחר לא כבר
+          // טוען - "placeholder מיידי מהקאש" לא היה כזה בפועל, ומסך מלא
+          // שחור היה מוצג עד שגם הוא (וגם cldFull המלא) סיימו להיטען מהרשת.
           placeholderSrc={cldThumb(product.image)}
           alt={product.name}
           onClose={() => setShowPhoto(false)}

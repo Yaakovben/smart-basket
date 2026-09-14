@@ -425,6 +425,12 @@ export const ru: Translations = {
   convertToGroupHint: 'Поделитесь списком с другими',
   convertToPrivate: 'Сделать личным списком',
   convertToPrivateHint: 'Убрать возможность совместного доступа',
+  convertToPrivateWarning: 'Все участники будут удалены, а общая история — стёрта. Это действие необратимо.',
+  convertToPrivateMembersTitle: 'Сначала удалите участников',
+  convertToPrivateMembersHint: 'Сначала удалите всех участников — нажмите значок участников вверху списка.',
+  convertToGroupExplain: 'Перевод в группу позволит делиться списком с другими участниками. Задайте 4-значный код доступа, который потребуется для вступления.',
+  tipBranchesMapTitle: 'Найди ближайший магазин 📍',
+  tipBranchesMapBody: 'В сравнении цен нажми кнопку карты — увидишь все филиалы на карте с суммой корзины и расстоянием от тебя.',
   convertToPrivateConfirmMessage: 'Список перестанет быть общим, а пароль группы будет удалён. Продолжить?',
   setGroupPassword: 'Установите пароль группы (4 цифры)',
   productExists: 'Продукт существует',
@@ -476,6 +482,7 @@ export const ru: Translations = {
   // Change password section
   changePassword: 'Изменить пароль',
   changePasswordHint: 'Новый код входа для участников группы',
+  newPasswordLabel: 'Новый код (4 цифры)',
   // Share list modal
   moreOptionsAria: 'Дополнительные параметры',
   // PDF generation

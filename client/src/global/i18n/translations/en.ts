@@ -425,6 +425,12 @@ export const en: Translations = {
   convertToGroupHint: 'Share this list with others',
   convertToPrivate: 'Convert to private list',
   convertToPrivateHint: 'Remove sharing capability',
+  convertToPrivateWarning: 'All members will be removed and shared history will be deleted. This action cannot be undone.',
+  convertToPrivateMembersTitle: 'Remove members first',
+  convertToPrivateMembersHint: 'Remove all members first — tap the members icon at the top of the list.',
+  convertToGroupExplain: 'Converting to a group lets you share this list with other members. Set a 4-digit access code that members will need to enter when joining.',
+  tipBranchesMapTitle: 'Find the nearest branch 📍',
+  tipBranchesMapBody: 'In price comparison, tap the map button to see all branches on a map — with the basket total and distance from your location.',
   convertToPrivateConfirmMessage: 'The list will stop being shared and the group password will be removed. Continue?',
   setGroupPassword: 'Set group password (4 digits)',
   productExists: 'Product exists',
@@ -476,6 +482,7 @@ export const en: Translations = {
   // Change password section
   changePassword: 'Change password',
   changePasswordHint: 'A new entry code for group members',
+  newPasswordLabel: 'New code (4 digits)',
   // Share list modal
   moreOptionsAria: 'More options',
   // PDF generation

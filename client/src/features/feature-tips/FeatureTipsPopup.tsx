@@ -22,13 +22,24 @@ interface FeatureTipsPopupProps {
 export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const [activeIndex, setActiveIndex] = useState(0);
+  // עמוד התחלה אקראי — בכל פתיחה של הפופאפ המשתמש רואה טיפ שונה
+  const [activeIndex, setActiveIndex] = useState(() => Math.floor(Math.random() * FEATURE_TIPS.length));
   const trackRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   // אחרי ניווט תכנותי (goTo) - מתעלמים מהתצפית עד שהיא "מסכימה" עם היעד,
   // כדי שהיא לא תדרוס עם ריבאונס-ביניים באמצע הגלילה החלקה. ראו goTo/
   // ה-observer למטה - זה מה שתיקן את "הכפתור עובד רק פעם אחת".
   const pendingIndexRef = useRef<number | null>(null);
+
+  // גלילה לעמוד ההתחלה האקראי — אחרי שה-DOM מוכן
+  useEffect(() => {
+    const el = slideRefs.current[activeIndex];
+    if (el && activeIndex > 0) {
+      el.scrollIntoView({ behavior: 'instant', inline: 'start', block: 'nearest' });
+    }
+    // רצים פעם אחת בלבד בפתיחה
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -87,7 +98,13 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
         sx={{
           ...modalContainerSx,
           p: 0, maxWidth: 380,
-          boxShadow: `0 26px 70px ${glow}, 0 2px 10px rgba(0,0,0,0.22)`,
+          // זכוכית מטושטשת — רקע חצי-שקוף עם blur במקום בגראונד אטום
+          bgcolor: isDark ? 'rgba(15,23,42,0.72)' : 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.85)',
+          boxShadow: `0 26px 70px ${glow}, 0 2px 10px rgba(0,0,0,0.18)`,
           transition: 'box-shadow 0.35s ease',
           animation: 'tipsIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both',
           '@keyframes tipsIn': {
@@ -169,6 +186,8 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
                 <Box sx={{
                   position: 'relative', overflow: 'hidden',
                   background: isDark ? tip.gradient.dark : tip.gradient.light,
+                  // שכבת שקיפות קלה על ה-hero כדי שה-blur של ה-popup יבצבץ מתחת
+                  opacity: 0.92,
                   px: 3, pt: 6.5, pb: 3.25,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>

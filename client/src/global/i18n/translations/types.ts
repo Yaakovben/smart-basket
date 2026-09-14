@@ -425,6 +425,12 @@ export type TranslationKeys =
   | 'convertToGroupHint'
   | 'convertToPrivate'
   | 'convertToPrivateHint'
+  | 'convertToPrivateWarning'
+  | 'convertToPrivateMembersTitle'
+  | 'convertToPrivateMembersHint'
+  | 'convertToGroupExplain'
+  | 'tipBranchesMapTitle'
+  | 'tipBranchesMapBody'
   | 'convertToPrivateConfirmMessage'
   | 'setGroupPassword'
   // Duplicate product
@@ -480,6 +486,7 @@ export type TranslationKeys =
   // Change password section
   | 'changePassword'
   | 'changePasswordHint'
+  | 'newPasswordLabel'
   // Share list modal
   | 'moreOptionsAria'
   // PDF generation

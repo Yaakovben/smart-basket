@@ -112,6 +112,15 @@ export const FEATURE_TIPS: FeatureTip[] = [
     bodyKey: 'tipSavedListsBody',
   },
   {
+    id: 'branches-map',
+    emoji: '🗺️',
+    gradient: { light: 'linear-gradient(135deg, #CFFAFE 0%, #ECFEFF 100%)', dark: 'linear-gradient(135deg, rgba(6,182,212,0.24) 0%, rgba(6,182,212,0.08) 100%)' },
+    ink: { light: '#0E7490', dark: '#67E8F9' },
+    glow: { light: 'rgba(6,182,212,0.20)', dark: 'rgba(0,0,0,0.4)' },
+    titleKey: 'tipBranchesMapTitle',
+    bodyKey: 'tipBranchesMapBody',
+  },
+  {
     id: 'mute-list',
     emoji: '🔕',
     gradient: { light: 'linear-gradient(135deg, #F1F5F9 0%, #F8FAFC 100%)', dark: 'linear-gradient(135deg, rgba(100,116,139,0.24) 0%, rgba(100,116,139,0.08) 100%)' },
