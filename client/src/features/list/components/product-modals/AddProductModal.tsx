@@ -273,7 +273,7 @@ export const AddProductModal = memo(({
         {recentSuggestions.length > 0 && (
           <Box sx={{ mt: 0.75 }}>
             <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 700, letterSpacing: 0.3, mb: 0.5, px: 0.25 }}>
-              ⏱️ הוספו לאחרונה
+              ⏱️ {t('recentlyAdded')}
             </Typography>
             {/* גלילה אופקית במקום שורה חדשה - שומר על גובה המודאל קבוע */}
             <Box sx={{
@@ -289,7 +289,10 @@ export const AddProductModal = memo(({
               {recentSuggestions.map(s => (
                 <Box
                   key={`recent-${s.name}`}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => applySuggestion(s)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applySuggestion(s); } }}
                   sx={{
                     display: 'flex', alignItems: 'center', gap: 0.5,
                     px: 1.25, py: 0.6,
@@ -301,6 +304,7 @@ export const AddProductModal = memo(({
                     scrollSnapAlign: 'start',
                     transition: 'all 0.15s',
                     '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.15)' },
+                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
                   }}
                 >
                   <Typography sx={{ fontSize: 13 }}>{CATEGORY_ICONS[s.category] || '📦'}</Typography>
@@ -315,7 +319,10 @@ export const AddProductModal = memo(({
             {filteredSuggestions.map(s => (
               <Box
                 key={s.name}
+                role="button"
+                tabIndex={0}
                 onClick={() => applySuggestion(s)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applySuggestion(s); } }}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -327,6 +334,7 @@ export const AddProductModal = memo(({
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                   '&:active': { transform: 'scale(0.95)' },
+                  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
                 }}
               >
                 <Typography sx={{ fontSize: 13 }}>{CATEGORY_ICONS[s.category] || '📦'}</Typography>

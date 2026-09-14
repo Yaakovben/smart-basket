@@ -5,6 +5,7 @@ import { forwardRef, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
 import { useReliableTap } from '../hooks/useReliableTap';
+import { useSettings } from '../context/SettingsContext';
 
 interface ModalProps {
   title: string;
@@ -35,6 +36,7 @@ export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
   // HomeHeader/ProfileComponent/HomeBottomNav: onClick רגיל התגלה כלא אמין
   // על חלק מהמכשירים ודורש הקשה כפולה. ה-X של המודל המשותף הזה לא קיבל
   // את התיקון הזה - כל מודל שמשתמש בו (כולל התראות) ירש את אותה בעיה.
+  const { t } = useSettings();
   const closeTap = useReliableTap(handleClose);
 
   return (
@@ -71,7 +73,7 @@ export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
       }}
     >
       {/* ידית גרירה */}
-      <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />
+      <Box aria-hidden="true" sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />
 
       {/* כותרת וכפתור סגירה */}
       <Box sx={{
@@ -90,7 +92,7 @@ export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
         <IconButton
           onPointerUp={closeTap.onPointerUp}
           onClick={closeTap.onClick}
-          aria-label="Close"
+          aria-label={t('closeModalAria')}
           disableRipple
           disableFocusRipple
           sx={{
