@@ -19,7 +19,7 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount 
   const hasMembers = membersCount > 0;
 
   return (
-    <Paper sx={{ ...accentBarSx(hasMembers ? 'neutral' : 'warning'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1 }}>
+    <Paper sx={{ ...accentBarSx('neutral'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1 }}>
       <Box
         sx={{ ...settingsRowSx, cursor: 'pointer', opacity: hasMembers ? 0.75 : 1 }}
         onClick={() => setOpen(v => !v)}
@@ -62,10 +62,11 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount 
               <Box sx={{
                 display: 'flex', gap: 1, alignItems: 'flex-start',
                 p: 1.5, mb: 1.5, borderRadius: '10px',
-                bgcolor: 'warning.main', opacity: 0.85,
+                bgcolor: 'action.selected',
+                border: '1px solid', borderColor: 'divider',
               }}>
-                <WarningAmberRoundedIcon sx={{ fontSize: 17, color: 'warning.contrastText', mt: '1px', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: 12.5, color: 'warning.contrastText', lineHeight: 1.5 }}>
+                <WarningAmberRoundedIcon sx={{ fontSize: 17, color: 'text.secondary', mt: '1px', flexShrink: 0 }} />
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.5 }}>
                   {t('convertToPrivateWarning')}
                 </Typography>
               </Box>
@@ -82,7 +83,6 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount 
                 </Button>
                 <Button
                   variant="contained"
-                  color="warning"
                   size="small"
                   disabled={converting}
                   onClick={async () => {
