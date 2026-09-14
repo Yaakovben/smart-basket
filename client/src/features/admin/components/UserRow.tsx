@@ -7,8 +7,9 @@ import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
 import { useUserRowDetails } from '../hooks/useUserRowDetails';
 import { UserRowExpandedContent } from './UserRowExpandedContent';
+import { TapToRevealText } from '../../../global/components';
 import {
-  userRowPaperSx, userRowMainSx, avatarCircleSx, onlineDotSx, userNameSx, lastSeenSx,
+  userRowPaperSx, userRowMainSx, avatarCircleSx, onlineDotSx, lastSeenSx,
   loginCountBoxSx, expandArrowSx,
 } from '../styles/UsersTable.styles';
 
@@ -51,9 +52,10 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
 
         {/* שם + נראה לאחרונה */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={userNameSx(isDark)}>
-            {user.name}
-          </Typography>
+          <TapToRevealText
+            text={user.name}
+            sx={{ fontSize: 14, fontWeight: 600, color: isDark ? '#F3F4F6' : '#1F2937' }}
+          />
           <Typography sx={lastSeenSx(isDark)}>
             {lastActivity
               ? getRelativeTime(lastActivity, language)
