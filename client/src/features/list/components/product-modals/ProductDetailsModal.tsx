@@ -7,7 +7,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
+import { cldThumb, cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -98,6 +98,13 @@ export const ProductDetailsModal = memo(({
     setShowPhoto(false);
     setNameExpanded(false);
     setImageFailed(false);
+    // Prefetch שקט — ברגע שנפתחים פרטי המוצר, מתחיל לטעון את גרסת
+    // המסך המלא ברקע. עד שהמשתמש ילחץ להגדיל (בדרך כלל כמה שניות אחרי)
+    // הדפדפן כבר יספיק לשמור אותה ב-cache — הפתיחה תרגיש מיידית.
+    if (product?.image) {
+      const img = new Image();
+      img.src = cldFull(product.image);
+    }
   }
 
   if (!product) return null;
@@ -435,7 +442,7 @@ export const ProductDetailsModal = memo(({
       {showPhoto && product.image && (
         <ImageLightbox
           src={cldFull(product.image)}
-          placeholderSrc={cldThumb(product.image)}
+          placeholderSrc={cldPreview(product.image)}
           alt={product.name}
           onClose={() => setShowPhoto(false)}
         />
