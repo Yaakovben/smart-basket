@@ -17,7 +17,7 @@
 
 import { logger } from '../../../config/logger';
 import { tryAuthenticateWithCandidates, withRetry } from './portalAuth';
-import { listLatestMatchingFile, listLatestPriceFullFile, downloadFile } from './portalFiles';
+import { listLatestMatchingFile, listAllLatestPriceFullFiles, downloadFile } from './portalFiles';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult,
@@ -49,16 +49,29 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
       try {
         return await withRetry(async () => {
           const { client, csrftoken } = await tryAuthenticate();
-          const filename = await listLatestPriceFullFile(client, csrftoken, chainId);
-          if (!filename) {
+          const filenames = await listAllLatestPriceFullFiles(client, csrftoken, chainId);
+          if (filenames.length === 0) {
             return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
           }
-          const buf = await downloadFile(client, filename);
-          const items = parseXmlBuffer(buf, filename);
-          if (items.length === 0) {
-            logger.warn(`[chain:${chainId}] file '${filename}' parsed to 0 items - schema mismatch?`);
+          // מוריד את קבצי כל הסניפים במקביל מוגבל - כך שמחירי הרשת ישקפו
+          // את כל הסניפים (לא רק אחד שנבחר כמעט באקראי), בלי להעמיס יתר
+          // על הפורטל/הזיכרון כשיש מאות סניפים (כמו רמי לוי).
+          const allItems: ReturnType<typeof parseXmlBuffer> = [];
+          const DOWNLOAD_CONCURRENCY = 4;
+          for (let i = 0; i < filenames.length; i += DOWNLOAD_CONCURRENCY) {
+            const batch = filenames.slice(i, i + DOWNLOAD_CONCURRENCY);
+            const parsedBatches = await Promise.all(
+              batch.map(async filename => {
+                const buf = await downloadFile(client, filename);
+                return parseXmlBuffer(buf, filename);
+              })
+            );
+            for (const items of parsedBatches) allItems.push(...items);
           }
-          return { chainId, chainName, items, fetchedFiles: 1 };
+          if (allItems.length === 0) {
+            logger.warn(`[chain:${chainId}] ${filenames.length} store files parsed to 0 items total - schema mismatch?`);
+          }
+          return { chainId, chainName, items: allItems, fetchedFiles: filenames.length };
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
