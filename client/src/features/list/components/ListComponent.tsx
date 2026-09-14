@@ -15,7 +15,7 @@ import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useListCostEstimate } from '../hooks/useListCostEstimate';
 import { PULL_MAX } from '../helpers/list-helpers';
-import { CATEGORY_ICONS } from '../../../global/constants';
+import { CATEGORY_ICONS, getReorderEntrySx } from '../../../global/constants';
 
 // ===== קומפוננטות משנה =====
 import { ListHeader } from './ListHeader';
@@ -68,23 +68,10 @@ interface ListPageProps {
   onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
 
-// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), לבן אטום עם
-// צל עדין (כך שהוא בולט/צף מעל הרקע, לא מתמזג איתו) והאייקון בצבע המותג
-// (תכלת) - לא אפור כמו הצ'יפים; זה כפתור פעולה, לא עוד קטגוריה.
-const reorderEntrySx = {
-  width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  bgcolor: '#FFFFFF', color: 'primary.main',
-  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.12s, background-color 0.15s',
-  '&:active': { transform: 'scale(0.9)' },
-  '&:hover': { bgcolor: '#F8FAFC' },
-} as const;
-
 // ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds, onSaveSavedLists }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
+  const isDark = settings.theme === 'dark';
   const isMuteToggling = useRef(false);
 
   const {
@@ -521,15 +508,15 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // לבן + תכלת (reorderEntrySx) - כפתור פעולה שבולט מעל
-              // הצ'יפים, לא מתמזג איתם.
+              // getReorderEntrySx - אותו כפתור סידור בדיוק כמו ברשימות
+              // בעמוד הבית, בולט מעל הצ'יפים ולא מתמזג איתם.
               <Box
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={reorderEntrySx}
+                sx={getReorderEntrySx(isDark)}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
@@ -570,7 +557,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                   aria-label={t('reorderProducts')}
                   onClick={reorderHandleEnter}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                  sx={reorderEntrySx}
+                  sx={getReorderEntrySx(isDark)}
                 >
                   <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
                 </Box>

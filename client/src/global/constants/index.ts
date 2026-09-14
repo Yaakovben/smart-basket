@@ -192,6 +192,24 @@ export const COMMON_STYLES = {
   }
 } as const;
 
+// כפתור כניסה ל"מצב סידור" (מוצרים ברשימה / רשימות בבית) - מקור אמת יחיד
+// ומודע-כהה, כך ששני המקומות ייראו זהים תמיד. ריבוע קטן שבולט מעל הרקע
+// שהוא יושב עליו (צ'יפים/כרטיסים), לא כפתור-אייקון אפור רגיל - זו פעולה,
+// לא עוד פריט תפריט. במצב כהה בלי לבן-על-כהה (ניגודיות מוגזמת) - משטח
+// מעט בהיר יותר מהרקע + מסגרת עדינה במקום צל.
+export const getReorderEntrySx = (isDark: boolean) => ({
+  width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
+  color: 'primary.main',
+  border: isDark ? '1px solid rgba(255,255,255,0.12)' : 'none',
+  boxShadow: isDark ? 'none' : '0 2px 6px rgba(0,0,0,0.15)',
+  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.12s, background-color 0.15s',
+  '&:active': { transform: 'scale(0.9)' },
+  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.14)' : '#F8FAFC' },
+} as const);
+
 // ===== אפשרויות תפריט הוספה =====
 export interface MenuOption {
   id: 'private' | 'group' | 'join';

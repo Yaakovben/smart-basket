@@ -50,6 +50,7 @@ export {
   MENU_OPTIONS,
   SIZES,
   COMMON_STYLES,
+  getReorderEntrySx,
   BRAND_COLORS,
   SWIPE_CONFIG
 } from '../constants';
