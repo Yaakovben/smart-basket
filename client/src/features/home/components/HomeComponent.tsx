@@ -393,10 +393,10 @@ export const HomeComponent = memo(({
           } else if (code.length === 6) {
             // קוד נראה תקין אבל סיסמה חסרה/לא תואמת
             setJoinCode(code);
-            setJoinError('הקוד זוהה אך הסיסמה חסרה או לא תקפה. הזינו סיסמה ידנית.');
+            setJoinError(t('qrPasswordMissing'));
           } else {
             // לא QR שלנו
-            setJoinError('זה לא QR להצטרפות לקבוצה. סרקו את ה-QR שקיבלתם מהמזמין.');
+            setJoinError(t('qrNotGroupCode'));
           }
         }}
       />

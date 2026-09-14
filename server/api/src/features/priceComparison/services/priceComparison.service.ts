@@ -5,7 +5,7 @@ import { PriceDAL } from '../dal/price.dal';
 import { getCachedComparison, setCachedComparison } from './comparisonCache';
 import { matchNormalizedName, BETA_CHAIN_ID, BETA_CHAIN_NAME, type NameMatch } from './productMatcher';
 import { buildChainTotals, type PendingProductLean } from './chainComparison';
-import type { UserLocation } from './branches.service';
+import { findNearestBranch, type UserLocation } from './branches.service';
 import type { PriceMatch, PriceListGroup, PriceChainTotal, PriceComparisonData } from './priceComparison.types';
 
 export type { PriceMatch, PriceListGroup, PriceChainTotal, PriceComparisonData } from './priceComparison.types';
@@ -150,6 +150,11 @@ export async function getComparisonForUser(
     return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
   }
 
+  // אם יש מיקום משתמש - מאתרים את הסניף הקרוב ביותר של הרשת הראשית, כדי
+  // שהמחירים המוצגים ישקפו את מה שהלקוח יראה בפועל באותו סניף ולא רק את
+  // הזול ביותר שנמצא אי-שם ברשת.
+  const primaryNearestBranch = userLocation ? await findNearestBranch(BETA_CHAIN_ID, userLocation) : null;
+
   // דה-דופליקציה לפי שם מנורמל: פריט "חלב 3%" שמופיע ב-5 רשימות — match רץ פעם אחת בלבד
   const nameMatchCache = new Map<string, NameMatch>();
   const uniqueNames = Array.from(new Set(pendingProducts.map(p => p.name)));
@@ -157,7 +162,7 @@ export async function getComparisonForUser(
   await Promise.all(
     uniqueNames.map(async name => {
       try {
-        const m = await matchNormalizedName(name);
+        const m = await matchNormalizedName(name, BETA_CHAIN_ID, BETA_CHAIN_NAME, undefined, primaryNearestBranch?.storeId);
         nameMatchCache.set(name, m);
       } catch {
         // שגיאה בהתאמה בודדת - ממלאים ב-unmatched ולא מפילים את כל הבקשה

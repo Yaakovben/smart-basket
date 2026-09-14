@@ -11,13 +11,13 @@ interface ConvertToPrivateSectionProps {
 
 export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount }: ConvertToPrivateSectionProps) => {
   const { t } = useSettings();
-  const [open, setOpen] = useState(false);
-  const [converting, setConverting] = useState(false);
   const hasMembers = membersCount > 0;
+  const [open, setOpen] = useState(hasMembers);
+  const [converting, setConverting] = useState(false);
 
   return (
     <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1, border: '1px solid', borderColor: 'divider' }}>
-      <Box sx={{ ...settingsRowSx, opacity: hasMembers ? 0.6 : 1 }} onClick={() => setOpen(v => !v)}>
+      <Box sx={settingsRowSx} onClick={() => setOpen(v => !v)}>
         <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToPrivate')}</Typography>

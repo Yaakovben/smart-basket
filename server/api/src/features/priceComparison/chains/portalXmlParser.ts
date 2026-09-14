@@ -42,8 +42,8 @@ function decompressBuffer(buf: Buffer): string {
 }
 
 interface PriceFullXml {
-  Root?: { Items?: { Item?: RawItem[] | RawItem } };
-  root?: { Items?: { Item?: RawItem[] | RawItem } };
+  Root?: { Items?: { Item?: RawItem[] | RawItem }; StoreID?: string | number; STOREID?: string | number };
+  root?: { Items?: { Item?: RawItem[] | RawItem }; StoreID?: string | number; STOREID?: string | number };
 }
 
 interface RawItem {
@@ -69,6 +69,10 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
   const itemsNode = parsed.Root?.Items?.Item || parsed.root?.Items?.Item;
   if (!itemsNode) return [];
   const priceItems = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
+  // ב-publishedprices.co.il כל קובץ PriceFull הוא של סניף בודד - מזהה
+  // הסניף מופיע פעם אחת בראש הקובץ (Root/StoreID), לא בכל פריט בנפרד.
+  // נשתמש בו כ-fallback כשלפריט עצמו אין StoreId/storeId.
+  const fileLevelStoreId = String(parsed.Root?.StoreID ?? parsed.Root?.STOREID ?? parsed.root?.StoreID ?? parsed.root?.STOREID ?? '').trim() || undefined;
 
   const results: ChainPriceItem[] = [];
   for (const it of priceItems) {
@@ -103,7 +107,7 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
       unitOfMeasure: get('UnitOfMeasure', 'unitOfMeasure'),
       manufacturerName: get('ManufacturerName', 'manufacturerName'),
       quantity: getNum('Quantity', 'quantity'),
-      storeId: get('StoreId', 'storeId'),
+      storeId: get('StoreId', 'storeId') || fileLevelStoreId,
       manufactureCountry: get('ManufactureCountry', 'manufactureCountry'),
       manufacturerItemDescription: get('ManufacturerItemDescription', 'manufacturerItemDescription'),
       qtyInPackage: getNum('QtyInPackage', 'qtyInPackage'),

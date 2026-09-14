@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 // אנימציות — שימר עובר על פני התג וצף קל
 const shimmer = keyframes`
@@ -24,6 +25,7 @@ interface Props {
 
 // תג BETA יצירתי - צורת טבלית מבחן עם שימר זהב ובועות צפות
 export const BetaBadge = memo(({ size = 'md' }: Props) => {
+  const { t } = useSettings();
   const isSm = size === 'sm';
   const fontSize = isSm ? 9 : 10.5;
   const py = isSm ? 0.3 : 0.4;
@@ -31,6 +33,8 @@ export const BetaBadge = memo(({ size = 'md' }: Props) => {
 
   return (
     <Box
+      role="img"
+      aria-label={t('betaBadgeLabel')}
       sx={{
         position: 'relative',
         display: 'inline-flex',
@@ -63,28 +67,11 @@ export const BetaBadge = memo(({ size = 'md' }: Props) => {
         },
       }}
     >
-      {/* אייקון טבלית מבחן עם בועות */}
-      <Box sx={{ position: 'relative', fontSize: fontSize + 2, lineHeight: 1, zIndex: 1 }}>
+      {/* אייקון טבלית מבחן עם בועות — כולו דקורטיבי, מוסתר מקוראי מסך */}
+      <Box aria-hidden="true" sx={{ position: 'relative', fontSize: fontSize + 2, lineHeight: 1, zIndex: 1 }}>
         <span>🧪</span>
-        {/* בועה זעירה צפה */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -2, right: -3,
-            width: 3, height: 3, borderRadius: '50%',
-            bgcolor: 'rgba(255,255,255,0.85)',
-            animation: `${floatBubble} 1.8s ease-in-out infinite`,
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 1, right: -1,
-            width: 2, height: 2, borderRadius: '50%',
-            bgcolor: 'rgba(255,255,255,0.7)',
-            animation: `${floatBubble} 2.2s ease-in-out infinite 0.3s`,
-          }}
-        />
+        <Box sx={{ position: 'absolute', top: -2, right: -3, width: 3, height: 3, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.85)', animation: `${floatBubble} 1.8s ease-in-out infinite` }} />
+        <Box sx={{ position: 'absolute', top: 1, right: -1, width: 2, height: 2, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.7)', animation: `${floatBubble} 2.2s ease-in-out infinite 0.3s` }} />
       </Box>
       <Typography
         sx={{

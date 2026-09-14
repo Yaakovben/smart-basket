@@ -1,5 +1,5 @@
 import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
@@ -444,7 +444,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       />
 
       {scanListMounted && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress size={32} /></Box>}>
           <ScanListPhoto
             open={showScanList}
             onClose={() => setShowScanList(false)}

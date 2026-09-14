@@ -1,5 +1,7 @@
 import type { ChainId } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
+import { BranchPriceDAL } from '../dal/branchPrice.dal';
+import { getBranchLabel } from './branches.service';
 import { normalizeProductName, stemHebrew } from '../chains';
 import type { PriceMatch } from './priceComparison.types';
 
@@ -42,6 +44,9 @@ export async function matchNormalizedName(
   chainId: ChainId = BETA_CHAIN_ID,
   chainName: string = BETA_CHAIN_NAME,
   preFetchedCandidates?: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>,
+  // מזהה הסניף הקרוב ביותר למשתמש (אם יש מיקום). אם מועבר - המחיר המוצג
+  // ינסה לשקף את המחיר בפועל באותו סניף, לא רק את הזול ביותר ברשת.
+  storeId?: string,
 ): Promise<NameMatch> {
   const normalized = normalizeProductName(userName);
   const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
@@ -171,6 +176,39 @@ export async function matchNormalizedName(
   if (!best || best.score < 0.55) return unmatched;
 
   const b = best.cand;
+
+  // אם יש סניף ספציפי - מנסים למצוא את המחיר האמיתי בו. אם אין נתון לסניף
+  // הזה (למשל המוצר לא נמכר בו, או שהמחיר עדיין לא סונכרן לקולקציה הזו) -
+  // נשארים עם המחיר הכלל-רשתי (b.price) אבל מסמנים שהוא לא מאומת לסניף.
+  let price = b.price;
+  let priceVerifiedAtBranch = false;
+  if (storeId) {
+    try {
+      const branchRows = await BranchPriceDAL.findByBarcodesAndStore([b.barcode], chainId, storeId);
+      if (branchRows.length > 0) {
+        price = branchRows[0].price;
+        priceVerifiedAtBranch = true;
+      }
+    } catch {
+      // לא מפילים את ההתאמה כולה על שגיאת DB - ממשיכים עם המחיר הכלל-רשתי
+    }
+  }
+
+  // הסניף הזול ביותר ברשת למוצר הזה (b.price/b.cheapestStoreId הם תמיד
+  // הערך הכלל-רשתי המקורי מ-Price.model, גם אם price לעיל הוחלף במחיר
+  // סניף ספציפי) - כדי שהלקוח יוכל לראות שיש מחיר זול יותר במקום אחר.
+  let cheapestBranch: NameMatch['cheapestBranch'];
+  if (b.cheapestStoreId) {
+    try {
+      const label = await getBranchLabel(chainId, b.cheapestStoreId);
+      if (label) {
+        cheapestBranch = { storeId: b.cheapestStoreId, price: b.price, branchName: label.branchName, city: label.city };
+      }
+    } catch {
+      // לא קריטי - לא מפילים את ההתאמה כולה על כשל בשליפת שם הסניף
+    }
+  }
+
   return {
     ...unmatched,
     matched: true,
@@ -178,10 +216,12 @@ export async function matchNormalizedName(
     chainName: b.chainName,
     itemName: b.itemName,
     itemNameNormalized: b.itemNameNormalized,
-    price: b.price,
+    price,
     barcode: b.barcode,
     matchConfidence: Math.round(best.coverage * 100) / 100,
     matchedTokens: best.matchedTokens,
     manufacturerName: b.manufacturerName,
+    priceVerifiedAtBranch,
+    cheapestBranch,
   };
 }

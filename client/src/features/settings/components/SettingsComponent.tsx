@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, Paper, Switch } from '@mui/material';
+import { Box, Typography, IconButton, Paper, Switch, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -55,6 +55,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
 
   // state לאישור ניקוי מטמון - popup שמסביר השלכות לפני פעולה הרסנית
   const [confirmClearCache, setConfirmClearCache] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const APP_VERSION = '1.1.0';
 
   const handleMainNotificationsToggle = async (enabled: boolean) => {
     updateNotifications({ enabled });
@@ -113,13 +116,13 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             onPushToggle={handlePushToggle}
           />
 
-          <Box sx={settingRowSx} onClick={toggleDarkMode}>
+          <Box sx={settingRowSx} role="button" tabIndex={0} onClick={toggleDarkMode} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDarkMode(); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>🌙</Box>
             <Typography sx={rowLabelSx}>{t('darkMode')}</Typography>
             <Switch checked={settings.theme === 'dark'} onChange={toggleDarkMode} onClick={(e) => e.stopPropagation()} sx={switchSx} />
           </Box>
 
-          <Box sx={lastSettingRowSx} onClick={() => setShowLanguage(true)}>
+          <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => setShowLanguage(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLanguage(true); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>🌐</Box>
             <Typography sx={rowLabelSx}>{t('language')}</Typography>
             <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{currentLanguageName}</Typography>
@@ -140,17 +143,17 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
 
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={settingRowSx} onClick={() => setShowHelp(true)}>
+          <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowHelp(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHelp(true); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>❓</Box>
             <Typography sx={rowLabelSx}>{t('helpSupport')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-          <Box sx={settingRowSx} onClick={() => setShowAbout(true)}>
+          <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowAbout(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowAbout(true); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>ℹ️</Box>
             <Typography sx={rowLabelSx}>{t('about')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-          <Box sx={lastSettingRowSx} onClick={() => navigate('/privacy')}>
+          <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/privacy')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/privacy'); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>📋</Box>
             <Typography sx={rowLabelSx}>{t('termsAndPrivacy')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
@@ -162,20 +165,26 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Paper
             sx={updateCardSx(isDark)}
             onClick={async () => {
-              if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
+              if (isUpdating) return;
+              setIsUpdating(true);
+              try {
+                if ('caches' in window) {
+                  const cacheNames = await caches.keys();
+                  await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+                if ('serviceWorker' in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+                window.location.reload();
+              } finally {
+                setIsUpdating(false);
               }
-              if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(registrations.map(reg => reg.unregister()));
-              }
-              window.location.reload();
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2.5 }}>
               <Box sx={updateCardIconSx}>
-                🔄
+                {isUpdating ? <CircularProgress size={20} sx={{ color: 'white' }} /> : '🔄'}
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'white' }}>
@@ -191,18 +200,18 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
 
         {/* מקבץ ניהול נתונים: ניקוי מטמון + מחיקת כל הנתונים */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={settingRowSx} onClick={() => setConfirmClearCache(true)}>
+          <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setConfirmClearCache(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setConfirmClearCache(true); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>🧹</Box>
             <Typography sx={rowLabelSx}>{t('clearCache')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-          <Box sx={dangerSettingRowSx} onClick={() => setConfirmDelete(true)}>
+          <Box sx={dangerSettingRowSx} role="button" tabIndex={0} onClick={() => setConfirmDelete(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setConfirmDelete(true); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>🗑️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>{t('deleteAllData')}</Typography>
           </Box>
         </Paper>
 
-        <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} 1.1.0</Typography>
+        <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} {APP_VERSION}</Typography>
       </Box>
 
       {showLanguage && <LanguageModal onClose={() => setShowLanguage(false)} onSelect={handleLanguageSelect} />}
