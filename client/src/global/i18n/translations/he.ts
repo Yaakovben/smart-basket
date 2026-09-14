@@ -788,6 +788,7 @@ export const he: Translations = {
   navigateTo: 'ניווט אל',
   navAppFallbackHint: 'אם האפליקציה לא מותקנת היא תיפתח בדפדפן',
   matchDisclaimer: 'ℹ️ ההתאמה למוצרים ברשת מבוססת על מילים בשם המוצר. הצגנו את ההתאמה הקרובה ביותר; בדקו את שם המוצר המלא בסניף.',
+  priceMayDifferAtBranch: 'המחיר הזה הוא הערכה ברמת הרשת - לא אומת בסניף הקרוב אליך, ועשוי להיות שונה בפועל',
   noProductsIdentifiedInChain: 'לא הצלחנו לזהות מוצרים מהרשימה ברשת זו',
   chainNoPricesToday: 'הרשת לא פרסמה מחירים היום - ננסה שוב בקרוב',
   matchedLabelPrefix: 'זוהו',

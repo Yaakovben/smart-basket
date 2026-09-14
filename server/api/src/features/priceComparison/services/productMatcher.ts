@@ -1,5 +1,6 @@
 import type { ChainId } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
+import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { normalizeProductName, stemHebrew } from '../chains';
 import type { PriceMatch } from './priceComparison.types';
 
@@ -42,6 +43,9 @@ export async function matchNormalizedName(
   chainId: ChainId = BETA_CHAIN_ID,
   chainName: string = BETA_CHAIN_NAME,
   preFetchedCandidates?: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>,
+  // מזהה הסניף הקרוב ביותר למשתמש (אם יש מיקום). אם מועבר - המחיר המוצג
+  // ינסה לשקף את המחיר בפועל באותו סניף, לא רק את הזול ביותר ברשת.
+  storeId?: string,
 ): Promise<NameMatch> {
   const normalized = normalizeProductName(userName);
   const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
@@ -171,6 +175,24 @@ export async function matchNormalizedName(
   if (!best || best.score < 0.55) return unmatched;
 
   const b = best.cand;
+
+  // אם יש סניף ספציפי - מנסים למצוא את המחיר האמיתי בו. אם אין נתון לסניף
+  // הזה (למשל המוצר לא נמכר בו, או שהמחיר עדיין לא סונכרן לקולקציה הזו) -
+  // נשארים עם המחיר הכלל-רשתי (b.price) אבל מסמנים שהוא לא מאומת לסניף.
+  let price = b.price;
+  let priceVerifiedAtBranch = false;
+  if (storeId) {
+    try {
+      const branchRows = await BranchPriceDAL.findByBarcodesAndStore([b.barcode], chainId, storeId);
+      if (branchRows.length > 0) {
+        price = branchRows[0].price;
+        priceVerifiedAtBranch = true;
+      }
+    } catch {
+      // לא מפילים את ההתאמה כולה על שגיאת DB - ממשיכים עם המחיר הכלל-רשתי
+    }
+  }
+
   return {
     ...unmatched,
     matched: true,
@@ -178,10 +200,11 @@ export async function matchNormalizedName(
     chainName: b.chainName,
     itemName: b.itemName,
     itemNameNormalized: b.itemNameNormalized,
-    price: b.price,
+    price,
     barcode: b.barcode,
     matchConfidence: Math.round(best.coverage * 100) / 100,
     matchedTokens: best.matchedTokens,
     manufacturerName: b.manufacturerName,
+    priceVerifiedAtBranch,
   };
 }

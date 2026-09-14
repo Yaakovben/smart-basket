@@ -39,6 +39,8 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheape
               isDark={isDark}
               cheapestPrice={priceInfo?.cheapest}
               mostExpensivePrice={priceInfo?.mostExpensive}
+              // יש סניף קרוב אבל המחיר הזה לא אומת דווקא בו - להזהיר שהוא הערכה
+              showBranchUnverified={!!chain.nearestBranch && !m.priceVerifiedAtBranch}
             />
           );
         })}

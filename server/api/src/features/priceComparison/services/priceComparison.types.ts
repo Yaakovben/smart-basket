@@ -16,6 +16,10 @@ export interface PriceMatch {
   matchedTokens: string[];
   userTokens: string[];
   manufacturerName?: string;
+  // true אם המחיר אומת מול הסניף הספציפי שהמשתמש נמצא קרוב אליו (ולא
+  // המחיר הזול ביותר שנמצא אי-שם ברשת). false/undefined = אין נתון לסניף
+  // הזה והמחיר המוצג הוא הערכה כללית ברמת הרשת - ה-UI צריך לסמן זאת.
+  priceVerifiedAtBranch?: boolean;
 }
 
 // קבוצת פריטים לפי רשימה - זה ה-unit המרכזי החדש

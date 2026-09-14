@@ -17,6 +17,7 @@ import {
   type ChainAdapter,
 } from '../chains';
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
+import { BranchPriceDAL, type UpsertBranchPriceInput } from '../dal/branchPrice.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
@@ -345,6 +346,27 @@ async function processChainItems(
       await new Promise<void>(r => setImmediate(r));
     }
   }
+
+  // ===== מחירים פר-סניף =====
+  // בנפרד מהאגרגציה לעיל (שמייצרת "המחיר הזול ברשת" לצורכי השוואה בין
+  // רשתות) - שומרים כאן את המחיר הממשי בכל סניף, כדי שהצגת "המחיר בסניף
+  // הקרוב אליי" תהיה מדויקת ולא תציג בטעות מחיר מסניף אחר של הרשת.
+  const branchPriceInputs: UpsertBranchPriceInput[] = [];
+  for (const item of result.items) {
+    if (item.blockedItem === true) continue;
+    if (item.price <= 0 || item.price > 10_000) continue;
+    if (!item.storeId) continue;
+    branchPriceInputs.push({ chainId: adapter.chainId, storeId: item.storeId, barcode: item.barcode, price: item.price });
+  }
+  let branchPricesUpserted = 0;
+  for (let i = 0; i < branchPriceInputs.length; i += BATCH_SIZE) {
+    const batch = branchPriceInputs.slice(i, i + BATCH_SIZE);
+    branchPricesUpserted += await BranchPriceDAL.bulkUpsert(batch);
+    if (i + BATCH_SIZE < branchPriceInputs.length) {
+      await new Promise<void>(r => setImmediate(r));
+    }
+  }
+  logger.info(`[price-sync] ${adapter.chainId}: branch-prices upserted=${branchPricesUpserted}`);
 
   // סנכרון סניפים - לא חוסם את המחירים אם נכשל
   const storesSummary = adapter.fetchLatestStores

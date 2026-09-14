@@ -12,6 +12,7 @@ import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { logger } from '../../../config/logger';
 
 export interface NearestBranch {
+  storeId: string;
   branchName: string;
   city: string;
   address: string;
@@ -151,6 +152,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
     // כדי שהלקוח יציג סימן ברור (~/בערך) ולא יטעה את המשתמש.
     const isApproximate = best.coordSource === 'unknown';
     return {
+      storeId: best.storeId,
       branchName: best.storeName,
       city: best.city || '',
       address: best.address || '',
@@ -167,6 +169,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
   if (addressOnly.length > 0) {
     const best = addressOnly[0];
     return {
+      storeId: best.storeId,
       branchName: best.storeName,
       city: best.city || '',
       address: best.address || '',

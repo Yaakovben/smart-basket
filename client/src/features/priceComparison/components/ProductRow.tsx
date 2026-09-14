@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Tooltip } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -9,10 +10,13 @@ interface ProductRowProps {
   // נתוני השוואה חוצת-רשתות - אופציונלי, מוצג רק כשיש מידע
   cheapestPrice?: number;
   mostExpensivePrice?: number;
+  // יש סניף קרוב מוצג אבל המחיר לא אומת דווקא באותו סניף - עדיף להזהיר
+  // מאשר לגרום ללקוח לראות מחיר שונה בפועל בחנות.
+  showBranchUnverified?: boolean;
 }
 
 // שורת מוצר בתוך כרטיס מורחב - שם + מחיר + אינדיקטור "הכי זול"
-export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice }: ProductRowProps) => {
+export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice, showBranchUnverified }: ProductRowProps) => {
   const { t } = useSettings();
   if (!match.matched) {
     return (
@@ -95,13 +99,20 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
 
       {/* מחיר + תג השוואה */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 0.2 }}>
-        <Typography sx={{
-          fontSize: 13, fontWeight: 800,
-          color: isCheapest ? '#059669' : (isMostExpensive ? '#DC2626' : '#0F766E'),
-          fontVariantNumeric: 'tabular-nums',
-        }}>
-          ₪{match.price.toFixed(2)}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+          {showBranchUnverified && (
+            <Tooltip title={t('priceMayDifferAtBranch')} arrow>
+              <InfoOutlinedIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+            </Tooltip>
+          )}
+          <Typography sx={{
+            fontSize: 13, fontWeight: 800,
+            color: isCheapest ? '#059669' : (isMostExpensive ? '#DC2626' : '#0F766E'),
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            ₪{match.price.toFixed(2)}
+          </Typography>
+        </Box>
         {/* תג השוואה - הכי זול / +X% */}
         {isCheapest && hasComparison && (
           <Box sx={{

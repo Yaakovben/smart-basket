@@ -782,6 +782,7 @@ export const en: Translations = {
   navigateTo: 'Navigate to',
   navAppFallbackHint: 'If the app is not installed it will open in the browser',
   matchDisclaimer: 'ℹ️ Product matches for this chain are based on words in the product name. We show the closest match; check the full product name at the store.',
+  priceMayDifferAtBranch: 'This price is a chain-wide estimate - not verified at your nearest branch, and may differ in store',
   noProductsIdentifiedInChain: "We couldn't identify any products from the list at this chain",
   chainNoPricesToday: "This chain hasn't published prices today - we'll try again soon",
   matchedLabelPrefix: 'Identified',

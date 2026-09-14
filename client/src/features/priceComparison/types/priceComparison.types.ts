@@ -16,6 +16,9 @@ export interface PriceMatch {
   matchedTokens: string[];
   userTokens: string[];
   manufacturerName?: string;
+  // true אם המחיר אומת מול הסניף הקרוב אליך בפועל. אם false/undefined -
+  // המחיר הוא הערכה כללית ברמת הרשת ועשוי להיות שונה מהמחיר בסניף שלך.
+  priceVerifiedAtBranch?: boolean;
 }
 
 // קבוצת פריטים לפי רשימה - unit מרכזי של UI

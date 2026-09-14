@@ -786,6 +786,7 @@ export type TranslationKeys =
   | 'navigateTo'
   | 'navAppFallbackHint'
   | 'matchDisclaimer'
+  | 'priceMayDifferAtBranch'
   | 'noProductsIdentifiedInChain'
   | 'chainNoPricesToday'
   | 'matchedLabelPrefix'

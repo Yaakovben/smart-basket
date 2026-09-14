@@ -79,10 +79,12 @@ export async function buildChainTotals(
           } as PriceMatch)),
         };
       }
-      // לרשת "הראשית" (BETA) - יש לנו כבר matchCache, לא לבצע פעם שנייה
+      // לרשת "הראשית" (BETA) - יש לנו כבר matchCache, לא לבצע פעם שנייה.
+      // אבל רק אם אין מיקום משתמש - עם מיקום, צריך מחיר מאומת לסניף הקרוב
+      // (nameMatchCache שהגיע מלמעלה לא לקח סניף בחשבון), כך שחייבים cache טרי.
       const isPrimaryChain = chainId === BETA_CHAIN_ID;
 
-      const chainMatchCache = isPrimaryChain
+      const chainMatchCache = (isPrimaryChain && !nearestBranch)
         ? nameMatchCache
         : await (async () => {
             const cache = new Map<string, NameMatch>();
@@ -90,7 +92,7 @@ export async function buildChainTotals(
               uniqueNames.map(async name => {
                 try {
                   // משתמשים ב-candidates שכבר הובאו - אין פנייה ל-DB
-                  cache.set(name, await matchNormalizedName(name, chainId, chainName, candidatesByName.get(name) || []));
+                  cache.set(name, await matchNormalizedName(name, chainId, chainName, candidatesByName.get(name) || [], nearestBranch?.storeId));
                 } catch {
                   cache.set(name, {
                     normalizedName: '',
