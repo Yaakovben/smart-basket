@@ -211,16 +211,21 @@ export const ProductDetailsModal = memo(({
               </Box>
             </Box>
           ) : (
-            <IconTile
-              emoji={CATEGORY_ICONS[product.category]}
-              color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
-              seedId={product.id}
-              size={76}
-              fontSize={38}
-              ariaLabel={product.category}
-              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem).
-              variant="light"
-            />
+            <Box sx={{
+              animation: imageFailed ? 'none' : undefined,
+              opacity: 1,
+              transition: 'opacity 0.2s ease',
+            }}>
+              <IconTile
+                emoji={CATEGORY_ICONS[product.category]}
+                color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+                seedId={product.id}
+                size={76}
+                fontSize={38}
+                ariaLabel={product.category}
+                variant="light"
+              />
+            </Box>
           )}
         </Box>
         {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;

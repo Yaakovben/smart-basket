@@ -36,6 +36,7 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
   const [transform, setTransform] = useState<Transform>(IDENTITY);
   const [gesturing, setGesturing] = useState(false);
   const [mainLoaded, setMainLoaded] = useState(false);
+  const [mainFailed, setMainFailed] = useState(false);
   const zoomed = transform.scale > 1.01;
 
   useEffect(() => {
@@ -264,17 +265,30 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
           decoding="async"
           draggable={false}
           onLoad={() => setMainLoaded(true)}
+          onError={() => setMainFailed(true)}
           sx={{
             display: 'block',
             maxWidth: '100%', maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: '8px',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-            opacity: mainLoaded || !placeholderSrc ? 1 : 0,
+            boxShadow: mainFailed ? 'none' : '0 8px 40px rgba(0,0,0,0.5)',
+            opacity: mainFailed ? 0 : (mainLoaded || !placeholderSrc ? 1 : 0),
             transition: 'opacity 0.25s ease-out',
             userSelect: 'none', WebkitUserSelect: 'none',
           }}
         />
+        {mainFailed && (
+          <Box sx={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 1, color: 'rgba(255,255,255,0.5)',
+            minWidth: 120, minHeight: 120,
+          }}>
+            <Box component="span" sx={{ fontSize: 48, lineHeight: 1 }}>🖼️</Box>
+            <Box sx={{ fontSize: 13, fontWeight: 500, textAlign: 'center' }}>
+              {t('photoLoadFailed')}
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>,
     document.body,

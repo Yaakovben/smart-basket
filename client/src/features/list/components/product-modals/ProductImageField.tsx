@@ -294,6 +294,8 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                   position: 'absolute', inset: 0,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
                   color: 'text.disabled',
+                  animation: 'sbFadeIn 0.2s ease',
+                  '@keyframes sbFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
                 }}>
                   <BrokenImageRoundedIcon sx={{ fontSize: 26 }} />
                   <Typography sx={{ fontSize: 10, fontWeight: 600, textAlign: 'center', lineHeight: 1.15, px: 0.5 }}>
@@ -302,8 +304,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 </Box>
               ) : (
                 <>
-                  {/* שכבת "טוען" עדינה מתחת לתמונה - shimmer אפרפר ניטרלי
-                      (לא תורכיז - תורכיז שמור *רק* לחיווי ההעלאה). */}
+                  {/* shimmer רק כשהתמונה עדיין לא נטענה */}
                   <Box aria-hidden="true" sx={{
                     position: 'absolute', inset: 0,
                     background: isDark
