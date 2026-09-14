@@ -180,6 +180,16 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
   return null;
 }
 
+// מחזיר שם/כתובת סניף ספציפי לפי (רשת, storeId) - משמש להצגת "הסניף הזול
+// ביותר" (ה-DB יודע רק storeId, לא שם קריא ללקוח). מסתמך על ה-cache הקיים
+// של כל הסניפים, אז לא עולה שאילתת DB נוספת.
+export async function getBranchLabel(chainId: ChainId, storeId: string): Promise<{ branchName: string; city: string } | null> {
+  const all = await getBranches();
+  const b = all.find(x => x.chainId === chainId && x.storeId === storeId);
+  if (!b) return null;
+  return { branchName: b.storeName, city: b.city || '' };
+}
+
 // ולידציה של קואורדינטות שהגיעו מהמשתמש.
 export function parseUserLocation(
   latRaw: unknown,

@@ -1,6 +1,7 @@
 import type { ChainId } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchPriceDAL } from '../dal/branchPrice.dal';
+import { getBranchLabel } from './branches.service';
 import { normalizeProductName, stemHebrew } from '../chains';
 import type { PriceMatch } from './priceComparison.types';
 
@@ -193,6 +194,21 @@ export async function matchNormalizedName(
     }
   }
 
+  // הסניף הזול ביותר ברשת למוצר הזה (b.price/b.cheapestStoreId הם תמיד
+  // הערך הכלל-רשתי המקורי מ-Price.model, גם אם price לעיל הוחלף במחיר
+  // סניף ספציפי) - כדי שהלקוח יוכל לראות שיש מחיר זול יותר במקום אחר.
+  let cheapestBranch: NameMatch['cheapestBranch'];
+  if (b.cheapestStoreId) {
+    try {
+      const label = await getBranchLabel(chainId, b.cheapestStoreId);
+      if (label) {
+        cheapestBranch = { storeId: b.cheapestStoreId, price: b.price, branchName: label.branchName, city: label.city };
+      }
+    } catch {
+      // לא קריטי - לא מפילים את ההתאמה כולה על כשל בשליפת שם הסניף
+    }
+  }
+
   return {
     ...unmatched,
     matched: true,
@@ -206,5 +222,6 @@ export async function matchNormalizedName(
     matchedTokens: best.matchedTokens,
     manufacturerName: b.manufacturerName,
     priceVerifiedAtBranch,
+    cheapestBranch,
   };
 }

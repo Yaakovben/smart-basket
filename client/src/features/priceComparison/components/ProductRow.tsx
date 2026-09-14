@@ -55,6 +55,11 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
     : 0;
   const savingsPct = rawSavingsPct <= IMPLAUSIBLE_SAVINGS_PCT ? rawSavingsPct : 0;
 
+  // "הסניף הזול ביותר" ברשת הזו למוצר הזה - מוצג רק אם הוא בפועל זול יותר
+  // מהמחיר שכבר מוצג (אחרת זה מידע מיותר/חוזר על עצמו).
+  const cheapestBranch = match.cheapestBranch;
+  const hasCheaperBranch = !!cheapestBranch && cheapestBranch.price < match.price - 0.01;
+
   return (
     <Box sx={{
       display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.65, px: 1,
@@ -126,6 +131,16 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
         {!isCheapest && savingsPct > 0 && (
           <Typography sx={{ fontSize: 9, color: 'text.disabled', fontVariantNumeric: 'tabular-nums' }}>
             +{savingsPct}%
+          </Typography>
+        )}
+        {hasCheaperBranch && (
+          <Typography sx={{
+            fontSize: 9, color: '#0D9488', fontWeight: 700,
+            textAlign: 'end', lineHeight: 1.3, maxWidth: 120,
+          }}>
+            {t('cheaperAtBranch')
+              .replace('{price}', cheapestBranch!.price.toFixed(2))
+              .replace('{branch}', cheapestBranch!.branchName)}
           </Typography>
         )}
       </Box>
