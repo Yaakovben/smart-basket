@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
 
@@ -236,7 +237,8 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
           cursor: zoomed ? 'grab' : 'zoom-in',
         }}
       >
-        {placeholderSrc && (
+        {/* placeholder מטושטש — נראה מיידית מהcache */}
+        {placeholderSrc && !mainFailed && (
           <Box
             component="img"
             src={placeholderSrc}
@@ -248,14 +250,23 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
               width: '100%', height: '100%',
               objectFit: 'contain',
               borderRadius: '8px',
-              // מעט בלור עד שהחדה נטענת - מסתיר את הפיקסלים של ההגדלה.
               filter: mainLoaded ? 'none' : 'blur(6px)',
               opacity: mainLoaded ? 0 : 1,
-              transition: 'opacity 0.25s ease-out',
+              transition: 'opacity 0.3s ease-out',
               userSelect: 'none', WebkitUserSelect: 'none',
             }}
           />
         )}
+        {/* ספינר — מוצג רק אחרי שהה קצרה, כדי שלא יבצבץ על תמונות מהירות */}
+        {!mainLoaded && !mainFailed && !placeholderSrc && (
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <CircularProgress size={36} sx={{ color: 'rgba(255,255,255,0.5)' }} />
+          </Box>
+        )}
+        {/* התמונה הסופית החדה */}
         <Box
           component="img"
           ref={imgRef}
@@ -271,20 +282,21 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
             maxWidth: '100%', maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: '8px',
-            boxShadow: mainFailed ? 'none' : '0 8px 40px rgba(0,0,0,0.5)',
-            opacity: mainFailed ? 0 : (mainLoaded || !placeholderSrc ? 1 : 0),
-            transition: 'opacity 0.25s ease-out',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+            opacity: mainLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease-out',
             userSelect: 'none', WebkitUserSelect: 'none',
           }}
         />
+        {/* שגיאה — רק אם הטעינה נכשלה בפועל */}
         {mainFailed && (
           <Box sx={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 1, color: 'rgba(255,255,255,0.5)',
-            minWidth: 120, minHeight: 120,
+            gap: 1.5, color: 'rgba(255,255,255,0.45)',
+            minWidth: 140, minHeight: 140,
           }}>
-            <Box component="span" sx={{ fontSize: 48, lineHeight: 1 }}>🖼️</Box>
-            <Box sx={{ fontSize: 13, fontWeight: 500, textAlign: 'center' }}>
+            <BrokenImageRoundedIcon sx={{ fontSize: 44, opacity: 0.6 }} />
+            <Box sx={{ fontSize: 13, fontWeight: 500, textAlign: 'center', lineHeight: 1.4 }}>
               {t('photoLoadFailed')}
             </Box>
           </Box>
