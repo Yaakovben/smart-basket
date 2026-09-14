@@ -103,6 +103,13 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
       };
       setGesturing(true);
     } else if (e.touches.length === 1) {
+      // מונע מהדפדפן ליצור מאירועי המגע האלה gesture-י "עכבר-תואם" מזויפים
+      // (click/dblclick מדומים, כמנהג נפוץ בדפדפני מובייל ~300ms אחרי מגע
+      // אמיתי) - בלעדיו, dblclick מזויף שמגיע *אחרי* שכבר טיפלנו בהקשה
+      // הכפולה האמיתית כאן (למטה) מפעיל את onDoubleClick של העכבר בשנית
+      // עם transform.scale המעודכן כבר - ומבטל את הזום מיד אחרי שהוגדל,
+      // בדיוק ה"מקטין מייד" שדווח.
+      e.preventDefault();
       const now = Date.now();
       if (now - g.current.lastTap < DOUBLE_TAP_MS) {
         const p = relToCenter(e.touches[0].clientX, e.touches[0].clientY);

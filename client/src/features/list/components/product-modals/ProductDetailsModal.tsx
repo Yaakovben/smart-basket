@@ -7,7 +7,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { cldThumb, cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
+import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -447,7 +447,13 @@ export const ProductDetailsModal = memo(({
       {showPhoto && product.image && (
         <ImageLightbox
           src={cldFull(product.image)}
-          placeholderSrc={cldPreview(product.image)}
+          // cldThumb, לא cldPreview - זו בדיוק הגרסה שכבר מוצגת/בקאש בתמונה
+          // הקטנה של פרטי המוצר (למטה, cldThumb(product.image)), כך
+          // שה-placeholder באמת מופיע מיידית מהקאש בלי בקשת רשת נוספת.
+          // cldPreview הוא URL/טרנספורם שונה (w_800) שאף מסך אחר לא כבר
+          // טוען - "placeholder מיידי מהקאש" לא היה כזה בפועל, ומסך מלא
+          // שחור היה מוצג עד שגם הוא (וגם cldFull המלא) סיימו להיטען מהרשת.
+          placeholderSrc={cldThumb(product.image)}
           alt={product.name}
           onClose={() => setShowPhoto(false)}
         />
