@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-rotate';
 import { Box, Typography, Button, CircularProgress, IconButton } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
@@ -371,14 +372,11 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         borderRadius: fillHeight ? 0 : '14px',
         overflow: 'hidden',
       }}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <MapContainer
           center={ISRAEL_CENTER}
           zoom={ISRAEL_ZOOM}
           zoomControl={false}
-          // אינטראקטיביות מלאה ומפורשת - בלי שום הגבלת תזוזה/זום (אין
-          // maxBounds) כדי שאפשר יהיה לגרור ולשחק עם המפה חופשי לגמרי,
-          // לא רק בתוך גבולות ישראל. inertia עם friction נמוך יותר
-          // (ברירת המחדל 23) - "החלקה" נעימה יותר אחרי גרירה מהירה.
           dragging={true}
           touchZoom={true}
           doubleClickZoom={true}
@@ -389,6 +387,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           inertiaDeceleration={2600}
           minZoom={2}
           maxZoom={19}
+          {...({ rotate: true, touchRotate: true, bearingSnap: 5 } as object)}
           style={{ width: '100%', height: '100%' }}
         >
           <TileLayer
