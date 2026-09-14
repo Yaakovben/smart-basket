@@ -54,6 +54,10 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   // כיוון הגלילה האוטומטית הפעילה כרגע (null = לא גוללים). קיים כדי
   // שה-rAF loop יתחיל/ייעצר *רק* כשהכיוון עצמו משתנה.
   const autoScrollDirRef = useRef<-1 | 0 | 1>(0);
+  // מהירות הגלילה הפעילה כרגע (px/frame, כולל סימן כיוון) - ה-rAF tick
+  // קורא אותה מחדש בכל frame במקום לסגור עליה, כדי שהאצה/האטה לפי מרחק
+  // מהקצה תתעדכן בלי לבטל ולהתחיל loop חדש.
+  const autoScrollSpeedRef = useRef(0);
   const lastMoveTimeRef = useRef(0);
   // מיקומי ה-top של כל השורות (viewport coords) + gap בין שורות, נמדדים
   // *פעם אחת* בתחילת הגרירה. חישוב targetIndex מהם (ולא מ-
@@ -105,7 +109,19 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     // מדידה סטטית של כל השורות *לפני* ש-setDragIndex גורם ל-transform.
     const tops = rowRefs.current.map((el) => (el ? el.getBoundingClientRect().top : 0));
     rowTopsRef.current = tops;
-    const validPitch = tops.length >= 2 && tops[0] > 0 && tops[1] > tops[0] ? tops[1] - tops[0] : rowHeightFallback;
+    // פיץ' (גובה שורה) מהחציון של *כל* הפערים בין שורות סמוכות, לא רק
+    // הפער בין השורה הראשונה לשנייה - ברשימות ארוכות עם גבהי שורה משתנים
+    // (הערה/הרחבה בפריט מסוים) פיץ' שנמדד מזוג בודד היה מייצג רק אותו
+    // זוג, וכל targetIndex שמחושב ביחס אליו התרחק יותר ויותר מהמיקום
+    // האמיתי ככל שגוללים רחוק יותר מהזוג הזה - בדיוק התחושה של "נתקע/
+    // נשבר" בגרירה ארוכה מההתחלה עד הסוף.
+    const gaps: number[] = [];
+    for (let i = 1; i < tops.length; i++) {
+      const gap = tops[i] - tops[i - 1];
+      if (gap > 0) gaps.push(gap);
+    }
+    gaps.sort((a, b) => a - b);
+    const validPitch = gaps.length > 0 ? gaps[Math.floor(gaps.length / 2)] : rowHeightFallback;
     rowPitchRef.current = validPitch;
     startScrollTopRef.current = contentRef.current?.scrollTop ?? 0;
     dragIndexRef.current = index;
@@ -150,21 +166,40 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     // מופעל/מבוטל *רק* כשהכיוון באמת משתנה. touchmove יכול לירות כמה
     // פעמים באותו frame - ביטול+התחלה מחדש של rAF בכל קריאה גרם ל-tick
     // אף פעם לא לרוץ בפועל, והגלילה יצאה stutter-y.
+    // מהירות משתנה לפי עומק החדירה לאזור הגלילה (לא קבועה) - באצבע שנעצרת
+    // ממש בקצה המסך (המקרה השכיח בגרירה ארוכה, כשאין עוד לאן להזיז את
+    // האצבע פיזית) מהירות קבועה ואיטית (6px/frame) הרגישה כאילו "נתקע"
+    // ברשימות ארוכות - קרוב לשפה ממש גוללת הרבה יותר מהר.
     const SCROLL_ZONE = 100;
-    const SCROLL_SPEED = 6;
+    const MIN_SCROLL_SPEED = 6;
+    const MAX_SCROLL_SPEED = 26;
     const container = contentRef.current;
     let dir: -1 | 0 | 1 = 0;
+    let speed = MIN_SCROLL_SPEED;
     if (container) {
       const rect = container.getBoundingClientRect();
-      if (clientY < rect.top + SCROLL_ZONE) dir = -1;
-      else if (clientY > rect.bottom - SCROLL_ZONE) dir = 1;
+      const distFromTop = clientY - rect.top;
+      const distFromBottom = rect.bottom - clientY;
+      if (distFromTop < SCROLL_ZONE) {
+        dir = -1;
+        speed = MIN_SCROLL_SPEED + (1 - Math.max(0, distFromTop) / SCROLL_ZONE) * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED);
+      } else if (distFromBottom < SCROLL_ZONE) {
+        dir = 1;
+        speed = MIN_SCROLL_SPEED + (1 - Math.max(0, distFromBottom) / SCROLL_ZONE) * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED);
+      }
     }
+    autoScrollSpeedRef.current = dir * speed;
     if (dir !== autoScrollDirRef.current) {
       autoScrollDirRef.current = dir;
       if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
       if (dir !== 0 && container) {
-        const speed = dir * SCROLL_SPEED;
-        const tick = () => { container.scrollBy(0, speed); autoScrollRef.current = requestAnimationFrame(tick); };
+        // קורא ל-ref בכל frame (לא סוגר על speed) - כך שהאצה/האטה תוך כדי
+        // החזקה באזור הגלילה (האצבע זזה קצת אבל לא משנה כיוון) תתעדכן בלי
+        // לבטל ולהתחיל rAF loop חדש בכל שינוי מהירות קטן.
+        const tick = () => {
+          container.scrollBy(0, autoScrollSpeedRef.current);
+          autoScrollRef.current = requestAnimationFrame(tick);
+        };
         autoScrollRef.current = requestAnimationFrame(tick);
       }
     }
