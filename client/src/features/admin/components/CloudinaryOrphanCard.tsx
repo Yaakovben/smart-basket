@@ -55,7 +55,7 @@ export const CloudinaryOrphanCard = ({ isDark }: Props) => {
       border: '1px solid', borderColor: 'divider',
     }}>
       <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
-        🧹 ניקוי יתומים מ-Cloudinary
+        🧹 ניקוי קבצים מיותרים מ-Cloudinary
       </Typography>
       <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1.25, lineHeight: 1.5 }}>
         תמונות ב-Cloudinary שאין להן מוצר מתאים ב-DB (נמחק, נכשל, נשכח). אינן נגישות לאף משתמש אך תופסות אחסון ו-credits.
@@ -66,8 +66,8 @@ export const CloudinaryOrphanCard = ({ isDark }: Props) => {
         <Box sx={{ mb: 1.25, p: 1.25, borderRadius: '8px', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9', border: '1px solid', borderColor: 'divider' }}>
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: scan.orphanCount > 0 ? (isDark ? '#FBBF24' : '#B45309') : (isDark ? '#6EE7B7' : '#047857') }}>
             {scan.orphanCount === 0
-              ? '✓ אין יתומים — Cloudinary נקי'
-              : `נמצאו ${scan.orphanCount} יתומים מתוך ${scan.totalCloudinaryResources} קבצים`}
+              ? '✓ אין קבצים מיותרים — Cloudinary נקי'
+              : `נמצאו ${scan.orphanCount} קבצים מיותרים מתוך ${scan.totalCloudinaryResources} קבצים`}
           </Typography>
           {scan.orphanCount > 0 && (
             <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.25 }}>
@@ -82,7 +82,7 @@ export const CloudinaryOrphanCard = ({ isDark }: Props) => {
         <Box sx={{ mb: 1.25, display: 'flex', alignItems: 'center', gap: 0.75 }}>
           <CheckCircleRoundedIcon sx={{ fontSize: 16, color: '#10B981' }} />
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: isDark ? '#6EE7B7' : '#047857' }}>
-            נמחקו {result.deleted} יתומים{result.failed > 0 ? ` · ${result.failed} נכשלו` : ''}
+            נמחקו {result.deleted} קבצים מיותרים{result.failed > 0 ? ` · ${result.failed} נכשלו` : ''}
           </Typography>
         </Box>
       )}
@@ -141,7 +141,7 @@ export const CloudinaryOrphanCard = ({ isDark }: Props) => {
 
       {confirmOpen && scan && (
         <ConfirmModal
-          title={`למחוק ${scan.orphanCount} יתומים מ-Cloudinary?`}
+          title={`למחוק ${scan.orphanCount} קבצים מיותרים מ-Cloudinary?`}
           message={`${scan.orphanCount} קבצים ב-Cloudinary שאין להם מוצר מתאים ב-DB ייחמקו לצמיתות. פעולה זו בלתי הפיכה.`}
           confirmText="מחק לצמיתות"
           onConfirm={() => { setConfirmOpen(false); void handleDelete(); }}
