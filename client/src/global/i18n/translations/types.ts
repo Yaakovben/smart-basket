@@ -429,6 +429,8 @@ export type TranslationKeys =
   | 'convertToPrivateMembersTitle'
   | 'convertToPrivateMembersHint'
   | 'convertToGroupExplain'
+  | 'tipBranchesMapTitle'
+  | 'tipBranchesMapBody'
   | 'convertToPrivateConfirmMessage'
   | 'setGroupPassword'
   // Duplicate product

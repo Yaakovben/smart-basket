@@ -429,6 +429,8 @@ export const en: Translations = {
   convertToPrivateMembersTitle: 'Remove members first',
   convertToPrivateMembersHint: 'Remove all members first — tap the members icon at the top of the list.',
   convertToGroupExplain: 'Converting to a group lets you share this list with other members. Set a 4-digit access code that members will need to enter when joining.',
+  tipBranchesMapTitle: 'Find the nearest branch 📍',
+  tipBranchesMapBody: 'In price comparison, tap the map button to see all branches on a map — with the basket total and distance from your location.',
   convertToPrivateConfirmMessage: 'The list will stop being shared and the group password will be removed. Continue?',
   setGroupPassword: 'Set group password (4 digits)',
   productExists: 'Product exists',

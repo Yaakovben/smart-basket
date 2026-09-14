@@ -429,6 +429,8 @@ export const he: Translations = {
   convertToPrivateMembersTitle: 'יש להסיר חברים קודם',
   convertToPrivateMembersHint: 'לפני המרה לפרטית יש להסיר את כל החברים — לחץ על אייקון החברים בראש הרשימה.',
   convertToGroupExplain: 'הפיכה לקבוצה תאפשר לשתף את הרשימה עם חברים נוספים. הגדר קוד גישה בן 4 ספרות שהחברים יצטרכו להזין כדי להצטרף.',
+  tipBranchesMapTitle: 'מצא את הסניף הכי קרוב אליך 📍',
+  tipBranchesMapBody: 'בהשוואת מחירים יש כפתור מפה — לחץ עליו וראה את כל הסניפים על גבי מפה, עם מחיר הסל ומרחק מהמיקום שלך.',
   convertToPrivateConfirmMessage: 'הרשימה תפסיק להיות משותפת וסיסמת הקבוצה תוסר. להמשיך?',
   setGroupPassword: 'הגדר סיסמת קבוצה (4 ספרות)',
   productExists: 'מוצר קיים',
