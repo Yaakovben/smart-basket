@@ -22,9 +22,9 @@ interface ValidateOptions {
 export function validate(schema: Joi.Schema | ValidateOptions) {
   // קיצור: validate(schema) = validate({ body: schema })
   const options: ValidateOptions =
-    'body' in schema || 'params' in schema || 'query' in schema
-      ? (schema as ValidateOptions)
-      : { body: schema as Joi.Schema };
+    Joi.isSchema(schema)
+      ? { body: schema }
+      : (schema as ValidateOptions);
 
   return (req: Request, _res: Response, next: NextFunction) => {
     const errors: Array<{ field: string; message: string }> = [];
