@@ -4,6 +4,7 @@ import { debugLog } from './debug-log';
 import { getAccessToken, getRefreshToken, setTokens } from './token-storage';
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
+import { consumeLegacyRefreshToken } from './token-storage';
 
 export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
 if (!API_URL) {
@@ -78,9 +79,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   sharedRefreshPromise = (async () => {
     try {
+      // מיגרציה: אם יש refresh token ישן ב-localStorage (סשן מלפני עדכון)
+      // שולחים אותו בגוף הבקשה חד-פעמית; השרת יכיר אותו ויגדיר cookie חדש.
+      // consumeLegacyRefreshToken מוחק את הטוקן הישן מ-localStorage מיד.
+      const legacyToken = consumeLegacyRefreshToken();
+      const body = legacyToken ? { refreshToken: legacyToken } : {};
+
       // ה-refresh token נמצא ב-httpOnly cookie — axios שולח אותו אוטומטית
-      // בזכות withCredentials:true. לא שולחים אותו בגוף הבקשה.
-      const response = await axios.post(`${API_URL}/auth/refresh`, {}, {
+      // בזכות withCredentials:true.
+      const response = await axios.post(`${API_URL}/auth/refresh`, body, {
         timeout: 20000,
         withCredentials: true,
       });
@@ -102,7 +109,8 @@ export async function refreshAccessToken(): Promise<string | null> {
           await new Promise<void>(r => setTimeout(r, 500 * (attempt + 1)));
           try {
             const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {}, {
-              timeout: 20000, withCredentials: true,
+              timeout: 20000,
+              withCredentials: true,
             });
             const { accessToken } = retryResponse.data.data;
             setTokens(accessToken);

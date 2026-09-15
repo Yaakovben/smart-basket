@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { DailyFaithManager } from '../../daily-faith';
@@ -37,7 +37,17 @@ export const AdminDashboard = () => {
   const socketOnlineUserIds = useOnlineUsers();
   // מוחזק כאן פעם אחת (לא בתוך הפאנל) כדי שנקודת הסטטוס על האייקון בכותרת
   // תשקף את אותם הנתונים בלי לירות בקשת רשת כפולה כשפותחים את הפאנל.
-  const aiStatus = useAiStatus();
+  // autoLoad=false: לא נטען מיד ב-mount - מחכה שהמשתמשים (הנתון הקריטי,
+  // ראו useAdminDashboard) יחזרו קודם, כדי לא להתחרות איתם על אותו
+  // pool חיבורים/שרת ולעכב את מה שהמנהל בפועל מחכה לו.
+  const aiStatus = useAiStatus(false);
+  const aiStatusStartedRef = useRef(false);
+  useEffect(() => {
+    if (!loading && !aiStatusStartedRef.current) {
+      aiStatusStartedRef.current = true;
+      aiStatus.load();
+    }
+  }, [loading, aiStatus.load]);
   const isRtl = settings.language === 'he';
 
   const onlineUserIds = useMemo(

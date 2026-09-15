@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
+import { lazy, Suspense, useMemo, useCallback, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
@@ -224,11 +224,17 @@ export const AppRouter = () => {
     addNotification: addPersistedNotification,
   } = useNotifications(user, initialData.notifications, authLoading);
 
-  // הצגת שגיאה כשטעינת רשימות או התראות נכשלת
-  // לא מציג בזמן אימות ראשוני, מונע הודעה מיותרת כשטוקן פג
+  // הצגת שגיאה כשטעינת רשימות או התראות נכשלת — פעם אחת בלבד לכל "פרק שגיאה".
+  // auto-retry ממחזר fetchError בין true→false→true בכל ניסיון; בלי ref היינו
+  // מציגים toast בכל ניסיון כושל — גם אחד בשנייה אם הניסיונות מהירים.
+  const fetchErrorShownRef = useRef(false);
   useEffect(() => {
-    if (!authLoading && (listsFetchError || notificationsFetchError)) {
+    const hasError = !authLoading && !!(listsFetchError || notificationsFetchError);
+    if (hasError && !fetchErrorShownRef.current) {
+      fetchErrorShownRef.current = true;
       showToast(t('errorOccurred'), 'error');
+    } else if (!hasError) {
+      fetchErrorShownRef.current = false;
     }
   }, [authLoading, listsFetchError, notificationsFetchError, showToast, t]);
 

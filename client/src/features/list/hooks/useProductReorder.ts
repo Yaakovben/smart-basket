@@ -55,8 +55,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
       if (p) result.push(p);
     }
     // מוצר שנוסף/הופיע אחרי הכניסה למצב סידור - נספח לסוף.
-    const reorderedIdSet = new Set(reorderedIds);
-    for (const p of items) if (!reorderedIdSet.has(p.id)) result.push(p);
+    for (const p of items) if (!reorderedIds.includes(p.id)) result.push(p);
     return result;
   }, [reorderMode, reorderedIds, items]);
 
@@ -78,7 +77,6 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     orderedItems,
     reorderMode,
     dragIndex: engine.dragIndex,
-    pendingIndex: engine.pendingIndex,
     dragOffsetY: engine.dragOffsetY,
     dragFixedTop: engine.dragFixedTop,
     dragContainerLeft: engine.dragContainerLeft,

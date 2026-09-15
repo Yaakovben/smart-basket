@@ -1,5 +1,4 @@
 import { useMemo, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
 import { Box, Typography, Button } from '@mui/material';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
@@ -33,15 +32,8 @@ interface HomeListContentProps {
   onLeaveList?: (list: List) => void;
   reorderMode: boolean;
   dragIndex: number;
-  // אינדקס הכרטיס ב-long-press (140ms) לפני שהגרירה בפועל מתחילה - נותן
-  // פידבק ויזואלי מיידי ללחיצה, ראו ProductReorderRow.isPending.
-  pendingIndex: number;
   // translateY (px) של הכרטיס הנגרר - עוקב אחרי האצבע 1:1.
   dragOffsetY: number;
-  // מידות לגרירה fixed-position: top ראשוני של הכרטיס הנגרר + מיכל (ראו ProductReorderRow).
-  dragFixedTop: number;
-  dragContainerLeft: number;
-  dragContainerWidth: number;
   // ההזזה (px) שכרטיס שאינו נגרר צריך להחיל כדי לפנות מקום ליעד.
   getRowShift: (index: number) => number;
   rowRefs: RefObject<(HTMLDivElement | null)[]>;
@@ -49,7 +41,7 @@ interface HomeListContentProps {
   onCancelReorder: () => void;
   onSaveOrder: () => void;
   onEnterReorder: () => void;
-  onDragHandleStart: (index: number, e: React.PointerEvent) => void;
+  onDragHandleStart: (index: number, clientY: number, clientX?: number) => void;
   t: (key: TranslationKeys) => string;
 }
 
@@ -76,7 +68,7 @@ const RetryDots = () => (
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
-  reorderMode, dragIndex, pendingIndex, dragOffsetY, dragFixedTop, dragContainerLeft, dragContainerWidth, getRowShift, rowRefs, hasOrderChanges,
+  reorderMode, dragIndex, dragOffsetY, getRowShift, rowRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
   // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
@@ -88,10 +80,17 @@ export const HomeListContent = ({
   // לא רק לכרטיס שבאמת זז).
   const dragHandlers = useMemo(() => {
     if (!reorderMode) return [];
-    return orderedDisplay.map((_, idx) => (e: React.PointerEvent) => {
-      e.stopPropagation();
-      onDragHandleStart(idx, e);
-    });
+    return orderedDisplay.map((_, idx) => ({
+      touch: (e: React.TouchEvent) => {
+        e.stopPropagation();
+        onDragHandleStart(idx, e.touches[0].clientY, e.touches[0].clientX);
+      },
+      mouse: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onDragHandleStart(idx, e.clientY, e.clientX);
+      },
+    }));
   }, [reorderMode, orderedDisplay, onDragHandleStart]);
 
   return (
@@ -338,90 +337,39 @@ export const HomeListContent = ({
         </Box>
         {orderedDisplay.map((l: List, idx: number) => {
           const isDragging = reorderMode && dragIndex === idx;
-          const isPending = reorderMode && pendingIndex === idx;
           // translateY = מעקב מיידי אחרי האצבע לכרטיס הנגרר; קפיצה של
           // גובה-שורה אחד לכרטיסים שמתפנים מקום (getRowShift). זהה למנוע
           // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
           const translateY = isDragging ? dragOffsetY : reorderMode ? getRowShift(idx) : 0;
-
           return (
-            <Box key={l.id}>
-              {/* הכרטיס המקורי - *תמיד* נשאר מחובר ל-DOM, גם בזמן גרירה
-                  (רק משנה מראה לפלייסהולדר). קריטי: זה האלמנט שקיבל את
-                  touchstart - הסרתו מה-DOM תוך כדי המחווה (כמו בגרסה
-                  הקודמת, שהחליפה אותו באלמנט fixed נפרד ב-portal) גרמה
-                  ל-touchmove/touchend הבאים על אותה מחווה להפסיק להיזרק
-                  לגמרי ב-iOS Safari - בדיוק "נתקע ולא זז" מיד בתחילת
-                  הגרירה. ראו אותה הערה ב-ProductReorderRow. */}
-              <Box
-                ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
-                onPointerDown={reorderMode ? dragHandlers[idx] : undefined}
-                sx={isDragging ? {
-                  height: 84, mb: 1, borderRadius: '16px',
-                  bgcolor: 'action.hover', opacity: 0.4,
-                } : {
-                  position: 'relative',
-                  transform: reorderMode ? `translateY(${translateY}px)` : 'none',
-                  // פידבק מיידי ל-long-press (isPending) - עוד לפני שהגרירה
-                  // בפועל מתחילה, כדי שהלחיצה לא תרגיש "מתה" ב-140ms הראשונות.
-                  scale: isPending ? '0.98' : '1',
-                  opacity: isPending ? 0.9 : 1,
-                  zIndex: 1,
-                  willChange: reorderMode ? 'transform' : 'auto',
-                  transition: isPending
-                    ? 'scale 0.1s ease, opacity 0.1s ease'
-                    : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
-                }}
-              >
-                {!isDragging && (
-                  <ListCard
-                    list={l}
-                    isMuted={isGroupMuted(l.id)}
-                    isOwner={l.owner.id === user.id}
-                    onSelect={onSelectList}
-                    onEditList={onEditList}
-                    onDeleteList={onDeleteList}
-                    onLeaveList={onLeaveList}
-                    onToggleMute={onToggleMute}
-                    t={t}
-                    reorderMode={reorderMode}
-                    isDragging={false}
-                  />
-                )}
-              </Box>
-
-              {/* "רוח רפאים" ויזואלית בלבד - עוקבת אחרי האצבע. אלמנט חדש
-                  לגמרי, בלי מאזיני מגע - הגרירה כבר מנוהלת דרך listener-ים
-                  על document. */}
-              {isDragging && createPortal(
-                <Box
-                  aria-hidden="true"
-                  sx={{
-                    position: 'fixed',
-                    top: dragFixedTop + translateY,
-                    // 16px = padding אופקי של contentRef (p: xs:2 -> 8*2px).
-                    left: dragContainerLeft + 16,
-                    width: dragContainerWidth - 32,
-                    zIndex: 1400,
-                    pointerEvents: 'none',
-                  }}
-                >
-                  <ListCard
-                    list={l}
-                    isMuted={isGroupMuted(l.id)}
-                    isOwner={l.owner.id === user.id}
-                    onSelect={onSelectList}
-                    onEditList={onEditList}
-                    onDeleteList={onDeleteList}
-                    onLeaveList={onLeaveList}
-                    onToggleMute={onToggleMute}
-                    t={t}
-                    reorderMode={reorderMode}
-                    isDragging
-                  />
-                </Box>,
-                document.body,
-              )}
+            <Box
+              key={l.id}
+              ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
+              sx={{
+                position: 'relative',
+                transform: reorderMode ? `translateY(${translateY}px)` : 'none',
+                transition: isDragging
+                  ? 'none'
+                  : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                zIndex: isDragging ? 5 : 1,
+                willChange: reorderMode ? 'transform' : 'auto',
+              }}
+            >
+              <ListCard
+                list={l}
+                isMuted={isGroupMuted(l.id)}
+                isOwner={l.owner.id === user.id}
+                onSelect={onSelectList}
+                onEditList={onEditList}
+                onDeleteList={onDeleteList}
+                onLeaveList={onLeaveList}
+                onToggleMute={onToggleMute}
+                t={t}
+                reorderMode={reorderMode}
+                isDragging={isDragging}
+                onRowTouch={dragHandlers[idx]?.touch}
+                onRowMouse={dragHandlers[idx]?.mouse}
+              />
             </Box>
           );
         })}

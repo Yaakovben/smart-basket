@@ -21,9 +21,13 @@ interface ListCardProps {
   t: (key: TranslationKeys) => string;
   reorderMode?: boolean;
   isDragging?: boolean;
+  // גרירה מתחילה מ*כל* מקום בכרטיס (long-press), לא רק מהידית - זהה
+  // בדיוק לגרירת מוצרים (ProductReorderRow). הידית נשארת כרמז ויזואלי.
+  onRowTouch?: (e: React.TouchEvent) => void;
+  onRowMouse?: (e: React.MouseEvent) => void;
 }
 
-export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging }: ListCardProps) => {
+export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, onRowTouch, onRowMouse }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -110,6 +114,8 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
       ...(reorderMode && { touchAction: 'pan-y' }),
     }}
       onClick={handleClick}
+      onTouchStart={reorderMode ? onRowTouch : undefined}
+      onMouseDown={reorderMode ? onRowMouse : undefined}
     >
       {reorderMode && (
         // ידית גרירה - רמז ויזואלי בלבד (הגרירה מתחילה מכל הכרטיס, כמו
