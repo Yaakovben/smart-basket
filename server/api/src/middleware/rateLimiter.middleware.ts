@@ -106,7 +106,7 @@ export const passwordChangeLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// הגבלת הצטרפות - 10 ניסיונות ל-15 דקות
+// הגבלת הצטרפות - 10 ניסיונות ל-15 דקות פר-משתמש
 // מונע ניחוש קודי הזמנה
 export const joinGroupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -114,6 +114,25 @@ export const joinGroupLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many join attempts, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
+// הגבלת ניחוש per-inviteCode - 20 ניסיונות ל-15 דקות על אותו קוד ספציפי.
+// משלים את joinGroupLimiter (שמגביל per-user): תוקף שיוצר חשבונות מרובים
+// לא יוכל לנחש סיסמת קבוצה ספציפית גם עם משתמשים שונים.
+export const inviteCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req: Request) => {
+    const code = (req.body as { inviteCode?: string })?.inviteCode ?? 'unknown';
+    return `invite:${code}`;
+  },
+  message: {
+    success: false,
+    message: 'Too many attempts for this invite code, please try again later',
   },
   standardHeaders: true,
   legacyHeaders: false,

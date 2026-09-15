@@ -17,7 +17,7 @@ import {
   removeMember,
   toggleMemberAdmin,
 } from '../controllers/list.controller';
-import { authenticate, validate, joinGroupLimiter } from '../middleware';
+import { authenticate, validate, joinGroupLimiter, inviteCodeLimiter } from '../middleware';
 import { listValidator } from '../validators';
 
 const router = Router();
@@ -29,7 +29,7 @@ router.get('/', getLists);
 router.post('/', validate(listValidator.create), createList);
 
 // חייב לבוא לפני /:id כדי ש-Express לא יתפוס את "join" / "templates" כמזהה
-router.post('/join', joinGroupLimiter, validate(listValidator.join), joinGroup);
+router.post('/join', joinGroupLimiter, inviteCodeLimiter, validate(listValidator.join), joinGroup);
 
 // === Item ===
 router.get('/:id', validate({ params: listValidator.params }), getList);

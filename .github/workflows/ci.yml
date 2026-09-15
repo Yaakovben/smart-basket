@@ -40,9 +40,11 @@ jobs:
       - name: TypeScript check
         run: npx tsc -b
 
-      - name: Lint (informational - does not fail the build)
+      - name: Lint
         run: npm run lint
-        continue-on-error: true
+
+      - name: Security audit
+        run: npm audit --audit-level=high
 
       - name: Build
         run: npm run build

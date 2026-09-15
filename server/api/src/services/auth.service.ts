@@ -77,7 +77,7 @@ export async function register(
   });
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
-  return { user: user.toJSON() as IUserResponse, tokens };
+  return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }
 
 /**
@@ -96,7 +96,7 @@ export async function login(
   if (!isMatch) throw AuthError.invalidCredentials();
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
-  return { user: user.toJSON() as IUserResponse, tokens };
+  return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }
 
 /**
@@ -115,13 +115,24 @@ export async function googleAuth(
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-  // אימות audience מול Google tokeninfo הוסר - הוא שבר login אמיתי בפרודקשן
-  // (ככל הנראה aud/azp שהוחזר מ-tokeninfo לא תאם בפועל את GOOGLE_CLIENT_ID
-  // המוגדר בשרת, או שהקריאה הנוספת ל-Google עצמה הייתה לא אמינה מספיק
-  // כדי לחסום עליה כל login). התיקון היה אמור לסגור פער אבטחה תיאורטי
-  // (confused deputy), אבל חסימת משתמשים אמיתיים חמורה יותר מהסיכון
-  // התיאורטי. TODO: לממש מחדש בזהירות - קודם ללוג בלבד (בלי לחסום) ולוודא
-  // בפועל שה-aud/azp שחוזר מ-Google תואם למה שמוגדר בשרת, לפני שחוסמים.
+  // בדיקת audience ב-fire-and-forget: רק לוג, בלי חסימה.
+  // אחרי שנוודא בפרודקשן שה-aud/azp תואם תמיד ל-GOOGLE_CLIENT_ID — נוסיף חסימה.
+  fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
+    { signal: AbortSignal.timeout(5000) }
+  )
+    .then(r => r.json())
+    .then((info: unknown) => {
+      const ti = info as { aud?: string; azp?: string; error?: string };
+      const expected = env.GOOGLE_CLIENT_ID;
+      const matches = ti.aud === expected || ti.azp === expected;
+      if (!matches) {
+        console.warn('[googleAuth] audience mismatch', {
+          aud: ti.aud, azp: ti.azp, expected, error: ti.error,
+        });
+      }
+    })
+    .catch(() => { /* tokeninfo לא קריטי */ });
 
   // שליפת פרטי משתמש מ-Google
   const response = await fetch(
@@ -163,5 +174,5 @@ export async function googleAuth(
   }
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent);
-  return { user: user.toJSON() as IUserResponse, tokens };
+  return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }

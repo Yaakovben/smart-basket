@@ -1,4 +1,4 @@
-import { useCallback, useMemo, type RefObject } from 'react';
+import { useCallback, useMemo, useState, type RefObject } from 'react';
 import type { List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { authApi } from '../../../services/api';
@@ -29,6 +29,11 @@ export function useListReorder(
   showToast: (message: string, type?: ToastType) => void,
   t: (key: TranslationKeys) => string,
 ) {
+  // מכריח re-render כשה-rollback למטה קורה אחרי שהקומפוננטה כבר סיימה
+  // לרנדר (בתוך .catch אסינכרוני) - מוטציה על user.listOrder לבדה לא
+  // מספיקה כדי שהתצוגה תתעדכן, כי אין setState מלווה.
+  const [, forceRender] = useState(0);
+
   // שמירה אופטימית: מעדכנים את user.listOrder מיד (התצוגה מתעדכנת) וה-API
   // רץ ברקע. כשל - החזרת הסדר הקודם + טוסט שגיאה.
   const persistOrder = useCallback((orderedIds: string[]) => {
@@ -42,6 +47,7 @@ export function useListReorder(
       .catch(() => {
         user.listOrder = prev;
         showToast(t('errorOccurred'), 'error');
+        forceRender((n) => n + 1);
       });
   }, [user, showToast, t]);
 
@@ -68,6 +74,9 @@ export function useListReorder(
     reorderMode,
     dragIndex: engine.dragIndex,
     dragOffsetY: engine.dragOffsetY,
+    dragFixedTop: engine.dragFixedTop,
+    dragContainerLeft: engine.dragContainerLeft,
+    dragContainerWidth: engine.dragContainerWidth,
     getRowShift: engine.getRowShift,
     rowRefs: engine.rowRefs,
     hasOrderChanges: engine.hasChanges,

@@ -261,9 +261,15 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // תמיד יהיה עדכני כשצריך.
   const selectionModeRef = useRef(selectionMode);
   const exitSelectionModeRef = useRef(exitSelectionMode);
+  // items (המקור ל-useProductReorder) הם ללא סינון חיפוש/טאב - שינוי filter/
+  // search תוך כדי גרירה מחליף את items מתחת לרגליים ומבלבל את אינדקסי
+  // הגרירה (ראו useProductReorder/useDragReorder) - נועלים אותם כל עוד
+  // reorderMode פעיל.
+  const reorderModeRef = useRef(reorderMode);
   useEffect(() => {
     selectionModeRef.current = selectionMode;
     exitSelectionModeRef.current = exitSelectionMode;
+    reorderModeRef.current = reorderMode;
   });
 
   // callbacks יציבים לכותרת - לא משתנים בין renders אלא אם התלות האמיתית משתנה
@@ -272,9 +278,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     onBack();
   }, [onBack]);
   const stableSetFilter = useCallback((f: Parameters<typeof setFilter>[0]) => {
+    if (reorderModeRef.current) return;
     if (selectionModeRef.current) exitSelectionModeRef.current();
     setFilter(f);
   }, [setFilter]);
+  const stableSetSearch = useCallback((s: string) => {
+    if (reorderModeRef.current) return;
+    setSearch(s);
+  }, [setSearch]);
   const stableEditList = useCallback(() => {
     if (selectionModeRef.current) exitSelectionModeRef.current();
     handleEditList();
@@ -422,7 +433,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         isOwner={isOwner}
         onBack={stableOnBack}
         onFilterChange={stableSetFilter}
-        onSearchChange={setSearch}
+        onSearchChange={stableSetSearch}
         onEditList={stableEditList}
         onDeleteList={stableDeleteList}
         onToggleMute={stableToggleMute}

@@ -17,7 +17,9 @@ import {
   createNotificationsForListMembers,
 } from './notification.service';
 import { transformList } from './list-transform.helper';
+import { memberIdsOf } from './list-access.helper';
 import { publishMemberKicked } from './redisPublisher.service';
+import { invalidateInsightsCache } from './insights.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 
@@ -60,11 +62,22 @@ export async function joinGroup(
       },
     }
   );
-  if (!updated) throw ConflictError.alreadyMember();
+  if (!updated) {
+    // ה-update האטומי לא תפס אף מסמך - או שהרשימה נמחקה בין ה-findByInviteCode
+    // למעלה לבין כאן (race), או שהמשתמש כבר הצטרף בבקשה מקבילה. בודקים איזה
+    // מהשניים קרה כדי להחזיר שגיאה נכונה במקום "כבר חבר" גורף.
+    const stillExists = await ListDAL.findById(list._id.toString());
+    if (!stillExists) throw NotFoundError.list();
+    throw ConflictError.alreadyMember();
+  }
 
   // התראה לחברי הקבוצה ברקע
   createNotificationsForListMembers(updated._id.toString(), 'join', userId, {})
     .catch((err: unknown) => logger.warn('Failed to create join notifications:', err));
+
+  // groupStats (מספר חברים, תורם מוביל) משתנה עבור כל חברי הרשימה, לא רק
+  // המצטרף - מנקים cache לכולם.
+  for (const id of memberIdsOf(updated)) invalidateInsightsCache(id);
 
   return transformList(updated);
 }
@@ -82,7 +95,10 @@ export async function leaveGroup(listId: string, userId: string): Promise<void> 
   const isMember = list.members.some(m => m.user.toString() === userId);
   if (!isMember) throw ForbiddenError.noAccess();
 
-  await ListDAL.removeMember(listId, userId);
+  const memberIdsBeforeLeave = memberIdsOf(list);
+
+  const updatedList = await ListDAL.removeMember(listId, userId);
+  if (!updatedList) throw NotFoundError.list();
 
   // התראה - לא מכשילה את פעולת העזיבה
   try {
@@ -90,6 +106,8 @@ export async function leaveGroup(listId: string, userId: string): Promise<void> 
   } catch (err: unknown) {
     logger.warn('Failed to create leave notification:', { listId, userId, error: err });
   }
+
+  for (const id of memberIdsBeforeLeave) invalidateInsightsCache(id);
 }
 
 /**
@@ -118,6 +136,8 @@ export async function removeMember(
 
   const memberExists = list.members.some(m => m.user.toString() === memberId);
   if (!memberExists) throw NotFoundError.member();
+
+  const memberIdsBeforeRemove = memberIdsOf(list);
 
   // שליפת פרטים להתראה לפני ההסרה
   const [member, actor] = await Promise.all([
@@ -149,6 +169,8 @@ export async function removeMember(
   // לקבל/לשדר אירועי מוצרים בזמן אמת לרשימה שהוא כבר לא חבר בה.
   // no-op אם Redis לא מוגדר (single-instance mode).
   publishMemberKicked(listId, memberId).catch((err: unknown) => logger.warn('Failed to publish member:kicked:', err));
+
+  for (const id of memberIdsBeforeRemove) invalidateInsightsCache(id);
 
   return transformList(updatedList);
 }

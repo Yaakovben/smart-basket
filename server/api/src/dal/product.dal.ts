@@ -158,8 +158,12 @@ export const ProductDAL = {
   // שגם מיון השרת (position:1) יישאר עקבי - אבל הלקוח ממילא ממיין לפי
   // קטגוריה כש-list.productsManuallyOrdered=false.
   async reorderProducts(listId: string, productIds: string[], manual = true): Promise<void> {
-    const base = manual ? 0 : Date.now();
     const step = manual ? 1 : 1000;
+    // manual=false: הפוזיציות חייבות להסתיים לא יאוחר מ-"עכשיו", לא להתחיל
+    // ממנו - אחרת מוצר שנוצר באמצע הפעולה (position=Date.now() ב-createProduct)
+    // יכול לקבל position קטן מכמה מהפוזיציות ה"עתידיות" שהוקצו כאן ולהיתקע
+    // באמצע הרשימה במקום בסוף.
+    const base = manual ? 0 : Date.now() - productIds.length * step;
     const bulkOps = productIds.map((id, index) => ({
       updateOne: {
         filter: { _id: new mongoose.Types.ObjectId(id), listId: new mongoose.Types.ObjectId(listId) },

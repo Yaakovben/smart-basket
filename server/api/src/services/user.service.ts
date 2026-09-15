@@ -21,7 +21,7 @@ import type { IUserResponse, ISavedListResponse } from '../types';
 export async function getProfile(userId: string): Promise<IUserResponse> {
   const user = await UserDAL.findById(userId);
   if (!user) throw NotFoundError.user();
-  return user.toJSON() as IUserResponse;
+  return user.toJSON() as unknown as IUserResponse;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function updateProfile(
   const user = await UserDAL.updateProfile(userId, data);
   if (!user) throw NotFoundError.user();
 
-  return user.toJSON() as IUserResponse;
+  return user.toJSON() as unknown as IUserResponse;
 }
 
 /**

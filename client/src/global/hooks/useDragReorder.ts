@@ -236,16 +236,18 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     autoScrollDirRef.current = 0;
     const from = dragIndexRef.current;
     const to = targetIndexRef.current;
-    if (from >= 0 && to >= 0 && from !== to) {
-      setReorderedIds((prev) => {
-        if (!prev) return prev;
-        const next = [...prev];
-        const [moved] = next.splice(from, 1);
-        next.splice(to, 0, moved);
-        return next;
-      });
+    setReorderedIds((prev) => {
+      if (!prev) return prev;
+      // אם רשימת הפריטים השתנתה תוך כדי הגרירה (למשל חבר קבוצה מחק מוצר
+      // בזמן אמת) - from/to שנמדדו בתחילת הגרירה עלולים כבר לא להתאים
+      // לאורך הרשימה הנוכחי. מוותרים על ה-drop הזה במקום לסלף את הסדר.
+      if (from < 0 || to < 0 || from >= prev.length || to >= prev.length || from === to) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
       haptic('medium'); // "נחיתה" מספקת של השורה במקום החדש
-    }
+      return next;
+    });
     dragIndexRef.current = -1;
     targetIndexRef.current = -1;
     setDragIndex(-1);

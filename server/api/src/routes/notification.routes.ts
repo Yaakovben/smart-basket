@@ -23,7 +23,7 @@ router.use(authenticate);
 
 // === נתיבי משתמש ===
 router.get('/', validate({ query: notificationValidator.getAll }), getNotifications);
-router.get('/unread-count', getUnreadCount);
+router.get('/unread-count', validate({ query: notificationValidator.getAll }), getUnreadCount);
 router.put('/read-all', validate(notificationValidator.markAllRead), markAllAsRead);
 router.put('/:id/read', validate({ params: notificationValidator.params }), markAsRead);
 
