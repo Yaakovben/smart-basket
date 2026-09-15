@@ -10,6 +10,10 @@ import { haptic, safeStorage } from '../../../global/helpers';
 const HINT_SHOW_DELAY_MS = 700;
 const HINT_AUTOHIDE_MS = 7000;
 const NEW_BADGE_KEY = 'sb_ai_fab_used';
+// כמה פעמים מציגים את הרמז הטקסטואלי "שאל את ה-AI" - לא בכל פתיחת דף
+// הבית (זה הציק), רק בפעמים הראשונות עד שהמשתמש כבר מכיר את הכפתור.
+const HINT_SHOWN_COUNT_KEY = 'sb_ai_fab_hint_count';
+const HINT_MAX_SHOWS = 2;
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
 // בר הניווט התחתון. Portal ל-document.body כמו HomeBottomNav, כדי לעקוף
@@ -24,8 +28,12 @@ export const AiAssistantFab = () => {
   // עד שרואה את הרמז הטקסטואלי (שנעלם אחרי 7ש' ועלול לפספס משתמש שלא שם לב).
   const [showNewBadge, setShowNewBadge] = useState(() => safeStorage.get(NEW_BADGE_KEY) !== 'true');
 
-  // רמז טקסט "שאל את ה-AI" - מוצג בכל פתיחת דף הבית, נעלם אחרי 7 שניות.
+  // רמז טקסט "שאל את ה-AI" - רק ב-HINT_MAX_SHOWS הפעמים הראשונות שדף הבית
+  // נפתח (לא בכל פתיחה - זה כבר הציק), נעלם אחרי 7 שניות.
   useEffect(() => {
+    const shownCount = Number(safeStorage.get(HINT_SHOWN_COUNT_KEY) ?? '0');
+    if (shownCount >= HINT_MAX_SHOWS) return;
+    safeStorage.set(HINT_SHOWN_COUNT_KEY, String(shownCount + 1));
     const showTimer = window.setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     const hideTimer = window.setTimeout(() => setShowHint(false), HINT_SHOW_DELAY_MS + HINT_AUTOHIDE_MS);
     return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer); };
