@@ -31,10 +31,9 @@ function reportAuthDiagnostic(reason: string, context: Record<string, unknown>) 
 // timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
 const apiClient = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
   timeout: 60000,
+  withCredentials: true, // שולח את ה-httpOnly refresh cookie לנתיבי /api/auth
 });
 
 // ===== רענון טוקן מרכזי =====
@@ -78,73 +77,46 @@ export async function refreshAccessToken(): Promise<string | null> {
   if (sharedRefreshPromise) return sharedRefreshPromise;
 
   sharedRefreshPromise = (async () => {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) return null;
-
     try {
-      // שימוש ב axios ישיר (לא apiClient) למניעת interceptor רקורסיבי
-      // timeout ארוך כמו ב-apiClient (ראו שורה 34) - 10 שניות היה מספיק
-      // רק לרוב המקרים, אבל Render Free cold start יכול לקחת 30-50 שניות
-      // (ראו הערה למעלה). ניסיון רענון שנקטע ב-timeout כאן מוחזר כ-null
-      // בלי לנקות טוקנים (רואים למטה, timeout לא מזוהה כ-401/403/409),
-      // אבל זה מבזבז את "הניסיון הראשון" בלי סיכוי אמיתי להצליח כשהשרת
-      // עדיין מתעורר - בדיוק ברגע הכי קריטי, פתיחת אפליקציה אחרי שנסגרה.
-      const response = await axios.post(`${API_URL}/auth/refresh`, {
-        refreshToken,
-      }, { timeout: 20000 });
+      // ה-refresh token נמצא ב-httpOnly cookie — axios שולח אותו אוטומטית
+      // בזכות withCredentials:true. לא שולחים אותו בגוף הבקשה.
+      const response = await axios.post(`${API_URL}/auth/refresh`, {}, {
+        timeout: 20000,
+        withCredentials: true,
+      });
 
-      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-      setTokens(accessToken, newRefreshToken);
+      const { accessToken } = response.data.data;
+      setTokens(accessToken);
       return accessToken;
     } catch (error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-      // 401/403: הטוקן לא תקף (או ייתכן שטאב/הקשר אחר כבר סיבב אותו).
-      // 409: השרת מבחין מפורשות בין "לא תקף" ל"race מול רענון מקביל שכבר
-      // סובב את הטוקן" (ראו auth.controller.ts + token.service.ts,
-      // RefreshResult) - חובה לנסות שוב, ואסור לנקות טוקנים על 409 בלבד
-      // אפילו אם כל הניסיונות נכשלים, כי זה לא מוכיח שהטוקן לא תקף.
+      // 401/403: הטוקן לא תקף (או race עם רענון מקביל שכבר סיבב).
+      // 409: race — חובה לנסות שוב, לא מסיקים כשל.
       if (status === 401 || status === 403 || status === 409) {
-        // אם המכשיר אופליין - השרת לא זמין, לא מנקים טוקנים
         if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
 
-        // race condition בין טאבים/הקשרים (למשל PWA מותקן + טאב Safari רגיל
-        // באותו origin, שניהם עם אותו refresh token): אחד מסובב, השני מקבל
-        // 401/409 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
-        // תקוע מאחורי cold-start של Render (יכול לקחת 30-50 שניות) - ננסה
-        // כמה פעמים עם backoff לפני שמסיקים שהטוקן באמת לא תקף ומנקים.
+        // race condition: ננסה שוב כמה פעמים עם backoff
         let lastStatus: number | undefined = status;
         for (let attempt = 0; attempt < 3; attempt++) {
           await new Promise<void>(r => setTimeout(r, 500 * (attempt + 1)));
-          const currentRefreshToken = getRefreshToken();
-          if (!currentRefreshToken) break;
           try {
-            const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {
-              refreshToken: currentRefreshToken,
-            }, { timeout: 20000 });
-            const { accessToken, refreshToken: newRefreshToken } = retryResponse.data.data;
-            setTokens(accessToken, newRefreshToken);
+            const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {}, {
+              timeout: 20000, withCredentials: true,
+            });
+            const { accessToken } = retryResponse.data.data;
+            setTokens(accessToken);
             return accessToken;
           } catch (retryError) {
             const retryStatus = (retryError as AxiosError).response?.status;
             lastStatus = retryStatus;
-            // שגיאת רשת/שרת (לא 401/403/409) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
             if (retryStatus !== 401 && retryStatus !== 403 && retryStatus !== 409) return null;
-            // עדיין נדחה - ייתכן שהצד המנצח עדיין לא סיים, ננסה שוב
           }
         }
-        // לא מנקים טוקנים אף פעם באופן אוטומטי כאן - רק מדווחים לאבחון.
-        // אחרי סבב ארוך של false positives (race conditions, cold-start,
-        // reload-ים לא-מבוקרים) שהוציאו משתמשים מחוברים לגמרי מהמערכת,
-        // ההחלטה המפורשת היא: היחיד שיכול "להוציא" משתמש הוא logout
-        // מפורש (authApi.logout / deleteAccount). כשל רענון אמיתי פשוט
-        // ישאיר את המשתמש עם טוקן ישן - בקשות ה-API הבאות ימשיכו לנסות
-        // לרענן, ולא יקרה איפוס סשן בשקט.
         if (lastStatus === 401 || lastStatus === 403) {
           reportAuthDiagnostic('refresh_exhausted_not_clearing', { initialStatus: status, finalStatus: lastStatus });
         }
       }
-      // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
     }
   })();

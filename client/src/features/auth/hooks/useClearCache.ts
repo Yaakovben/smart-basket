@@ -15,12 +15,11 @@ export const useClearCache = () => {
         const names = await caches.keys();
         await Promise.all(names.map(n => caches.delete(n)));
       }
-      // שימור טוקנים - לא רוצים שניקוי מטמון יגרום גם להתנתקות
+      // שימור access token - לא רוצים שניקוי מטמון יגרום גם להתנתקות
+      // (refresh token נמצא ב-httpOnly cookie ולא מושפע מ-localStorage.clear)
       const access = localStorage.getItem('accessToken');
-      const refresh = localStorage.getItem('refreshToken');
       localStorage.clear();
       if (access) localStorage.setItem('accessToken', access);
-      if (refresh) localStorage.setItem('refreshToken', refresh);
       sessionStorage.clear();
       if ('indexedDB' in window && indexedDB.databases) {
         const dbs = await indexedDB.databases();

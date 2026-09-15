@@ -1,10 +1,10 @@
-import apiClient, { setTokens, clearTokens, getRefreshToken, getAccessToken, setAuthInProgress } from './client';
+import apiClient, { setTokens, clearTokens, getAccessToken, setAuthInProgress } from './client';
 import type { User, AuthResponse, LoginData, CheckEmailResponse, RegisterData } from './types/auth.types';
 import type { SavedList } from '../../global/types';
 
-// שמירת טוקנים עם אימות שנשמרו (דפדפנים/extensions עלולים לחסום localStorage)
-const saveAndVerifyTokens = (accessToken: string, refreshToken: string): void => {
-  setTokens(accessToken, refreshToken);
+// שמירת access token עם אימות שנשמר (refresh token נמצא ב-httpOnly cookie)
+const saveAndVerifyTokens = (accessToken: string): void => {
+  setTokens(accessToken);
   const savedToken = getAccessToken();
   if (!savedToken) {
     throw new Error('Failed to save authentication tokens. Please check if localStorage is enabled.');
@@ -25,7 +25,7 @@ export const authApi = {
       if (!responseData?.user || !responseData?.tokens) {
         throw new Error('Invalid server response');
       }
-      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      saveAndVerifyTokens(responseData.tokens.accessToken);
       return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       // השהיה קצרה כדי לוודא שעדכוני state הושלמו לפני redirect
@@ -41,7 +41,7 @@ export const authApi = {
       if (!responseData?.user || !responseData?.tokens) {
         throw new Error('Invalid server response');
       }
-      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      saveAndVerifyTokens(responseData.tokens.accessToken);
       return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       setTimeout(() => setAuthInProgress(false), 100);
@@ -56,7 +56,7 @@ export const authApi = {
       if (!responseData?.user || !responseData?.tokens) {
         throw new Error('Invalid server response');
       }
-      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      saveAndVerifyTokens(responseData.tokens.accessToken);
       return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       setTimeout(() => setAuthInProgress(false), 100);
@@ -64,13 +64,11 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    const refreshToken = getRefreshToken();
-    if (refreshToken) {
-      try {
-        await apiClient.post('/auth/logout', { refreshToken });
-      } catch {
-        // התעלמות משגיאות ב-logout
-      }
+    try {
+      // השרת קורא את ה-refresh token מה-httpOnly cookie ומבטל אותו
+      await apiClient.post('/auth/logout');
+    } catch {
+      // התעלמות משגיאות ב-logout
     }
     clearTokens();
   },
