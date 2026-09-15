@@ -19,9 +19,8 @@
  * קודי WFileType: 1=Stores, 2=Price, 3=Promo, 4=PriceFull, 5=PromoFull
  */
 
-import axios from 'axios';
 import { logger } from '../../../config/logger';
-import { insecureHttpsAgent } from './insecureAgent';
+import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -72,12 +71,9 @@ async function listFiles(
     WStore: '',
   });
   const url = `${baseUrl}/MainIO_Hok.aspx?${params.toString()}`;
-  const res = await axios.get(url, {
+  const res = await axiosGetWithTlsFallback(url, {
     timeout: 30_000,
-    httpsAgent: insecureHttpsAgent,
-    // Bina לא מצריך Cookie אבל לפעמים בודק User-Agent
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'application/json,text/plain,*/*' },
-    // קצת רשתות מחזירות תעודות חלקיות - תואם להגדרת publishedPrices
     validateStatus: s => s < 500,
   });
   if (res.status >= 400) throw new Error(`bina_list_http_${res.status}`);
@@ -94,9 +90,8 @@ async function resolveAndDownload(
   fileName: string,
 ): Promise<Buffer> {
   const resolveUrl = `${baseUrl}/Download.aspx?FileNm=${encodeURIComponent(fileName)}`;
-  const resolveRes = await axios.get<BinaSPathEntry[]>(resolveUrl, {
+  const resolveRes = await axiosGetWithTlsFallback<BinaSPathEntry[]>(resolveUrl, {
     timeout: 30_000,
-    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'application/json' },
     validateStatus: s => s < 500,
   });
@@ -106,10 +101,9 @@ async function resolveAndDownload(
     throw new Error('bina_resolve_no_spath');
   }
   const sPath = resolvedPaths[0].SPath;
-  const fileRes = await axios.get<ArrayBuffer>(sPath, {
+  const fileRes = await axiosGetWithTlsFallback<ArrayBuffer>(sPath, {
     timeout: 60_000,
     responseType: 'arraybuffer',
-    httpsAgent: insecureHttpsAgent,
     maxContentLength: MAX_COMPRESSED_BYTES,
     maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },

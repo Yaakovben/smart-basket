@@ -14,9 +14,8 @@
  * ה-XML בפורמט סטנדרטי (Root/Items/Item) - reuse של parseXmlBuffer/parseStoresXml.
  */
 
-import axios from 'axios';
 import { logger } from '../../../config/logger';
-import { insecureHttpsAgent } from './insecureAgent';
+import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -44,9 +43,8 @@ interface VictoryFile {
 
 async function listFiles(): Promise<VictoryFile[]> {
   const url = `${PORTAL_BASE}/webapi/api/getfiles?edi=${VICTORY_CHAIN_ID}`;
-  const r = await axios.get<VictoryFile[]>(url, {
+  const r = await axiosGetWithTlsFallback<VictoryFile[]>(url, {
     timeout: FETCH_TIMEOUT_MS,
-    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', Accept: 'application/json' },
   });
   if (!Array.isArray(r.data)) throw new Error('victory_files_not_array');
@@ -55,9 +53,8 @@ async function listFiles(): Promise<VictoryFile[]> {
 
 async function listBranches(): Promise<VictoryBranch[]> {
   const url = `${PORTAL_BASE}/webapi/api/getbranches?edi=${VICTORY_CHAIN_ID}`;
-  const r = await axios.get<VictoryBranch[]>(url, {
+  const r = await axiosGetWithTlsFallback<VictoryBranch[]>(url, {
     timeout: FETCH_TIMEOUT_MS,
-    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', Accept: 'application/json' },
   });
   if (!Array.isArray(r.data)) throw new Error('victory_branches_not_array');
@@ -66,10 +63,9 @@ async function listBranches(): Promise<VictoryBranch[]> {
 
 async function downloadFile(fileName: string): Promise<Buffer> {
   const url = `${PORTAL_BASE}/webapi/${VICTORY_CHAIN_ID}/${fileName}`;
-  const r = await axios.get<ArrayBuffer>(url, {
+  const r = await axiosGetWithTlsFallback<ArrayBuffer>(url, {
     timeout: DOWNLOAD_TIMEOUT_MS,
     responseType: 'arraybuffer',
-    httpsAgent: insecureHttpsAgent,
     maxContentLength: MAX_COMPRESSED_BYTES,
     maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },

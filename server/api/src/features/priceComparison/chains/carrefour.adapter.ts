@@ -15,9 +15,8 @@
  * אנחנו ממחזרים את parseXmlBuffer/parseStoresXml מהפקטורי הקיים.
  */
 
-import axios from 'axios';
 import { logger } from '../../../config/logger';
-import { insecureHttpsAgent } from './insecureAgent';
+import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -37,9 +36,8 @@ interface CarrefourFile {
 
 // מושך את דף הפורטל ומחלץ ממנו path + files שמוטמעים ב-JS.
 async function fetchIndex(): Promise<{ path: string; files: CarrefourFile[] }> {
-  const res = await axios.get<string>(`${PORTAL_BASE}/`, {
+  const res = await axiosGetWithTlsFallback<string>(`${PORTAL_BASE}/`, {
     timeout: FETCH_TIMEOUT_MS,
-    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'text/html' },
     responseType: 'text',
   });
@@ -114,10 +112,9 @@ function pickLatestStoresFile(files: CarrefourFile[]): string | null {
 
 async function downloadFile(path: string, filename: string): Promise<Buffer> {
   const url = `${PORTAL_BASE}/${path}/${filename}`;
-  const res = await axios.get<ArrayBuffer>(url, {
+  const res = await axiosGetWithTlsFallback<ArrayBuffer>(url, {
     timeout: DOWNLOAD_TIMEOUT_MS,
     responseType: 'arraybuffer',
-    httpsAgent: insecureHttpsAgent,
     maxContentLength: MAX_COMPRESSED_BYTES,
     maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },
