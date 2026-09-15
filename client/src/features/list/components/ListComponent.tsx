@@ -240,17 +240,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // יצירת פונקציה חדשה בכל רינדור ששוברת את ה-memo של השורות.
   const reorderDragHandlers = useMemo(() => {
     if (!reorderMode) return [];
-    return reorderOrderedItems.map((_, idx) => ({
-      touch: (e: React.TouchEvent) => {
-        e.stopPropagation();
-        reorderHandleDragStart(idx, e.touches[0].clientY, e.touches[0].clientX);
-      },
-      mouse: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        reorderHandleDragStart(idx, e.clientY, e.clientX);
-      },
-    }));
+    return reorderOrderedItems.map((_, idx) => (e: React.PointerEvent) => {
+      e.stopPropagation();
+      reorderHandleDragStart(idx, e);
+    });
   }, [reorderMode, reorderOrderedItems, reorderHandleDragStart]);
 
   // refs לגישה לערכים עדכניים מתוך useCallbacks יציבים - מונע יצירת closures
@@ -630,8 +623,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 isPending={reorderPendingIndex === idx}
                 translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
                 rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
-                onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
-                onRowMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
+                onRowPointerDown={reorderDragHandlers[idx] ?? (() => {})}
                 dragFixedTop={reorderDragFixedTop}
                 dragContainerLeft={reorderDragContainerLeft}
                 dragContainerWidth={reorderDragContainerWidth}

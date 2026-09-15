@@ -78,6 +78,9 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const pendingDragRef = useRef<{
     index: number; startY: number; startX: number; timer: ReturnType<typeof setTimeout>;
   } | null>(null);
+  // ה-pointerId הפעיל כרגע (מה-PointerEvent המקורי) - כדי להתעלם
+  // מ-pointer-ים אחרים (למשל אצבע שנייה) ולשחרר את ה-capture בסיום.
+  const activePointerIdRef = useRef<number | null>(null);
 
   const cancelPending = useCallback(() => {
     if (pendingDragRef.current) {
@@ -150,8 +153,18 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     haptic('medium');
   }, [contentRef, rowHeightFallback]);
 
-  const handleDragStart = useCallback((index: number, clientY: number, clientX = 0) => {
+  // מקבל את ה-PointerEvent המקורי (לא רק קואורדינטות) - כדי לתפוס
+  // (setPointerCapture) את ה-pointer על האלמנט הנוכחי. זה מבטיח שכל
+  // pointermove/pointerup הבאים ל-pointer הזה יגיעו ל-listener-ים
+  // שרשומים על document, בלי תלות ב"מיהו האלמנט הפיזי מתחת לאצבע" -
+  // בדיוק הבאג שגרם לגרירה "להיתקע" לגמרי בהתחלה בחלק מהמכשירים.
+  const handleDragStart = useCallback((index: number, e: React.PointerEvent) => {
     cancelPending();
+    const { clientY, clientX, pointerId } = e;
+    activePointerIdRef.current = pointerId;
+    try {
+      (e.currentTarget as Element).setPointerCapture(pointerId);
+    } catch { /* לא קריטי - ממשיכים גם בלי capture */ }
     lastPointerYRef.current = clientY;
     const timer = setTimeout(() => {
       const p = pendingDragRef.current;
@@ -235,6 +248,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
 
   const handleDragEnd = useCallback(() => {
     cancelPending();
+    activePointerIdRef.current = null;
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     autoScrollDirRef.current = 0;
     const from = dragIndexRef.current;
@@ -261,28 +275,27 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const isActive = dragIndex >= 0 || pendingIndex >= 0;
   useEffect(() => {
     if (!isActive) return;
-    const onTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (!touch) return;
+    // Pointer Events מאוחדים (מגע+עכבר+עט) - עם setPointerCapture
+    // ב-handleDragStart, ה-pointer-move/up הבאים מגיעים תמיד ל-listener-ים
+    // האלה, בלי תלות בהיטסט מחדש של הדפדפן על מה שנמצא פיזית מתחת לאצבע.
+    const onPointerMove = (e: PointerEvent) => {
+      if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return;
       // בזמן גרירה פעילה - חוסמים גלילת דף. בשלב pending - *לא* חוסמים,
       // כדי שגלילה אנכית תעבוד רגיל ורק תבטל את ה-pending.
       if (dragIndex >= 0) e.preventDefault();
-      handleDragMove(touch.clientY, touch.clientX);
+      handleDragMove(e.clientY, e.clientX);
     };
-    const onTouchEnd = () => handleDragEnd();
-    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY, e.clientX);
-    const onMouseUp = () => handleDragEnd();
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-    document.addEventListener('touchcancel', onTouchEnd);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    const onPointerUp = (e: PointerEvent) => {
+      if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return;
+      handleDragEnd();
+    };
+    document.addEventListener('pointermove', onPointerMove, { passive: false });
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
     return () => {
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      document.removeEventListener('touchcancel', onTouchEnd);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('pointercancel', onPointerUp);
     };
   }, [dragIndex, pendingIndex, isActive, handleDragMove, handleDragEnd]);
 
@@ -296,6 +309,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   // שהצרכן קרא ל-onCommit) וגם כבסיס ל-cancel.
   const resetEngine = useCallback(() => {
     cancelPending();
+    activePointerIdRef.current = null;
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     autoScrollDirRef.current = 0;
     dragIndexRef.current = -1;

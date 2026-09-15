@@ -49,7 +49,7 @@ interface HomeListContentProps {
   onCancelReorder: () => void;
   onSaveOrder: () => void;
   onEnterReorder: () => void;
-  onDragHandleStart: (index: number, clientY: number, clientX?: number) => void;
+  onDragHandleStart: (index: number, e: React.PointerEvent) => void;
   t: (key: TranslationKeys) => string;
 }
 
@@ -88,17 +88,10 @@ export const HomeListContent = ({
   // לא רק לכרטיס שבאמת זז).
   const dragHandlers = useMemo(() => {
     if (!reorderMode) return [];
-    return orderedDisplay.map((_, idx) => ({
-      touch: (e: React.TouchEvent) => {
-        e.stopPropagation();
-        onDragHandleStart(idx, e.touches[0].clientY, e.touches[0].clientX);
-      },
-      mouse: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        onDragHandleStart(idx, e.clientY, e.clientX);
-      },
-    }));
+    return orderedDisplay.map((_, idx) => (e: React.PointerEvent) => {
+      e.stopPropagation();
+      onDragHandleStart(idx, e);
+    });
   }, [reorderMode, orderedDisplay, onDragHandleStart]);
 
   return (
@@ -362,8 +355,7 @@ export const HomeListContent = ({
                   הגרירה. ראו אותה הערה ב-ProductReorderRow. */}
               <Box
                 ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
-                onTouchStart={reorderMode ? dragHandlers[idx]?.touch : undefined}
-                onMouseDown={reorderMode ? dragHandlers[idx]?.mouse : undefined}
+                onPointerDown={reorderMode ? dragHandlers[idx] : undefined}
                 sx={isDragging ? {
                   height: 84, mb: 1, borderRadius: '16px',
                   bgcolor: 'action.hover', opacity: 0.4,
