@@ -3,6 +3,14 @@ import { NotFoundError, ForbiddenError } from '../errors';
 import type { IList } from '../models';
 
 /**
+ * האם userId הוא הבעלים של הרשימה - בדיקה חוזרת שהייתה משוכפלת ב-6+
+ * מקומות (השוואת ObjectId.toString() ידנית); ריכוז כאן כדי ששינוי עתידי
+ * (למשל מעבר ל-.equals()) יצטרך להתעדכן במקום אחד בלבד.
+ */
+export const isListOwner = (list: Pick<IList, 'owner'>, userId: string): boolean =>
+  list.owner.toString() === userId;
+
+/**
  * בדיקה שהרשימה קיימת והמשתמש בעל גישה (בעלים או חבר)
  */
 export const checkListAccess = async (
@@ -15,7 +23,7 @@ export const checkListAccess = async (
     throw NotFoundError.list();
   }
 
-  const isOwner = list.owner.toString() === userId;
+  const isOwner = isListOwner(list, userId);
   const isMember = list.members.some((m) => m.user.toString() === userId);
 
   if (!isOwner && !isMember) {
@@ -40,7 +48,7 @@ export const checkListAccessLean = async (
     throw NotFoundError.list();
   }
 
-  const isOwner = list.owner.toString() === userId;
+  const isOwner = isListOwner(list, userId);
   const isMember = list.members.some((m) => m.user.toString() === userId);
 
   if (!isOwner && !isMember) {
@@ -72,7 +80,7 @@ export const checkListOwner = async (
     throw NotFoundError.list();
   }
 
-  if (list.owner.toString() !== userId) {
+  if (!isListOwner(list, userId)) {
     throw ForbiddenError.notOwner();
   }
 

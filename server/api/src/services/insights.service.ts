@@ -193,31 +193,55 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
     longestWeeks = Math.max(longestWeeks, streak);
     if (currentWeeks === 0) currentWeeks = streak;
 
-    // ===== השוואה לחודש קודם =====
+    // ===== השוואה לחודש קודם + מגמות שבועיות (8 שבועות) =====
+    // מעבר יחיד על allProducts/purchasedProducts במקום ~18 מעברים נפרדים
+    // (2 סינוני חודש + 8×2 סינוני שבוע, כל אחד מפרסר מחדש createdAt/updatedAt) -
+    // משמעותי במיוחד למשתמשים עם היסטוריית מוצרים ארוכה, כי זה רץ בכל cache miss.
     const now = new Date();
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const thisMonthProducts = allProducts.filter(p => new Date(p.createdAt) >= thisMonthStart);
-    const prevMonthProducts = allProducts.filter(p => new Date(p.createdAt) >= prevMonthStart && new Date(p.createdAt) < thisMonthStart);
-    const prevPurchased = prevMonthProducts.filter(p => p.isPurchased);
-    const prevCompletionRate = prevMonthProducts.length > 0 ? Math.round((prevPurchased.length / prevMonthProducts.length) * 100) : 0;
-    const hasBaseline = prevMonthProducts.length > 0;
-    const productsGrowth = hasBaseline ? Math.round(((thisMonthProducts.length - prevMonthProducts.length) / prevMonthProducts.length) * 100) : 0;
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    const weekStarts: number[] = [];
+    for (let i = 7; i >= 0; i--) weekStarts.push(now.getTime() - (i * 7 + now.getDay()) * 86400000);
+    const weekEnds = weekStarts.map(ws => ws + 7 * 86400000);
 
-    // ===== מגמות שבועיות (8 שבועות) =====
-    const weeklyTrends: InsightsData['weeklyTrends'] = [];
-    for (let i = 7; i >= 0; i--) {
-      const ws = new Date(now.getTime() - (i * 7 + now.getDay()) * 86400000);
-      const we = new Date(ws.getTime() + 7 * 86400000);
+    let thisMonthCount = 0;
+    let prevMonthCount = 0;
+    let prevPurchasedCount = 0;
+    const addedPerWeek = new Array(8).fill(0) as number[];
+    for (const p of allProducts) {
+      const t = new Date(p.createdAt).getTime();
+      if (t >= thisMonthStart) thisMonthCount++;
+      else if (t >= prevMonthStart) {
+        prevMonthCount++;
+        if (p.isPurchased) prevPurchasedCount++;
+      }
+      for (let i = 0; i < 8; i++) {
+        if (t >= weekStarts[i] && t < weekEnds[i]) { addedPerWeek[i]++; break; }
+      }
+    }
+    const purchasedPerWeek = new Array(8).fill(0) as number[];
+    for (const p of purchasedProducts) {
+      const t = new Date(p.updatedAt).getTime();
+      for (let i = 0; i < 8; i++) {
+        if (t >= weekStarts[i] && t < weekEnds[i]) { purchasedPerWeek[i]++; break; }
+      }
+    }
+
+    const prevCompletionRate = prevMonthCount > 0 ? Math.round((prevPurchasedCount / prevMonthCount) * 100) : 0;
+    const hasBaseline = prevMonthCount > 0;
+    const productsGrowth = hasBaseline ? Math.round(((thisMonthCount - prevMonthCount) / prevMonthCount) * 100) : 0;
+
+    const weeklyTrends: InsightsData['weeklyTrends'] = weekStarts.map((ws, i) => {
+      const wsDate = new Date(ws);
       // תווית: D/M לשנה הנוכחית, D/M/YY כשהשבוע משנה אחרת (מונע בלבול
       // בין "15/3" של שנה זו לבין שנה קודמת בתצוגות multi-month).
-      const yearSuffix = ws.getFullYear() !== now.getFullYear() ? `/${String(ws.getFullYear()).slice(-2)}` : '';
-      weeklyTrends.push({
-        week: `${ws.getDate()}/${ws.getMonth() + 1}${yearSuffix}`,
-        added: allProducts.filter(p => new Date(p.createdAt) >= ws && new Date(p.createdAt) < we).length,
-        purchased: purchasedProducts.filter(p => new Date(p.updatedAt) >= ws && new Date(p.updatedAt) < we).length,
-      });
-    }
+      const yearSuffix = wsDate.getFullYear() !== now.getFullYear() ? `/${String(wsDate.getFullYear()).slice(-2)}` : '';
+      return {
+        week: `${wsDate.getDate()}/${wsDate.getMonth() + 1}${yearSuffix}`,
+        added: addedPerWeek[i],
+        purchased: purchasedPerWeek[i],
+      };
+    });
 
     // תובנות מהנתונים החדשים
     if (predictedNextDate) {
@@ -259,7 +283,7 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
       smartTips, hourlyActivity, weekdayActivity, shoppingScore: score,
       shoppingPersonality: personality,
       streaks: { currentWeeks, longestWeeks },
-      monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length, hasBaseline },
+      monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthCount, hasBaseline },
       weeklyTrends,
       groupStats,
       ...((() => {

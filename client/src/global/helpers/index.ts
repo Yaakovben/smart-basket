@@ -61,6 +61,9 @@ export {
   generateShareListMessage
 } from './listOperations';
 
+// עיצוב מחיר (₪)
+export { formatILS } from './currencyFormatting';
+
 // עיצוב תאריכים
 export {
   formatDateShort,

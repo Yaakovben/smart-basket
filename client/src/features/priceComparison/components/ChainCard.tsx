@@ -5,7 +5,7 @@ import NearMeIcon from '@mui/icons-material/NearMe';
 import type { PriceChainTotal, NearestBranch } from '../types/priceComparison.types';
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';
-import { haptic } from '../../../global/helpers';
+import { haptic, formatILS } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 // אנימציה עדינה לכרטיס הראשון - בצבע טורקיז ניטרלי שמתאים לכל סוג מיון
@@ -185,11 +185,11 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
                   fontVariantNumeric: 'tabular-nums',
                   lineHeight: 1.1,
                 }}>
-                  ₪{chain.total.toFixed(0)}
+                  {formatILS(chain.total)}
                 </Typography>
                 {!isWinner && delta > 0 && chain.isComplete && (
                   <Typography sx={{ fontSize: 10.5, color: '#DC2626', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                    +₪{delta.toFixed(0)}
+                    +{formatILS(delta)}
                   </Typography>
                 )}
               </>
