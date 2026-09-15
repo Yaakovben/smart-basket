@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 import { NotificationDAL, ListDAL, UserDAL } from '../dal';
 import { NotFoundError } from '../errors';
 import { logger } from '../config';
-import type { INotificationDoc, NotificationType } from '../models';
+import type { INotificationDoc, NotificationType, IList } from '../models';
 import { sendToUser, sendToUsers } from './push.service';
 
 const PUSH_ICON = '/icon-192x192.png';
@@ -171,11 +171,14 @@ export async function createNotificationsForListMembers(
     productId?: string;
     productName?: string;
     excludeUserId?: string;
+    // רשימה שהקורא כבר טען מה-DB (למשל אחרי updateOne/findById משלו) -
+    // חוסך round-trip כפול לאותו _id באותה בקשה. ברירת מחדל: טוען בעצמו.
+    preloadedList?: Pick<IList, 'owner' | 'members' | 'name'>;
   } = {}
 ): Promise<NotificationResponse[]> {
   // שאילתות מקבילות במקום סדרתיות
   const [list, actor] = await Promise.all([
-    ListDAL.findById(listId),
+    data.preloadedList ? Promise.resolve(data.preloadedList) : ListDAL.findById(listId),
     UserDAL.findById(actorId),
   ]);
   if (!list) throw NotFoundError.list();
