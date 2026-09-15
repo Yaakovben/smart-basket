@@ -51,6 +51,15 @@ export const checkListAccessLean = async (
 };
 
 /**
+ * מזהי כל חברי הרשימה (כולל הבעלים) - לשימוש בניקוי cache שצריך לחול
+ * על כל מי שרואה את הרשימה, לא רק על המשתמש שביצע את הפעולה.
+ */
+export const memberIdsOf = (list: Pick<IList, 'owner' | 'members'>): string[] => [
+  list.owner.toString(),
+  ...list.members.map((m) => m.user.toString()),
+];
+
+/**
  * בדיקה שהרשימה קיימת והמשתמש הוא הבעלים
  */
 export const checkListOwner = async (

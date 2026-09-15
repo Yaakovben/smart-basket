@@ -2,10 +2,21 @@ import { ProductDAL, ListDAL } from '../dal';
 import { NotFoundError, AppError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
-import type { IProductDoc, IProductEditChange, IProductEditEntry } from '../models';
-import { checkListAccessLean } from './list-access.helper';
+import type { IProductDoc, IProductEditChange, IProductEditEntry, IList } from '../models';
+import { checkListAccessLean, memberIdsOf } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
+import { invalidateInsightsCache } from './insights.service';
 import { deleteCloudinaryImage, deleteCloudinaryImages } from './imageUpload.service';
+
+// מנקה את מטמון השוואת המחירים והתובנות לכל חברי הרשימה (לא רק לפועל) -
+// כדי שרכישה/הוספה של חבר קבוצה אחד תשתקף מיד גם אצל שאר חברי הרשימה
+// המשותפת, ולא רק אצל מי שביצע את הפעולה.
+const invalidateCachesForList = (list: Pick<IList, 'owner' | 'members'>): void => {
+  for (const id of memberIdsOf(list)) {
+    invalidatePriceCacheForUser(id);
+    invalidateInsightsCache(id);
+  }
+};
 
 // המרת מוצר Mongoose לאובייקט תגובת API - משטח refs מאוכלסים לשם בלבד
 const flattenPopulatedName = (json: Record<string, unknown>, field: string): void => {
@@ -32,7 +43,7 @@ export async function addProduct(
   userId: string,
   data: CreateProductInput
 ) {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
 
   // idempotency: אם זו הוספה חוזרת עם אותו clientId (למשל תשובת השרת
   // אבדה ברשת בניסיון קודם, offlineQueue שולח שוב) - מחזירים את המוצר
@@ -71,7 +82,7 @@ export async function addProduct(
   }
 
   await ListDAL.touchUpdatedAt(listId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(list);
 
   return toProductResponse(product);
 }
@@ -82,7 +93,7 @@ export async function updateProduct(
   userId: string,
   data: UpdateProductInput
 ): Promise<void> {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
 
   const hasContentEdit = data.name !== undefined || data.quantity !== undefined || data.unit !== undefined ||
     data.category !== undefined || data.note !== undefined || data.image !== undefined;
@@ -161,7 +172,7 @@ export async function updateProduct(
     throw NotFoundError.product();
   }
   await ListDAL.touchUpdatedAt(listId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(list);
 }
 
 export async function deleteProduct(
@@ -169,7 +180,7 @@ export async function deleteProduct(
   productId: string,
   userId: string
 ): Promise<void> {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
 
   const product = await ProductDAL.deleteProductInList(productId, listId);
   if (!product) {
@@ -178,7 +189,7 @@ export async function deleteProduct(
   void deleteCloudinaryImage(product.image);
 
   await ListDAL.touchUpdatedAt(listId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(list);
 }
 
 export async function clearProducts(
@@ -186,7 +197,7 @@ export async function clearProducts(
   userId: string,
   filter: 'all' | 'purchased' | 'pending'
 ): Promise<number> {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
 
   let result: { deletedCount: number; images: string[] };
   if (filter === 'purchased') {
@@ -197,7 +208,7 @@ export async function clearProducts(
     result = await ProductDAL.clearAll(listId);
   }
   await ListDAL.touchUpdatedAt(listId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(list);
   // batch, לא await - ניקוי כל התמונות ב-Cloudinary בבת אחת, best-effort.
   void deleteCloudinaryImages(result.images);
   return result.deletedCount;
@@ -208,10 +219,10 @@ export async function resetProducts(
   listId: string,
   userId: string
 ): Promise<number> {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
   const count = await ProductDAL.resetAll(listId);
   await ListDAL.touchUpdatedAt(listId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(list);
   return count;
 }
 
@@ -240,14 +251,15 @@ export async function moveProducts(
   }
   // גישה לשתי הרשימות - לא רק למקור. בלי זה משתמש יכול "להעביר" מוצר
   // לרשימה שהוא לא חבר בה.
-  await checkListAccessLean(sourceListId, userId);
-  await checkListAccessLean(targetListId, userId);
+  const sourceList = await checkListAccessLean(sourceListId, userId);
+  const targetList = await checkListAccessLean(targetListId, userId);
 
   const movedCount = await ProductDAL.moveToList(productIds, sourceListId, targetListId);
 
   await ListDAL.touchUpdatedAt(sourceListId);
   await ListDAL.touchUpdatedAt(targetListId);
-  invalidatePriceCacheForUser(userId);
+  invalidateCachesForList(sourceList);
+  invalidateCachesForList(targetList);
 
   return movedCount;
 }
