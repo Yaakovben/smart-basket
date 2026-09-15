@@ -225,6 +225,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     handleDragStart: reorderHandleDragStart,
     handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
     handleCancel: reorderHandleCancel, handleSortByCategory: reorderSortByCategory,
+    dragFixedTop: reorderDragFixedTop, dragContainerLeft: reorderDragContainerLeft, dragContainerWidth: reorderDragContainerWidth,
   } = useProductReorder({
     listId: list.id,
     items,
@@ -619,6 +620,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
                 onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
                 onRowMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
+                dragFixedTop={reorderDragFixedTop}
+                dragContainerLeft={reorderDragContainerLeft}
+                dragContainerWidth={reorderDragContainerWidth}
               />
             ))}
           </>
@@ -774,7 +778,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             showToast(t('errorOccurred'), 'error');
           }
         } : undefined}
-        onConvertToPrivate={list.isGroup && list.members.length === 0 ? () => {
+        onConvertToPrivate={list.isGroup ? () => {
           // הפעולה עצמה מיידית וחסרת חיכוך (בניגוד ל"הפוך למשותפת", שכבר
           // דורש הרחבה+הגדרת סיסמה+כפתור נפרד) - אישור לפני ביצוע, אותו
           // מנגנון confirm/setConfirm כמו removeMember/leaveList.
