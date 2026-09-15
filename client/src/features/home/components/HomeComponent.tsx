@@ -91,7 +91,7 @@ export const HomeComponent = memo(({
   ));
 
   const {
-    orderedDisplay, reorderMode, dragIndex, pendingIndex, dragOffsetY, dragFixedTop, dragContainerLeft, dragContainerWidth, getRowShift, rowRefs,
+    orderedDisplay, reorderMode, dragIndex, dragOffsetY, getRowShift, rowRefs,
     hasOrderChanges, handleDragStart, handleSaveOrder, handleEnterReorder, handleCancelReorder,
   } = useListReorder(contentRef, display, user, showToast, t);
 
@@ -164,11 +164,7 @@ export const HomeComponent = memo(({
         onLeaveList={onLeaveList ? (list) => setConfirmLeaveList(list) : undefined}
         reorderMode={reorderMode}
         dragIndex={dragIndex}
-        pendingIndex={pendingIndex}
         dragOffsetY={dragOffsetY}
-        dragFixedTop={dragFixedTop}
-        dragContainerLeft={dragContainerLeft}
-        dragContainerWidth={dragContainerWidth}
         getRowShift={getRowShift}
         rowRefs={rowRefs}
         hasOrderChanges={hasOrderChanges}

@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { createPortal } from 'react-dom';
 import { Box, Typography } from '@mui/material';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import type { Product, ProductCategory } from '../../../global/types';
@@ -11,21 +10,17 @@ interface Props {
   product: Product;
   index: number;
   isDragging: boolean;
-  // true בזמן ה-140ms של long-press לפני שהגרירה בפועל מתחילה - נותן
-  // פידבק ויזואלי מיידי ללחיצה (בלי זה יש "מתה" מוחשית בלי שום תגובה
-  // עד שהגרירה נדלקת, שמרגישה כאילו השורה "נתקעת" ברגע הראשון).
-  isPending?: boolean;
   translateY: number;
   rowRef: (el: HTMLDivElement | null) => void;
-  // Pointer Events מאוחדים (מגע+עכבר+עט) - ראו useDragReorder.handleDragStart.
-  onRowPointerDown: (e: React.PointerEvent) => void;
+  onRowTouch: (e: React.TouchEvent) => void;
+  onRowMouse: (e: React.MouseEvent) => void;
   // fixed-position data (נדרש רק כשגוררים - כדי לצאת מ-overflow clipping)
   dragFixedTop?: number;
   dragContainerLeft?: number;
   dragContainerWidth?: number;
 }
 
-export const ProductReorderRow = memo(({ product, index, isDragging, isPending = false, translateY, rowRef, onRowPointerDown, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
+export const ProductReorderRow = memo(({ product, index, isDragging, translateY, rowRef, onRowTouch, onRowMouse, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
@@ -94,62 +89,46 @@ export const ProductReorderRow = memo(({ product, index, isDragging, isPending =
 
   return (
     <>
-      {/* השורה המקורית - *תמיד* נשארת מחוברת ל-DOM, גם בזמן גרירה (רק
-          משנה מראה לפלייסהולדר מקווקו). קריטי: זה האלמנט שקיבל את
-          touchstart - אם הוא היה מוסר מה-DOM תוך כדי המחווה (כמו שהיה
-          בגרסה הקודמת, שהחליפה אותו באלמנט fixed נפרד ב-portal), ב-iOS
-          Safari (ובדפדפנים נוספים) ה-touchmove/touchend הבאים על אותה
-          מחווה פשוט מפסיקים להיזרק לגמרי - בדיוק התחושה של "נתקע ולא זז
-          בכלל" מיד בתחילת הגרירה. Pointer Events + setPointerCapture (ראו
-          useDragReorder) מוסיפים שכבת הגנה נוספת - נועלים את שאר המחווה
-          לאלמנט הזה בלי תלות בהיטסט מחדש של הדפדפן. */}
-      <Box
-        ref={rowRef}
-        data-reorder-index={index}
-        onPointerDown={onRowPointerDown}
-        sx={isDragging ? {
+      {/* Placeholder: שומר מקום בזרימה כשהשורה עברה ל-fixed */}
+      {isDragging && (
+        <Box sx={{
           height: 64, mb: '6px', borderRadius: '14px',
           bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)',
           border: '1px dashed', borderColor: 'divider',
-        } : {
-          ...sharedSx,
-          mb: '6px',
-          position: 'relative',
-          transform: `translateY(${translateY}px)`,
-          // פידבק מיידי ל-long-press (isPending) - עוד לפני שהגרירה בפועל
-          // מתחילה, כדי שהלחיצה לא תרגיש "מתה" ב-140ms הראשונות.
-          scale: isPending ? '0.98' : '1',
-          opacity: isPending ? 0.9 : 1,
-          zIndex: 1,
-          willChange: 'transform',
-          transition: isPending
-            ? 'scale 0.1s ease, opacity 0.1s ease'
-            : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
-        }}
-      >
-        {!isDragging && rowContent}
-      </Box>
+        }} />
+      )}
 
-      {/* "רוח רפאים" ויזואלית בלבד - עוקבת אחרי האצבע. אלמנט חדש לגמרי,
-          בלי מאזיני מגע - הגרירה כבר מנוהלת דרך listener-ים על document. */}
-      {isDragging && createPortal(
-        <Box
-          aria-hidden="true"
-          sx={{
-            ...sharedSx,
-            position: 'fixed',
+      {/* השורה עצמה — fixed כשגוררים (יוצאת מה-overflow clipping), relative אחרת */}
+      <Box
+        ref={isDragging ? undefined : rowRef}
+        data-reorder-index={index}
+        onTouchStart={onRowTouch}
+        onMouseDown={onRowMouse}
+        sx={{
+          ...sharedSx,
+          mb: isDragging ? 0 : '6px',
+          position: isDragging ? 'fixed' : 'relative',
+          ...(isDragging ? {
             top: dragFixedTop + translateY,
             left: dragContainerLeft + 12,
             width: dragContainerWidth - 24,
             zIndex: 1400,
             transform: 'none',
-            pointerEvents: 'none',
             transition: 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease',
-          }}
-        >
-          {rowContent}
-        </Box>,
-        document.body,
+          } : {
+            transform: `translateY(${translateY}px)`,
+            zIndex: 1,
+            willChange: 'transform',
+            transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
+          }),
+        }}
+      >
+        {rowContent}
+      </Box>
+
+      {/* ref נפרד על אלמנט בלתי-נראה לצורך מדידת מיקום בלבד (מוסתר מהמשתמש) */}
+      {isDragging && (
+        <Box ref={rowRef} sx={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} />
       )}
     </>
   );

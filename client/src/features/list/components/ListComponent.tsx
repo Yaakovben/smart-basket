@@ -220,7 +220,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   const {
     orderedItems: reorderOrderedItems,
-    reorderMode, dragIndex: reorderDragIndex, pendingIndex: reorderPendingIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
+    reorderMode, dragIndex: reorderDragIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
     rowRefs: reorderRowRefs, hasChanges: reorderHasChanges,
     handleDragStart: reorderHandleDragStart,
     handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
@@ -240,10 +240,17 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // יצירת פונקציה חדשה בכל רינדור ששוברת את ה-memo של השורות.
   const reorderDragHandlers = useMemo(() => {
     if (!reorderMode) return [];
-    return reorderOrderedItems.map((_, idx) => (e: React.PointerEvent) => {
-      e.stopPropagation();
-      reorderHandleDragStart(idx, e);
-    });
+    return reorderOrderedItems.map((_, idx) => ({
+      touch: (e: React.TouchEvent) => {
+        e.stopPropagation();
+        reorderHandleDragStart(idx, e.touches[0].clientY, e.touches[0].clientX);
+      },
+      mouse: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        reorderHandleDragStart(idx, e.clientY, e.clientX);
+      },
+    }));
   }, [reorderMode, reorderOrderedItems, reorderHandleDragStart]);
 
   // refs לגישה לערכים עדכניים מתוך useCallbacks יציבים - מונע יצירת closures
@@ -487,9 +494,16 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           // eslint-disable-next-line react-hooks/refs
           transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
         }}
-        onTouchStart={handlePullStart}
-        onTouchMove={handlePullMove}
-        onTouchEnd={handlePullEnd}
+        // חוסמים pull-to-refresh לגמרי במצב סידור - בלי זה, התחלת גרירה
+        // כשגוללים בראש הרשימה (scrollTop=0, מצב שכיח) מפעילה *גם* את
+        // ה-pull-to-refresh על אותו מגע, שמחיל transform על המכל הזה עצמו
+        // - וזה בדיוק מה שגרם לשורה הנגררת (position:fixed) "לקפוץ"
+        // למקום שגוי ולהיתקע: ה-transform על המכל משנה את ה-containing
+        // block שלה מה-viewport למכל הזה. אחרי שגוללים ולו פיקסל אחד
+        // scrollTop כבר לא 0 בדיוק, ולכן זה נראה כמו "רק בגרירה הראשונה".
+        onTouchStart={reorderMode ? undefined : handlePullStart}
+        onTouchMove={reorderMode ? undefined : handlePullMove}
+        onTouchEnd={reorderMode ? undefined : handlePullEnd}
         onClick={handleCloseItem}
         role="main"
         aria-label={list.name}
@@ -620,10 +634,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 product={p}
                 index={idx}
                 isDragging={reorderDragIndex === idx}
-                isPending={reorderPendingIndex === idx}
                 translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
                 rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
-                onRowPointerDown={reorderDragHandlers[idx] ?? (() => {})}
+                onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
+                onRowMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
                 dragFixedTop={reorderDragFixedTop}
                 dragContainerLeft={reorderDragContainerLeft}
                 dragContainerWidth={reorderDragContainerWidth}
