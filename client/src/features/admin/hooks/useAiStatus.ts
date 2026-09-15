@@ -11,7 +11,10 @@ interface UseAiStatusReturn {
   forceRefresh: () => Promise<void>;
 }
 
-export const useAiStatus = (): UseAiStatusReturn => {
+// autoLoad=false: לא יורה בקשה ב-mount - הקורא אחראי לקרוא ל-load() כשמתאים
+// (למשל אחרי שנתוני הדשבורד הקריטיים כבר חזרו, כדי לא להתחרות איתם על אותו
+// pool חיבורים/שרת ולעכב את מה שהמנהל באמת מחכה לו).
+export const useAiStatus = (autoLoad = true): UseAiStatusReturn => {
   const [data, setData] = useState<AiStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,7 +54,7 @@ export const useAiStatus = (): UseAiStatusReturn => {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (autoLoad) load(); }, [load, autoLoad]);
 
   return { data, loading, refreshing, lastFetchAt, refreshError, load, forceRefresh };
 };
