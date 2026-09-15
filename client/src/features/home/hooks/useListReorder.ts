@@ -73,6 +73,7 @@ export function useListReorder(
     orderedDisplay,
     reorderMode,
     dragIndex: engine.dragIndex,
+    pendingIndex: engine.pendingIndex,
     dragOffsetY: engine.dragOffsetY,
     dragFixedTop: engine.dragFixedTop,
     dragContainerLeft: engine.dragContainerLeft,

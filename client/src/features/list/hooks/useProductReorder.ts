@@ -78,6 +78,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     orderedItems,
     reorderMode,
     dragIndex: engine.dragIndex,
+    pendingIndex: engine.pendingIndex,
     dragOffsetY: engine.dragOffsetY,
     dragFixedTop: engine.dragFixedTop,
     dragContainerLeft: engine.dragContainerLeft,
