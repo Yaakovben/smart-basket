@@ -20,7 +20,7 @@ import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
-import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary } from '../services/imageUpload.service';
+import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
 
 /**
  * GET /api/admin/users
@@ -269,6 +269,17 @@ export const getCloudinaryOrphans = asyncHandler(async (req: AuthRequest, res: R
     success: true,
     data: { dryRun: false, orphanCount: scan.orphanPublicIds.length, deleted, failed },
   });
+});
+
+/**
+ * POST /api/admin/cloudinary-dead-references
+ * מנקה (image = '') את כל המוצרים שמפנים לכתובת Cloudinary שכבר לא קיימת
+ * שם (deadReferenceCount ב-cloudinary-health) - הקובץ עצמו כבר נמחק,
+ * אין מה "לשחזר", רק לנקות את ההפניה השבורה מה-DB.
+ */
+export const clearCloudinaryDeadReferences = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const cleared = await clearDeadCloudinaryReferences();
+  res.json({ success: true, data: { cleared } });
 });
 
 /**

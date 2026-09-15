@@ -342,6 +342,38 @@ export async function deleteCloudinaryOrphans(publicIds: string[]): Promise<{ de
   return { deleted, failed };
 }
 
+// מסיר את שדה image מכל מוצר שמפנה לכתובת Cloudinary שכבר לא קיימת שם
+// (deadReferenceCount ב-getCloudinaryUsage למעלה) - אין מה "לשחזר", הקובץ
+// כבר נמחק בפועל מ-Cloudinary, אז הפעולה היחידה האפשרית היא לנקות את
+// ההפניה השבורה מה-DB (בדיוק כמו clearLocalImages, לא מוחקת את המוצר עצמו).
+export async function clearDeadCloudinaryReferences(): Promise<number> {
+  ensureConfigured();
+
+  const productImages = await Product.find({ image: { $regex: '^https://res\\.cloudinary\\.com/' } })
+    .select('image').lean();
+
+  const existingFileIds = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await cloudinary.api.resources({
+      type: 'upload', prefix: UPLOAD_FOLDER, max_results: 500, next_cursor: cursor,
+    });
+    for (const r of page.resources as Array<{ public_id: string }>) existingFileIds.add(r.public_id);
+    cursor = page.next_cursor;
+  } while (cursor);
+
+  const deadIds = productImages
+    .filter((p) => {
+      const id = extractCloudinaryPublicId(p.image as string);
+      return !!id && !existingFileIds.has(id);
+    })
+    .map((p) => p._id);
+
+  if (deadIds.length === 0) return 0;
+  const result = await Product.updateMany({ _id: { $in: deadIds } }, { $set: { image: '' } });
+  return result.modifiedCount;
+}
+
 // ===== תמונות ששמורות מקומית (data URL) בתוך מסמך המוצר עצמו =====
 // כל תמונה שהעלאתה ל-Cloudinary לא הצליחה (לא מוגדר בשרת, או שהעלאה
 // אמיתית נכשלה - ראו product.service.ts/ProductImageField.tsx) נשארת

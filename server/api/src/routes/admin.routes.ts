@@ -16,6 +16,7 @@ import {
   getDbHealth,
   getCloudinaryHealth,
   getCloudinaryOrphans,
+  clearCloudinaryDeadReferences,
   getLocalImages,
   getAiStatusHandler,
   refreshAiStatusHandler,
@@ -39,6 +40,8 @@ router.get('/cloudinary-health', getCloudinaryHealth);
 // dry-run כברירת מחדל (GET/POST בלי confirm) - מחיקה בפועל רק עם confirm=true.
 router.get('/cloudinary-orphans', getCloudinaryOrphans);
 router.post('/cloudinary-orphans', getCloudinaryOrphans);
+// מנקה הפניות שבורות - מוצרים שמפנים לכתובת Cloudinary שכבר נמחקה שם.
+router.post('/cloudinary-dead-references', clearCloudinaryDeadReferences);
 // תמונות שנשמרו כ-data URL בתוך מסמכי המוצר (לא ב-Cloudinary) - אותו דפוס
 // dry-run/confirm כמו cloudinary-orphans.
 router.get('/local-images', getLocalImages);
