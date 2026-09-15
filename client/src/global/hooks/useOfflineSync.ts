@@ -68,16 +68,17 @@ export function useOfflineSync(
           }
           await removeQueued(mutation.id);
           anySynced = true;
-        } catch {
-          if (navigator.onLine) {
-            // שגיאת שרת (לא רשת, למשל 400/404/409 - הרשומה כבר לא תקפה) -
-            // מסירים כדי למנוע תקיעות, אבל מודיעים למשתמש שמשהו לא הסתנכרן
-            // במקום לזרוק את זה בשקט.
+        } catch (err) {
+          const status = (err as { response?: { status?: number } }).response?.status;
+          // שגיאת לקוח קבועה (4xx מלבד 429) — הפעולה לא תקפה (ID נמחק, קונפליקט וכו')
+          // מסירים מהתור ומודיעים למשתמש. navigator.onLine אינו אמין לבדיקת שרת
+          // (cold-start, רשת רעועה — יחזיר true גם כשהשרת לא מגיב).
+          if (status !== undefined && status >= 400 && status < 500 && status !== 429) {
             await removeQueued(mutation.id);
             anySynced = true;
             anyPermanentlyFailed = true;
           }
-          // שגיאת רשת - נשמר לנסיון הבא
+          // 5xx, 429, timeout, שגיאת רשת — נשמר לנסיון הבא
         }
       }
 
