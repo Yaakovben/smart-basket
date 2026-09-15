@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Box, Typography } from '@mui/material';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import type { Product, ProductCategory } from '../../../global/types';
@@ -98,33 +99,53 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         }} />
       )}
 
-      {/* השורה עצמה — fixed כשגוררים (יוצאת מה-overflow clipping), relative אחרת */}
-      <Box
-        ref={isDragging ? undefined : rowRef}
-        data-reorder-index={index}
-        onTouchStart={onRowTouch}
-        onMouseDown={onRowMouse}
-        sx={{
-          ...sharedSx,
-          mb: isDragging ? 0 : '6px',
-          position: isDragging ? 'fixed' : 'relative',
-          ...(isDragging ? {
-            top: dragFixedTop + translateY,
-            left: dragContainerLeft + 12,
-            width: dragContainerWidth - 24,
-            zIndex: 1400,
-            transform: 'none',
-            transition: 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease',
-          } : {
+      {isDragging ? (
+        // מוגש ב-portal ישירות ל-body: iOS Safari מזיז בטעות position:fixed
+        // שמקונן בתוך מכל עם -webkit-overflow-scrolling:touch יחד עם הגלילה
+        // שלו (במקום להישאר קבוע ביחס ל-viewport) - בדיוק המצב של מכל
+        // הרשימה כאן. זה מה שגרם לשורה הנגררת "להיעלם" בזמן גלילה אוטומטית
+        // ליד קצה המסך. portal מוציא אותה לגמרי מחוץ למכל הגולל, אז הבאג
+        // הזה כבר לא רלוונטי.
+        createPortal(
+          <Box
+            data-reorder-index={index}
+            onTouchStart={onRowTouch}
+            onMouseDown={onRowMouse}
+            sx={{
+              ...sharedSx,
+              mb: 0,
+              position: 'fixed',
+              top: dragFixedTop + translateY,
+              left: dragContainerLeft + 12,
+              width: dragContainerWidth - 24,
+              zIndex: 1400,
+              transform: 'none',
+              transition: 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease',
+            }}
+          >
+            {rowContent}
+          </Box>,
+          document.body,
+        )
+      ) : (
+        <Box
+          ref={rowRef}
+          data-reorder-index={index}
+          onTouchStart={onRowTouch}
+          onMouseDown={onRowMouse}
+          sx={{
+            ...sharedSx,
+            mb: '6px',
+            position: 'relative',
             transform: `translateY(${translateY}px)`,
             zIndex: 1,
             willChange: 'transform',
             transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
-          }),
-        }}
-      >
-        {rowContent}
-      </Box>
+          }}
+        >
+          {rowContent}
+        </Box>
+      )}
 
       {/* ref נפרד על אלמנט בלתי-נראה לצורך מדידת מיקום בלבד (מוסתר מהמשתמש) */}
       {isDragging && (

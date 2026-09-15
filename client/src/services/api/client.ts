@@ -14,7 +14,8 @@ if (!API_URL) {
 // redirect הוסר לגמרי (ראו redirectToSessionExpiredLogin למטה) - אין יותר
 // שום דבר שקורא את הדגל הזה. נשאר כפונקציה ריקה כדי לא לשבור את כל נקודות
 // הקריאה הקיימות (useAuth.ts, auth.api.ts).
-export const setAuthInProgress = (_value: boolean) => {};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const setAuthInProgress = (_: boolean) => {};
 
 // דיווח אבחוני best-effort ל-Sentry (אם מוגדר) ברגע שבו טוקנים מנוקים בפועל
 // עקב כשל אימות - לא ידוע מראש אם/למה זה קורה בפרודקשן, אז ברגע שזה כן
