@@ -99,12 +99,12 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
           ...modalContainerSx,
           p: 0, maxWidth: 380,
           // זכוכית מטושטשת — רקע חצי-שקוף עם blur במקום בגראונד אטום
-          bgcolor: isDark ? 'rgba(15,23,42,0.72)' : 'rgba(255,255,255,0.78)',
+          bgcolor: isDark ? 'rgba(15,23,42,0.82)' : 'rgba(255,255,255,0.92)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid',
-          borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.85)',
-          boxShadow: `0 26px 70px ${glow}, 0 2px 10px rgba(0,0,0,0.18)`,
+          border: '1.5px solid',
+          borderColor: isDark ? `${ink}44` : `${ink}55`,
+          boxShadow: `0 28px 72px ${glow}, 0 2px 12px rgba(0,0,0,0.18)`,
           transition: 'box-shadow 0.35s ease',
           animation: 'tipsIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both',
           '@keyframes tipsIn': {
@@ -186,8 +186,6 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
                 <Box sx={{
                   position: 'relative', overflow: 'hidden',
                   background: isDark ? tip.gradient.dark : tip.gradient.light,
-                  // שכבת שקיפות קלה על ה-hero כדי שה-blur של ה-popup יבצבץ מתחת
-                  opacity: 0.92,
                   px: 3, pt: 6.5, pb: 3.25,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>

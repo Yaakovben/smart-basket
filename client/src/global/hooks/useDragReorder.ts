@@ -37,6 +37,10 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const [dragIndex, setDragIndex] = useState(-1);
   const [targetIndex, setTargetIndex] = useState(-1);
   const [dragOffsetY, setDragOffsetY] = useState(0);
+  // מידות לגרירה fixed-position: top ראשוני של השורה הנגררת + מיכל
+  const [dragFixedTop, setDragFixedTop] = useState(0);
+  const [dragContainerLeft, setDragContainerLeft] = useState(0);
+  const [dragContainerWidth, setDragContainerWidth] = useState(0);
   // pending = long-press ממתין (עוד לא drag). state (לא ref) כדי שה-effect
   // שמחבר את מאזיני ה-touch של ה-document ירוץ *מיד* עם הלחיצה.
   const [pending, setPending] = useState(false);
@@ -108,6 +112,15 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const activateDrag = useCallback((index: number, startY: number) => {
     // מדידה סטטית של כל השורות *לפני* ש-setDragIndex גורם ל-transform.
     const tops = rowRefs.current.map((el) => (el ? el.getBoundingClientRect().top : 0));
+    // מיקום ה-viewport של השורה הנגררת + מיכל - לגרירה fixed-position
+    const rowEl = rowRefs.current[index];
+    if (rowEl) setDragFixedTop(rowEl.getBoundingClientRect().top);
+    const containerEl = contentRef.current;
+    if (containerEl) {
+      const r = containerEl.getBoundingClientRect();
+      setDragContainerLeft(r.left);
+      setDragContainerWidth(r.width);
+    }
     rowTopsRef.current = tops;
     // פיץ' (גובה שורה) מהחציון של *כל* הפערים בין שורות סמוכות, לא רק
     // הפער בין השורה הראשונה לשנייה - ברשימות ארוכות עם גבהי שורה משתנים
@@ -287,6 +300,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     setDragIndex(-1);
     setTargetIndex(-1);
     setDragOffsetY(0);
+    setDragFixedTop(0);
   }, [cancelPending]);
 
   const handleEnter = useCallback(() => {
@@ -312,11 +326,26 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     onCommit(finalIds);
   }, [reorderedIds, resetEngine, onCommit]);
 
+  // סגירת מצב סידור כשמקישים מחוץ לאזור התוכן (כפתורים, ניווט, FAB וכו')
+  useEffect(() => {
+    if (!reorderMode || dragIndex >= 0) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const content = contentRef.current;
+      if (!content || content.contains(e.target as Node)) return;
+      resetEngine();
+    };
+    document.addEventListener('pointerdown', onPointerDown, { capture: true });
+    return () => document.removeEventListener('pointerdown', onPointerDown, { capture: true });
+  }, [reorderMode, dragIndex, contentRef, resetEngine]);
+
   return {
     reorderMode,
     reorderedIds,
     dragIndex,
     dragOffsetY,
+    dragFixedTop,
+    dragContainerLeft,
+    dragContainerWidth,
     getRowShift,
     rowRefs,
     hasChanges,
@@ -324,8 +353,6 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     handleEnter,
     handleCancel,
     handleSave,
-    // יציאה ממצב סידור בלי commit דרך handleSave - לצרכן שמבצע שמירה מיוחדת
-    // משלו (למשל "חזרה למיון לפי קטגוריה" שלא עובר דרך כפתור "סיים").
     exitReorder: resetEngine,
   };
 }
