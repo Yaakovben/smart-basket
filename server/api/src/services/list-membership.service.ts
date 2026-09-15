@@ -71,8 +71,8 @@ export async function joinGroup(
     throw ConflictError.alreadyMember();
   }
 
-  // התראה לחברי הקבוצה ברקע
-  createNotificationsForListMembers(updated._id.toString(), 'join', userId, {})
+  // התראה לחברי הקבוצה ברקע - preloadedList חוסך findById כפול על אותה רשימה
+  createNotificationsForListMembers(updated._id.toString(), 'join', userId, { preloadedList: updated })
     .catch((err: unknown) => logger.warn('Failed to create join notifications:', err));
 
   // groupStats (מספר חברים, תורם מוביל) משתנה עבור כל חברי הרשימה, לא רק
@@ -102,7 +102,7 @@ export async function leaveGroup(listId: string, userId: string): Promise<void> 
 
   // התראה - לא מכשילה את פעולת העזיבה
   try {
-    await createNotificationsForListMembers(listId, 'leave', userId, {});
+    await createNotificationsForListMembers(listId, 'leave', userId, { preloadedList: list });
   } catch (err: unknown) {
     logger.warn('Failed to create leave notification:', { listId, userId, error: err });
   }
@@ -161,7 +161,9 @@ export async function removeMember(
   }
 
   if (member) {
-    createNotificationsForListMembers(listId, 'removed', memberId, { excludeUserId: userId })
+    // preloadedList=updatedList (אחרי ההסרה בפועל) - לא הרשימה הישנה, כדי
+    // שהחבר שהוסר לא ייכלל בעצמו ברשימת היעד של ההתראה.
+    createNotificationsForListMembers(listId, 'removed', memberId, { excludeUserId: userId, preloadedList: updatedList })
       .catch((err: unknown) => logger.warn('Failed to create removed notifications:', err));
   }
 

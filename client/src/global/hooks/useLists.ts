@@ -36,7 +36,12 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // visibilitychange (למטה), ובלי ההשוואה הזו כל חזרה לאפליקציה הייתה
       // יוצרת מערך חדש (רפרנס שונה, תוכן זהה) ומפילה re-render על כל רשת
       // כרטיסי הרשימות בדף הבית - בדיוק אותה בעיה שתוקנה ב-useInsightsData.
-      if (JSON.stringify(converted) !== JSON.stringify(listsRef.current)) {
+      // חתימה זולה (id:updatedAt לכל רשימה) במקום JSON.stringify עמוק על כל
+      // המבנה (כולל כל מוצרי כל הרשימות) - השרת מעדכן updatedAt בכל שינוי
+      // אמיתי (touchUpdatedAt בהוספה/מחיקה/סידור מוצרים), אז זו השוואה
+      // שקולה בלי לסרוק ולסריאלז את כל העץ המקונן בכל visibilitychange/reconnect.
+      const signature = (list: typeof converted) => list.map(l => `${l.id}:${l.updatedAt}`).join('|');
+      if (signature(converted) !== signature(listsRef.current)) {
         setLists(converted);
       }
       writeListsCache(apiLists);

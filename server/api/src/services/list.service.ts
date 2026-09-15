@@ -119,7 +119,7 @@ export async function updateList(
                      : 'design';
     const productName = nameChanged ? `${changeType}:${list.name}` : changeType;
 
-    createNotificationsForListMembers(listId, 'list_update', userId, { productName })
+    createNotificationsForListMembers(listId, 'list_update', userId, { productName, preloadedList: list })
       .catch((err: unknown) => logger.error('List update notification failed:', err));
   }
 
@@ -148,7 +148,7 @@ export async function deleteList(listId: string, userId: string): Promise<{ memb
   // התראות list_deleted לחברים - אחרי הניקוי כדי שלא יימחקו.
   // batch אחד (insertMany) במקום יצירה בודדת לכל חבר.
   if (list.isGroup && memberIds.length > 0) {
-    await createNotificationsForListMembers(listId, 'list_deleted', userId);
+    await createNotificationsForListMembers(listId, 'list_deleted', userId, { preloadedList: list });
   }
 
   await ListDAL.deleteById(listId);

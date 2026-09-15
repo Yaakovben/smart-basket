@@ -17,7 +17,22 @@ export const LoginErrorAlert = ({ error, clearing, onClearCache, onDismiss, t, f
     <Box sx={{ mt: 2 }}>
       <Alert
         severity="warning"
-        sx={{ borderRadius: '12px', fontSize, alignItems: 'flex-start' }}
+        sx={{
+          borderRadius: '12px',
+          fontSize,
+          alignItems: 'flex-start',
+          '& .MuiAlert-action': {
+            position: 'absolute',
+            top: 4,
+            left: 4,
+            p: 0,
+            mr: 0,
+            alignSelf: 'auto',
+          },
+          position: 'relative',
+          pr: 1,
+          pl: 5,
+        }}
         role="alert"
         aria-live="assertive"
         onClose={onDismiss}
