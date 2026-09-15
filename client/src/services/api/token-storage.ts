@@ -60,6 +60,19 @@ export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 // הפונקציה נשמרת לתאימות אחורה עם קוד שעדיין מייבא אותה.
 export const getRefreshToken = (): string | null => null;
 
+// מיגרציה חד-פעמית: קורא refresh token ישן מ-localStorage (סשנים מלפני עדכון
+// ה-httpOnly cookie), שולח אותו לשרת ב-body כדי שהשרת ינפיק cookie חדש,
+// ואז מוחק אותו. אחרי שהמיגרציה רצה פעם אחת — השדה נמחק ולא מופיע שוב.
+export const consumeLegacyRefreshToken = (): string | null => {
+  try {
+    const token = localStorage.getItem('refreshToken');
+    if (token) localStorage.removeItem('refreshToken');
+    return token;
+  } catch {
+    return null;
+  }
+};
+
 export const setTokens = (accessToken: string, _refreshToken?: string) => {
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
