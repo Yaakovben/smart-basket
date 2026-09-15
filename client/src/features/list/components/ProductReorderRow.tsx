@@ -17,15 +17,15 @@ interface Props {
   isPending?: boolean;
   translateY: number;
   rowRef: (el: HTMLDivElement | null) => void;
-  onRowTouch: (e: React.TouchEvent) => void;
-  onRowMouse: (e: React.MouseEvent) => void;
+  // Pointer Events מאוחדים (מגע+עכבר+עט) - ראו useDragReorder.handleDragStart.
+  onRowPointerDown: (e: React.PointerEvent) => void;
   // fixed-position data (נדרש רק כשגוררים - כדי לצאת מ-overflow clipping)
   dragFixedTop?: number;
   dragContainerLeft?: number;
   dragContainerWidth?: number;
 }
 
-export const ProductReorderRow = memo(({ product, index, isDragging, isPending = false, translateY, rowRef, onRowTouch, onRowMouse, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
+export const ProductReorderRow = memo(({ product, index, isDragging, isPending = false, translateY, rowRef, onRowPointerDown, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
@@ -100,12 +100,13 @@ export const ProductReorderRow = memo(({ product, index, isDragging, isPending =
           בגרסה הקודמת, שהחליפה אותו באלמנט fixed נפרד ב-portal), ב-iOS
           Safari (ובדפדפנים נוספים) ה-touchmove/touchend הבאים על אותה
           מחווה פשוט מפסיקים להיזרק לגמרי - בדיוק התחושה של "נתקע ולא זז
-          בכלל" מיד בתחילת הגרירה. */}
+          בכלל" מיד בתחילת הגרירה. Pointer Events + setPointerCapture (ראו
+          useDragReorder) מוסיפים שכבת הגנה נוספת - נועלים את שאר המחווה
+          לאלמנט הזה בלי תלות בהיטסט מחדש של הדפדפן. */}
       <Box
         ref={rowRef}
         data-reorder-index={index}
-        onTouchStart={onRowTouch}
-        onMouseDown={onRowMouse}
+        onPointerDown={onRowPointerDown}
         sx={isDragging ? {
           height: 64, mb: '6px', borderRadius: '14px',
           bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)',
