@@ -347,69 +347,79 @@ export const HomeListContent = ({
           // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
           const translateY = isDragging ? dragOffsetY : reorderMode ? getRowShift(idx) : 0;
 
-          const card = (
-            <ListCard
-              list={l}
-              isMuted={isGroupMuted(l.id)}
-              isOwner={l.owner.id === user.id}
-              onSelect={onSelectList}
-              onEditList={onEditList}
-              onDeleteList={onDeleteList}
-              onLeaveList={onLeaveList}
-              onToggleMute={onToggleMute}
-              t={t}
-              reorderMode={reorderMode}
-              isDragging={isDragging}
-              onRowTouch={dragHandlers[idx]?.touch}
-              onRowMouse={dragHandlers[idx]?.mouse}
-            />
-          );
-
-          if (isDragging) {
-            // כרטיס נגרר - fixed-position ב-portal ישירות ל-body, זהה
-            // בדיוק ל-ProductReorderRow: גם יוצא מ-overflow clipping וגם
-            // נמנע מהבאג ב-iOS Safari שמזיז position:fixed יחד עם גלילת
-            // מכל עם -webkit-overflow-scrolling:touch (WebkitOverflowScrolling
-            // מוגדר על contentRef כאן, בדיוק כמו במכל המוצרים).
-            return (
-              <div key={l.id}>
-                {/* Placeholder - שומר מקום בזרימה כשהכרטיס עבר ל-fixed */}
-                <Box sx={{ height: 84, mb: 1, borderRadius: '16px', bgcolor: 'action.hover', opacity: 0.4 }} />
-                {createPortal(
-                  <Box
-                    sx={{
-                      position: 'fixed',
-                      top: dragFixedTop + translateY,
-                      // 16px = padding אופקי של contentRef (p: xs:2 -> 8*2px),
-                      // אותה גישה כמו ProductReorderRow ביחס למכל שלו.
-                      left: dragContainerLeft + 16,
-                      width: dragContainerWidth - 32,
-                      zIndex: 1400,
-                    }}
-                  >
-                    {card}
-                  </Box>,
-                  document.body,
-                )}
-                {/* ref נפרד לצורך מדידת מיקום בלבד (מוסתר) */}
-                <Box ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }} sx={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} />
-              </div>
-            );
-          }
-
           return (
-            <Box
-              key={l.id}
-              ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
-              sx={{
-                position: 'relative',
-                transform: reorderMode ? `translateY(${translateY}px)` : 'none',
-                transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
-                zIndex: 1,
-                willChange: reorderMode ? 'transform' : 'auto',
-              }}
-            >
-              {card}
+            <Box key={l.id}>
+              {/* הכרטיס המקורי - *תמיד* נשאר מחובר ל-DOM, גם בזמן גרירה
+                  (רק משנה מראה לפלייסהולדר). קריטי: זה האלמנט שקיבל את
+                  touchstart - הסרתו מה-DOM תוך כדי המחווה (כמו בגרסה
+                  הקודמת, שהחליפה אותו באלמנט fixed נפרד ב-portal) גרמה
+                  ל-touchmove/touchend הבאים על אותה מחווה להפסיק להיזרק
+                  לגמרי ב-iOS Safari - בדיוק "נתקע ולא זז" מיד בתחילת
+                  הגרירה. ראו אותה הערה ב-ProductReorderRow. */}
+              <Box
+                ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
+                onTouchStart={reorderMode ? dragHandlers[idx]?.touch : undefined}
+                onMouseDown={reorderMode ? dragHandlers[idx]?.mouse : undefined}
+                sx={isDragging ? {
+                  height: 84, mb: 1, borderRadius: '16px',
+                  bgcolor: 'action.hover', opacity: 0.4,
+                } : {
+                  position: 'relative',
+                  transform: reorderMode ? `translateY(${translateY}px)` : 'none',
+                  transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                  zIndex: 1,
+                  willChange: reorderMode ? 'transform' : 'auto',
+                }}
+              >
+                {!isDragging && (
+                  <ListCard
+                    list={l}
+                    isMuted={isGroupMuted(l.id)}
+                    isOwner={l.owner.id === user.id}
+                    onSelect={onSelectList}
+                    onEditList={onEditList}
+                    onDeleteList={onDeleteList}
+                    onLeaveList={onLeaveList}
+                    onToggleMute={onToggleMute}
+                    t={t}
+                    reorderMode={reorderMode}
+                    isDragging={false}
+                  />
+                )}
+              </Box>
+
+              {/* "רוח רפאים" ויזואלית בלבד - עוקבת אחרי האצבע. אלמנט חדש
+                  לגמרי, בלי מאזיני מגע - הגרירה כבר מנוהלת דרך listener-ים
+                  על document. */}
+              {isDragging && createPortal(
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    position: 'fixed',
+                    top: dragFixedTop + translateY,
+                    // 16px = padding אופקי של contentRef (p: xs:2 -> 8*2px).
+                    left: dragContainerLeft + 16,
+                    width: dragContainerWidth - 32,
+                    zIndex: 1400,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <ListCard
+                    list={l}
+                    isMuted={isGroupMuted(l.id)}
+                    isOwner={l.owner.id === user.id}
+                    onSelect={onSelectList}
+                    onEditList={onEditList}
+                    onDeleteList={onDeleteList}
+                    onLeaveList={onLeaveList}
+                    onToggleMute={onToggleMute}
+                    t={t}
+                    reorderMode={reorderMode}
+                    isDragging
+                  />
+                </Box>,
+                document.body,
+              )}
             </Box>
           );
         })}

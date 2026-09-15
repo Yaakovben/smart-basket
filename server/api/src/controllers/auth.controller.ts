@@ -13,6 +13,7 @@ import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from
 import { asyncHandler } from '../utils';
 import { AuthError, ConflictError } from '../errors';
 import { logger } from '../config';
+import { env } from '../config';
 import { LoginActivityDAL } from '../dal';
 import * as authService from '../services/auth.service';
 import { refreshAccessToken, invalidateRefreshToken } from '../services/token.service';
@@ -23,6 +24,23 @@ const getClientInfo = (req: Request) => ({
   ipAddress: req.ip || req.socket.remoteAddress,
   userAgent: req.get('User-Agent'),
 });
+
+// שם ה-cookie של ה-refresh token. path מוגבל ל-/api/auth כדי שלא ייסגר
+// לכל בקשת API — רק לנתיבי האימות שצריכים אותו.
+const REFRESH_COOKIE = 'sb_refresh';
+const REFRESH_COOKIE_OPTS = {
+  httpOnly: true,
+  secure: env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/api/auth',
+  maxAge: 90 * 24 * 60 * 60 * 1000, // 90 יום
+};
+
+const setRefreshCookie = (res: Response, token: string) =>
+  res.cookie(REFRESH_COOKIE, token, REFRESH_COOKIE_OPTS);
+
+const clearRefreshCookie = (res: Response) =>
+  res.clearCookie(REFRESH_COOKIE, { ...REFRESH_COOKIE_OPTS, maxAge: 0 });
 
 // ====================== Handlers ======================
 
@@ -45,6 +63,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const registerInput = req.body as RegisterInput;
   const { ipAddress, userAgent } = getClientInfo(req);
   const result = await authService.register(registerInput, ipAddress, userAgent);
+  setRefreshCookie(res, result.tokens.refreshToken);
   res.status(201).json({ success: true, data: result });
 });
 
@@ -56,6 +75,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const loginInput = req.body as LoginInput;
   const { ipAddress, userAgent } = getClientInfo(req);
   const result = await authService.login(loginInput, ipAddress, userAgent);
+  setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });
 
@@ -67,6 +87,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   const googleAuthInput = req.body as GoogleAuthInput;
   const { ipAddress, userAgent } = getClientInfo(req);
   const result = await authService.googleAuth(googleAuthInput, ipAddress, userAgent);
+  setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });
 
@@ -78,10 +99,14 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
  *   לא מתנתק - ראו ההערה על RefreshResult ב-token.service.ts)
  */
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
-  const { refreshToken: refreshTokenValue } = req.body as { refreshToken: string };
+  // קורא מ-cookie (httpOnly) ראשית, עם fallback לגוף הבקשה לתאימות אחורה
+  const refreshTokenValue: string =
+    (req.cookies as Record<string, string>)[REFRESH_COOKIE] ||
+    (req.body as { refreshToken?: string }).refreshToken || '';
   const result = await refreshAccessToken(refreshTokenValue);
   if (result.status === 'invalid') throw AuthError.invalidToken();
   if (result.status === 'race') throw new ConflictError('Refresh already in progress, retry');
+  setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result.tokens });
 });
 
@@ -111,7 +136,10 @@ export const logAppOpen = asyncHandler(async (req: AuthRequest, res: Response) =
  * יציאה - ביטול ה-refresh token הנוכחי (לא משפיע על מכשירים אחרים).
  */
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  const { refreshToken: refreshTokenValue } = req.body as { refreshToken: string };
-  await invalidateRefreshToken(refreshTokenValue);
+  const refreshTokenValue: string =
+    (req.cookies as Record<string, string>)[REFRESH_COOKIE] ||
+    (req.body as { refreshToken?: string }).refreshToken || '';
+  clearRefreshCookie(res);
+  if (refreshTokenValue) await invalidateRefreshToken(refreshTokenValue);
   res.json({ success: true, message: 'Logged out successfully' });
 });

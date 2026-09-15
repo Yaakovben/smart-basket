@@ -90,66 +90,55 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
 
   return (
     <>
-      {/* Placeholder: שומר מקום בזרימה כשהשורה עברה ל-fixed */}
-      {isDragging && (
-        <Box sx={{
+      {/* השורה המקורית - *תמיד* נשארת מחוברת ל-DOM, גם בזמן גרירה (רק
+          משנה מראה לפלייסהולדר מקווקו). קריטי: זה האלמנט שקיבל את
+          touchstart - אם הוא היה מוסר מה-DOM תוך כדי המחווה (כמו שהיה
+          בגרסה הקודמת, שהחליפה אותו באלמנט fixed נפרד ב-portal), ב-iOS
+          Safari (ובדפדפנים נוספים) ה-touchmove/touchend הבאים על אותה
+          מחווה פשוט מפסיקים להיזרק לגמרי - בדיוק התחושה של "נתקע ולא זז
+          בכלל" מיד בתחילת הגרירה. */}
+      <Box
+        ref={rowRef}
+        data-reorder-index={index}
+        onTouchStart={onRowTouch}
+        onMouseDown={onRowMouse}
+        sx={isDragging ? {
           height: 64, mb: '6px', borderRadius: '14px',
           bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)',
           border: '1px dashed', borderColor: 'divider',
-        }} />
-      )}
+        } : {
+          ...sharedSx,
+          mb: '6px',
+          position: 'relative',
+          transform: `translateY(${translateY}px)`,
+          zIndex: 1,
+          willChange: 'transform',
+          transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
+        }}
+      >
+        {!isDragging && rowContent}
+      </Box>
 
-      {isDragging ? (
-        // מוגש ב-portal ישירות ל-body: iOS Safari מזיז בטעות position:fixed
-        // שמקונן בתוך מכל עם -webkit-overflow-scrolling:touch יחד עם הגלילה
-        // שלו (במקום להישאר קבוע ביחס ל-viewport) - בדיוק המצב של מכל
-        // הרשימה כאן. זה מה שגרם לשורה הנגררת "להיעלם" בזמן גלילה אוטומטית
-        // ליד קצה המסך. portal מוציא אותה לגמרי מחוץ למכל הגולל, אז הבאג
-        // הזה כבר לא רלוונטי.
-        createPortal(
-          <Box
-            data-reorder-index={index}
-            onTouchStart={onRowTouch}
-            onMouseDown={onRowMouse}
-            sx={{
-              ...sharedSx,
-              mb: 0,
-              position: 'fixed',
-              top: dragFixedTop + translateY,
-              left: dragContainerLeft + 12,
-              width: dragContainerWidth - 24,
-              zIndex: 1400,
-              transform: 'none',
-              transition: 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease',
-            }}
-          >
-            {rowContent}
-          </Box>,
-          document.body,
-        )
-      ) : (
+      {/* "רוח רפאים" ויזואלית בלבד - עוקבת אחרי האצבע. אלמנט חדש לגמרי,
+          בלי מאזיני מגע - הגרירה כבר מנוהלת דרך listener-ים על document. */}
+      {isDragging && createPortal(
         <Box
-          ref={rowRef}
-          data-reorder-index={index}
-          onTouchStart={onRowTouch}
-          onMouseDown={onRowMouse}
+          aria-hidden="true"
           sx={{
             ...sharedSx,
-            mb: '6px',
-            position: 'relative',
-            transform: `translateY(${translateY}px)`,
-            zIndex: 1,
-            willChange: 'transform',
-            transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
+            position: 'fixed',
+            top: dragFixedTop + translateY,
+            left: dragContainerLeft + 12,
+            width: dragContainerWidth - 24,
+            zIndex: 1400,
+            transform: 'none',
+            pointerEvents: 'none',
+            transition: 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease',
           }}
         >
           {rowContent}
-        </Box>
-      )}
-
-      {/* ref נפרד על אלמנט בלתי-נראה לצורך מדידת מיקום בלבד (מוסתר מהמשתמש) */}
-      {isDragging && (
-        <Box ref={rowRef} sx={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} />
+        </Box>,
+        document.body,
       )}
     </>
   );

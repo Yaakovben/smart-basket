@@ -15,7 +15,7 @@ export interface AuthResponse {
   user: User;
   tokens: {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string; // נשלח מהשרת אבל לא נשמר בצד הלקוח (httpOnly cookie)
   };
 }
 

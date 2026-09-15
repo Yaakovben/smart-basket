@@ -63,7 +63,7 @@ export const ClearCachePage = () => {
       try {
         const preserve: Record<string, string | null> = {
           accessToken: localStorage.getItem('accessToken'),
-          refreshToken: localStorage.getItem('refreshToken'),
+          // refreshToken נמצא ב-httpOnly cookie — לא ב-localStorage
           app_build_version: localStorage.getItem('app_build_version'),
         };
         localStorage.clear();

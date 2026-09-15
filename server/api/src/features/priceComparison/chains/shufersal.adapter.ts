@@ -10,10 +10,9 @@
  * מבנה ה-XML זהה (Root/Items/Item) — אפשר להשתמש באותו parser.
  */
 
-import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
-import { insecureHttpsAgent } from './insecureAgent';
+import { axiosGetWithTlsFallback } from './insecureAgent';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoreItem, ChainStoresFetchResult,
@@ -26,8 +25,8 @@ const DOWNLOAD_TIMEOUT_MS = 120_000;
 const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
 const MAX_DECOMPRESSED_BYTES = 300 * 1024 * 1024;
 // הפורטל של שופרסל ולעיתים גם pricesprodpublic.blob.core.windows.net
-// מחזירים שרשרת תעודות שלא תמיד תקפה - דורש httpsAgent מותאם כדי לא
-// ליפול ב-UNABLE_TO_VERIFY (ראו insecureAgent.ts).
+// מחזירים שרשרת תעודות שלפעמים חסרה ב-CA bundle של Node/Linux.
+// axiosGetWithTlsFallback מנסה TLS תקין תחילה — fallback רק בשגיאת CERT.
 
 interface PriceFullXml {
   Root?: { Items?: { Item?: RawItem[] | RawItem } };
@@ -77,19 +76,17 @@ function extractAllFileUrls(html: string, fileNamePrefix: string): string[] {
 }
 
 async function fetchCategoryHtml(catID: number): Promise<string> {
-  const res = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=${catID}&storeId=0`, {
+  const res = await axiosGetWithTlsFallback<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=${catID}&storeId=0`, {
     timeout: FETCH_TIMEOUT_MS,
-    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
   });
   return res.data;
 }
 
 async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: boolean }> {
-  const res = await axios.get<ArrayBuffer>(url, {
+  const res = await axiosGetWithTlsFallback<ArrayBuffer>(url, {
     responseType: 'arraybuffer',
     timeout: DOWNLOAD_TIMEOUT_MS,
-    httpsAgent: insecureHttpsAgent,
     maxContentLength: MAX_COMPRESSED_BYTES,
     maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },

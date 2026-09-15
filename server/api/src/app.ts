@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
@@ -42,6 +43,7 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
