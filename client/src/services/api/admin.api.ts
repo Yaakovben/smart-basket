@@ -69,6 +69,13 @@ export const adminApi = {
     return response.data.data;
   },
 
+  /** מנקה את שדה image מכל המוצרים שמפנים לכתובת Cloudinary שכבר נמחקה
+   *  שם (deadReferenceCount ב-getCloudinaryHealth). בלתי הפיך. */
+  async clearCloudinaryDeadReferences(): Promise<{ cleared: number }> {
+    const response = await apiClient.post<{ data: { cleared: number } }>('/admin/cloudinary-dead-references');
+    return response.data.data;
+  },
+
   /** מחיקת משתמש לצמיתות (רשימות פרטיות, קבוצות בבעלותו, מנויי push, התראות...). בלתי הפיך. */
   async deleteUser(userId: string): Promise<void> {
     await apiClient.delete(`/admin/users/${userId}`);

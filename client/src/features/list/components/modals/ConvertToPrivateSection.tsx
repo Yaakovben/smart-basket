@@ -12,7 +12,7 @@ interface ConvertToPrivateSectionProps {
 export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount }: ConvertToPrivateSectionProps) => {
   const { t } = useSettings();
   const hasMembers = membersCount > 0;
-  const [open, setOpen] = useState(hasMembers);
+  const [open, setOpen] = useState(false);
   const [converting, setConverting] = useState(false);
 
   return (

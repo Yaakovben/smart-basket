@@ -1,11 +1,15 @@
-import { Box, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
+import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
+import { adminApi } from '../../../services/api';
 import type { CloudinaryHealth } from '../../../services/api/admin.api';
 import { statusInfo, formatMB, CLOUDINARY_METRIC_META } from '../helpers/dbHealthHelpers';
 import { DbHealthCircularGauge } from './DbHealthCircularGauge';
 import { CloudinaryMetricRow } from './CloudinaryMetricRow';
 import { LocalImagesWarningCard } from './LocalImagesWarningCard';
 import { CloudinaryOrphanCard } from './CloudinaryOrphanCard';
+import { ConfirmModal } from '../../../global/components';
 
 interface Props {
   data: CloudinaryHealth | null;
@@ -28,6 +32,22 @@ const formatCloudinaryAsOf = (raw: string): string => {
 };
 
 export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
+  const [deadRefCount, setDeadRefCount] = useState<number | null>(null);
+  const [clearingDeadRefs, setClearingDeadRefs] = useState(false);
+  const [confirmClearDeadRefs, setConfirmClearDeadRefs] = useState(false);
+  const [clearedDeadRefs, setClearedDeadRefs] = useState<number | null>(null);
+
+  const handleClearDeadRefs = async () => {
+    setClearingDeadRefs(true);
+    try {
+      const { cleared } = await adminApi.clearCloudinaryDeadReferences();
+      setClearedDeadRefs(cleared);
+      setDeadRefCount(0);
+    } finally {
+      setClearingDeadRefs(false);
+    }
+  };
+
   if (!data) {
     return (
       <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
@@ -105,19 +125,59 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
             : data.liveObjectCount != null ? `${fmtNum(data.liveObjectCount)} מוצרים`
             : data.objects != null ? fmtNum(data.objects) : '—'
         } isDark={isDark} />
-      {data.deadReferenceCount != null && data.deadReferenceCount > 0 && (
-        <Box sx={{
-          mb: 1, p: 1.25, borderRadius: 2,
-          bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.10)',
-          border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.35)' : 'rgba(245,158,11,0.3)',
-        }}>
-          <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#FCD34D' : '#B45309', lineHeight: 1.4 }}>
-            ⚠ {fmtNum(data.deadReferenceCount)} {data.deadReferenceCount === 1 ? 'מוצר מפנה' : 'מוצרים מפנים'} לתמונה שכבר לא קיימת ב-Cloudinary
-          </Typography>
-          <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.3, lineHeight: 1.4 }}>
-            קרוב לוודאי נמחקה ידנית מלוח הבקרה של Cloudinary. באפליקציה המשתמשים רואים אריח קטגוריה במקום התמונה. פתחו כל מוצר כזה והסירו/החליפו את התמונה.
-          </Typography>
-        </Box>
+      {(() => {
+        const count = deadRefCount ?? data.deadReferenceCount;
+        if (count == null || count <= 0) return null;
+        return (
+          <Box sx={{
+            mb: 1, p: 1.25, borderRadius: 2,
+            bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.10)',
+            border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.35)' : 'rgba(245,158,11,0.3)',
+          }}>
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#FCD34D' : '#B45309', lineHeight: 1.4 }}>
+              ⚠ {fmtNum(count)} {count === 1 ? 'מוצר מפנה' : 'מוצרים מפנים'} לתמונה שכבר לא קיימת ב-Cloudinary
+            </Typography>
+            <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.3, lineHeight: 1.4 }}>
+              קרוב לוודאי נמחקה ידנית מלוח הבקרה של Cloudinary. באפליקציה המשתמשים רואים אריח קטגוריה במקום התמונה. אפשר לנקות את ההפניה (המוצר יישאר בלי תמונה) או לפתוח כל מוצר כזה ולהחליף אותה ידנית.
+            </Typography>
+            <Box
+              role="button" tabIndex={0}
+              aria-disabled={clearingDeadRefs}
+              onClick={() => { if (!clearingDeadRefs) setConfirmClearDeadRefs(true); }}
+              onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && !clearingDeadRefs) setConfirmClearDeadRefs(true); }}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 1,
+                px: 1.25, py: 0.6, borderRadius: '999px',
+                bgcolor: isDark ? 'rgba(245,158,11,0.18)' : '#FEF3C7',
+                border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.4)' : '#FCD34D',
+                color: isDark ? '#FCD34D' : '#92400E',
+                fontSize: 11.5, fontWeight: 700,
+                cursor: clearingDeadRefs ? 'default' : 'pointer', opacity: clearingDeadRefs ? 0.6 : 1,
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'transform 0.12s',
+                '&:active': clearingDeadRefs ? {} : { transform: 'scale(0.96)' },
+              }}
+            >
+              {clearingDeadRefs ? <CircularProgress size={13} sx={{ color: 'inherit' }} /> : <DeleteSweepRoundedIcon sx={{ fontSize: 15 }} />}
+              {clearingDeadRefs ? 'מנקה…' : `נקה ${fmtNum(count)} הפניות שבורות`}
+            </Box>
+
+            {confirmClearDeadRefs && (
+              <ConfirmModal
+                title={`לנקות ${fmtNum(count)} הפניות שבורות?`}
+                message={`שדה התמונה יוסר מ-${fmtNum(count)} מוצרים (המוצרים עצמם יישארו, בלי תמונה). פעולה זו בלתי הפיכה.`}
+                confirmText="נקה עכשיו"
+                onConfirm={() => { setConfirmClearDeadRefs(false); void handleClearDeadRefs(); }}
+                onCancel={() => setConfirmClearDeadRefs(false)}
+              />
+            )}
+          </Box>
+        );
+      })()}
+      {clearedDeadRefs != null && clearedDeadRefs > 0 && (
+        <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1 }}>
+          נוקו {fmtNum(clearedDeadRefs)} הפניות שבורות.
+        </Typography>
       )}
       <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.requests} pct={null}
         valueText={data.requests != null ? fmtNum(data.requests) : '—'} isDark={isDark} />
