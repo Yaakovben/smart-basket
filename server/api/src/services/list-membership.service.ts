@@ -17,7 +17,7 @@ import {
   createNotificationsForListMembers,
 } from './notification.service';
 import { transformList } from './list-transform.helper';
-import { memberIdsOf } from './list-access.helper';
+import { memberIdsOf, isListOwner } from './list-access.helper';
 import { publishMemberKicked } from './redisPublisher.service';
 import { invalidateInsightsCache } from './insights.service';
 import type { JoinGroupInput } from '../validators';
@@ -35,7 +35,7 @@ export async function joinGroup(
   const list = await ListDAL.findByInviteCode(data.inviteCode);
   if (!list) throw NotFoundError.inviteCode();
 
-  if (list.owner.toString() === userId) throw ConflictError.isOwner();
+  if (isListOwner(list, userId)) throw ConflictError.isOwner();
   if (list.members.some(m => m.user.toString() === userId)) throw ConflictError.alreadyMember();
 
   if (list.password) {
@@ -90,7 +90,7 @@ export async function leaveGroup(listId: string, userId: string): Promise<void> 
   const list = await ListDAL.findById(listId);
   if (!list) throw NotFoundError.list();
 
-  if (list.owner.toString() === userId) throw ForbiddenError.ownerCannotLeave();
+  if (isListOwner(list, userId)) throw ForbiddenError.ownerCannotLeave();
 
   const isMember = list.members.some(m => m.user.toString() === userId);
   if (!isMember) throw ForbiddenError.noAccess();
@@ -123,12 +123,12 @@ export async function removeMember(
   const list = await ListDAL.findById(listId);
   if (!list) throw NotFoundError.list();
 
-  const isOwner = list.owner.toString() === userId;
+  const isOwner = isListOwner(list, userId);
   const isAdmin = list.members.some(m => m.user.toString() === userId && m.isAdmin);
   if (!isOwner && !isAdmin) throw ForbiddenError.notAdmin();
 
   // אי אפשר להסיר את הבעלים
-  if (list.owner.toString() === memberId) throw ForbiddenError.cannotRemoveOwner();
+  if (isListOwner(list, memberId)) throw ForbiddenError.cannotRemoveOwner();
 
   // רק הבעלים יכול להסיר אדמינים אחרים
   const targetMember = list.members.find(m => m.user.toString() === memberId);
@@ -187,7 +187,7 @@ export async function toggleMemberAdmin(
   const list = await ListDAL.findById(listId);
   if (!list) throw NotFoundError.list();
 
-  if (list.owner.toString() !== userId) throw ForbiddenError.notOwner();
+  if (!isListOwner(list, userId)) throw ForbiddenError.notOwner();
 
   const member = list.members.find(m => m.user.toString() === memberId);
   if (!member) throw NotFoundError.member();

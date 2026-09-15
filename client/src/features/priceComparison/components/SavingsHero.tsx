@@ -1,6 +1,7 @@
 import { Box, Typography, Paper } from '@mui/material';
 import type { PriceChainTotal } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { formatILS } from '../../../global/helpers';
 
 interface SavingsHeroProps {
   cheapest: PriceChainTotal;
@@ -45,7 +46,7 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => {
             {t('savingsHeroPriceLabel')}
           </Typography>
           <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-            ₪{cheapest.total.toFixed(0)}
+            {formatILS(cheapest.total)}
           </Typography>
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', mt: 0.1 }}>
             {t('savingsHeroProductsCount').replace('{count}', String(cheapest.matchedCount))}
@@ -71,7 +72,7 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => {
               fontVariantNumeric: 'tabular-nums', lineHeight: 1,
               letterSpacing: -0.5,
             }}>
-              ₪{savings.toFixed(0)}
+              {formatILS(savings)}
             </Typography>
           </Box>
         )}

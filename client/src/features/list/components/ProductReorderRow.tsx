@@ -11,6 +11,10 @@ interface Props {
   product: Product;
   index: number;
   isDragging: boolean;
+  // true בזמן ה-140ms של long-press לפני שהגרירה בפועל מתחילה - נותן
+  // פידבק ויזואלי מיידי ללחיצה (בלי זה יש "מתה" מוחשית בלי שום תגובה
+  // עד שהגרירה נדלקת, שמרגישה כאילו השורה "נתקעת" ברגע הראשון).
+  isPending?: boolean;
   translateY: number;
   rowRef: (el: HTMLDivElement | null) => void;
   onRowTouch: (e: React.TouchEvent) => void;
@@ -21,7 +25,7 @@ interface Props {
   dragContainerWidth?: number;
 }
 
-export const ProductReorderRow = memo(({ product, index, isDragging, translateY, rowRef, onRowTouch, onRowMouse, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
+export const ProductReorderRow = memo(({ product, index, isDragging, isPending = false, translateY, rowRef, onRowTouch, onRowMouse, dragFixedTop = 0, dragContainerLeft = 0, dragContainerWidth = 300 }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
@@ -111,9 +115,15 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
           mb: '6px',
           position: 'relative',
           transform: `translateY(${translateY}px)`,
+          // פידבק מיידי ל-long-press (isPending) - עוד לפני שהגרירה בפועל
+          // מתחילה, כדי שהלחיצה לא תרגיש "מתה" ב-140ms הראשונות.
+          scale: isPending ? '0.98' : '1',
+          opacity: isPending ? 0.9 : 1,
           zIndex: 1,
           willChange: 'transform',
-          transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
+          transition: isPending
+            ? 'scale 0.1s ease, opacity 0.1s ease'
+            : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
         }}
       >
         {!isDragging && rowContent}

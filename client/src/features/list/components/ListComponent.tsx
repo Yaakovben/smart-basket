@@ -220,7 +220,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   const {
     orderedItems: reorderOrderedItems,
-    reorderMode, dragIndex: reorderDragIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
+    reorderMode, dragIndex: reorderDragIndex, pendingIndex: reorderPendingIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
     rowRefs: reorderRowRefs, hasChanges: reorderHasChanges,
     handleDragStart: reorderHandleDragStart,
     handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
@@ -627,6 +627,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 product={p}
                 index={idx}
                 isDragging={reorderDragIndex === idx}
+                isPending={reorderPendingIndex === idx}
                 translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
                 rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
                 onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}

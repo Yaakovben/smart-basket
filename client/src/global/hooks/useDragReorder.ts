@@ -41,9 +41,13 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const [dragFixedTop, setDragFixedTop] = useState(0);
   const [dragContainerLeft, setDragContainerLeft] = useState(0);
   const [dragContainerWidth, setDragContainerWidth] = useState(0);
-  // pending = long-press ממתין (עוד לא drag). state (לא ref) כדי שה-effect
-  // שמחבר את מאזיני ה-touch של ה-document ירוץ *מיד* עם הלחיצה.
-  const [pending, setPending] = useState(false);
+  // pendingIndex = אינדקס השורה שבה long-press ממתין (עוד לא drag), או -1.
+  // state (לא ref) משתי סיבות: (1) ה-effect שמחבר את מאזיני ה-touch של
+  // ה-document צריך לרוץ *מיד* עם הלחיצה, (2) השורות עצמן צריכות לדעת
+  // איזו מהן ב-pending כדי לתת פידבק ויזואלי מיידי ללחיצה - בלי זה יש
+  // "מתה" מוחשית של DRAG_ACTIVATION_DELAY_MS (140ms) בלי שום תגובה לפני
+  // שהגרירה בפועל מתחילה, שמרגישה כאילו "נתקע" ברגע הראשון של הגרירה.
+  const [pendingIndex, setPendingIndex] = useState(-1);
   // סדר הפריטים ברגע הכניסה למצב סידור - state (לא ref) כי hasChanges
   // נגזר ממנו בזמן render.
   const [originalOrder, setOriginalOrder] = useState<string[]>([]);
@@ -80,7 +84,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
       clearTimeout(pendingDragRef.current.timer);
       pendingDragRef.current = null;
     }
-    setPending(false);
+    setPendingIndex(-1);
   }, []);
 
   // targetIndex מתוך המדידה הסטטית שנלקחה ב-activateDrag + פיצוי גלילה.
@@ -152,11 +156,11 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     const timer = setTimeout(() => {
       const p = pendingDragRef.current;
       pendingDragRef.current = null;
-      setPending(false);
+      setPendingIndex(-1);
       if (p) activateDrag(p.index, lastPointerYRef.current || p.startY);
     }, DRAG_ACTIVATION_DELAY_MS);
     pendingDragRef.current = { index, startY: clientY, startX: clientX, timer };
-    setPending(true);
+    setPendingIndex(index);
   }, [cancelPending, activateDrag]);
 
   const handleDragMove = useCallback((clientY: number, clientX = 0) => {
@@ -231,7 +235,6 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
 
   const handleDragEnd = useCallback(() => {
     cancelPending();
-    setPending(false);
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     autoScrollDirRef.current = 0;
     const from = dragIndexRef.current;
@@ -255,7 +258,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     setDragOffsetY(0);
   }, [cancelPending]);
 
-  const isActive = dragIndex >= 0 || pending;
+  const isActive = dragIndex >= 0 || pendingIndex >= 0;
   useEffect(() => {
     if (!isActive) return;
     const onTouchMove = (e: TouchEvent) => {
@@ -281,7 +284,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-  }, [dragIndex, pending, isActive, handleDragMove, handleDragEnd]);
+  }, [dragIndex, pendingIndex, isActive, handleDragMove, handleDragEnd]);
 
   const hasChanges = useMemo(() => {
     if (!reorderedIds) return false;
@@ -344,6 +347,7 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     reorderMode,
     reorderedIds,
     dragIndex,
+    pendingIndex,
     dragOffsetY,
     dragFixedTop,
     dragContainerLeft,

@@ -33,6 +33,9 @@ interface HomeListContentProps {
   onLeaveList?: (list: List) => void;
   reorderMode: boolean;
   dragIndex: number;
+  // אינדקס הכרטיס ב-long-press (140ms) לפני שהגרירה בפועל מתחילה - נותן
+  // פידבק ויזואלי מיידי ללחיצה, ראו ProductReorderRow.isPending.
+  pendingIndex: number;
   // translateY (px) של הכרטיס הנגרר - עוקב אחרי האצבע 1:1.
   dragOffsetY: number;
   // מידות לגרירה fixed-position: top ראשוני של הכרטיס הנגרר + מיכל (ראו ProductReorderRow).
@@ -73,7 +76,7 @@ const RetryDots = () => (
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
-  reorderMode, dragIndex, dragOffsetY, dragFixedTop, dragContainerLeft, dragContainerWidth, getRowShift, rowRefs, hasOrderChanges,
+  reorderMode, dragIndex, pendingIndex, dragOffsetY, dragFixedTop, dragContainerLeft, dragContainerWidth, getRowShift, rowRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
   // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
@@ -342,6 +345,7 @@ export const HomeListContent = ({
         </Box>
         {orderedDisplay.map((l: List, idx: number) => {
           const isDragging = reorderMode && dragIndex === idx;
+          const isPending = reorderMode && pendingIndex === idx;
           // translateY = מעקב מיידי אחרי האצבע לכרטיס הנגרר; קפיצה של
           // גובה-שורה אחד לכרטיסים שמתפנים מקום (getRowShift). זהה למנוע
           // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
@@ -366,9 +370,15 @@ export const HomeListContent = ({
                 } : {
                   position: 'relative',
                   transform: reorderMode ? `translateY(${translateY}px)` : 'none',
-                  transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                  // פידבק מיידי ל-long-press (isPending) - עוד לפני שהגרירה
+                  // בפועל מתחילה, כדי שהלחיצה לא תרגיש "מתה" ב-140ms הראשונות.
+                  scale: isPending ? '0.98' : '1',
+                  opacity: isPending ? 0.9 : 1,
                   zIndex: 1,
                   willChange: reorderMode ? 'transform' : 'auto',
+                  transition: isPending
+                    ? 'scale 0.1s ease, opacity 0.1s ease'
+                    : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
                 }}
               >
                 {!isDragging && (

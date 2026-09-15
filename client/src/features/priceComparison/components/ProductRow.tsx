@@ -3,6 +3,7 @@ import { Box, Typography, Tooltip } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { formatILS } from '../../../global/helpers';
 
 interface ProductRowProps {
   match: PriceMatch;
@@ -97,7 +98,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
         )}
         {match.userQuantity > 1 && (
           <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: showIdentifiedAs ? 0.1 : 0 }}>
-            ×{match.userQuantity} = ₪{subtotal.toFixed(2)}
+            ×{match.userQuantity} = {formatILS(subtotal, 2)}
           </Typography>
         )}
       </Box>
@@ -115,7 +116,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
             color: isCheapest ? '#059669' : (isMostExpensive ? '#DC2626' : '#0F766E'),
             fontVariantNumeric: 'tabular-nums',
           }}>
-            ₪{match.price.toFixed(2)}
+            {formatILS(match.price, 2)}
           </Typography>
         </Box>
         {/* תג השוואה - הכי זול / +X% */}
