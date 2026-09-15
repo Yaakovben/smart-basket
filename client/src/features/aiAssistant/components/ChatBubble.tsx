@@ -24,7 +24,7 @@ function getCachedUser(): User | null {
 
 export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
   const isUser = entry.role === 'user';
-  const currentUser = useMemo(getCachedUser, []);
+  const currentUser = useMemo(() => getCachedUser(), []);
 
   return (
     <Box sx={{ mb: 1.5 }}>

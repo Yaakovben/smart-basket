@@ -77,10 +77,9 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
   useEffect(() => {
     if (!open || ranRef.current) return;
     ranRef.current = true;
-    setText('');
-    setDone(false);
-    setError(null);
-    setLoading(true);
+    // אתחול מצב לפני תחילת הניתוח — מקובץ ב-React 18, render בודד
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setText(''); setDone(false); setError(null); setLoading(true);
 
     const prompt = buildAnalysisPrompt(listName, productNames, settings.language);
     const MAX_ATTEMPTS = 2;
@@ -127,7 +126,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       })
       .catch(() => { setPriceGroup(null); setChainTotals([]); })
       .finally(() => setPriceLoading(false));
-  }, [open, listId, listName, productNames, settings.language]);
+  }, [open, listId, listName, productNames, settings.language, t]);
 
   // איפוס כשהdrawer נסגר - מוכן לפתיחה הבאה
   const handleClose = () => {

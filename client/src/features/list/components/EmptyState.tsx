@@ -73,9 +73,9 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
   // הרשימה ריקה (שיכול להיות המון זמן), רק "רמז" חולף כשנכנסים לרשימה חדשה.
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
-    if (!wantsSavedLists) { setTimedOut(false); return; }
+    if (!wantsSavedLists) return;
     const timer = window.setTimeout(() => setTimedOut(true), 8000);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); setTimedOut(false); };
   }, [wantsSavedLists]);
 
   const showSavedLists = wantsSavedLists && !timedOut;
