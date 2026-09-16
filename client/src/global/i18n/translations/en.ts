@@ -275,6 +275,7 @@ export const en: Translations = {
   removedYouNotif: 'removed you from the list',
   deletedGroupNotif: 'deleted the list',
   listUpdatedNotif: 'updated list settings',
+  reorderedProductsNotif: 'changed the products order',
   groupDeletedNotif: 'List was deleted',
   inListNotif: 'in list',
   deleteGroupTitle: 'Delete List',

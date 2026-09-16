@@ -16,6 +16,7 @@ const notificationTypes = [
   'list_deleted',
   'list_update',
   'list_clear',
+  'products_reorder',
 ] as const;
 
 export const notificationValidator = {

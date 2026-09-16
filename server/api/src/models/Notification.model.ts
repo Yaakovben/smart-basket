@@ -14,7 +14,8 @@ export type NotificationType =
   | 'member_removed'
   | 'list_deleted'
   | 'list_update'  // כששם או הגדרות הרשימה שונו
-  | 'list_clear';  // כשרשימה נוקתה
+  | 'list_clear'  // כשרשימה נוקתה
+  | 'products_reorder';  // כשסדר המוצרים שונה (גרירה ידנית או מיון לפי קטגוריה)
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -34,7 +35,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_photo_add', 'product_photo_remove', 'product_delete', 'product_purchase', 'product_unpurchase', 'member_removed', 'list_deleted', 'list_update', 'list_clear'],
+      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_photo_add', 'product_photo_remove', 'product_delete', 'product_purchase', 'product_unpurchase', 'member_removed', 'list_deleted', 'list_update', 'list_clear', 'products_reorder'],
       required: true,
     },
     listId: {

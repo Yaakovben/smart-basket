@@ -78,6 +78,7 @@ const generatePushMessage = (
       case 'product_purchase':   return `${firstName} סימן/ה "${productName}" כנקנה`;
       case 'product_unpurchase': return `${firstName} החזיר/ה "${productName}" לרשימה`;
       case 'list_clear':      return `${firstName} ניקה/תה את הרשימה`;
+      case 'products_reorder': return `${firstName} שינה/תה את סדר המוצרים ברשימה`;
       case 'list_update': {
         // productName מקודד שינוי ושם חדש אופציונלי כ-"changeType:newName"
         const [changeType, newName] = productName?.includes(':')

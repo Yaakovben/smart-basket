@@ -270,6 +270,7 @@ export type TranslationKeys =
   | 'removedYouNotif'
   | 'deletedGroupNotif'
   | 'listUpdatedNotif'
+  | 'reorderedProductsNotif'
   | 'groupDeletedNotif'
   | 'inListNotif'
   | 'deleteGroupTitle'
