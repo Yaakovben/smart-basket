@@ -139,13 +139,10 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         trackEvent('group_joined'); // לופ ויראלי - הצטרפות דרך קוד הזמנה
         return { success: true };
       } catch (error: unknown) {
-        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: { code?: string; message?: string } | string } }; code?: string };
+        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string; code?: string } }; code?: string };
         const status = apiError.response?.status;
-        const errorData = apiError.response?.data?.error;
-        const errorCode = typeof errorData === 'object' ? errorData?.code : undefined;
-        const errorMessage = apiError.response?.data?.message
-          || (typeof errorData === 'string' ? errorData : errorData?.message)
-          || '';
+        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error || '';
+        const errorCode = apiError.response?.data?.code;
 
         // שגיאת רשת או timeout
         if (apiError.code === 'ERR_NETWORK' || apiError.code === 'ECONNABORTED') {
