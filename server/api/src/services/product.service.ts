@@ -1,5 +1,6 @@
 import { ProductDAL, ListDAL } from '../dal';
 import { NotFoundError, AppError } from '../errors';
+import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc, IProductEditChange, IProductEditEntry, IList } from '../models';
@@ -7,6 +8,7 @@ import { checkListAccessLean, memberIdsOf } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
 import { invalidateInsightsCache } from './insights.service';
 import { deleteCloudinaryImage, deleteCloudinaryImages } from './imageUpload.service';
+import { createNotificationsForListMembers } from './notification.service';
 
 // מנקה את מטמון השוואת המחירים והתובנות לכל חברי הרשימה (לא רק לפועל) -
 // כדי שרכישה/הוספה של חבר קבוצה אחד תשתקף מיד גם אצל שאר חברי הרשימה
@@ -232,12 +234,20 @@ export async function reorderProducts(
   productIds: string[],
   manual = true
 ): Promise<void> {
-  await checkListAccessLean(listId, userId);
+  const list = await checkListAccessLean(listId, userId);
   await ProductDAL.reorderProducts(listId, productIds, manual);
   // דגל ברמת הרשימה - הלקוח ממיין לפי position רק כשהוא true. גם מעדכן
   // updatedAt כדי שסנכרון ה-socket (products:reordered → refetch) יביא את
   // הסדר החדש לשאר חברי הקבוצה.
   await ListDAL.setProductsManuallyOrdered(listId, manual);
+
+  // התראה + push לשאר חברי הקבוצה - בלי זה הסדר פשוט משתנה אצלם בלי
+  // הסבר, ומבלבל ("למה המוצרים זזו?"). לא preloadedList (חסר name כאן) -
+  // הפונקציה טוענת את הרשימה המלאה בעצמה ומחזירה [] מעצמה אם אין חברים.
+  if (list.members.length > 0) {
+    createNotificationsForListMembers(listId, 'products_reorder', userId)
+      .catch((err: unknown) => logger.error('Reorder notification failed:', err));
+  }
 }
 
 export async function moveProducts(

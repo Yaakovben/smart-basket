@@ -68,6 +68,7 @@ export function getSettingsKeyForType(type: string): keyof NotifSettingsIDB | nu
     case 'member_removed': return 'groupRemoved';
     case 'list_deleted': return 'groupDelete';
     case 'list_update': return 'listUpdate';
+    case 'products_reorder': return 'listUpdate';
     case 'product_add': return 'productAdd';
     case 'product_update': return 'productEdit';
     case 'product_photo_add': return 'productEdit';

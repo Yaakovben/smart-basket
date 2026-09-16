@@ -275,6 +275,7 @@ export const ru: Translations = {
   removedYouNotif: 'удалил(а) вас из списка',
   deletedGroupNotif: 'удалил(а) список',
   listUpdatedNotif: 'обновил(а) настройки списка',
+  reorderedProductsNotif: 'изменил(а) порядок товаров',
   groupDeletedNotif: 'Список был удалён',
   inListNotif: 'в списке',
   deleteGroupTitle: 'Удалить список',

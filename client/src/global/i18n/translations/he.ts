@@ -274,6 +274,7 @@ export const he: Translations = {
   removedYouNotif: 'הסיר/ה אותך מהרשימה',
   deletedGroupNotif: 'מחק/ה את הרשימה',
   listUpdatedNotif: 'עדכן/ה את הגדרות הרשימה',
+  reorderedProductsNotif: 'שינה/תה את סדר המוצרים',
   groupDeletedNotif: 'הרשימה נמחקה',
   inListNotif: 'ברשימה',
   deleteGroupTitle: 'מחיקת רשימה',

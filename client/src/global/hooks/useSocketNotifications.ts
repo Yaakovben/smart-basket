@@ -46,7 +46,7 @@ interface ListDeletedEventData {
 // התראה מקומית לפאנל הפופאפ
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_photo_add' | 'product_photo_remove' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
+  type: 'product_add' | 'product_edit' | 'product_photo_add' | 'product_photo_remove' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear' | 'products_reorder';
   listId: string;
   listName: string;
   userId: string;
@@ -199,6 +199,40 @@ export function useSocketNotifications(
       }
     });
 
+    // סידור מחדש (גרירה ידנית או מיון לפי קטגוריה) - בלי טוסט/התראה כאן
+    // המוצרים פשוט זזו בלי הסבר, מה שמבלבל חברי קבוצה אחרים. גם נשמר
+    // כהתראה מתמשכת + push דרך ה-API (ראו product.service.ts) - זה כאן
+    // רק ה"עכשיו" בזמן אמת בזמן שהאפליקציה פתוחה.
+    const unsubProductsReordered = socketService.on('products:reordered', (data: unknown) => {
+      try {
+        const event = data as { listId: string; userId: string; userName: string; manual?: boolean };
+        if (!event?.userId || !event?.listId) return;
+        if (event.userId === user.id) return;
+
+        const listName = listNamesRef.current[event.listId] || '';
+        const firstName = event.userName?.split(' ')[0] || '';
+        const isMuted = notificationSettingsRef.current.mutedGroupIds?.includes(event.listId);
+
+        addNotificationRef.current?.({
+          id: `notif_${Date.now()}_${event.userId}`,
+          type: 'products_reorder',
+          listId: event.listId,
+          listName,
+          userId: event.userId,
+          userName: event.userName,
+          timestamp: new Date(),
+          read: false
+        });
+
+        const ns = notificationSettingsRef.current;
+        if (!isMuted && ns.enabled && ns.listUpdate && !isPushSubscribedRef.current) {
+          showToastRef.current(`${firstName} ${tRef.current('reorderedProductsNotif')}${listName ? ` ${tRef.current('inListNotif')} ${listName}` : ''}`, 'info');
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול באירוע סידור מחדש:', err);
+      }
+    });
+
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
       handleProductEvent(event, 'productPurchase', event.isPurchased ? 'product_purchase' : 'product_unpurchase',
@@ -325,6 +359,7 @@ export function useSocketNotifications(
       unsubProductUpdated();
       unsubProductDeleted();
       unsubProductsCleared();
+      unsubProductsReordered();
       unsubProductToggled();
       unsubNotificationNew();
       unsubMemberRemoved();
