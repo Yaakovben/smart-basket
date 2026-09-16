@@ -48,6 +48,12 @@ export const he: Translations = {
   sendEmail: 'שלח אימייל',
   sendWhatsApp: 'שלח וואטסאפ',
   helpDescription: 'נשמח לעזור! פנה אלינו בכל שאלה.',
+  // Feedback popup
+  feedbackTitle: 'מה דעתך על האפליקציה?',
+  feedbackDescription: 'ספרו לנו מה אתם חושבים, ומה תרצו שנשפר או נוסיף.',
+  feedbackPlaceholder: 'כתבו כאן את המשוב שלכם...',
+  feedbackSend: 'שליחה',
+  feedbackMaybeLater: 'אולי אחר כך',
   // About
   aboutDescription: 'פשוט, נוח, משותף - רשימת קניות חכמה',
   developedBy: 'פותח על ידי',

@@ -46,6 +46,12 @@ export type TranslationKeys =
   | 'sendEmail'
   | 'sendWhatsApp'
   | 'helpDescription'
+  // Feedback popup
+  | 'feedbackTitle'
+  | 'feedbackDescription'
+  | 'feedbackPlaceholder'
+  | 'feedbackSend'
+  | 'feedbackMaybeLater'
   // About
   | 'aboutDescription'
   | 'developedBy'

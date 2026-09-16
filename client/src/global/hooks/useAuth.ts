@@ -5,6 +5,7 @@ import { socketService } from "../../services/socket";
 import { getAccessToken, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 import { diagLog } from "../helpers/crashLog";
+import { countAppOpen } from "../helpers/appOpenCount";
 
 // מעקב אחר זמן כניסות וחזרות מרקע (מודולרי, שורד StrictMode re-mount).
 let _lastAppOpenLogAt = 0;
@@ -164,6 +165,8 @@ export function useAuth() {
 
         // רישום פתיחת אפליקציה לאדמין (throttled)
         logAppOpenThrottled();
+        // מונה פתיחות אמיתי (לא throttled) - לתנאי הכניסה של פופאפ המשוב.
+        countAppOpen();
       } catch (error) {
         diagLog('auth', `checkAuth failed: ${String(error)}`);
         clearTimeout(timeoutId!);

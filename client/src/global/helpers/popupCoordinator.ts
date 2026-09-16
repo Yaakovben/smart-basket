@@ -5,6 +5,8 @@
  *  1. daily-faith  (התחזקות יומית) - תמיד ראשון אם זמין
  *  2. pwa-install  (הזמנה להתקנה) - רק בדפדפן
  *  3. push-notify  (בקשת הרשאה להתראות) - רק ב-PWA מותקן
+ *  4. feedback     (מה דעתך על האפליקציה) - רק למשתמשים ותיקים (20+ פתיחות),
+ *                  פעם אחת לכל משתמש (לצמיתות, לא רק לסשן)
  *
  * חוקים:
  *  - פופאפ אחד לסשן בלבד (sessionStorage, מתאפס בסגירת הדפדפן)
@@ -12,7 +14,7 @@
  *  - כל popup שומר דחייה משלו ב-localStorage (לצמיתות)
  */
 
-type PopupKind = 'daily-faith' | 'pwa-install' | 'push-notify' | 'feature-tip';
+type PopupKind = 'daily-faith' | 'pwa-install' | 'push-notify' | 'feature-tip' | 'feedback';
 
 const SESSION_KEY = 'sb_popup_shown_session';
 
