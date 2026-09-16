@@ -61,9 +61,23 @@ function showOverlay(preparingText: string, isDark: boolean): HTMLElement {
   overlay.id = OVERLAY_ID;
   overlay.style.cssText = `
     position: fixed; inset: 0; z-index: 999999;
-    background: ${isDark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
-    font-family: ${APP_FONT_STACK}; font-size: 15px; font-weight: 600; color: ${ink};
+    background: ${isDark ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.45)'};
+    display: flex; align-items: center; justify-content: center;
+  `;
+
+  const card = document.createElement('div');
+  card.style.cssText = `
+    width: 108px; height: 138px; border-radius: 14px;
+    background: ${fill}; border: 1.5px solid ${edge};
+    box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  `;
+
+  const labelInCard = document.createElement('span');
+  labelInCard.textContent = preparingText;
+  labelInCard.style.cssText = `
+    font-family: ${APP_FONT_STACK}; font-size: 11px; font-weight: 600; color: ${ink};
+    text-align: center; padding: 0 8px;
   `;
 
   const stack = document.createElement('div');
@@ -104,11 +118,9 @@ function showOverlay(preparingText: string, isDark: boolean): HTMLElement {
   stack.appendChild(back1);
   stack.appendChild(front);
 
-  const label = document.createElement('div');
-  label.textContent = preparingText;
-
-  overlay.appendChild(stack);
-  overlay.appendChild(label);
+  card.appendChild(stack);
+  card.appendChild(labelInCard);
+  overlay.appendChild(card);
   document.body.appendChild(overlay);
   return overlay;
 }

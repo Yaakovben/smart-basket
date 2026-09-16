@@ -6,12 +6,11 @@ import { getAccessToken, rehydrateTokensFromIdb, setAuthInProgress } from "../..
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 import { diagLog } from "../helpers/crashLog";
 
-// זמן הרישום האחרון של פתיחת אפליקציה (מודולרי, שורד StrictMode re-mount).
-// לא רק "פעם אחת לכל טעינה": מתעדכן גם כשה-PWA/טאב חוזר לחזית אחרי שהיה
-// ברקע, כדי ש"כניסה אחרונה" בדשבורד האדמין ישקף שימוש אמיתי ולא ישאר תקוע
-// מהפתיחה הראשונה של הסשן.
+// מעקב אחר זמן כניסות וחזרות מרקע (מודולרי, שורד StrictMode re-mount).
 let _lastAppOpenLogAt = 0;
+let _hiddenAt = 0; // מתי האפליקציה הלכה לרקע
 const APP_OPEN_LOG_THROTTLE_MS = 15 * 60 * 1000; // 15 דקות
+const MIN_BACKGROUND_FOR_LOG_MS = 2 * 60 * 1000; // חזרה אחרי 2+ דקות = כניסה "חדשה"
 
 const logAppOpenThrottled = () => {
   const now = Date.now();
@@ -203,13 +202,22 @@ export function useAuth() {
     checkAuth();
   }, []);
 
-  // רישום פתיחת אפליקציה גם כש-PWA/טאב חוזר לחזית מהרקע (לא רק ב-mount הראשוני).
-  // מובייל/PWA לרוב לא עושים reload מלא כשחוזרים מהרקע, אז בלי זה "כניסה אחרונה"
-  // נשארת תקועה מהפתיחה הראשונה של הסשן.
+  // רישום פתיחת אפליקציה גם כשה-PWA/טאב חוזר לחזית מהרקע.
+  // אם המשתמש היה ברקע 2+ דקות — זו "כניסה חדשה" שנרשמת מיידית ללא throttle.
+  // חזרה מהירה (פחות מ-2 דקות, למשל לחיצה על לינק ב-WhatsApp וחזרה) — throttle רגיל.
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && getAccessToken()) {
-        logAppOpenThrottled();
+      if (document.visibilityState === 'hidden') {
+        _hiddenAt = Date.now();
+      } else if (document.visibilityState === 'visible' && getAccessToken()) {
+        const awayMs = _hiddenAt > 0 ? Date.now() - _hiddenAt : 0;
+        _hiddenAt = 0;
+        if (awayMs >= MIN_BACKGROUND_FOR_LOG_MS) {
+          _lastAppOpenLogAt = Date.now();
+          authApi.logAppOpen();
+        } else {
+          logAppOpenThrottled();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);

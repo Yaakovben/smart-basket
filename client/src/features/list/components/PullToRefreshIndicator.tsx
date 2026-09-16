@@ -1,21 +1,22 @@
 import { memo } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { PULL_THRESHOLD, PULL_MAX } from '../helpers/list-helpers';
 
 // ===== אינדיקטור Pull to Refresh - מופיע מעל התוכן בזמן משיכה =====
-// טבעת התקדמות אמיתית (0%-100% עד סף המשיכה) סביב חץ שמסתובב בהדרגה;
-// בהגעה לסף - הטבעת מתמלאת, "קופצת" קלות והחץ מתחלף לוי - מצב "ניתן
-// לשחרר" ברור ושונה מ"עדיין למשוך". בזמן הרענון עצמו - ספינר אמיתי
-// (indeterminate), לא רק סיבוב CSS על אייקון קבוע.
+// lastRefreshedAt: אם מועבר, מוצג "נכון ל HH:MM" מתחת לאינדיקטור בזמן משיכה.
 interface PullToRefreshIndicatorProps {
   pullDistance: number;
   refreshing: boolean;
   pullActive: boolean;
+  lastRefreshedAt?: Date | null;
 }
 
-export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActive }: PullToRefreshIndicatorProps) => {
+export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActive, lastRefreshedAt }: PullToRefreshIndicatorProps) => {
+  const timeLabel = lastRefreshedAt
+    ? lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
   if (!(pullDistance > 0 || refreshing)) return null;
 
   const progress = Math.min(1, pullDistance / PULL_THRESHOLD);
@@ -25,8 +26,8 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
     <Box sx={{
       position: 'absolute',
       top: 0, left: 0, right: 0,
-      height: refreshing ? 54 : Math.min(pullDistance, PULL_MAX),
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: refreshing ? 60 : Math.min(pullDistance, PULL_MAX),
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.5,
       bgcolor: 'background.default',
       transition: pullActive ? 'none' : 'height 0.25s cubic-bezier(0.34, 1.2, 0.64, 1)',
       zIndex: 5,
@@ -76,6 +77,17 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
           )}
         </Box>
       </Box>
+      {/* "נכון ל HH:MM" — מוצג בזמן משיכה/רענון אם יש timestamp */}
+      {timeLabel && (pullDistance > 0 || refreshing) && (
+        <Typography sx={{
+          fontSize: 10, fontWeight: 600, color: 'text.disabled',
+          letterSpacing: 0.2, lineHeight: 1,
+          opacity: Math.min(1, pullDistance / (PULL_THRESHOLD * 0.5)),
+          transition: pullActive ? 'none' : 'opacity 0.2s ease',
+        }}>
+          נכון ל {timeLabel}
+        </Typography>
+      )}
     </Box>
   );
 });

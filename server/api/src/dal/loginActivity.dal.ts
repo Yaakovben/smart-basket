@@ -10,7 +10,7 @@ type UserLoginStats = {
   lastAppOpenAt: Date | null;
 };
 
-const LOGIN_STATS_CACHE_TTL_MS = 5 * 60 * 1000;
+const LOGIN_STATS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 דקות — נתוני "כניסה אחרונה" לא צריכים דיוק לשנייה
 const loginStatsCache = new Map<string, { data: UserLoginStats[]; expiresAt: number; refreshing?: boolean }>();
 
 async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> {
