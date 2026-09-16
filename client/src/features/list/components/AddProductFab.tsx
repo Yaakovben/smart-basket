@@ -16,17 +16,25 @@ interface AddProductFabProps {
   itemCount: number;
   fabPosition: FabPosition | null;
   isDragging: boolean;
+  // false בזמן גלילה למטה ברשימה ארוכה - הכפתור פשוט מסתיר מוצרים. תמיד
+  // true בזמן גרירה בפועל (isDragging), גם אם הוחבא רגע לפני כן.
+  visible: boolean;
   onAddProduct: () => void;
   onDragStart: (clientX: number, clientY: number, currentCenterX?: number, currentCenterY?: number) => void;
   onDragMove: (clientX: number, clientY: number) => void;
   onDragEnd: () => void;
 }
 
+// אנימציית הופעה/הסתרה - קפיצה עדינה (לא רק fade שטוח) עם overshoot קל
+// שמתאים לשפה העיצובית של האפליקציה (אותו סוג עקומה כמו כרטיסי רשימה).
+const VISIBILITY_TRANSITION = 'opacity 0.22s ease, transform 0.28s cubic-bezier(0.34,1.4,0.64,1)';
+
 // ===== קומפוננטה =====
 export const AddProductFab = memo(({
   itemCount,
   fabPosition,
   isDragging,
+  visible,
   onAddProduct,
   onDragStart,
   onDragMove,
@@ -87,7 +95,7 @@ export const AddProductFab = memo(({
           }),
           zIndex: 5,
           touchAction: 'none',
-          '& > *': { pointerEvents: 'auto' },
+          '& > *': { pointerEvents: visible ? 'auto' : 'none' },
         }}
         onTouchStart={(e) => { const c = measureCenter(); onDragStart(e.touches[0].clientX, e.touches[0].clientY, c?.x, c?.y); }}
         onTouchMove={(e) => onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
@@ -104,9 +112,12 @@ export const AddProductFab = memo(({
           aria-label={t('addProduct')}
           sx={{
             cursor: isDragging ? 'grabbing' : 'grab',
-            transition: isDragging ? 'none' : 'all 0.2s ease',
+            transition: isDragging ? 'none' : `all 0.2s ease, ${VISIBILITY_TRANSITION}`,
             width: { xs: 52, sm: 56 },
             height: { xs: 52, sm: 56 },
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'scale(1) translateY(0)' : 'scale(0.6) translateY(28px)',
+            pointerEvents: visible ? 'auto' : 'none',
           }}
         >
           <AddIcon sx={{ fontSize: { xs: 22, sm: 24 } }} />
@@ -141,8 +152,11 @@ export const AddProductFab = memo(({
           fontSize: 14,
           textTransform: 'none',
           boxShadow: '0 6px 20px rgba(20, 184, 166, 0.4)',
-          pointerEvents: 'auto',
+          pointerEvents: visible ? 'auto' : 'none',
           touchAction: 'manipulation',
+          transition: VISIBILITY_TRANSITION,
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'scale(1) translateY(0)' : 'scale(0.6) translateY(28px)',
         }}
       >
         <AddIcon sx={{ fontSize: 20 }} />

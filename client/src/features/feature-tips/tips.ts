@@ -111,6 +111,15 @@ export const FEATURE_TIPS: FeatureTip[] = [
     bodyKey: 'tipBranchesMapBody',
   },
   {
+    id: 'drag-add-button',
+    emoji: '✋',
+    gradient: { light: 'linear-gradient(135deg, #F472B6 0%, #FBCFE8 60%, #FDF2F8 100%)', dark: 'linear-gradient(135deg, rgba(244,114,182,0.55) 0%, rgba(244,114,182,0.18) 100%)' },
+    ink: { light: '#9D174D', dark: '#F9A8D4' },
+    glow: { light: 'rgba(244,114,182,0.38)', dark: 'rgba(0,0,0,0.4)' },
+    titleKey: 'tipDragFabTitle',
+    bodyKey: 'tipDragFabBody',
+  },
+  {
     id: 'mute-list',
     emoji: '🔕',
     gradient: { light: 'linear-gradient(135deg, #94A3B8 0%, #CBD5E1 60%, #F8FAFC 100%)', dark: 'linear-gradient(135deg, rgba(100,116,139,0.55) 0%, rgba(100,116,139,0.18) 100%)' },
