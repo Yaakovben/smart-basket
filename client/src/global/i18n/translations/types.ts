@@ -919,6 +919,20 @@ export type TranslationKeys =
   | 'tipMuteListTitle'
   | 'tipMuteListBody'
   | 'tipNext'
-  | 'tipDotAria';
+  | 'tipDotAria'
+  // Freemium / Upgrade modal
+  | 'planLimitReached'
+  | 'planFree'
+  | 'planPro'
+  | 'planBadgePro'
+  | 'upgradeTitle'
+  | 'upgradeSubtitle'
+  | 'upgradeListLimit'
+  | 'upgradeMembersLimit'
+  | 'upgradeAiLimit'
+  | 'upgradePriceLimit'
+  | 'upgradeCta'
+  | 'upgradePrice'
+  | 'upgradeContact';
 
 export type Translations = Record<TranslationKeys, string>;

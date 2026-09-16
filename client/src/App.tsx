@@ -5,6 +5,7 @@ import { SettingsProvider, useSettings } from './global/context/SettingsContext'
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
+import { UpgradeModalProvider } from './global/components/UpgradeModalContext';
 import { useServiceWorker } from './global/hooks';
 import { diagLog } from './global/helpers/crashLog';
 
@@ -138,7 +139,9 @@ const ThemedApp = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <AppRouter />
+        <UpgradeModalProvider>
+          <AppRouter />
+        </UpgradeModalProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

@@ -20,6 +20,8 @@ export interface ISavedList {
   items: ISavedListItem[];
 }
 
+export type UserPlan = 'free' | 'pro';
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -41,6 +43,9 @@ export interface IUser extends Document {
   // ישירות בכל login; רק "מתעדכן כלפי מעלה" כשה-live count (המחושב מתוך
   // LoginActivity, שמתנקה אוטומטית אחרי 90 יום) עולה מעליו.
   totalLogins: number;
+  // מנוי: 'free' (ברירת מחדל) או 'pro' (9.90 שקל/חודש).
+  plan: UserPlan;
+  planExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -123,6 +128,14 @@ const userSchema = new Schema<IUser>(
     totalLogins: {
       type: Number,
       default: 0,
+    },
+    plan: {
+      type: String,
+      enum: ['free', 'pro'],
+      default: 'free',
+    },
+    planExpiresAt: {
+      type: Date,
     },
   },
   {

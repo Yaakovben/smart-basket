@@ -921,4 +921,18 @@ export const he: Translations = {
   tipSavedListsBody: 'קניות שחוזרות כל שבוע? שמרו אותן כרשימה קבועה, והוסיפו את כל המוצרים בלחיצה אחת בכל פעם מחדש.',
   tipMuteListTitle: 'השתקת התראות לרשימה',
   tipMuteListBody: 'רשימה קבוצתית רועשת מדי? "השתק רשימה" מתפריט הרשימה משתיק את ההתראות - היא ממשיכה לפעול כרגיל.',
+  // Freemium
+  planLimitReached: 'הגעת למגבלת התוכנית החינמית',
+  planFree: 'חינמי',
+  planPro: 'Pro',
+  planBadgePro: 'PRO',
+  upgradeTitle: 'שדרג ל-Pro',
+  upgradeSubtitle: 'גישה מלאה לכל הפיצ\'רים',
+  upgradeListLimit: 'עד 3 רשימות בבעלותך',
+  upgradeMembersLimit: 'עד 3 חברים לכל קבוצה',
+  upgradeAiLimit: '5 בקשות AI ביום',
+  upgradePriceLimit: '3 השוואות מחיר ביום',
+  upgradeCta: 'שדרג עכשיו',
+  upgradePrice: '₪9.90 לחודש',
+  upgradeContact: 'צור קשר',
 };

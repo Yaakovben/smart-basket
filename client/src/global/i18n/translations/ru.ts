@@ -915,4 +915,18 @@ export const ru: Translations = {
   tipSavedListsBody: 'Покупки повторяются каждую неделю? Сохраните список и добавляйте все товары одним нажатием каждый раз.',
   tipMuteListTitle: 'Отключить уведомления списка',
   tipMuteListBody: 'Групповой список слишком шумный? В меню списка есть «Отключить список» — он останется активным, просто не будет уведомлять.',
+  // Freemium
+  planLimitReached: 'Достигнут лимит бесплатного тарифа',
+  planFree: 'Бесплатно',
+  planPro: 'Pro',
+  planBadgePro: 'PRO',
+  upgradeTitle: 'Перейти на Pro',
+  upgradeSubtitle: 'Полный доступ ко всем функциям',
+  upgradeListLimit: 'До 3 списков в вашей собственности',
+  upgradeMembersLimit: 'До 3 участников в группе',
+  upgradeAiLimit: '5 запросов AI в день',
+  upgradePriceLimit: '3 сравнения цен в день',
+  upgradeCta: 'Обновить сейчас',
+  upgradePrice: '₪9.90 в месяц',
+  upgradeContact: 'Связаться с нами',
 };

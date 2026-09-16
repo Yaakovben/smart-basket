@@ -10,7 +10,8 @@
 
 import mongoose from 'mongoose';
 import { ListDAL, UserDAL } from '../dal';
-import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
+import { NotFoundError, ForbiddenError, ConflictError, AuthError, PlanLimitError } from '../errors';
+import { PLAN_LIMITS } from '../constants';
 import { logger } from '../config';
 import {
   createNotification,
@@ -45,6 +46,14 @@ export async function joinGroup(
 
   const user = await UserDAL.findById(userId);
   if (!user) throw NotFoundError.user();
+
+  // בדיקת מגבלת Freemium: בעלים חינמי מוגבל ל-3 חברים כולל עצמו
+  const owner = await UserDAL.findById(list.owner.toString());
+  if (owner && owner.plan !== 'pro') {
+    const limit = PLAN_LIMITS.free.maxGroupMembers;
+    const totalParticipants = 1 + list.members.length;
+    if (totalParticipants >= limit) throw PlanLimitError.members(limit);
+  }
 
   // הוספה אטומית ($ne מונעת כפילות מבקשות מקבילות)
   const updated = await ListDAL.updateOne(

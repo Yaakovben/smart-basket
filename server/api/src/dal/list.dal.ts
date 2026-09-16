@@ -87,6 +87,11 @@ export const ListDAL = {
     );
   },
 
+  // ספירת רשימות שבבעלות המשתמש (לבדיקת מגבלת Freemium)
+  async countOwnedByUser(userId: string): Promise<number> {
+    return List.countDocuments({ owner: new mongoose.Types.ObjectId(userId) });
+  },
+
   // יצירת קוד הזמנה ייחודי בן 6 תווים
   async generateUniqueInviteCode(): Promise<string> {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

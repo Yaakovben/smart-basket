@@ -5,25 +5,31 @@ import { listsApi } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { trackEvent } from "../services/analytics";
 import { convertApiList } from "./converters";
+import { emitPlanLimit } from "../helpers/planLimitEvent";
 
 export function useListActions(user: User | null, lists: List[], setLists: Dispatch<SetStateAction<List[]>>) {
   const createList = useCallback(
     async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
-      // שליחה לשרת קודם, הוספה ל-UI רק אחרי אישור
-      const newList = await listsApi.createList({
-        name: list.name,
-        icon: list.icon,
-        color: list.color,
-        isGroup: list.isGroup,
-        password: list.password || undefined,
-      });
+      try {
+        const newList = await listsApi.createList({
+          name: list.name,
+          icon: list.icon,
+          color: list.color,
+          isGroup: list.isGroup,
+          password: list.password || undefined,
+        });
 
-      const converted = convertApiList(newList);
-      setLists((prev) => [...prev, converted]);
-      socketService.joinList(newList.id);
-      trackEvent('list_created', { isGroup: list.isGroup });
+        const converted = convertApiList(newList);
+        setLists((prev) => [...prev, converted]);
+        socketService.joinList(newList.id);
+        trackEvent('list_created', { isGroup: list.isGroup });
 
-      return converted;
+        return converted;
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 402) { emitPlanLimit('lists'); return; }
+        throw err;
+      }
     },
     [setLists],
   );
@@ -148,6 +154,10 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         }
         if (status === 429) {
           return { success: false, error: 'tooManyAttempts' };
+        }
+        if (status === 402) {
+          emitPlanLimit('members');
+          return { success: false, error: 'planLimitReached' };
         }
 
         return { success: false, error: 'unknownError' };

@@ -5,9 +5,13 @@ import { geocodeAddress } from '../services/geocoder.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { Branch } from '../models/Branch.model';
 import { BranchDAL } from '../dal/branch.dal';
+import { UserDAL } from '../../../dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
+import { PlanLimitError } from '../../../errors';
+import { PLAN_LIMITS } from '../../../constants';
+import { planUsage } from '../../../services/plan-usage.service';
 
 // מצב סנכרון מחירים - בדיקה מקומית מהירה, בנוסף למנעול המשותף האמיתי
 // ב-syncAllChains (getSyncProgress().active), שמכסה גם ריצות cron.
@@ -22,6 +26,16 @@ let adminSyncInProgress = false;
 // lat/lng אופציונליים - אם מועברים, כל רשת תכלול את הסניף הקרוב ביותר עם מרחק.
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
+
+  // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 השוואות מחיר ביום
+  const priceUser = await UserDAL.findById(userId).catch(() => null);
+  if (priceUser && priceUser.plan !== 'pro') {
+    const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
+    const todayCount = planUsage.getPriceCount(userId);
+    if (todayCount >= limit) throw PlanLimitError.priceComparison(limit);
+    planUsage.incrementPrice(userId);
+  }
+
   const rawListId = req.query.listId;
   const listId = typeof rawListId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawListId)
     ? rawListId

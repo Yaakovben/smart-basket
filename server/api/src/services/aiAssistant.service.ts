@@ -14,10 +14,13 @@
 
 import { logger } from '../config';
 import { env } from '../config/environment';
-import { AppError } from '../errors';
+import { AppError, PlanLimitError } from '../errors';
+import { PLAN_LIMITS } from '../constants';
 import { getUserInsights } from './insights.service';
 import { ListDAL } from '../dal/list.dal';
+import { UserDAL } from '../dal';
 import { Product } from '../models';
+import { planUsage } from './plan-usage.service';
 
 interface AiProvider {
   name: string;
@@ -455,6 +458,15 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   if (aiBudgetExceeded()) {
     logger.warn('aiAssistant: global daily budget (%d) reached', AI_DAILY_BUDGET);
     throw new AppError('AI assistant daily limit reached', 429, 'AI_DAILY_LIMIT');
+  }
+
+  // בדיקת מגבלת Freemium פר-משתמש: חינמי מוגבל ל-5 בקשות AI ביום
+  const aiUser = await UserDAL.findById(userId).catch(() => null);
+  if (aiUser && aiUser.plan !== 'pro') {
+    const limit = PLAN_LIMITS.free.maxAiRequestsPerDay;
+    const todayCount = planUsage.getAiCount(userId);
+    if (todayCount >= limit) throw PlanLimitError.ai(limit);
+    planUsage.incrementAi(userId);
   }
 
   const trimmedHistory = messages.slice(-MAX_HISTORY_MESSAGES);

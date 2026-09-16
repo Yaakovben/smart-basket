@@ -9,8 +9,9 @@
  */
 
 import mongoose from 'mongoose';
-import { ListDAL, ProductDAL } from '../dal';
-import { ForbiddenError } from '../errors';
+import { ListDAL, ProductDAL, UserDAL } from '../dal';
+import { ForbiddenError, PlanLimitError } from '../errors';
+import { PLAN_LIMITS } from '../constants';
 import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import {
@@ -49,6 +50,14 @@ export async function createList(
   userId: string,
   data: CreateListInput
 ): Promise<IListResponse> {
+  // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 רשימות בבעלותו
+  const user = await UserDAL.findById(userId);
+  if (user && user.plan !== 'pro') {
+    const limit = PLAN_LIMITS.free.maxOwnedLists;
+    const count = await ListDAL.countOwnedByUser(userId);
+    if (count >= limit) throw PlanLimitError.lists(limit);
+  }
+
   let inviteCode: string | undefined;
 
   if (data.isGroup) inviteCode = await ListDAL.generateUniqueInviteCode();

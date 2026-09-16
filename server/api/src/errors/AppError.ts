@@ -162,6 +162,36 @@ export class NotFoundError extends AppError {
   }
 }
 
+// שגיאת מגבלת מנוי (402) - משתמש חינמי הגיע לתקרת ה-Freemium
+export type PlanLimitFeature = 'lists' | 'members' | 'ai' | 'priceComparison';
+
+export class PlanLimitError extends AppError {
+  public readonly feature: PlanLimitFeature;
+  public readonly limit: number;
+
+  constructor(feature: PlanLimitFeature, limit: number, message: string) {
+    super(message, 402, 'PLAN_LIMIT_REACHED', { feature, limit });
+    this.feature = feature;
+    this.limit = limit;
+  }
+
+  static lists(limit: number): PlanLimitError {
+    return new PlanLimitError('lists', limit, `Free plan allows up to ${limit} lists`);
+  }
+
+  static members(limit: number): PlanLimitError {
+    return new PlanLimitError('members', limit, `Free plan allows up to ${limit} members per group`);
+  }
+
+  static ai(limit: number): PlanLimitError {
+    return new PlanLimitError('ai', limit, `Free plan allows up to ${limit} AI requests per day`);
+  }
+
+  static priceComparison(limit: number): PlanLimitError {
+    return new PlanLimitError('priceComparison', limit, `Free plan allows up to ${limit} price comparisons per day`);
+  }
+}
+
 // שגיאת התנגשות (409)
 export class ConflictError extends AppError {
   constructor(message: string) {
