@@ -57,10 +57,7 @@ export const EditListModal = memo(({
       )}
 
       {list.isGroup && onConvertToPrivate && (
-        <ConvertToPrivateSection
-          onConvertToPrivate={onConvertToPrivate}
-          membersCount={list.members.length}
-        />
+        <ConvertToPrivateSection onClick={onConvertToPrivate} />
       )}
 
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15, mt: 2 }}>

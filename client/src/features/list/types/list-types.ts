@@ -23,6 +23,7 @@ export interface ConfirmState {
   title: string;
   message: string;
   onConfirm: () => void;
+  confirmText?: string;
 }
 
 // ===== מיקום FAB =====
