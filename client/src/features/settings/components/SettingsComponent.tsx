@@ -13,6 +13,7 @@ import { NotificationsSettingsSection } from './NotificationsSettingsSection';
 import { LanguageModal } from './LanguageModal';
 import { AboutModal } from './AboutModal';
 import { HelpModal } from './HelpModal';
+import { SubscriptionModal } from './SubscriptionModal';
 import {
   glassButtonSx, settingRowSx, lastSettingRowSx, dangerSettingRowSx, switchSx, rowLabelSx, headerSx,
   updateCardSx, updateCardIconSx,
@@ -53,7 +54,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
     handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, togglePushExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData, showToast, t });
 
-  // state לאישור ניקוי מטמון - popup שמסביר השלכות לפני פעולה הרסנית
+  const [showSubscription, setShowSubscription] = useState(false);
   const [confirmClearCache, setConfirmClearCache] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -141,6 +142,15 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
+        {/* ניהול מנוי */}
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => setShowSubscription(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSubscription(true); } }}>
+            <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
+            <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+          </Box>
+        </Paper>
+
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowHelp(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHelp(true); } }}>
@@ -214,6 +224,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} {APP_VERSION}</Typography>
       </Box>
 
+      {showSubscription && <SubscriptionModal onClose={() => setShowSubscription(false)} showToast={showToast} />}
       {showLanguage && <LanguageModal onClose={() => setShowLanguage(false)} onSelect={handleLanguageSelect} />}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}

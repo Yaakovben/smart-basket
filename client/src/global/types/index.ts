@@ -28,9 +28,10 @@ export interface User {
   // UI של אדמין" בקליינט (אין יותר השוואת מייל קשיחה).
   isAdmin?: boolean;
   listOrder?: string[];
-  // רשימות קבועות - עצמאיות ממחזור החיים של רשימה בודדת.
   savedLists?: SavedList[];
   createdAt?: string;
+  plan?: 'free' | 'pro';
+  planExpiresAt?: string | null;
 }
 
 // ===== מוצר =====

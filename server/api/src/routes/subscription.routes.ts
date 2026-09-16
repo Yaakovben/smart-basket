@@ -45,4 +45,12 @@ router.post('/upgrade', asyncHandler(async (_req: AuthRequest, res: Response) =>
   });
 }));
 
+// DELETE /api/subscription — ביטול עצמי של מנוי Pro
+// מאפשר למשתמש לבטל את המנוי שלו (מחזיר לחינמי) בלי צורך לפנות לאדמין
+router.delete('/', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  await UserDAL.updateById(userId, { plan: 'free', planExpiresAt: null });
+  res.json({ success: true });
+}));
+
 export default router;
