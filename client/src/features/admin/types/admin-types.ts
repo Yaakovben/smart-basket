@@ -1,6 +1,6 @@
 import type { LoginActivity, User } from '../../../global/types';
 
-export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth';
+export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth' | 'pro';
 
 export interface UserWithLastLogin extends User {
   lastLoginAt?: string;

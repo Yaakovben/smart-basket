@@ -13,6 +13,7 @@ import {
   getStats,
   getUserDetails,
   deleteUser,
+  updateUserPlan,
   getDbHealth,
   getCloudinaryHealth,
   getCloudinaryOrphans,
@@ -32,6 +33,11 @@ router.use(isAdmin);
 
 const userIdParams = Joi.object({ userId: commonSchemas.objectId.required() });
 
+const updatePlanBody = Joi.object({
+  plan: Joi.string().valid('free', 'pro').required(),
+  planExpiresAt: Joi.date().iso().allow(null).optional(),
+});
+
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
 router.get('/stats', getStats);
@@ -49,6 +55,7 @@ router.post('/local-images', getLocalImages);
 router.get('/ai-status', getAiStatusHandler);
 router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
+router.patch('/users/:userId/plan', validate({ params: userIdParams, body: updatePlanBody }), updateUserPlan);
 router.delete('/users/:userId', validate({ params: userIdParams }), deleteUser);
 
 export default router;

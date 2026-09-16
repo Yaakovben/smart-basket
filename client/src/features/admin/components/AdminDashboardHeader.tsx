@@ -22,6 +22,7 @@ interface AdminDashboardHeaderProps {
   userFilter: UserFilter;
   onlineCount: number;
   stats: DashboardStats;
+  proCount: number;
   loading?: boolean;
   onFilterClick: (filter: UserFilter) => void;
   onSelectAll: () => void;
@@ -32,7 +33,7 @@ interface AdminDashboardHeaderProps {
 export const AdminDashboardHeader = ({
   isDark, isRtl, title, faithTitle, isRefreshing,
   onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
-  userFilter, onlineCount, stats, loading, onFilterClick, onSelectAll, t,
+  userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t,
 }: AdminDashboardHeaderProps) => (
   <Box
     sx={{
@@ -64,6 +65,7 @@ export const AdminDashboardHeader = ({
       userFilter={userFilter}
       onlineCount={onlineCount}
       stats={stats}
+      proCount={proCount}
       loading={loading}
       onFilterClick={onFilterClick}
       onSelectAll={onSelectAll}

@@ -7,6 +7,7 @@
  * - Dashboard stats (היום, החודש)
  * - פירוט משתמש (רשימות שלו + ספירת מוצרים)
  * - מחיקת משתמש
+ * - עדכון תוכנית מנוי (free/pro)
  *
  * כל הנתיבים כאן דורשים authenticate + isAdmin.
  * מותקן ב-/api/admin.
@@ -169,6 +170,31 @@ export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response) =
   await LoginActivityDAL.deleteByUser(userId);
 
   res.json({ success: true, message: 'User deleted successfully' });
+});
+
+/**
+ * PATCH /api/admin/users/:userId/plan
+ * עדכון תוכנית מנוי של משתמש (free/pro).
+ * אדמין יכול לשדרג/לשנמך ידנית, עם תאריך תפוגה אופציונלי.
+ */
+export const updateUserPlan = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { userId } = req.params;
+  const { plan, planExpiresAt } = req.body as { plan: 'free' | 'pro'; planExpiresAt?: string | null };
+
+  const user = await UserDAL.findById(userId);
+  if (!user) throw NotFoundError.user();
+
+  const update: { plan: 'free' | 'pro'; planExpiresAt?: Date | null } = { plan };
+  if (plan === 'pro') {
+    update.planExpiresAt = planExpiresAt ? new Date(planExpiresAt) : null;
+  } else {
+    // חזרה ל-free מנקה את תאריך התפוגה
+    update.planExpiresAt = null;
+  }
+
+  await UserDAL.updateById(userId, update as Partial<typeof user>);
+
+  res.json({ success: true, data: { plan, planExpiresAt: update.planExpiresAt } });
 });
 
 /**

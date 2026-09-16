@@ -81,6 +81,11 @@ export const adminApi = {
     await apiClient.delete(`/admin/users/${userId}`);
   },
 
+  /** עדכון תוכנית מנוי של משתמש. אדמין בלבד. */
+  async setUserPlan(userId: string, plan: 'free' | 'pro', planExpiresAt?: string | null): Promise<void> {
+    await apiClient.patch(`/admin/users/${userId}/plan`, { plan, planExpiresAt: planExpiresAt ?? null });
+  },
+
   async getAiStatus(): Promise<AiStatus> {
     const response = await apiClient.get<{ data: AiStatus }>('/admin/ai-status');
     return response.data.data;

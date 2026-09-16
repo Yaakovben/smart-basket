@@ -14,6 +14,7 @@ import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
 import { AdminAiStatusCard } from './AdminAiStatusCard';
+import type { UserWithLastLogin } from '../types';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -55,6 +56,12 @@ export const AdminDashboard = () => {
     [socketOnlineUserIds, user?.id]
   );
 
+  // ספירת משתמשי Pro מתוך רשימת כל המשתמשים
+  const proCount = useMemo(
+    () => usersWithLoginInfo.filter(u => (u as UserWithLastLogin & { plan?: string }).plan === 'pro').length,
+    [usersWithLoginInfo]
+  );
+
   const { userSearch, setUserSearch, userFilter, setUserFilter, handleFilterClick, filteredUsers } =
     useAdminUserFilter(usersWithLoginInfo, onlineUserIds);
 
@@ -83,6 +90,7 @@ export const AdminDashboard = () => {
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
         stats={stats}
+        proCount={proCount}
         loading={loading}
         onFilterClick={handleFilterClick}
         onSelectAll={() => setUserFilter('all')}

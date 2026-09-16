@@ -43,6 +43,8 @@ export const useAdminUserFilter = (
       result = result.filter(u =>
         isActiveThisMonth(u.lastLoginAt) || isActiveThisMonth(u.lastAppOpenAt)
       );
+    } else if (userFilter === 'pro') {
+      result = result.filter(u => (u as UserWithLastLogin & { plan?: string }).plan === 'pro');
     }
 
     // סינון לפי חיפוש
