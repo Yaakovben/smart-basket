@@ -43,13 +43,14 @@ interface Props {
   loading?: boolean;
   isDark?: boolean;
   locationStatus?: LocationStatus;
+  hasLocation?: boolean;
   onRequestLocation?: () => void;
   onResetLocationDenied?: () => void;
   // שם הרשימה שנבחרה - להתאמת הודעות ריק ("ברשימה הזאת" במקום "ברשימות שלך")
   selectedListName?: string | null;
 }
 
-export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, selectedListName }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, hasLocation = false, onRequestLocation, selectedListName }: Props) => {
   const { settings, t } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -101,7 +102,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       </Box>
 
       {/* באנר מיקום - רק אם רלוונטי */}
-      <LocationStatusBanner locationStatus={locationStatus} onRequestLocation={onRequestLocation} isDark={isDark} />
+      <LocationStatusBanner locationStatus={locationStatus} hasLocation={hasLocation} onRequestLocation={onRequestLocation} isDark={isDark} />
 
       {/* HERO - חיסכון מובלט אבל לא צועק */}
       {hasChainData && cheapest && <SavingsHero cheapest={cheapest} savings={savings} />}
