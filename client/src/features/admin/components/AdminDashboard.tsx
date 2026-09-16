@@ -14,7 +14,6 @@ import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
 import { AdminAiStatusCard } from './AdminAiStatusCard';
-import type { UserWithLastLogin } from '../types';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -58,7 +57,7 @@ export const AdminDashboard = () => {
 
   // ספירת משתמשי Pro מתוך רשימת כל המשתמשים
   const proCount = useMemo(
-    () => usersWithLoginInfo.filter(u => (u as UserWithLastLogin & { plan?: string }).plan === 'pro').length,
+    () => usersWithLoginInfo.filter(u => u.plan === 'pro').length,
     [usersWithLoginInfo]
   );
 

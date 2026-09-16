@@ -10,6 +10,8 @@ export interface UserWithLastLogin extends User {
   createdAt: string;
   totalLogins: number;
   hasPushSubscription: boolean;
+  plan: 'free' | 'pro';
+  planExpiresAt?: string | null;
 }
 
 export interface DashboardStats {

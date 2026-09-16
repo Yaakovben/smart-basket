@@ -4,6 +4,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
 import { haptic } from '../../../global/helpers';
+import { PlanLimitHandledError } from '../../../global/hooks/useLists.actions';
 import type {
   NewListForm,
   HomeTab,
@@ -170,7 +171,13 @@ export const useHome = ({
       setShowCreate(false);
       setShowCreateGroup(false);
       showToast(t('created'));
-    } catch {
+    } catch (err: unknown) {
+      // plan limit טופל (UpgradeModal נפתח) — סוגרים מודאל בלי טוסט ובלי הודעת שגיאה
+      if (err instanceof PlanLimitHandledError) {
+        setShowCreate(false);
+        setShowCreateGroup(false);
+        return;
+      }
       setCreateError(t('errorOccurred'));
     } finally {
       setCreatingList(false);

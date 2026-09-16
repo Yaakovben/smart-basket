@@ -10,7 +10,7 @@ import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
 import { PlanLimitError } from '../../../errors';
-import { PLAN_LIMITS } from '../../../constants';
+import { PLAN_LIMITS, isPro } from '../../../constants';
 import { planUsage } from '../../../services/plan-usage.service';
 
 // מצב סנכרון מחירים - בדיקה מקומית מהירה, בנוסף למנעול המשותף האמיתי
@@ -27,13 +27,14 @@ let adminSyncInProgress = false;
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
 
-  // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 השוואות מחיר ביום
+  // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 השוואות מחיר ביום.
+  // increment מתבצע רק אחרי הצלחה — לא שורף מכסה על קריאות שנכשלות.
   const priceUser = await UserDAL.findById(userId).catch(() => null);
-  if (priceUser && priceUser.plan !== 'pro') {
+  const userIsFree = priceUser && !isPro(priceUser);
+  if (userIsFree) {
     const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
     const todayCount = planUsage.getPriceCount(userId);
     if (todayCount >= limit) throw PlanLimitError.priceComparison(limit);
-    planUsage.incrementPrice(userId);
   }
 
   const rawListId = req.query.listId;
@@ -42,6 +43,10 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
     : undefined;
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const data = await getComparisonForUser(userId, listId, userLocation);
+
+  // increment אחרי הצלחה בלבד
+  if (userIsFree) planUsage.incrementPrice(userId);
+
   res.json({ success: true, data });
   // הוסר: lazy auto-sync שגרם לסנכרון מלא ברקע בזמן בקשות של לקוחות.
   // הקרון של 04:00 ו-16:00 + סנכרון startup מספיקים. אם נדרש סנכרון דחוף -

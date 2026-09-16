@@ -194,8 +194,8 @@ export class PlanLimitError extends AppError {
 
 // שגיאת התנגשות (409)
 export class ConflictError extends AppError {
-  constructor(message: string) {
-    super(message, 409, 'CONFLICT');
+  constructor(message: string, code = 'CONFLICT') {
+    super(message, 409, code);
   }
 
   static emailExists(): ConflictError {
@@ -208,5 +208,10 @@ export class ConflictError extends AppError {
 
   static isOwner(): ConflictError {
     return new ConflictError('You are the owner of this list');
+  }
+
+  // הקבוצה מלאה מצד בעלים חינמי — מי שמצטרף לא יכול לפתור את זה עצמאית
+  static groupFull(): ConflictError {
+    return new ConflictError('This group has reached the maximum number of members', 'GROUP_FULL');
   }
 }

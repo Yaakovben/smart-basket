@@ -31,7 +31,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
   const isRtl = settings.language === 'he';
 
   // plan מקומי - מתעדכן אחרי שינוי מהאדמין בלי refresh כללי
-  const initialPlan: 'free' | 'pro' = (user as UserWithLastLogin & { plan?: 'free' | 'pro' }).plan ?? 'free';
+  const initialPlan: 'free' | 'pro' = user.plan ?? 'free';
   const [localPlan, setLocalPlan] = useState<'free' | 'pro'>(initialPlan);
 
   const toggleExpand = useCallback(() => {

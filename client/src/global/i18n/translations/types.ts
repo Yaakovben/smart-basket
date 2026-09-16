@@ -922,6 +922,7 @@ export type TranslationKeys =
   | 'tipDotAria'
   // Freemium / Upgrade modal
   | 'planLimitReached'
+  | 'groupFull'
   | 'planFree'
   | 'planPro'
   | 'planBadgePro'

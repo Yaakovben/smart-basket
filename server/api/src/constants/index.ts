@@ -7,4 +7,4 @@ export {
 
 export type { ProductUnit, ProductCategory } from './product.constants';
 
-export { PLAN_LIMITS } from './plan.constants';
+export { PLAN_LIMITS, isPro } from './plan.constants';

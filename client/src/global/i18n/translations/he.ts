@@ -923,6 +923,7 @@ export const he: Translations = {
   tipMuteListBody: 'רשימה קבוצתית רועשת מדי? "השתק רשימה" מתפריט הרשימה משתיק את ההתראות - היא ממשיכה לפעול כרגיל.',
   // Freemium
   planLimitReached: 'הגעת למגבלת התוכנית החינמית',
+  groupFull: 'הקבוצה מלאה — הבעלים צריך לשדרג ל-Pro כדי להוסיף חברים',
   planFree: 'חינמי',
   planPro: 'Pro',
   planBadgePro: 'PRO',

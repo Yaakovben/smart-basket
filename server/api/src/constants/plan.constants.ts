@@ -8,3 +8,10 @@ export const PLAN_LIMITS = {
     maxPriceComparisonsPerDay: 3, // מספר השוואות מחיר מקסימלי ליום
   },
 } as const;
+
+/** בדיקה אם משתמש הוא Pro תקף — plan=pro ומנוי לא פג תוקף */
+export function isPro(user: { plan?: string; planExpiresAt?: Date | null }): boolean {
+  if (user.plan !== 'pro') return false;
+  if (user.planExpiresAt && user.planExpiresAt < new Date()) return false;
+  return true;
+}

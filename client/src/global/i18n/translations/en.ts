@@ -917,6 +917,7 @@ export const en: Translations = {
   tipMuteListBody: 'A group list too noisy? The list menu has "Mute list" — it stays active, just without pinging you.',
   // Freemium
   planLimitReached: 'You\'ve reached your free plan limit',
+  groupFull: 'This group is full — the owner needs to upgrade to Pro to add more members',
   planFree: 'Free',
   planPro: 'Pro',
   planBadgePro: 'PRO',

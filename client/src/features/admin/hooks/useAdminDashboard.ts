@@ -68,7 +68,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     fetchData();
   }, [fetchData]);
 
-  // משתמשים עם סטטיסטיקות התחברות
+  // משתמשים עם סטטיסטיקות התחברות + שדה plan לסינון וה-badge
   const usersWithLoginInfo: UserWithLastLogin[] = useMemo(() => {
     return allUsers.map((user) => ({
       id: user.id,
@@ -83,6 +83,8 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       registrationMethod: (user.googleId ? 'google' : 'email') as 'google' | 'email',
       createdAt: user.createdAt,
       hasPushSubscription: user.hasPushSubscription,
+      plan: user.plan ?? 'free',
+      planExpiresAt: user.planExpiresAt ?? undefined,
     }));
   }, [allUsers]);
 

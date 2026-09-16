@@ -15,7 +15,7 @@
 import { logger } from '../config';
 import { env } from '../config/environment';
 import { AppError, PlanLimitError } from '../errors';
-import { PLAN_LIMITS } from '../constants';
+import { PLAN_LIMITS, isPro } from '../constants';
 import { getUserInsights } from './insights.service';
 import { ListDAL } from '../dal/list.dal';
 import { UserDAL } from '../dal';
@@ -462,7 +462,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
 
   // בדיקת מגבלת Freemium פר-משתמש: חינמי מוגבל ל-5 בקשות AI ביום
   const aiUser = await UserDAL.findById(userId).catch(() => null);
-  if (aiUser && aiUser.plan !== 'pro') {
+  if (aiUser && !isPro(aiUser)) {
     const limit = PLAN_LIMITS.free.maxAiRequestsPerDay;
     const todayCount = planUsage.getAiCount(userId);
     if (todayCount >= limit) throw PlanLimitError.ai(limit);

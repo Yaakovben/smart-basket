@@ -7,6 +7,11 @@ import { trackEvent } from "../services/analytics";
 import { convertApiList } from "./converters";
 import { emitPlanLimit } from "../helpers/planLimitEvent";
 
+// שגיאה פנימית המסמנת ש-plan limit טופל (modal נפתח) — הקורא לא מציג הצלחה ולא שגיאה
+export class PlanLimitHandledError extends Error {
+  constructor() { super('plan-limit-handled'); }
+}
+
 export function useListActions(user: User | null, lists: List[], setLists: Dispatch<SetStateAction<List[]>>) {
   const createList = useCallback(
     async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
@@ -27,7 +32,11 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         return converted;
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } }).response?.status;
-        if (status === 402) { emitPlanLimit('lists'); return; }
+        if (status === 402) {
+          emitPlanLimit('lists');
+          // זורק שגיאה ייעודית: הקורא (handleCreate) יסגור את המודאל בלי טוסט הצלחה ובלי הודעת שגיאה
+          throw new PlanLimitHandledError();
+        }
         throw err;
       }
     },
@@ -130,34 +139,45 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         trackEvent('group_joined'); // לופ ויראלי - הצטרפות דרך קוד הזמנה
         return { success: true };
       } catch (error: unknown) {
-        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string };
+        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: { code?: string; message?: string } | string } }; code?: string };
         const status = apiError.response?.status;
-        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
+        const errorData = apiError.response?.data?.error;
+        const errorCode = typeof errorData === 'object' ? errorData?.code : undefined;
+        const errorMessage = apiError.response?.data?.message
+          || (typeof errorData === 'string' ? errorData : errorData?.message)
+          || '';
 
         // שגיאת רשת או timeout
         if (apiError.code === 'ERR_NETWORK' || apiError.code === 'ECONNABORTED') {
           return { success: false, error: 'networkError' };
         }
 
+        // קבוצה מלאה — בעלים חינמי הגיע למגבלת חברים. זה לא בעיה של המצטרף.
+        if (errorCode === 'GROUP_FULL') {
+          return { success: false, error: 'groupFull' };
+        }
+
+        // מגבלת מנוי של המצטרף עצמו (תרחיש עתידי, כרגע לא קורה)
+        if (status === 402) {
+          emitPlanLimit('members');
+          return { success: false, error: 'planLimitReached' };
+        }
+
         // מיפוי שגיאות ספציפיות למפתחות תרגום
-        if (errorMessage?.toLowerCase().includes('owner')) {
+        if (errorMessage.toLowerCase().includes('owner')) {
           return { success: false, error: 'youAreOwner' };
         }
-        if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
+        if (status === 404 || errorMessage.toLowerCase().includes('invalid invite code')) {
           return { success: false, error: 'invalidGroupCode' };
         }
-        if (status === 400 || errorMessage?.toLowerCase().includes('invalid password')) {
+        if (status === 400 || errorMessage.toLowerCase().includes('invalid password')) {
           return { success: false, error: 'invalidGroupPassword' };
         }
-        if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {
+        if (status === 409 || errorMessage.toLowerCase().includes('already a member')) {
           return { success: false, error: 'alreadyMember' };
         }
         if (status === 429) {
           return { success: false, error: 'tooManyAttempts' };
-        }
-        if (status === 402) {
-          emitPlanLimit('members');
-          return { success: false, error: 'planLimitReached' };
         }
 
         return { success: false, error: 'unknownError' };

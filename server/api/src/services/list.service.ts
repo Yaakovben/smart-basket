@@ -11,7 +11,7 @@
 import mongoose from 'mongoose';
 import { ListDAL, ProductDAL, UserDAL } from '../dal';
 import { ForbiddenError, PlanLimitError } from '../errors';
-import { PLAN_LIMITS } from '../constants';
+import { PLAN_LIMITS, isPro } from '../constants';
 import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import {
@@ -52,7 +52,7 @@ export async function createList(
 ): Promise<IListResponse> {
   // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 רשימות בבעלותו
   const user = await UserDAL.findById(userId);
-  if (user && user.plan !== 'pro') {
+  if (user && !isPro(user)) {
     const limit = PLAN_LIMITS.free.maxOwnedLists;
     const count = await ListDAL.countOwnedByUser(userId);
     if (count >= limit) throw PlanLimitError.lists(limit);
