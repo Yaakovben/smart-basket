@@ -351,7 +351,10 @@ export const HomeListContent = ({
                 transition: isDragging
                   ? 'none'
                   : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
-                zIndex: isDragging ? 5 : 1,
+                // 1200 - מעל ה-bottom nav (z-index 1100, portal ל-body) - בלי
+                // זה הכרטיס הנגרר "נעלם" מאחורי הבר התחתון ברגע שגוררים אותו
+                // קרוב לתחתית המסך (בדיוק אזור הגלילה האוטומטית).
+                zIndex: isDragging ? 1200 : 1,
                 willChange: reorderMode ? 'transform' : 'auto',
               }}
             >
