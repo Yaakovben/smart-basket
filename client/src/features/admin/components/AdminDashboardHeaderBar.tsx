@@ -1,12 +1,11 @@
 import { Box, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
+import { headerIconButtonSx } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 import { getAiHealth, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
@@ -15,7 +14,6 @@ interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
   title: string;
   faithTitle: string;
-  isRefreshing: boolean;
   onBack: () => void;
   onOpenDbHealth: () => void;
   onOpenFaith: () => void;
@@ -23,15 +21,16 @@ interface AdminDashboardHeaderBarProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
-  onRefresh: () => void;
 }
 
 // שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים. סדר ה-DOM כאן = סדר
 // ויזואלי מימין לשמאל (ראו הערה למטה) - שליחת הודעות תמיד הכי ימני,
-// ואייקון ה-AI תמיד מיד לפניו (משמאלו).
+// ואייקון ה-AI תמיד מיד לפניו (משמאלו). אין כפתור ריענון ידני - הרענון
+// נעשה בגרירה (pull-to-refresh, ראו AdminDashboard/PullToRefreshIndicator),
+// אותו דפוס בדיוק כמו מסך הרשימה.
 export const AdminDashboardHeaderBar = ({
-  isRtl, title, faithTitle, isRefreshing,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
+  isRtl, title, faithTitle,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
@@ -69,12 +68,6 @@ export const AdminDashboardHeaderBar = ({
       </Box>
       <Box onClick={onOpenPriceSync} role="button" tabIndex={0} aria-label="ניהול מאגר מחירים" sx={headerIconButtonSx(44)}>
         <StorefrontIcon sx={{ fontSize: 26 }} />
-      </Box>
-      <Box onClick={onRefresh} role="button" tabIndex={0} sx={headerIconButtonSx(44)}>
-        <RefreshIcon sx={{
-          fontSize: 26,
-          animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
-        }} />
       </Box>
     </Box>
   </Box>

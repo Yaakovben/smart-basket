@@ -88,7 +88,6 @@ export const AdminDashboard = () => {
         isRtl={isRtl}
         title={t('adminDashboard')}
         faithTitle={t('dailyFaithManagerTitle')}
-        isRefreshing={isRefreshing}
         onBack={() => navigate('/settings')}
         onOpenDbHealth={() => setDbHealthOpen(true)}
         onOpenFaith={() => setFaithOpen(true)}
@@ -96,7 +95,6 @@ export const AdminDashboard = () => {
         onOpenAiStatus={() => setAiStatusOpen(true)}
         aiStatus={aiStatus.data}
         onOpenPush={() => setPushOpen(true)}
-        onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
         stats={stats}

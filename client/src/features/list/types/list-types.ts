@@ -63,6 +63,7 @@ export interface UseListReturn {
   showHint: boolean;
   addError: string;
   refreshing: boolean;
+  lastFetchAt: Date | null;
   fabPosition: FabPosition | null;
   showFab: boolean;
   isDragging: boolean;

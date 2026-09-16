@@ -10,7 +10,6 @@ interface AdminDashboardHeaderProps {
   isRtl: boolean;
   title: string;
   faithTitle: string;
-  isRefreshing: boolean;
   onBack: () => void;
   onOpenDbHealth: () => void;
   onOpenFaith: () => void;
@@ -18,7 +17,6 @@ interface AdminDashboardHeaderProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
-  onRefresh: () => void;
   userFilter: UserFilter;
   onlineCount: number;
   stats: DashboardStats;
@@ -30,8 +28,8 @@ interface AdminDashboardHeaderProps {
 
 // כותרת הדשבורד: רקע גרדיאנט, שורת ניווט עליונה וכרטיסי סטטיסטיקה לחיצים
 export const AdminDashboardHeader = ({
-  isDark, isRtl, title, faithTitle, isRefreshing,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
+  isDark, isRtl, title, faithTitle,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush,
   userFilter, onlineCount, stats, loading, onFilterClick, onSelectAll, t,
 }: AdminDashboardHeaderProps) => (
   <Box
@@ -50,7 +48,6 @@ export const AdminDashboardHeader = ({
       isRtl={isRtl}
       title={title}
       faithTitle={faithTitle}
-      isRefreshing={isRefreshing}
       onBack={onBack}
       onOpenDbHealth={onOpenDbHealth}
       onOpenFaith={onOpenFaith}
@@ -58,7 +55,6 @@ export const AdminDashboardHeader = ({
       onOpenAiStatus={onOpenAiStatus}
       aiStatus={aiStatus}
       onOpenPush={onOpenPush}
-      onRefresh={onRefresh}
     />
     <AdminDashboardStatCards
       userFilter={userFilter}
