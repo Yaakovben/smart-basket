@@ -22,6 +22,12 @@ interface PriceTabProps {
   selectedListId: string | null;
   onSelectListId: (id: string | null) => void;
   allUserLists: InsightsListMeta[];
+  // true כשגוללים למטה מעבר לסף - מסתירים את בורר "איזו רשימה להשוות"
+  // באנימציה (לא unmount) כדי שלא יחסום תוצאות לצמיתות ברשימות ארוכות.
+  stickyHidden: boolean;
+  // true ברגע שהתרחקנו מראש העמוד (גם אם עדיין גלוי) - נותן לבורר מראה
+  // "כרטיס צף" (פינות מעוגלות + צל) במקום פס שטוח שממוזג בקצה העמוד.
+  stickyScrolled: boolean;
 }
 
 // טאב "מחירים" של עמוד התובנות - השוואת מחירים בין רשתות לרשימה נבחרת.
@@ -29,6 +35,7 @@ export const PriceTab = memo(({
   isDark, priceData, priceLoading, priceLoadingLabel, priceError, onRetry,
   locationStatus, hasLocation, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
+  stickyHidden, stickyScrolled,
 }: PriceTabProps) => {
   const { t } = useSettings();
 
@@ -89,9 +96,22 @@ export const PriceTab = memo(({
           top: 'env(safe-area-inset-top, 0px)',
           zIndex: 5,
           bgcolor: 'background.default',
-          mx: -2, px: 2, pt: 1, pb: 1,
+          // ברגע שהתרחקנו מראש העמוד - "כרטיס צף": מתכנס פנימה מהקצוות,
+          // פינות מעוגלות וצל, במקום פס שטוח שממוזג עם קצה המסך.
+          mx: stickyScrolled ? 0 : -2,
+          mt: stickyScrolled ? 1 : 0,
+          px: 2, pt: 1, pb: 1,
+          borderRadius: stickyScrolled ? '16px' : 0,
+          border: stickyScrolled ? '1px solid' : 'none',
           borderBottom: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          boxShadow: stickyScrolled ? (isDark ? '0 8px 22px rgba(0,0,0,0.35)' : '0 8px 22px rgba(0,0,0,0.09)') : 'none',
+          // מוסתר (לא unmount) בגלילה למטה - ברשימת תוצאות ארוכה הבורר
+          // פשוט חוסם תוכן; חוזר להופיע בגלילה למעלה או קרוב לראש העמוד.
+          transform: stickyHidden ? 'translateY(-130%)' : 'translateY(0)',
+          opacity: stickyHidden ? 0 : 1,
+          pointerEvents: stickyHidden ? 'none' : 'auto',
+          transition: 'transform 0.28s cubic-bezier(0.34,1.4,0.64,1), opacity 0.22s ease, border-radius 0.25s ease, box-shadow 0.25s ease, margin 0.25s ease',
         }}>
           {/* תווית מידע - מוצגת כשיש רשימה אחת. המשתמש יודע על מה הניתוח נעשה. */}
           {allUserLists.length === 1 && allUserLists[0] && (
