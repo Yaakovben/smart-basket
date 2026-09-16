@@ -918,6 +918,8 @@ export type TranslationKeys =
   | 'tipSavedListsBody'
   | 'tipMuteListTitle'
   | 'tipMuteListBody'
+  | 'tipDragFabTitle'
+  | 'tipDragFabBody'
   | 'tipNext'
   | 'tipDotAria'
   // Freemium / Upgrade modal

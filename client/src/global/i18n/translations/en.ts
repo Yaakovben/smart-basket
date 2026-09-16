@@ -915,6 +915,8 @@ export const en: Translations = {
   tipSavedListsBody: 'Shopping that repeats every week? Save it as a saved list and add all its items with one tap each time.',
   tipMuteListTitle: 'Mute list notifications',
   tipMuteListBody: 'A group list too noisy? The list menu has "Mute list" — it stays active, just without pinging you.',
+  tipDragFabTitle: 'You can drag the add button',
+  tipDragFabBody: 'The ➕ button in the way of something? Press and hold it for a moment, then drag it anywhere on the screen.',
   // Freemium
   planLimitReached: 'You\'ve reached your free plan limit',
   groupFull: 'This group is full — the owner needs to upgrade to Pro to add more members',

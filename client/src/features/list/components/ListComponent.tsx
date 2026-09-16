@@ -199,6 +199,24 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   // ===== סידור מוצרים ידני (גרירה) =====
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // הסתרת ה-FAB בגלילה למטה - ברשימות ארוכות הוא פשוט מסתיר מוצרים.
+  // חוזר לגלות ברגע שגוללים למעלה ולו קצת, או שחוזרים קרוב לראש הרשימה.
+  // סף (לא כל שינוי scrollTop קטן) כדי לא "לרפרף" סביב תזוזות זעירות.
+  const [fabHiddenByScroll, setFabHiddenByScroll] = useState(false);
+  const lastScrollTopRef = useRef(0);
+  const SCROLL_HIDE_THRESHOLD_PX = 6;
+  const SCROLL_NEAR_TOP_PX = 40;
+  const handleContentScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    const delta = top - lastScrollTopRef.current;
+    lastScrollTopRef.current = top;
+    if (top < SCROLL_NEAR_TOP_PX) { setFabHiddenByScroll(false); return; }
+    if (delta > SCROLL_HIDE_THRESHOLD_PX) setFabHiddenByScroll(true);
+    else if (delta < -SCROLL_HIDE_THRESHOLD_PX) setFabHiddenByScroll(false);
+  }, []);
   // עדכון אופטימי מקומי אחרי סידור - מקבע position לכל מוצר לפי הסדר החדש
   // + דגל הרשימה, כדי שהתצוגה תתעדכן מיד (לפני שה-refetch של הסוקט חוזר).
   // קריאה אטומית *אחת* ל-onUpdateProductsForList (updater + extraPatch יחד) -
@@ -504,6 +522,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onTouchStart={reorderMode ? undefined : handlePullStart}
         onTouchMove={reorderMode ? undefined : handlePullMove}
         onTouchEnd={reorderMode ? undefined : handlePullEnd}
+        onScroll={handleContentScroll}
         onClick={handleCloseItem}
         role="main"
         aria-label={list.name}
@@ -701,6 +720,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           itemCount={items.length}
           fabPosition={fabPosition}
           isDragging={isDragging}
+          // תמיד גלוי בזמן גרירה בפועל - גם אם המשתמש "גלל" מעט תוך כדי.
+          visible={!fabHiddenByScroll || isDragging}
           onAddProduct={() => setShowAdd(true)}
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}
