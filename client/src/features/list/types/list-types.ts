@@ -24,6 +24,7 @@ export interface ConfirmState {
   message: string;
   onConfirm: () => void;
   confirmText?: string;
+  hideCancel?: boolean;
 }
 
 // ===== מיקום FAB =====

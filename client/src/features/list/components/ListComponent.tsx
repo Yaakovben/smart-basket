@@ -825,6 +825,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
               title: t('convertToPrivate'),
               message: t('convertToPrivateMembersHint'),
               confirmText: t('gotIt'),
+              hideCancel: true,
               onConfirm: () => setConfirm(null),
             });
             return;

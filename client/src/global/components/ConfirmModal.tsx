@@ -11,6 +11,9 @@ interface ConfirmModalProps {
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   confirmText?: string;
+  // popup מידע בלבד (אין פעולה הרסנית לאשר) - מסתיר את כפתור הביטול
+  // ומציג את כפתור האישור היחיד בצבע ניטרלי (לא אדום).
+  hideCancel?: boolean;
 }
 
 const Transition = forwardRef(function Transition(
@@ -20,7 +23,7 @@ const Transition = forwardRef(function Transition(
   return <Zoom ref={ref} {...props} />;
 });
 
-export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText }: ConfirmModalProps) => {
+export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText, hideCancel = false }: ConfirmModalProps) => {
   const { t } = useSettings();
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -98,24 +101,26 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 0, gap: 1.5 }}>
-        <Button
-          onClick={handleCancel}
-          variant="outlined"
-          fullWidth
-          disabled={isClosing || loading}
-          sx={{
-            borderColor: 'divider',
-            borderWidth: 2,
-            color: 'text.primary',
-            '&:hover': { borderColor: 'divider', borderWidth: 2, bgcolor: 'action.hover' }
-          }}
-        >
-          {t('cancel')}
-        </Button>
+        {!hideCancel && (
+          <Button
+            onClick={handleCancel}
+            variant="outlined"
+            fullWidth
+            disabled={isClosing || loading}
+            sx={{
+              borderColor: 'divider',
+              borderWidth: 2,
+              color: 'text.primary',
+              '&:hover': { borderColor: 'divider', borderWidth: 2, bgcolor: 'action.hover' }
+            }}
+          >
+            {t('cancel')}
+          </Button>
+        )}
         <Button
           onClick={handleConfirm}
           variant="contained"
-          color="error"
+          color={hideCancel ? 'primary' : 'error'}
           fullWidth
           disabled={isClosing || loading}
         >
