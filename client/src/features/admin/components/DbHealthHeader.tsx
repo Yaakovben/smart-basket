@@ -1,11 +1,8 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
 import type { ReactNode } from 'react';
 
 interface DbHealthHeaderProps {
-  loading: boolean;
-  onRefresh: () => void;
   onClose: () => void;
   icon: ReactNode;
   title: string;
@@ -13,7 +10,8 @@ interface DbHealthHeaderProps {
 }
 
 // כותרת כרטיס בריאות השירותים - גנרית (משמשת גם ל-MongoDB וגם ל-Cloudinary).
-export const DbHealthHeader = ({ loading, onRefresh, onClose, icon, title, meta }: DbHealthHeaderProps) => (
+// אין כפתור רענון ידני - הרענון נעשה בגרירה (pull-to-refresh), ראו DbHealthCard.
+export const DbHealthHeader = ({ onClose, icon, title, meta }: DbHealthHeaderProps) => (
   <Box sx={{
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider',
@@ -30,9 +28,6 @@ export const DbHealthHeader = ({ loading, onRefresh, onClose, icon, title, meta 
       </Box>
     </Box>
     <Box sx={{ display: 'flex', gap: 0.5 }}>
-      <IconButton onClick={onRefresh} disabled={loading} aria-label="רענון">
-        <RefreshIcon />
-      </IconButton>
       <IconButton onClick={onClose} aria-label="סגירה">
         <CloseIcon />
       </IconButton>

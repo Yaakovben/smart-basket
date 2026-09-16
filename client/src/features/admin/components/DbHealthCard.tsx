@@ -6,6 +6,9 @@ import { ShimmerBlock } from '../../../global/components';
 import { useDbHealth } from '../hooks/useDbHealth';
 import { useCloudinaryHealth } from '../hooks/useCloudinaryHealth';
 import { statusInfo, tierName } from '../helpers/dbHealthHelpers';
+import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
+import { PULL_MAX } from '../../list/helpers/list-helpers';
 import { DbHealthHeader } from './DbHealthHeader';
 import { DbHealthHero } from './DbHealthHero';
 import { DbHealthStatsRow } from './DbHealthStatsRow';
@@ -36,6 +39,10 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
 
   const active = tab === 'mongo' ? mongo : cloud;
   const lastUpdatedText = timeText(active.lastFetchAt);
+
+  // ריענון בגרירה - אותו דפוס בדיוק כמו דף הרשימה/דשבורד המנהל, במקום
+  // כפתור רענון ידני עם אייקון מסתובב.
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(active.load);
 
   const metaChip = (text: string) => (
     <Box sx={{
@@ -70,8 +77,6 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
       pt: 'env(safe-area-inset-top)',
     }}>
       <DbHealthHeader
-        loading={active.loading}
-        onRefresh={active.load}
         onClose={onClose}
         icon={tab === 'mongo'
           ? <StorageIcon sx={{ color: '#0D9488' }} />
@@ -105,7 +110,18 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         ))}
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={active.loading} pullActive={pullActiveRef.current} lastRefreshedAt={active.lastFetchAt} />
+        <Box
+          sx={{
+            height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',
+            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
+          }}
+          onTouchStart={handlePullStart}
+          onTouchMove={handlePullMove}
+          onTouchEnd={handlePullEnd}
+        >
         {tab === 'mongo' && (
           <>
             {mongo.loading && !mongo.data && (
@@ -140,6 +156,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
             {!cloud.loading || cloud.data ? <CloudinaryHealthContent data={cloud.data} isDark={isDark} /> : null}
           </>
         )}
+        </Box>
       </Box>
     </Box>
   );
