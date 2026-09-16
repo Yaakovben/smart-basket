@@ -241,11 +241,13 @@ export async function reorderProducts(
   // הסדר החדש לשאר חברי הקבוצה.
   await ListDAL.setProductsManuallyOrdered(listId, manual);
 
-  // התראה + push לשאר חברי הקבוצה - בלי זה הסדר פשוט משתנה אצלם בלי
-  // הסבר, ומבלבל ("למה המוצרים זזו?"). לא preloadedList (חסר name כאן) -
-  // הפונקציה טוענת את הרשימה המלאה בעצמה ומחזירה [] מעצמה אם אין חברים.
+  // התראה (פעמון + toast) לשאר חברי הקבוצה - בלי זה הסדר פשוט משתנה אצלם
+  // בלי הסבר, ומבלבל ("למה המוצרים זזו?"). בלי push - סידור מחדש הוא שינוי
+  // קטן מדי כדי להצדיק פוש שמפריע למשתמש מחוץ לאפליקציה. לא preloadedList
+  // (חסר name כאן) - הפונקציה טוענת את הרשימה המלאה בעצמה ומחזירה [] מעצמה
+  // אם אין חברים.
   if (list.members.length > 0) {
-    createNotificationsForListMembers(listId, 'products_reorder', userId)
+    createNotificationsForListMembers(listId, 'products_reorder', userId, { skipPush: true })
       .catch((err: unknown) => logger.error('Reorder notification failed:', err));
   }
 }

@@ -78,7 +78,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError, pendingImageUploadRef,
-    refreshing,
+    refreshing, lastFetchAt,
     fabPosition, showFab, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
@@ -355,6 +355,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     if (selectionModeRef.current) exitSelectionModeRef.current();
     leaveList();
   }, [leaveList]);
+  // כניסה למצב סידור מוצרים - בלי זה מצב בחירה מרובה נשאר פעיל ברקע
+  // (הבר התחתון של הבחירה נשאר גלוי מעל שורות הגרירה, ובלבול לגבי לאיזה
+  // מצב לחיצה על שורה מתייחסת).
+  const stableEnterReorder = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    reorderHandleEnter();
+  }, [reorderHandleEnter]);
   const stableToggleMute = useCallback(() => {
     if (isMuteToggling.current) return;
     isMuteToggling.current = true;
@@ -487,7 +494,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
           לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
       {/* eslint-disable-next-line react-hooks/refs */}
-      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} />
+      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
 
       {/* Content */}
       <Box
@@ -552,8 +559,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
-                onClick={reorderHandleEnter}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
+                onClick={stableEnterReorder}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
                 sx={getReorderEntrySx(isDark)}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
@@ -593,8 +600,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                   role="button"
                   tabIndex={0}
                   aria-label={t('reorderProducts')}
-                  onClick={reorderHandleEnter}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
+                  onClick={stableEnterReorder}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
                   sx={getReorderEntrySx(isDark)}
                 >
                   <SwapVertRoundedIcon sx={{ fontSize: 19 }} />

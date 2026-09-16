@@ -175,6 +175,11 @@ export async function createNotificationsForListMembers(
     // רשימה שהקורא כבר טען מה-DB (למשל אחרי updateOne/findById משלו) -
     // חוסך round-trip כפול לאותו _id באותה בקשה. ברירת מחדל: טוען בעצמו.
     preloadedList?: Pick<IList, 'owner' | 'members' | 'name'>;
+    // אירועים "שקטים" (למשל סידור מחדש של מוצרים) - עדיין יוצרים רשומת
+    // התראה ב-DB ומעדכנים את הפעמון/toast בזמן אמת (socket), אבל בלי
+    // push notification דרך המערכת - שינוי סדר לא מספיק משמעותי כדי
+    // להצדיק פוש שמפריע למשתמש מחוץ לאפליקציה.
+    skipPush?: boolean;
   } = {}
 ): Promise<NotificationResponse[]> {
   // שאילתות מקבילות במקום סדרתיות
@@ -217,6 +222,8 @@ export async function createNotificationsForListMembers(
   }));
 
   const notifications = await NotificationDAL.createMany(notificationsData);
+
+  if (data.skipPush) return notifications.map(transformNotification);
 
   // Push לכל המקבלים במקביל, עם eventId משותף למניעת כפילות
   const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);

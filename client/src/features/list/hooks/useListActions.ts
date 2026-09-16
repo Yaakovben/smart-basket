@@ -36,6 +36,7 @@ export const useListActions = ({
   const [showEditList, setShowEditList] = useState(false);
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastFetchAt, setLastFetchAt] = useState<Date | null>(null);
 
   const hasListChanges = useMemo(() => {
     if (!editListData) return false;
@@ -128,6 +129,7 @@ export const useListActions = ({
     try {
       const apiList = await listsApi.getList(list.id);
       onUpdateList(convertApiList(apiList));
+      setLastFetchAt(new Date());
     } catch {
       showToast(t('errorOccurred'), 'error');
     } finally {
@@ -140,6 +142,7 @@ export const useListActions = ({
     editListData, setEditListData,
     hasListChanges,
     refreshing,
+    lastFetchAt,
     handleEditList,
     saveListChanges,
     handleDeleteList,
