@@ -490,17 +490,23 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         </Suspense>
       )}
 
-      {/* pullActiveRef.current: ref מכוון בכוונה (לא state) כדי להימנע מ-render נוסף
-          במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
-          לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
-      {/* eslint-disable-next-line react-hooks/refs */}
-      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
+      {/* עוטפים את האינדיקטור+התוכן יחד ב-position:relative נפרד מהמכל
+          החיצוני (שכולל גם את הכותרת הקבועה) - כדי שה-top:0 המוחלט של
+          PullToRefreshIndicator יתחיל ממש מתחת לכותרת, לא מתחת/מאחורי
+          הכותרת עצמה (מה שקרה כשהוא היה position:absolute ביחס למכל שכולל
+          גם אותה, ולכן כמעט בלתי-נראה). */}
+      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {/* pullActiveRef.current: ref מכוון בכוונה (לא state) כדי להימנע מ-render נוסף
+            במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
+            לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
+        {/* eslint-disable-next-line react-hooks/refs */}
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
 
-      {/* Content */}
-      <Box
-        ref={scrollContainerRef}
-        sx={{
-          flex: 1,
+        {/* Content */}
+        <Box
+          ref={scrollContainerRef}
+          sx={{
+          height: '100%',
           overflowY: 'auto',
           overflowX: 'hidden',
           // פס גלילה דק ומעודן - נותן חיווי "יש עוד ברשימה" בלי הגוש של
@@ -719,6 +725,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             )}
           </>
         )}
+      </Box>
       </Box>
 
       {/* FAB - Add Product Button (מוסתר במצב סידור מוצרים) */}
