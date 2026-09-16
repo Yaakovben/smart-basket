@@ -818,9 +818,20 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           }
         } : undefined}
         onConvertToPrivate={list.isGroup ? () => {
-          // הפעולה עצמה מיידית וחסרת חיכוך (בניגוד ל"הפוך למשותפת", שכבר
-          // דורש הרחבה+הגדרת סיסמה+כפתור נפרד) - אישור לפני ביצוע, אותו
-          // מנגנון confirm/setConfirm כמו removeMember/leaveList.
+          // חברים בקבוצה - לא ניתן להמיר. פופאפ מידע בלבד (בלי טקסט אזהרה
+          // קבוע בתוך המסך) - חייבים להסיר את כולם קודם דרך ניהול החברים.
+          if (list.members.length > 0) {
+            setConfirm({
+              title: t('convertToPrivate'),
+              message: t('convertToPrivateMembersHint'),
+              confirmText: t('gotIt'),
+              onConfirm: () => setConfirm(null),
+            });
+            return;
+          }
+          // אין חברים - הפעולה עצמה מיידית וחסרת חיכוך (בניגוד ל"הפוך
+          // למשותפת", שכבר דורש הרחבה+הגדרת סיסמה+כפתור נפרד) - אישור לפני
+          // ביצוע, אותו מנגנון confirm/setConfirm כמו removeMember/leaveList.
           setConfirm({
             title: t('convertToPrivate'),
             message: t('convertToPrivateConfirmMessage'),
