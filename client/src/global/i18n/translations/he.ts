@@ -235,6 +235,7 @@ export const he: Translations = {
   invalidGroupCode: 'קוד רשימה לא תקין',
   invalidGroupPassword: 'סיסמת רשימה שגויה',
   alreadyMember: 'אתה כבר חבר ברשימה זו',
+  groupFull: 'הקבוצה מלאה — הבעלים צריך לשדרג לפרו כדי להוסיף חברים נוספים',
   youAreOwner: 'אתה הבעלים של רשימה זו',
   or: 'או',
   enterEmail: 'נא להזין אימייל',

@@ -236,6 +236,7 @@ export const en: Translations = {
   invalidGroupCode: 'Invalid list code',
   invalidGroupPassword: 'Invalid list password',
   alreadyMember: 'You are already a member of this list',
+  groupFull: 'Group is full — the owner needs to upgrade to Pro to add more members',
   youAreOwner: 'You are the owner of this list',
   or: 'or',
   enterEmail: 'Please enter email',

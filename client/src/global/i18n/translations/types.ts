@@ -231,6 +231,7 @@ export type TranslationKeys =
   | 'invalidGroupCode'
   | 'invalidGroupPassword'
   | 'alreadyMember'
+  | 'groupFull'
   | 'youAreOwner'
   | 'or'
   | 'enterEmail'

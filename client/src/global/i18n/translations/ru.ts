@@ -236,6 +236,7 @@ export const ru: Translations = {
   invalidGroupCode: 'Неверный код списка',
   invalidGroupPassword: 'Неверный пароль списка',
   alreadyMember: 'Вы уже являетесь участником этого списка',
+  groupFull: 'Группа заполнена — владелец должен перейти на Pro, чтобы добавить ещё участников',
   youAreOwner: 'Вы владелец этого списка',
   or: 'или',
   enterEmail: 'Введите email',
