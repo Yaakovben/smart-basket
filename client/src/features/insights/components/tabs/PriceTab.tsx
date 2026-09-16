@@ -16,6 +16,7 @@ interface PriceTabProps {
   priceError: boolean;
   onRetry: () => void;
   locationStatus: LocationStatus;
+  hasLocation: boolean;
   onRequestLocation: () => void;
   onResetLocationDenied: () => void;
   selectedListId: string | null;
@@ -26,7 +27,7 @@ interface PriceTabProps {
 // טאב "מחירים" של עמוד התובנות - השוואת מחירים בין רשתות לרשימה נבחרת.
 export const PriceTab = memo(({
   isDark, priceData, priceLoading, priceLoadingLabel, priceError, onRetry,
-  locationStatus, onRequestLocation, onResetLocationDenied,
+  locationStatus, hasLocation, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
 }: PriceTabProps) => {
   const { t } = useSettings();
@@ -211,6 +212,7 @@ export const PriceTab = memo(({
         data={priceData}
         isDark={isDark}
         locationStatus={locationStatus}
+        hasLocation={hasLocation}
         onRequestLocation={onRequestLocation}
         onResetLocationDenied={onResetLocationDenied}
         selectedListName={

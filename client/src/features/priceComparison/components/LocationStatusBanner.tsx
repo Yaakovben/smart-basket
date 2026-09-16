@@ -8,12 +8,13 @@ import type { LocationStatus } from '../hooks/useUserLocation';
 
 interface LocationStatusBannerProps {
   locationStatus: LocationStatus | undefined;
+  hasLocation: boolean;
   onRequestLocation?: () => void;
   isDark: boolean;
 }
 
 // באנר מיקום - מוצג לפי מצב ה-geolocation הנוכחי (idle/requesting/granted/denied/blocked/unavailable/error)
-export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark }: LocationStatusBannerProps) => {
+export const LocationStatusBanner = ({ locationStatus, hasLocation, onRequestLocation, isDark }: LocationStatusBannerProps) => {
   const { t } = useSettings();
   return (
   <>
@@ -59,7 +60,7 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
       </Box>
     )}
 
-    {locationStatus === 'granted' && (
+    {locationStatus === 'granted' && hasLocation && (
       <Box sx={{
         mb: 1.25, px: 1, py: 0.55, borderRadius: '8px',
         display: 'inline-flex', alignItems: 'center', gap: 0.4,
