@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StarIcon from '@mui/icons-material/Star';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import EmailIcon from '@mui/icons-material/Email';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { subscriptionApi, type SubscriptionStatus } from '../../../services/api/subscription.api';
 import { ConfirmModal } from '../../../global/components';
@@ -172,17 +172,13 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                       <Button
                         variant="contained"
                         fullWidth
-                        startIcon={<WhatsAppIcon />}
-                        href="https://wa.me/972525000000?text=שלום%2C%20אני%20מעוניין%20לשדרג%20ל-Pro"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        startIcon={<EmailIcon />}
+                        href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
                         sx={{
                           mt: 0.5, borderRadius: 2, fontWeight: 700,
-                          background: '#25D366', '&:hover': { background: '#1DA851' },
-                          color: 'white',
                         }}
                       >
-                        {t('upgradeContact')} — WhatsApp
+                        {t('upgradeContact')}
                       </Button>
                     </Box>
                   </Box>
