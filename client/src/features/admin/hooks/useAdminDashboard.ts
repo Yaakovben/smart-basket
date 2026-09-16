@@ -106,5 +106,6 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     refreshData,
     loading,
     error,
+    lastFetchAt: lastFetchAtRef.current,
   };
 };

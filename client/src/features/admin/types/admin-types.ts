@@ -25,4 +25,5 @@ export interface UseAdminDashboardReturn {
   usersWithLoginInfo: UserWithLastLogin[];
   stats: DashboardStats;
   refreshData: () => void;
+  lastFetchAt?: number;
 }

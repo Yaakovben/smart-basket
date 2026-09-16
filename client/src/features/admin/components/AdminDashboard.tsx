@@ -14,6 +14,8 @@ import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
 import { AdminAiStatusCard } from './AdminAiStatusCard';
+import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -32,8 +34,10 @@ export const AdminDashboard = () => {
     stats,
     refreshData,
     loading,
-    error
+    error,
+    lastFetchAt,
   } = useAdminDashboard();
+  const lastRefreshedAt = lastFetchAt ? new Date(lastFetchAt) : null;
   const socketOnlineUserIds = useOnlineUsers();
   // מוחזק כאן פעם אחת (לא בתוך הפאנל) כדי שנקודת הסטטוס על האייקון בכותרת
   // תשקף את אותם הנתונים בלי לירות בקשת רשת כפולה כשפותחים את הפאנל.
@@ -64,8 +68,21 @@ export const AdminDashboard = () => {
     setTimeout(() => setIsRefreshing(false), 1000);
   }, [refreshData]);
 
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handleRefresh);
+
   return (
-    <Box sx={{ height: 'var(--app-height, 100dvh)', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+    <Box
+      sx={{ height: 'var(--app-height, 100dvh)', position: 'relative', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}
+      onTouchStart={handlePullStart}
+      onTouchMove={handlePullMove}
+      onTouchEnd={handlePullEnd}
+    >
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        refreshing={isRefreshing}
+        pullActive={pullActiveRef.current}
+        lastRefreshedAt={lastRefreshedAt}
+      />
       <AdminDashboardHeader
         isDark={isDark}
         isRtl={isRtl}
