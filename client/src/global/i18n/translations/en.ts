@@ -49,6 +49,12 @@ export const en: Translations = {
   sendEmail: 'Send Email',
   sendWhatsApp: 'Send WhatsApp',
   helpDescription: 'We\'d love to help! Contact us with any questions.',
+  // Feedback popup
+  feedbackTitle: 'What do you think of the app?',
+  feedbackDescription: 'Tell us what you think, and what you\'d like us to improve or add.',
+  feedbackPlaceholder: 'Write your feedback here...',
+  feedbackSend: 'Send',
+  feedbackMaybeLater: 'Maybe later',
   // About
   aboutDescription: 'Simple, convenient, shared - a smart shopping list',
   developedBy: 'Developed by',

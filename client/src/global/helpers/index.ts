@@ -83,6 +83,9 @@ export {
 // localStorage בטוח — try/catch פנימי, API קריא יותר (גם עם JSON)
 export { safeStorage } from './safeStorage';
 
+// מונה "פתיחות אפליקציה" אמיתיות - לתנאי כניסה של פופאפ המשוב (20+ פתיחות)
+export { getAppOpenCount, countAppOpen } from './appOpenCount';
+
 // יומן אבחון ששורד קריסה - לחקירת "האפליקציה נסגרת לבד" ב-iOS PWA.
 // rotateCrashLog/startHeartbeat רצים אוטומטית ב-import של המודול (ראו
 // crashLog.ts) ולכן לא מיוצאים - רק ה-API שצריך שימוש חיצוני.

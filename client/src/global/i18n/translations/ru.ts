@@ -49,6 +49,12 @@ export const ru: Translations = {
   sendEmail: 'Отправить email',
   sendWhatsApp: 'Отправить WhatsApp',
   helpDescription: 'Мы рады помочь! Свяжитесь с нами по любым вопросам.',
+  // Feedback popup
+  feedbackTitle: 'Что вы думаете о приложении?',
+  feedbackDescription: 'Расскажите, что вы думаете и что бы вы хотели улучшить или добавить.',
+  feedbackPlaceholder: 'Напишите здесь свой отзыв...',
+  feedbackSend: 'Отправить',
+  feedbackMaybeLater: 'Может позже',
   // About
   aboutDescription: 'Просто, удобно, вместе - умный список покупок',
   developedBy: 'Разработано',

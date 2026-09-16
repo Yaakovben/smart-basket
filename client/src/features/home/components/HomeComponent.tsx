@@ -12,6 +12,7 @@ import { useHome } from '../hooks/useHome';
 import { useListReorder } from '../hooks/useListReorder';
 import { useHomeNotifications } from '../hooks/useHomeNotifications';
 import { useHomePushPrompt } from '../hooks/useHomePushPrompt';
+import { useFeedbackPopup } from '../hooks/useFeedbackPopup';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
 import { HomeMenuSheet } from './HomeMenuSheet';
@@ -21,6 +22,7 @@ import { CreateListModal } from './CreateListModal';
 import { JoinGroupModal } from './JoinGroupModal';
 import { NotificationsModal } from './NotificationsModal';
 import { HomeBottomNav } from './HomeBottomNav';
+import { FeedbackPopup } from './FeedbackPopup';
 import { AiAssistantFab } from './AiAssistantFab';
 import type { HomePageProps } from '../types/home-types';
 
@@ -42,6 +44,7 @@ export const HomeComponent = memo(({
   }), []);
 
   const { showPushPrompt, pushPromptError, pushLoading, handleEnablePush, handleDismissPushPrompt } = useHomePushPrompt();
+  const { showFeedbackPopup, handleCloseFeedbackPopup } = useFeedbackPopup();
 
   // סורק QR להצטרפות — נפתח מתוך JoinModal
   const [showQRScanner, setShowQRScanner] = useState(false);
@@ -303,6 +306,9 @@ export const HomeComponent = memo(({
       {confirmLogout && (
         <ConfirmModal title={t('logout')} message={t('logoutConfirm')} confirmText={t('logout')} onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />
       )}
+
+      {/* Feedback Popup - פעם אחת למשתמש ותיק (20+ פתיחות) */}
+      {showFeedbackPopup && <FeedbackPopup onClose={handleCloseFeedbackPopup} />}
 
       {/* Push Notification Prompt */}
       {showPushPrompt && (
