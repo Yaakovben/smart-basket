@@ -5,6 +5,7 @@ import type { Product, ProductCategory } from '../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../../../global/helpers';
 import { cldThumb } from '../../../global/helpers/cloudinaryImage';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { IconTile } from '../../../global/components';
 
 interface Props {
   product: Product;
@@ -41,16 +42,18 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
           component="img"
           src={cldThumb(product.image)}
           alt=""
-          sx={{ width: 38, height: 38, borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
+          sx={{
+            width: 38, height: 38, borderRadius: '10px', objectFit: 'cover', flexShrink: 0,
+            // צל עדין - בלי זה התמונה נדבקת שטוחה לידית הגרירה הצמודה אליה.
+            boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.15)',
+          }}
         />
       ) : (
-        <Box sx={{
-          width: 38, height: 38, borderRadius: '10px', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-          bgcolor: isDark ? `${color}33` : `${color}1F`,
-        }}>
-          {icon}
-        </Box>
+        // IconTile (variant="light") - אותו אריח בדיוק כמו SwipeItem, במקום
+        // ה-Box{bgcolor:flat} השטוח שהיה כאן: הטבעת/צל העדינים שלו (ראו
+        // iconArt.ts getIconTintRing) מפרידים אותו ויזואלית מידית הגרירה
+        // הצמודה, במקום "להידבק" אליה שטוח בלי שום הפרדה.
+        <IconTile emoji={icon} color={color} seedId={product.id} size={38} fontSize={20} variant="light" />
       )}
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
