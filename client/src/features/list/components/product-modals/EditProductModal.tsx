@@ -7,6 +7,7 @@ import { useSettings } from '../../../../global/context/SettingsContext';
 import { ProductNoteField } from './ProductNoteField';
 import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
+import { setPendingImageUpload } from '../../helpers/pendingImageUpload';
 
 // ===== סגנונות =====
 const labelSx = COMMON_STYLES.label;
@@ -166,7 +167,7 @@ export const EditProductModal = memo(({
         <ProductImageField
           value={product.image || ''}
           onChange={(v) => onUpdateField('image', v as Product['image'])}
-          onUploadStart={(promise, localValue) => { editPendingImageUploadRef.current = { promise, localValue }; }}
+          onUploadStart={(promise, localValue) => setPendingImageUpload(editPendingImageUploadRef, promise, localValue)}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>

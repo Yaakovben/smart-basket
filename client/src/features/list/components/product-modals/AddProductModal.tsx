@@ -14,6 +14,7 @@ import type { NewProductForm } from '../../types/list-types';
 import { ProductNoteField } from './ProductNoteField';
 import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
+import { setPendingImageUpload } from '../../helpers/pendingImageUpload';
 
 // ===== סגנונות =====
 const labelSx = COMMON_STYLES.label;
@@ -415,7 +416,7 @@ export const AddProductModal = memo(({
         <ProductImageField
           value={newProduct.image}
           onChange={(v) => onUpdateField('image', v)}
-          onUploadStart={(promise, localValue) => { pendingImageUploadRef.current = { promise, localValue }; }}
+          onUploadStart={(promise, localValue) => setPendingImageUpload(pendingImageUploadRef, promise, localValue)}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>
