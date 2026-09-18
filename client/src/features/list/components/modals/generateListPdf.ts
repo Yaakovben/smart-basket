@@ -24,36 +24,40 @@ const APP_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, s
 // React) אז מוגדר כאן ישירות, לא מיובא.
 const BRAND_INK_LIGHT = '#0F766E';
 const BRAND_INK_DARK = '#5EEAD4';
-const BRAND_FILL_LIGHT = 'linear-gradient(310deg, #D9FAF2 0%, #F2FDFB 100%)';
-const BRAND_FILL_DARK = 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)';
 const BRAND_EDGE_LIGHT = 'rgba(20,184,166,0.32)';
 const BRAND_EDGE_DARK = 'rgba(45,212,191,0.4)';
 
-// חושפים overlay מלא-מסך עם אנימציה וטקסט - נבנה ב-DOM גולמי (לא React) כי
-// הוא חייב להישאר קיים ומצויר בזמן שה-DOM האמיתי של PrintListView נחשף
-// ומצולם ע"י html2canvas. מוצג *לפני* טעינת html2canvas/jsPDF (לא אחרי) -
-// בפעם הראשונה בסשן, הורדה+פענוח של שתי הספריות האלה יכולה לקחת כמה
-// שניות ברשת סלולרית, ובלי זה המשתמש רואה מסך ריק לגמרי באותו זמן.
-//
-// האנימציה: "מחסנית דפים" - שני "דפים" מוצללים מציצים מאחורי דף קדמי
-// (עומק, כמו כמה עמודי PDF שהופקו בזה אחר זה), כולו צף בעדינות. בתוך
-// הדף הקדמי - שורות "טקסט" שמאירות/כהות בזו-אחר-זו בתזמון מדורג, כמו
-// תוכן שנכתב לתוך העמוד. אותו גרדיאנט/מסגרת/גוון תכלת בדיוק כמו הפתק
-// הקיים בכל האפליקציה (paperNote.ts) - כדי שה-overlay ירגיש שייך לאפליקציה
-// ולא כמו מסך טעינה גנרי, ומתאים תמטית ל"מכינים PDF".
-function showOverlay(preparingText: string, isDark: boolean): HTMLElement {
+// overlay מלא-מסך — נבנה ב-DOM גולמי (לא React) כי חייב להישאר קיים
+// בזמן שה-DOM האמיתי של PrintListView נחשף ומצולם. מוצג לפני טעינת
+// html2canvas/jsPDF כדי שלא יהיה רגע ריק ברשת סלולרית.
+// העיצוב: כרטיס גדול (180×220px) עם "דפים" מוצללים + קו סריקה —
+// אותו שפת עיצוב בדיוק כמו מסך הסריקה (ScanListPhoto), כדי שהחיווי
+// ירגיש שייך לאפליקציה ולא גנרי. ה-overlay מבוטל ע"י לחיצה עליו.
+function showOverlay(preparingText: string, isDark: boolean, onCancel: () => void): HTMLElement {
   if (!document.getElementById(OVERLAY_KEYFRAMES_ID)) {
     const style = document.createElement('style');
     style.id = OVERLAY_KEYFRAMES_ID;
     style.textContent = `
-      @keyframes pdf-stack-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-      @keyframes pdf-line-reveal { 0%, 100% { opacity: 0.28; transform: scaleX(0.45); } 50% { opacity: 1; transform: scaleX(1); } }
+      @keyframes pdf-scan-sweep {
+        0%   { top: 8px; opacity: 0; }
+        8%   { opacity: 1; }
+        92%  { opacity: 1; }
+        100% { top: calc(100% - 10px); opacity: 0; }
+      }
+      @keyframes pdf-line-reveal {
+        0%, 15%  { transform: scaleX(0); opacity: 0.3; }
+        35%, 65% { transform: scaleX(1); opacity: 1; }
+        90%, 100%{ transform: scaleX(1); opacity: 0.5; }
+      }
+      @keyframes pdf-card-in {
+        from { opacity: 0; transform: scale(0.9) translateY(16px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+      }
     `;
     document.head.appendChild(style);
   }
 
   const ink = isDark ? BRAND_INK_DARK : BRAND_INK_LIGHT;
-  const fill = isDark ? BRAND_FILL_DARK : BRAND_FILL_LIGHT;
   const edge = isDark ? BRAND_EDGE_DARK : BRAND_EDGE_LIGHT;
   const isRtl = document.documentElement.dir === 'rtl';
 
@@ -61,66 +65,75 @@ function showOverlay(preparingText: string, isDark: boolean): HTMLElement {
   overlay.id = OVERLAY_ID;
   overlay.style.cssText = `
     position: fixed; inset: 0; z-index: 999999;
-    background: ${isDark ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.45)'};
-    display: flex; align-items: center; justify-content: center;
+    background: ${isDark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.55)'};
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
   `;
+  overlay.addEventListener('click', onCancel);
 
+  // כרטיס מרכזי גדול — גודל דומה לכרטיס הסריקה, עם מחסנית דפים + קו סורק
   const card = document.createElement('div');
   card.style.cssText = `
-    width: 108px; height: 138px; border-radius: 14px;
-    background: ${fill}; border: 1.5px solid ${edge};
-    box-shadow: 0 8px 32px rgba(0,0,0,0.32);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    position: relative; width: 148px; height: 190px; border-radius: 18px; overflow: hidden;
+    background: ${isDark ? 'rgba(15,118,110,0.18)' : 'rgba(209,250,242,0.95)'};
+    border: 1.5px solid ${edge};
+    box-shadow: 0 16px 48px rgba(20,184,166,0.28);
+    animation: pdf-card-in 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
   `;
+  // עצירת פרופגציה — לחיצה על הכרטיס עצמו לא מבטלת
+  card.addEventListener('click', e => e.stopPropagation());
 
-  const labelInCard = document.createElement('span');
-  labelInCard.textContent = preparingText;
-  labelInCard.style.cssText = `
-    font-family: ${APP_FONT_STACK}; font-size: 11px; font-weight: 600; color: ${ink};
-    text-align: center; padding: 0 8px;
-  `;
-
-  const stack = document.createElement('div');
-  stack.style.cssText = `
-    position: relative; width: 58px; height: 74px;
-    animation: pdf-stack-float 2.2s ease-in-out infinite;
-  `;
-
-  const pageBaseCss = 'position: absolute; inset: 0; border-radius: 7px;'
-    + `background: ${fill}; border: 1.5px solid ${edge};`;
-
-  const back2 = document.createElement('div');
-  back2.style.cssText = `${pageBaseCss} transform: translate(7px, 7px); opacity: 0.5;`;
-  const back1 = document.createElement('div');
-  back1.style.cssText = `${pageBaseCss} transform: translate(3.5px, 3.5px); opacity: 0.75;`;
-
-  const front = document.createElement('div');
-  front.style.cssText = `
-    ${pageBaseCss}
-    box-shadow: 0 8px 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(20,184,166,0.22)'};
-    display: flex; flex-direction: column; justify-content: center; gap: 6px;
-    padding: 0 10px;
-  `;
-  // "שורות טקסט" מדומות - נחשפות/מתעמעמות בזו-אחר-זו, מכיוון הקריאה (ימין
-  // לשמאל ב-RTL) כדי שזה יקרא כמו טקסט שנכתב, לא סתם הבהוב אחיד.
-  ['70%', '90%', '55%', '80%'].forEach((w, i) => {
-    const line = document.createElement('div');
-    line.style.cssText = `
-      height: 3px; width: ${w}; border-radius: 2px; background: ${ink};
+  // "שורות טקסט" מדומות — נחשפות בתזמון מדורג
+  ['72%', '92%', '58%', '82%', '66%'].forEach((w, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = `
+      position: absolute; height: 7px; border-radius: 4px;
+      background: ${ink}; opacity: 0;
+      top: ${20 + i * 30}px;
+      ${isRtl ? `right: 16px; width: ${w};` : `left: 16px; width: ${w};`}
       transform-origin: ${isRtl ? 'right' : 'left'};
-      animation: pdf-line-reveal 1.6s ease-in-out infinite;
-      animation-delay: ${i * 0.18}s;
+      animation: pdf-line-reveal 2.4s ease-in-out infinite;
+      animation-delay: ${i * 0.35}s;
     `;
-    front.appendChild(line);
+    card.appendChild(row);
   });
 
-  stack.appendChild(back2);
-  stack.appendChild(back1);
-  stack.appendChild(front);
+  // קו סריקה זוהר (אותו סגנון כמו ScanListPhoto)
+  const scanLine = document.createElement('div');
+  scanLine.style.cssText = `
+    position: absolute; left: 0; right: 0; height: 3px; border-radius: 2px;
+    background: ${isDark ? '#5EEAD4' : '#14B8A6'};
+    box-shadow: 0 0 10px 2px rgba(20,184,166,0.65);
+    animation: pdf-scan-sweep 2.4s ease-in-out infinite;
+  `;
+  card.appendChild(scanLine);
 
-  card.appendChild(stack);
-  card.appendChild(labelInCard);
+  // טקסט + כפתור ביטול מתחת לכרטיס
+  const label = document.createElement('div');
+  label.style.cssText = `
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  `;
+
+  const labelText = document.createElement('span');
+  labelText.textContent = preparingText;
+  labelText.style.cssText = `
+    font-family: ${APP_FONT_STACK}; font-size: 15px; font-weight: 600; color: white;
+    text-align: center;
+  `;
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'ביטול';
+  cancelBtn.style.cssText = `
+    font-family: ${APP_FONT_STACK}; font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.65); background: transparent; border: none;
+    padding: 4px 12px; cursor: pointer; border-radius: 8px;
+  `;
+  cancelBtn.addEventListener('click', onCancel);
+
+  label.appendChild(labelText);
+  label.appendChild(cancelBtn);
+
   overlay.appendChild(card);
+  overlay.appendChild(label);
   document.body.appendChild(overlay);
   return overlay;
 }
@@ -133,8 +146,11 @@ export async function generateListPdf(
   const sourceEl = document.querySelector<HTMLElement>(SOURCE_SELECTOR);
   if (!sourceEl) return null;
 
-  // ה-overlay מוצג *לפני* ה-import הדינמי (לא אחריו) - ראה הערה ב-showOverlay.
-  const overlay = showOverlay(preparingText, isDark);
+  let cancelled = false;
+  const onCancel = () => { cancelled = true; overlay.remove(); };
+
+  // ה-overlay מוצג לפני ה-import הדינמי — כדי שלא יהיה רגע ריק ברשת סלולרית.
+  const overlay = showOverlay(preparingText, isDark, onCancel);
 
   const prevStyle = {
     display: sourceEl.style.display,
@@ -150,6 +166,9 @@ export async function generateListPdf(
       import('html2canvas'),
       import('jspdf'),
     ]);
+
+    if (cancelled) return null;
+
     const html2canvas = html2canvasModule.default;
     const { jsPDF } = jsPdfModule;
 
@@ -165,7 +184,9 @@ export async function generateListPdf(
     sourceEl.style.width = `${CAPTURE_WIDTH}px`;
     sourceEl.style.zIndex = '999998'; // מתחת ל-overlay, אבל עדיין ממוקם ומצויר כרגיל על המסך
 
-    const canvas = await html2canvas(sourceEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+    if (cancelled) return null;
+
+    const canvas = await html2canvas(sourceEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
     // JPEG ולא PNG - הרקע לבן אחיד והתוכן הוא בעיקר טקסט/אייקונים, כך שאיכות
     // JPEG גבוהה (0.85) נראית זהה כמעט לעין אבל במשקל קטן משמעותית (חשוב
     // לשיתוף בוואטסאפ/הודעות - PNG ברזולוציה כפולה יצא מגה-בייטים בודדים).
@@ -176,6 +197,8 @@ export async function generateListPdf(
     // width/height כש-format מקבל מידות "landscape" (רחב מגבוה) בלי לציין
     // orientation - בדיוק המקרה של רשימה קצרה (רחבה מגבוהה). בלי זה התמונה
     // הייתה נדחסת ליחס-רוחב הפוך, מה שנראה כאילו חלק מהטקסט "נעלם" מהעמוד.
+    if (cancelled) return null;
+
     const orientation = canvas.width >= canvas.height ? 'l' : 'p';
     const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height], orientation });
     pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
