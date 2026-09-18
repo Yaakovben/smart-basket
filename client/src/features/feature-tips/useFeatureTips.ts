@@ -6,7 +6,7 @@ const SESSION_MARKER_KEY = 'sb_session_marker';
 const SESSION_SHOWN_KEY = 'sb_feature_tip_session_shown'; // הוצג בסשן הזה (הגנה מ-reload)
 
 const MIN_SESSION = 3;        // לא מציקים למשתמש חדש - רק מהסשן השלישי
-const SHOW_EVERY = 5;         // פעם בכל 5 פתיחות
+const SHOW_EVERY = 8;         // פעם בכל 8 פתיחות
 const DELAY_MS = 12_000;      // 12 שניות שימוש לפני שהקרוסלה קופצת
 
 const getSessionNumber = (): number => {
