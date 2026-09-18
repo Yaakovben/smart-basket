@@ -97,9 +97,13 @@ export const useProductForm = () => {
     }
   }, []);
 
+  // סגירה *בלי* לשמור (X/ביטול/רקע) - מאפסת גם את הטופס, לא רק את הנראות.
+  // בלעדיה, פתיחה הבאה של "הוסף מוצר" הייתה מציגה את כל השדות (שם, כמות,
+  // הערה, תמונה...) עם הערכים מהניסיון הקודם שננטש.
   const closeAddModal = useCallback(() => {
     setShowAdd(false);
     setAddError('');
+    setNewProduct(getDefaultNewProduct());
   }, []);
 
   return {
