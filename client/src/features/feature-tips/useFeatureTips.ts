@@ -4,10 +4,15 @@ import { markPopupShown, canShowSecondaryPopup } from '../../global/helpers';
 const SESSION_COUNT_KEY = 'sb_session_count';       // מונה סשנים משותף (זהה ל-useDailyFaith)
 const SESSION_MARKER_KEY = 'sb_session_marker';
 const SESSION_SHOWN_KEY = 'sb_feature_tip_session_shown'; // הוצג בסשן הזה (הגנה מ-reload)
+const LAST_SHOWN_AT_KEY = 'sb_feature_tip_last_shown_at'; // timestamp - חסם התדירות האמיתי (ראו MIN_INTERVAL_MS)
 
 const MIN_SESSION = 3;        // לא מציקים למשתמש חדש - רק מהסשן השלישי
-const SHOW_EVERY = 3;         // פעם בכל 3 פתיחות
+const SHOW_EVERY = 3;         // פעם בכל 3 פתיחות (מועמדות בלבד - ראו MIN_INTERVAL_MS)
 const DELAY_MS = 12_000;      // 12 שניות שימוש לפני שהקרוסלה קופצת
+// תקרה אמיתית בזמן קלנדרי, לא רק בספירת סשנים - "סשן" מתאפס בכל פתיחה
+// מחדש של ה-PWA (למשל אחרי שהאפליקציה עברה לרקע במובייל), אז SHOW_EVERY
+// לבדו יכול להציג את זה כמה פעמים באותו יום אצל משתמש שפותח/סוגר הרבה.
+const MIN_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // שבוע
 
 const getSessionNumber = (): number => {
   try {
@@ -44,6 +49,11 @@ export function useFeatureTips(enabled: boolean) {
     if (session < MIN_SESSION) return;
     if (session % SHOW_EVERY !== 0) return;
 
+    try {
+      const lastShownAt = parseInt(localStorage.getItem(LAST_SHOWN_AT_KEY) || '0', 10) || 0;
+      if (Date.now() - lastShownAt < MIN_INTERVAL_MS) return;
+    } catch { /* */ }
+
     let cancelled = false;
     const timer = setTimeout(() => {
       if (cancelled) return;
@@ -55,7 +65,10 @@ export function useFeatureTips(enabled: boolean) {
 
       setShow(true);
       markPopupShown('feature-tip');
-      try { sessionStorage.setItem(SESSION_SHOWN_KEY, '1'); } catch { /* */ }
+      try {
+        sessionStorage.setItem(SESSION_SHOWN_KEY, '1');
+        localStorage.setItem(LAST_SHOWN_AT_KEY, String(Date.now()));
+      } catch { /* */ }
     }, DELAY_MS);
 
     return () => { cancelled = true; clearTimeout(timer); };
