@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { Box, Typography, Paper, Collapse, IconButton, Chip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
@@ -30,9 +30,10 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
   const isGoogle = user.registrationMethod === 'google';
   const isRtl = settings.language === 'he';
 
-  // plan מקומי - מתעדכן אחרי שינוי מהאדמין בלי refresh כללי
-  const initialPlan: 'free' | 'pro' = user.plan ?? 'free';
-  const [localPlan, setLocalPlan] = useState<'free' | 'pro'>(initialPlan);
+  // plan מקומי - מתעדכן אחרי שינוי מהאדמין בלי refresh כללי,
+  // ומסתנכרן עם prop כשהנתונים מתרעננים (pull-to-refresh)
+  const [localPlan, setLocalPlan] = useState<'free' | 'pro'>(user.plan ?? 'free');
+  useEffect(() => { setLocalPlan(user.plan ?? 'free'); }, [user.plan]);
 
   const toggleExpand = useCallback(() => {
     setIsExpanded(prev => !prev);

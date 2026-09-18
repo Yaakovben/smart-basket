@@ -57,11 +57,15 @@ export async function joinGroup(
     if (totalParticipants >= limit) throw ConflictError.groupFull();
   }
 
-  // הוספה אטומית ($ne מונעת כפילות מבקשות מקבילות)
+  // הוספה אטומית: $ne מונע כפילות, $size מגביל מספר חברים לפי תוכנית הבעלים.
+  // שני תנאים יחד מכסים race condition שבו שני משתמשים מצטרפים בו-זמנית
+  // לקבוצה שנשאר בה מקום לאחד — ה-update יצליח רק לראשון.
+  const maxMembers = owner && !isPro(owner) ? PLAN_LIMITS.free.maxGroupMembers - 1 : 9999;
   const updated = await ListDAL.updateOne(
     {
       _id: list._id,
       'members.user': { $ne: new mongoose.Types.ObjectId(userId) },
+      $expr: { $lt: [{ $size: '$members' }, maxMembers] },
     },
     {
       $push: {

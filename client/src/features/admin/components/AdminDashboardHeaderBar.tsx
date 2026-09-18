@@ -5,6 +5,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { headerIconButtonSx } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
@@ -21,6 +22,7 @@ interface AdminDashboardHeaderBarProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
+  onRefresh: () => void;
 }
 
 // שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים. סדר ה-DOM כאן = סדר
@@ -30,7 +32,7 @@ interface AdminDashboardHeaderBarProps {
 // אותו דפוס בדיוק כמו מסך הרשימה.
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
@@ -68,6 +70,10 @@ export const AdminDashboardHeaderBar = ({
       </Box>
       <Box onClick={onOpenPriceSync} role="button" tabIndex={0} aria-label="ניהול מאגר מחירים" sx={headerIconButtonSx(44)}>
         <StorefrontIcon sx={{ fontSize: 26 }} />
+      </Box>
+      {/* כפתור רענון ידני — מיועד לשימוש מדסקטופ שאין לו touch events */}
+      <Box onClick={onRefresh} role="button" tabIndex={0} aria-label="רענן נתונים" sx={{ ...headerIconButtonSx(44), display: { xs: 'none', md: 'flex' } }}>
+        <RefreshIcon sx={{ fontSize: 26 }} />
       </Box>
     </Box>
   </Box>

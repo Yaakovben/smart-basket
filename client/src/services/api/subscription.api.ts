@@ -4,10 +4,10 @@ export interface SubscriptionStatus {
   plan: 'free' | 'pro';
   planExpiresAt: string | null;
   limits: {
-    maxLists: number;
-    maxMembersPerGroup: number;
-    aiQueriesPerDay: number;
-    priceComparisonsPerDay: number;
+    maxOwnedLists: number;
+    maxGroupMembers: number;
+    maxAiRequestsPerDay: number;
+    maxPriceComparisonsPerDay: number;
   } | null;
   usage: {
     aiToday: number;

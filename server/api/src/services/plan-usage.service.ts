@@ -15,7 +15,8 @@ const aiUsage = new Map<string, DayUsage>();
 const priceUsage = new Map<string, DayUsage>();
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  // שימוש בשעון ישראל (UTC+2/+3) כדי שהמכסה תתאפס בחצות שעון ישראל
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' });
 }
 
 function getCount(map: Map<string, DayUsage>, userId: string): number {

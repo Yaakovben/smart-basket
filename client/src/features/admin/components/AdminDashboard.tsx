@@ -101,6 +101,7 @@ export const AdminDashboard = () => {
         onOpenAiStatus={() => setAiStatusOpen(true)}
         aiStatus={aiStatus.data}
         onOpenPush={() => setPushOpen(true)}
+        onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
         stats={stats}

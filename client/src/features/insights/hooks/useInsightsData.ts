@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { insightsApi, type InsightsData } from '../../../services/api';
 import { priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
+import { emitPlanLimit } from '../../../global/helpers/planLimitEvent';
 import { safeStorage } from '../../../global/helpers';
 import { INSIGHTS_CACHE_KEY, PRICE_CACHE_KEY, ALL_LISTS_PRICE_CACHE_KEY, readCache, writeCache } from '../helpers/insightsCache';
 import type { InsightTab, InsightsListMeta } from '../types/insights-types';
@@ -161,8 +162,13 @@ export function useInsightsData(tab: InsightTab) {
           setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
           safeStorage.setJSON('sb_insights_selected_list', res.lists[0].listId);
         }
-      } catch {
+      } catch (err) {
         if (cancelled) return;
+        // מגבלת תוכנית — אין טעם לנסות שוב, פותחים מודאל שדרוג
+        if ((err as { response?: { status?: number } })?.response?.status === 402) {
+          emitPlanLimit('priceComparison');
+          return;
+        }
         await new Promise(r => setTimeout(r, 4000));
         if (cancelled) return;
         try {
@@ -173,8 +179,13 @@ export function useInsightsData(tab: InsightTab) {
           if (selectedListId === null && res?.lists && res.lists.length > 0) {
             setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
           }
-        } catch {
-          if (!cancelled) setPriceError(true);
+        } catch (err2) {
+          if (cancelled) return;
+          if ((err2 as { response?: { status?: number } })?.response?.status === 402) {
+            emitPlanLimit('priceComparison');
+            return;
+          }
+          setPriceError(true);
         }
       }
     };
@@ -202,7 +213,12 @@ export function useInsightsData(tab: InsightTab) {
         setAllListsPriceData(res);
         writeCache(ALL_LISTS_PRICE_CACHE_KEY, res);
       })
-      .catch(() => { /* טאב "רשימות" נופל בחזרה ל-groupStats אם זה נכשל */ });
+      .catch(err => {
+        if ((err as { response?: { status?: number } })?.response?.status === 402) {
+          emitPlanLimit('priceComparison');
+        }
+        /* טאב "רשימות" נופל בחזרה ל-groupStats אם זה נכשל */
+      });
     return () => { cancelled = true; };
   }, [tab, allListsPriceData, userLocation]);
 
@@ -212,7 +228,13 @@ export function useInsightsData(tab: InsightTab) {
     setPriceLoading(true);
     priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
       .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
-      .catch(() => setPriceError(true))
+      .catch(err => {
+        if ((err as { response?: { status?: number } })?.response?.status === 402) {
+          emitPlanLimit('priceComparison');
+        } else {
+          setPriceError(true);
+        }
+      })
       .finally(() => setPriceLoading(false));
   };
 
