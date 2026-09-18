@@ -1,26 +1,20 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
-import { spin } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 
 interface AdminAiStatusHeaderProps {
   data: AiStatus | null;
-  loading: boolean;
-  refreshing: boolean;
-  lastFetchAt: Date | null;
-  onRefresh: () => void;
   onClose: () => void;
 }
 
-// כותרת קבועה (לא גוללת עם התוכן) - אותו דפוס כמו DbHealthHeader, כדי
-// שהמנהל תמיד יראה את זמן העדכון האחרון ואת כפתור הרענון בלי לגלול.
-export const AdminAiStatusHeader = ({ data, loading, refreshing, lastFetchAt, onRefresh, onClose }: AdminAiStatusHeaderProps) => {
+// כותרת קבועה (לא גוללת עם התוכן) - אותו דפוס בדיוק כמו DbHealthHeader:
+// בלי כפתור רענון ידני ובלי "זמן עדכון" משלה - הרענון נעשה בגרירה
+// (pull-to-refresh, ראו AdminAiStatusCard/PullToRefreshIndicator), ו"מתי
+// עודכן" מוצג פעם אחת בלבד שם (לא כאן וגם למטה בפאנל הספק - שני חיווי
+// זמן שונים לאותו דבר בעצם היו מבלבלים, "אין פעמיים גם למעלה וגם למטה").
+export const AdminAiStatusHeader = ({ data, onClose }: AdminAiStatusHeaderProps) => {
   const primary = data?.providers.find(p => p.role === 'primary');
-  const lastUpdatedText = lastFetchAt
-    ? lastFetchAt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
-    : null;
 
   return (
     <Box sx={{
@@ -60,19 +54,11 @@ export const AdminAiStatusHeader = ({ data, loading, refreshing, lastFetchAt, on
                   </Typography>
                 </Box>
               )}
-              {lastUpdatedText && (
-                <Typography sx={{ fontSize: 10, color: 'text.disabled' }} title="מתי המסך הזה נטען בפועל - לא בהכרח אותו רגע שבו המודל נבדק, ראו 'נבדק לאחרונה' למטה">
-                  · המסך נטען {lastUpdatedText}
-                </Typography>
-              )}
             </Box>
           )}
         </Box>
       </Box>
       <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-        <IconButton onClick={onRefresh} disabled={loading || refreshing} aria-label="עדכון עכשווי">
-          <RefreshIcon sx={{ animation: refreshing ? `${spin} 1s linear infinite` : 'none' }} />
-        </IconButton>
         <IconButton onClick={onClose} aria-label="סגירה">
           <CloseIcon />
         </IconButton>

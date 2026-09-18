@@ -2,6 +2,8 @@ import { Box, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
+import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
 
@@ -80,6 +82,11 @@ interface Props {
 // (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
 // את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
 export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, refreshError, onRefresh, onClose }: Props) => {
+  // ריענון בגרירה - אותו דפוס בדיוק כמו DbHealthCard/דף הרשימה/דשבורד
+  // המנהל, במקום כפתור רענון ידני עם אייקון מסתובב בכותרת (שהיה גם
+  // מציג "מתי עודכן" פעמיים - פעם בכותרת ופעם למטה בפאנל הספק).
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(onRefresh);
+
   return (
     <Box sx={{
       position: 'fixed', inset: 0, zIndex: 2000,
@@ -87,16 +94,15 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
       display: 'flex', flexDirection: 'column',
       pt: 'env(safe-area-inset-top)',
     }}>
-      <AdminAiStatusHeader
-        data={data}
-        loading={loading}
-        refreshing={refreshing}
-        lastFetchAt={lastFetchAt}
-        onRefresh={onRefresh}
-        onClose={onClose}
-      />
+      <AdminAiStatusHeader data={data} onClose={onClose} />
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <Box
+        sx={{ flex: 1, position: 'relative', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+        onTouchStart={handlePullStart}
+        onTouchMove={handlePullMove}
+        onTouchEnd={handlePullEnd}
+      >
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
         {refreshError && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
