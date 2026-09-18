@@ -223,18 +223,32 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                     ))}
                   </Box>
 
-                  {/* כפתור ביטול */}
-                  <Box sx={{ pt: 1 }}>
-                    <Button
-                      variant="text"
-                      color="error"
-                      fullWidth
-                      disabled={cancelling}
-                      onClick={() => setConfirmCancel(true)}
-                      sx={{ borderRadius: 2, fontSize: 13, fontWeight: 600, py: 1 }}
-                    >
-                      {cancelling ? <CircularProgress size={16} color="error" /> : t('subscriptionCancelBtn')}
-                    </Button>
+                  {/* חידוש אוטומטי - סטטוס שקט, לא כפתור בולט. "ביטול" פה
+                      אף פעם לא חותך גישה - isPro() בשרת ממשיך לכבד את
+                      planExpiresAt, זה רק מכבה את "יתחדש שוב אחרי". במתכוון
+                      לא בצבע אדום/מזמין-לחיצה כמו כפתור השדרוג - ה-UI לא
+                      "מפתה" לבטל, רק מאפשר את זה בלי להסתיר. */}
+                  <Box sx={{ pt: 0.5, textAlign: 'center' }}>
+                    {status.planAutoRenew ? (
+                      <Box
+                        component="button"
+                        disabled={cancelling}
+                        onClick={() => setConfirmCancel(true)}
+                        sx={{
+                          background: 'none', border: 'none', cursor: cancelling ? 'default' : 'pointer',
+                          fontSize: 12, color: 'text.disabled', fontWeight: 500,
+                          textDecoration: 'underline', textUnderlineOffset: 3,
+                          py: 0.5, px: 1,
+                          '&:hover': { color: 'text.secondary' },
+                        }}
+                      >
+                        {cancelling ? <CircularProgress size={13} sx={{ color: 'inherit' }} /> : t('subscriptionCancelBtn')}
+                      </Box>
+                    ) : (
+                      <Typography sx={{ fontSize: 12, color: 'text.disabled', lineHeight: 1.5 }}>
+                        {t('subscriptionAutoRenewOffDesc')} {expiryDate}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
 
@@ -270,51 +284,103 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                     </Box>
                   )}
 
-                  {/* כרטיס שדרוג */}
+                  {/* כרטיס שדרוג - הכרטיס "מגרה" בכוונה: הילה זוהרת שפועמת
+                      בעדינות, כוכב שמנצנץ, ותג "הכי משתלם" בפינה - מנוגד
+                      במתכוון לכפתור הביטול השקט למעלה. */}
                   <Box sx={{
-                    mx: 3, mb: 3, p: 2.5, borderRadius: 2.5,
-                    background: isDark
-                      ? 'linear-gradient(135deg, rgba(109,40,217,0.25) 0%, rgba(76,29,149,0.35) 100%)'
-                      : 'linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(109,40,217,0.14) 100%)',
-                    border: '1px solid rgba(124,58,237,0.25)',
+                    position: 'relative',
+                    mx: 3, mb: 3, mt: 0.5,
+                    animation: 'sbUpgradeGlow 2.6s ease-in-out infinite',
+                    '@keyframes sbUpgradeGlow': {
+                      '0%, 100%': { boxShadow: '0 0 0 0 rgba(124,58,237,0.35), 0 4px 18px rgba(124,58,237,0.18)' },
+                      '50%': { boxShadow: '0 0 0 7px rgba(124,58,237,0), 0 4px 18px rgba(124,58,237,0.3)' },
+                    },
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    borderRadius: 2.5,
                   }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                      <StarIcon sx={{ fontSize: 18, color: '#FCD34D' }} />
-                      <Typography sx={{ fontWeight: 700, fontSize: 15, color: isDark ? 'white' : '#4C1D95' }}>
-                        שדרג ל-Pro
+                    {/* תג "הכי משתלם" */}
+                    <Box sx={{
+                      position: 'absolute', top: -10, insetInlineStart: 16, zIndex: 1,
+                      px: 1.25, py: 0.35, borderRadius: '999px',
+                      background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                      boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+                    }}>
+                      <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#4C1D95', letterSpacing: 0.2 }}>
+                        ✨ {t('upgradeBestValueBadge')}
                       </Typography>
-                      <Chip
-                        label={`${status.currency === 'ILS' ? '₪' : '$'}${status.priceMonthly}/חו׳`}
-                        size="small"
-                        sx={{ ml: 'auto', fontWeight: 700, fontSize: 12, bgcolor: '#7C3AED', color: 'white' }}
-                      />
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mb: 2 }}>
-                      {PRO_FEATURES.map((f) => (
-                        <Box key={f} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CheckCircleIcon sx={{ fontSize: 15, color: '#7C3AED', flexShrink: 0 }} />
-                          <Typography sx={{ fontSize: 13, color: isDark ? 'rgba(255,255,255,0.8)' : '#374151' }}>
-                            {f}
+                    <Box sx={{
+                      p: 2.5, pt: 3, borderRadius: 2.5,
+                      background: isDark
+                        ? 'linear-gradient(135deg, rgba(109,40,217,0.3) 0%, rgba(76,29,149,0.4) 100%)'
+                        : 'linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(109,40,217,0.16) 100%)',
+                      border: '1px solid rgba(124,58,237,0.3)',
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                        <StarIcon sx={{
+                          fontSize: 20, color: '#FCD34D',
+                          animation: 'sbStarPulse 1.8s ease-in-out infinite',
+                          '@keyframes sbStarPulse': {
+                            '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+                            '50%': { transform: 'scale(1.15) rotate(-8deg)' },
+                          },
+                          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                        }} />
+                        <Typography sx={{ fontWeight: 800, fontSize: 16, color: isDark ? 'white' : '#4C1D95' }}>
+                          שדרג ל-Pro
+                        </Typography>
+                        <Box sx={{ ml: 'auto', textAlign: 'end' }}>
+                          <Typography sx={{ fontSize: 18, fontWeight: 800, color: isDark ? 'white' : '#4C1D95', lineHeight: 1 }}>
+                            {status.currency === 'ILS' ? '₪' : '$'}{status.priceMonthly}
+                            <Typography component="span" sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary' }}>
+                              {' '}/{t('perMonthShort')}
+                            </Typography>
                           </Typography>
                         </Box>
-                      ))}
-                    </Box>
+                      </Box>
 
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      startIcon={<EmailIcon />}
-                      href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
-                      sx={{
-                        borderRadius: 2, fontWeight: 700, fontSize: 14,
-                        background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
-                        boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
-                        '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)' },
-                      }}
-                    >
-                      {t('upgradeContact')}
-                    </Button>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85, mb: 2.25 }}>
+                        {PRO_FEATURES.map((f) => (
+                          <Box key={f} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CheckCircleIcon sx={{ fontSize: 16, color: '#7C3AED', flexShrink: 0 }} />
+                            <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: isDark ? 'rgba(255,255,255,0.85)' : '#374151' }}>
+                              {f}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        startIcon={<EmailIcon />}
+                        href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
+                        sx={{
+                          position: 'relative', overflow: 'hidden',
+                          borderRadius: 2, fontWeight: 800, fontSize: 15, py: 1.1,
+                          background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
+                          boxShadow: '0 6px 18px rgba(124,58,237,0.45)',
+                          transition: 'transform 0.15s ease',
+                          '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)', transform: 'translateY(-1px)' },
+                          '&:active': { transform: 'scale(0.98)' },
+                          // "ברק" שעובר על הכפתור בלולאה - מרמז שיש כאן משהו לתפוס
+                          '&::after': {
+                            content: '""', position: 'absolute', inset: 0,
+                            background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)',
+                            backgroundSize: '250% 100%',
+                            animation: 'sbBtnShine 3.2s ease-in-out infinite',
+                          },
+                          '@keyframes sbBtnShine': {
+                            '0%, 60%': { backgroundPosition: '150% 0' },
+                            '100%': { backgroundPosition: '-150% 0' },
+                          },
+                          '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
+                        }}
+                      >
+                        {t('upgradeContact')}
+                      </Button>
+                    </Box>
                   </Box>
                 </Box>
               )}
@@ -326,7 +392,7 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
       {confirmCancel && (
         <ConfirmModal
           title={t('subscriptionCancelTitle')}
-          message={t('subscriptionCancelDesc')}
+          message={expiryDate ? `${t('subscriptionCancelDesc')} ${expiryDate}` : t('subscriptionCancelDesc')}
           confirmText={t('subscriptionCancelBtn')}
           onConfirm={handleCancel}
           onCancel={() => setConfirmCancel(false)}

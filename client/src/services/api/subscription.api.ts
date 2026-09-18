@@ -3,6 +3,8 @@ import apiClient from './client';
 export interface SubscriptionStatus {
   plan: 'free' | 'pro';
   planExpiresAt: string | null;
+  // false אחרי שהמשתמש ביטל - עדיין Pro עד planExpiresAt, פשוט לא יתחדש אחריו.
+  planAutoRenew: boolean;
   limits: {
     maxOwnedLists: number;
     maxGroupMembers: number;

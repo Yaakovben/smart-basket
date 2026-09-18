@@ -46,6 +46,10 @@ export interface IUser extends Document {
   // מנוי: 'free' (ברירת מחדל) או 'pro' (9.90 שקל/חודש).
   plan: UserPlan;
   planExpiresAt?: Date;
+  // false אחרי שהמשתמש ביטל - נשאר Pro עד planExpiresAt (isPro() כבר
+  // מכבד את התאריך), רק לא "מחודש" אחריו. ברירת מחדל true (גם למשתמשי
+  // free - לא רלוונטי להם, אבל עקבי).
+  planAutoRenew: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -136,6 +140,10 @@ const userSchema = new Schema<IUser>(
     },
     planExpiresAt: {
       type: Date,
+    },
+    planAutoRenew: {
+      type: Boolean,
+      default: true,
     },
   },
   {

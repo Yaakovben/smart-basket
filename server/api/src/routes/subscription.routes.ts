@@ -21,6 +21,7 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
     data: {
       plan,
       planExpiresAt: user?.planExpiresAt ?? null,
+      planAutoRenew: user?.planAutoRenew ?? true,
       limits: plan === 'pro' ? null : PLAN_LIMITS.free,
       usage: plan === 'pro' ? null : {
         aiToday: planUsage.getAiCount(userId),
@@ -45,11 +46,17 @@ router.post('/upgrade', asyncHandler(async (_req: AuthRequest, res: Response) =>
   });
 }));
 
-// DELETE /api/subscription — ביטול עצמי של מנוי Pro
-// מאפשר למשתמש לבטל את המנוי שלו (מחזיר לחינמי) בלי צורך לפנות לאדמין
+// DELETE /api/subscription — ביטול חידוש אוטומטי (לא ביטול גישה מיידי!)
+// המשתמש נשאר Pro עד planExpiresAt - isPro() (plan.constants.ts) כבר
+// מכבד את התאריך הזה בכל בדיקת הרשאה, אז אין צורך לגעת ב-plan עצמו כאן.
+// משתמש שכבר free (או Pro בלי תאריך תפוגה - הוענק ידנית בלי הגבלת זמן)
+// - אין מה "לבטל", מחזירים בהצלחה בלי לשנות כלום.
 router.delete('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  await UserDAL.updateById(userId, { plan: 'free', planExpiresAt: null });
+  const user = await UserDAL.findById(userId);
+  if (user?.plan === 'pro' && user.planExpiresAt) {
+    await UserDAL.updateById(userId, { planAutoRenew: false });
+  }
   res.json({ success: true });
 }));
 
