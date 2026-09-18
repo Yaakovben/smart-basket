@@ -41,6 +41,11 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
   const [dragFixedTop, setDragFixedTop] = useState(0);
   const [dragContainerLeft, setDragContainerLeft] = useState(0);
   const [dragContainerWidth, setDragContainerWidth] = useState(0);
+  // left/width של השורה הנגררת עצמה (לא המיכל) - למי שרוצה למקם את
+  // ה-portal בדיוק ברוחב/מיקום המקורי של השורה בלי לנחש padding של
+  // המיכל (ראו HomeListContent, ששם ה-padding משתנה לפי breakpoint).
+  const [dragRowLeft, setDragRowLeft] = useState(0);
+  const [dragRowWidth, setDragRowWidth] = useState(0);
   // pending = long-press ממתין (עוד לא drag). state (לא ref) כדי שה-effect
   // שמחבר את מאזיני ה-touch של ה-document ירוץ *מיד* עם הלחיצה.
   const [pending, setPending] = useState(false);
@@ -114,7 +119,12 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     const tops = rowRefs.current.map((el) => (el ? el.getBoundingClientRect().top : 0));
     // מיקום ה-viewport של השורה הנגררת + מיכל - לגרירה fixed-position
     const rowEl = rowRefs.current[index];
-    if (rowEl) setDragFixedTop(rowEl.getBoundingClientRect().top);
+    if (rowEl) {
+      const rowRect = rowEl.getBoundingClientRect();
+      setDragFixedTop(rowRect.top);
+      setDragRowLeft(rowRect.left);
+      setDragRowWidth(rowRect.width);
+    }
     const containerEl = contentRef.current;
     if (containerEl) {
       const r = containerEl.getBoundingClientRect();
@@ -348,6 +358,8 @@ export function useDragReorder({ getIds, contentRef, onCommit, rowHeightFallback
     dragFixedTop,
     dragContainerLeft,
     dragContainerWidth,
+    dragRowLeft,
+    dragRowWidth,
     getRowShift,
     rowRefs,
     hasChanges,

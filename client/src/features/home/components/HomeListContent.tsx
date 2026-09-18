@@ -1,4 +1,5 @@
 import { useMemo, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { Box, Typography, Button } from '@mui/material';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
@@ -34,6 +35,11 @@ interface HomeListContentProps {
   dragIndex: number;
   // translateY (px) של הכרטיס הנגרר - עוקב אחרי האצבע 1:1.
   dragOffsetY: number;
+  // מיקום/מידות ה-viewport של השורה הנגררת עצמה, נמדדים פעם אחת בתחילת
+  // הגרירה - לגרירה fixed-position+portal (ראו הערה למטה ליד isDragging).
+  dragFixedTop: number;
+  dragRowLeft: number;
+  dragRowWidth: number;
   // ההזזה (px) שכרטיס שאינו נגרר צריך להחיל כדי לפנות מקום ליעד.
   getRowShift: (index: number) => number;
   rowRefs: RefObject<(HTMLDivElement | null)[]>;
@@ -68,7 +74,7 @@ const RetryDots = () => (
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
-  reorderMode, dragIndex, dragOffsetY, getRowShift, rowRefs, hasOrderChanges,
+  reorderMode, dragIndex, dragOffsetY, dragFixedTop, dragRowLeft, dragRowWidth, getRowShift, rowRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
   // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
@@ -337,42 +343,68 @@ export const HomeListContent = ({
         </Box>
         {orderedDisplay.map((l: List, idx: number) => {
           const isDragging = reorderMode && dragIndex === idx;
-          // translateY = מעקב מיידי אחרי האצבע לכרטיס הנגרר; קפיצה של
-          // גובה-שורה אחד לכרטיסים שמתפנים מקום (getRowShift). זהה למנוע
-          // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
-          const translateY = isDragging ? dragOffsetY : reorderMode ? getRowShift(idx) : 0;
+          // כרטיסים שאינם נגררים: קפיצה של גובה-שורה אחד כדי לפנות מקום
+          // ליעד (getRowShift). זהה למנוע של גרירת מוצרים - ראו useDragReorder.
+          const translateY = reorderMode ? getRowShift(idx) : 0;
+          const card = (
+            <ListCard
+              list={l}
+              isMuted={isGroupMuted(l.id)}
+              isOwner={l.owner.id === user.id}
+              onSelect={onSelectList}
+              onEditList={onEditList}
+              onDeleteList={onDeleteList}
+              onLeaveList={onLeaveList}
+              onToggleMute={onToggleMute}
+              t={t}
+              reorderMode={reorderMode}
+              isDragging={isDragging}
+              onRowTouch={dragHandlers[idx]?.touch}
+              onRowMouse={dragHandlers[idx]?.mouse}
+            />
+          );
           return (
             <Box
               key={l.id}
               ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
-              sx={{
-                position: 'relative',
-                transform: reorderMode ? `translateY(${translateY}px)` : 'none',
-                transition: isDragging
-                  ? 'none'
-                  : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
-                // 1200 - מעל ה-bottom nav (z-index 1100, portal ל-body) - בלי
-                // זה הכרטיס הנגרר "נעלם" מאחורי הבר התחתון ברגע שגוררים אותו
-                // קרוב לתחתית המסך (בדיוק אזור הגלילה האוטומטית).
-                zIndex: isDragging ? 1200 : 1,
-                willChange: reorderMode ? 'transform' : 'auto',
-              }}
+              sx={{ position: 'relative' }}
             >
-              <ListCard
-                list={l}
-                isMuted={isGroupMuted(l.id)}
-                isOwner={l.owner.id === user.id}
-                onSelect={onSelectList}
-                onEditList={onEditList}
-                onDeleteList={onDeleteList}
-                onLeaveList={onLeaveList}
-                onToggleMute={onToggleMute}
-                t={t}
-                reorderMode={reorderMode}
-                isDragging={isDragging}
-                onRowTouch={dragHandlers[idx]?.touch}
-                onRowMouse={dragHandlers[idx]?.mouse}
-              />
+              {isDragging ? (
+                <>
+                  {/* placeholder: שומר את גובה/רוחב השורה בזרימה כשהכרטיס
+                      האמיתי עבר ל-fixed+portal, בלי לנחש גובה קבוע (בניגוד
+                      למוצרים, לכרטיסי רשימה יש גובה משתנה מעט). */}
+                  <Box sx={{ visibility: 'hidden' }} aria-hidden="true">{card}</Box>
+                  {/* מוגש ב-portal ישירות ל-body, position:fixed ביחס
+                      ל-viewport - אותה סיבה בדיוק כמו ProductReorderRow:
+                      צמוד לאצבע 1:1 בלי תלות בגלילה האוטומטית של המכל
+                      (שגרירת translateY רגילה לא הייתה מפצה עליה, ולכן
+                      הכרטיס "נשאר גבוה/נמוך מדי" ביחס לאצבע). left/width
+                      נמדדים מהשורה עצמה (dragRowLeft/dragRowWidth), לא
+                      מהמכל - כדי לא להיות תלויים בפדינג הרספונסיבי שלו. */}
+                  {createPortal(
+                    <Box sx={{
+                      position: 'fixed',
+                      top: dragFixedTop + dragOffsetY,
+                      left: dragRowLeft,
+                      width: dragRowWidth,
+                      zIndex: 1400,
+                    }}>
+                      {card}
+                    </Box>,
+                    document.body,
+                  )}
+                </>
+              ) : (
+                <Box sx={{
+                  transform: reorderMode ? `translateY(${translateY}px)` : 'none',
+                  transition: 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                  zIndex: 1,
+                  willChange: reorderMode ? 'transform' : 'auto',
+                }}>
+                  {card}
+                </Box>
+              )}
             </Box>
           );
         })}
