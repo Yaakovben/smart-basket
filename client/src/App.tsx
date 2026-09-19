@@ -36,7 +36,13 @@ const handleNewVersion = () => {
 
   if (!storedVersion || storedVersion === buildVersion) return;
 
-  diagLog('version', 'new version detected, starting background cache/SW cleanup');
+  diagLog('version', 'new version detected, clearing user cache + browser caches');
+  // ניקוי נתוני משתמש מקאש: כשיש deploy חדש, מבנה ה-User עשוי להשתנות.
+  // נתונים ישנים ב-cached_user גורמים לפעולות ברשימה להיכשל עד שניקוי ידני.
+  // שומרים רק את הטוקן - המשתמש לא ייזרק ל-login.
+  const keysToRemove = ['cached_user', 'cached_lists', 'cached_insights', 'cached_prices', 'hint_seen'];
+  keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch { /* quota */ } });
+
   (async () => {
     try {
       if ('caches' in window) {

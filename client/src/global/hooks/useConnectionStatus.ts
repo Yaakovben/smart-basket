@@ -11,8 +11,9 @@
 import { useSyncExternalStore } from 'react';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';
+import { subscribeFetchIssue } from '../services/connectionIssue';
 
-export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting';
+export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting' | 'server-starting';
 
 const OFFLINE_CONFIRM_MS = 3000;
 const SOCKET_GRACE_MS = 4000;
@@ -63,7 +64,10 @@ function handleOffline() {
 
 function handleOnline() {
   clearOfflineTimer();
-  setState({ phase: socketDown ? 'reconnecting' : 'online' });
+  // server-starting מנוהל ע"י subscribeFetchIssue - לא מאפסים אותו כאן
+  if (state.phase !== 'server-starting') {
+    setState({ phase: socketDown ? 'reconnecting' : 'online' });
+  }
 }
 
 window.addEventListener('offline', handleOffline);
@@ -96,6 +100,18 @@ socketService.on('connect_error', scheduleReconnecting);
 socketService.on('connect', handleSocketConnected);
 
 subscribeToQueueCount(n => setState({ pendingCount: n }));
+
+// fetchIssue=true כשטעינת הרשימות/התראות הראשונית נכשלת (שרת קר / אין קליטה).
+// מוצג רק כש-online ולא כבר מוצג חיווי אחר - שכבת "מתחבר לשרת..." שנעלמת
+// ברגע שהשרת מתעורר והנתונים מגיעים.
+subscribeFetchIssue(active => {
+  const currentPhase = state.phase;
+  if (active && (currentPhase === 'online' || currentPhase === 'server-starting')) {
+    setState({ phase: 'server-starting' });
+  } else if (!active && currentPhase === 'server-starting') {
+    setState({ phase: 'online' });
+  }
+});
 
 export function useConnectionStatus() {
   return useSyncExternalStore(subscribe, getSnapshot);
