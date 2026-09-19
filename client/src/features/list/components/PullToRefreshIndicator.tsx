@@ -98,13 +98,13 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
           </Box>
         </Box>
 
-        {refreshing && (
+        {(refreshing || ready) && (
           <Typography sx={{
             fontSize: 12.5, fontWeight: 700, lineHeight: 1,
             color: 'primary.main',
             whiteSpace: 'nowrap',
           }}>
-            מרענן…
+            {refreshing ? 'מרענן…' : 'שחרר לרענון'}
           </Typography>
         )}
 
