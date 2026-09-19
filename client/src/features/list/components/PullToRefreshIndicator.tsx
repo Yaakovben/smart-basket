@@ -104,7 +104,7 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
           whiteSpace: 'nowrap',
           transition: pullActive ? 'color 0.15s ease' : 'none',
         }}>
-          {refreshing ? 'מרענן…' : ready ? 'משחררים ומרעננים' : 'משכו לרענון'}
+          {refreshing ? 'מרענן…' : 'משכו לרענון'}
         </Typography>
 
         {timeLabel && (
