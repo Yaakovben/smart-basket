@@ -115,27 +115,35 @@ export async function googleAuth(
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-  // בדיקת audience ב-fire-and-forget: לוג בלבד, ללא חסימה.
-  // הפורמט של aud/azp בתגובת tokeninfo לא אחיד (numeric ID מול client_id string)
-  // ויש לאמת בלוגים לפני שמוסיפים חסימה.
-  fetch(
-    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
-    { signal: AbortSignal.timeout(5000) }
-  )
-    .then(r => r.json())
-    .then((info: unknown) => {
-      const ti = info as { aud?: string; azp?: string; error?: string };
-      const expected = env.GOOGLE_CLIENT_ID;
-      if (expected) {
-        const matches = ti.aud === expected || ti.azp === expected;
-        if (!matches) {
-          console.warn('[googleAuth] audience mismatch (לוג בלבד)', {
-            aud: ti.aud, azp: ti.azp, expected, error: ti.error,
+  // אימות audience: מוודא שה-access token הונפק ספציפית לאפליקציה שלנו.
+  // טוקן עם audience שגוי = טוקן שהונפק לאפליקציה אחרת ומנסים "לנצל" אותו כאן.
+  // אם GOOGLE_CLIENT_ID לא מוגדר (סביבת פיתוח) — דילוג על הבדיקה.
+  if (env.GOOGLE_CLIENT_ID) {
+    let tokenInfoOk = false;
+    try {
+      const tiRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
+        { signal: AbortSignal.timeout(5000) }
+      );
+      if (tiRes.ok) {
+        const ti = (await tiRes.json()) as { aud?: string; azp?: string; error?: string };
+        tokenInfoOk = ti.aud === env.GOOGLE_CLIENT_ID || ti.azp === env.GOOGLE_CLIENT_ID;
+        if (!tokenInfoOk) {
+          console.warn('[googleAuth] audience mismatch — חוסם כניסה', {
+            aud: ti.aud, azp: ti.azp, expected: env.GOOGLE_CLIENT_ID, error: ti.error,
           });
         }
+      } else {
+        // שגיאת HTTP מ-tokeninfo (למשל 400 = טוקן לא תקף) — חוסמים
+        console.warn('[googleAuth] tokeninfo HTTP error', { status: tiRes.status });
       }
-    })
-    .catch(() => { /* tokeninfo לא קריטי */ });
+    } catch (e) {
+      // timeout / network — לא חוסמים כדי לא לשבור כניסה כשל-Google יש בעיה
+      console.warn('[googleAuth] tokeninfo fetch failed (not blocking)', { error: String(e) });
+      tokenInfoOk = true;
+    }
+    if (!tokenInfoOk) throw AuthError.googleAuthFailed();
+  }
 
   // שליפת פרטי משתמש מ-Google
   const response = await fetch(
