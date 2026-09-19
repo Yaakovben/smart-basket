@@ -101,11 +101,20 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     fetchData(true);
   }, [fetchData]);
 
+  // עדכון מקומי (בלי refetch מלא) של plan אחרי שאדמין שינה אותו בפועל -
+  // בלי זה כרטיס הסטטיסטיקה "X Pro" בכותרת (proCount, נגזר מ-usersWithLoginInfo)
+  // נשאר עם המספר הישן עד לרענון מלא הבא, למרות שהשורה הבודדת (state מקומי
+  // ב-UserRow) כן מתעדכנת מיד - חוסר סנכרון בין הכרטיס לשורה.
+  const updateUserPlanLocal = useCallback((userId: string, plan: 'free' | 'pro') => {
+    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, plan } : u));
+  }, []);
+
   return {
     activities,
     usersWithLoginInfo,
     stats,
     refreshData,
+    updateUserPlanLocal,
     loading,
     error,
     lastFetchAt: lastFetchAtRef.current,

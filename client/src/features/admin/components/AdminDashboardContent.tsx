@@ -21,12 +21,13 @@ interface AdminDashboardContentProps {
   language: Language;
   onlineUserIds: Set<string>;
   onUserDeleted: () => void;
+  onUserPlanChanged: (userId: string, plan: 'free' | 'pro') => void;
 }
 
 // אזור התוכן הראשי מתחת לכותרת: שגיאה, חיפוש, טבלת משתמשים ופיד פעילות
 export const AdminDashboardContent = ({
   error, loading, isDark, onRetry, t,
-  userSearch, setUserSearch, filteredUsers, activities, language, onlineUserIds, onUserDeleted,
+  userSearch, setUserSearch, filteredUsers, activities, language, onlineUserIds, onUserDeleted, onUserPlanChanged,
 }: AdminDashboardContentProps) => (
   <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
     {/* שגיאה */}
@@ -94,6 +95,7 @@ export const AdminDashboardContent = ({
         onlineUserIds={onlineUserIds}
         isDark={isDark}
         onUserDeleted={onUserDeleted}
+        onUserPlanChanged={onUserPlanChanged}
       />
     )}
 

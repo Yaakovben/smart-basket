@@ -33,6 +33,7 @@ export const AdminDashboard = () => {
     usersWithLoginInfo,
     stats,
     refreshData,
+    updateUserPlanLocal,
     loading,
     error,
     lastFetchAt,
@@ -125,6 +126,7 @@ export const AdminDashboard = () => {
         language={settings.language}
         onlineUserIds={onlineUserIds}
         onUserDeleted={refreshData}
+        onUserPlanChanged={updateUserPlanLocal}
       />
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}

@@ -27,5 +27,6 @@ export interface UseAdminDashboardReturn {
   usersWithLoginInfo: UserWithLastLogin[];
   stats: DashboardStats;
   refreshData: () => void;
+  updateUserPlanLocal: (userId: string, plan: 'free' | 'pro') => void;
   lastFetchAt?: number;
 }

@@ -21,9 +21,12 @@ interface UserRowProps {
   userActivities: LoginActivity[];
   isDark: boolean;
   onUserDeleted: () => void;
+  // מעדכן את רשימת המשתמשים ברמת הדשבורד - בלי זה כרטיס הסטטיסטיקה
+  // "X Pro" בכותרת נשאר עם מספר ישן עד לרענון מלא (ראו useAdminDashboard).
+  onUserPlanChanged: (userId: string, plan: 'free' | 'pro') => void;
 }
 
-export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted }: UserRowProps) => {
+export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted, onUserPlanChanged }: UserRowProps) => {
   const { t, settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
   const { showDetails, userLists, detailsLoading, listsSummary, handleShowDetails } = useUserRowDetails(user.id);
@@ -39,9 +42,10 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
     setIsExpanded(prev => !prev);
   }, []);
 
-  const handlePlanChanged = useCallback((_userId: string, plan: 'free' | 'pro') => {
+  const handlePlanChanged = useCallback((userId: string, plan: 'free' | 'pro') => {
     setLocalPlan(plan);
-  }, []);
+    onUserPlanChanged(userId, plan);
+  }, [onUserPlanChanged]);
 
   const lastActivity = user.lastAppOpenAt && user.lastLoginAt
     ? (new Date(user.lastAppOpenAt) > new Date(user.lastLoginAt) ? user.lastAppOpenAt : user.lastLoginAt)
