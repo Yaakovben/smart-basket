@@ -115,35 +115,32 @@ export async function googleAuth(
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-  // אימות audience: מוודא שה-access token הונפק ספציפית לאפליקציה שלנו.
-  // טוקן עם audience שגוי = טוקן שהונפק לאפליקציה אחרת ומנסים "לנצל" אותו כאן.
-  // אם GOOGLE_CLIENT_ID לא מוגדר (סביבת פיתוח) — דילוג על הבדיקה.
-  if (env.GOOGLE_CLIENT_ID) {
-    let tokenInfoOk = false;
-    try {
-      const tiRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
-        { signal: AbortSignal.timeout(5000) }
-      );
-      if (tiRes.ok) {
-        const ti = (await tiRes.json()) as { aud?: string; azp?: string; error?: string };
-        tokenInfoOk = ti.aud === env.GOOGLE_CLIENT_ID || ti.azp === env.GOOGLE_CLIENT_ID;
-        if (!tokenInfoOk) {
-          console.warn('[googleAuth] audience mismatch — חוסם כניסה', {
-            aud: ti.aud, azp: ti.azp, expected: env.GOOGLE_CLIENT_ID, error: ti.error,
+  // בדיקת audience ב-fire-and-forget: לוג בלבד, ללא חסימה.
+  // תוקן בחזרה ל-log-only ב-2026-09-20: הגרסה החוסמת (aud/azp !==
+  // GOOGLE_CLIENT_ID => throw) התבררה כתקרית פרודקשן חמורה - חסמה כניסת
+  // Google לחלק ניכר מהמשתמשים. כפי שהוזהר כאן במקור: הפורמט של aud/azp
+  // בתגובת tokeninfo לגבי access token (בניגוד ל-ID token) אינו אחיד בין
+  // client_id string ל-project number, ואף שגיאת HTTP חולפת מ-Google
+  // (rate limit/5xx) הייתה חוסמת התחברות באופן גורף. אין לחסום שוב בלי
+  // לאמת קודם בלוגים על פני מדגם רחב של כניסות אמיתיות.
+  fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
+    { signal: AbortSignal.timeout(5000) }
+  )
+    .then(r => r.json())
+    .then((info: unknown) => {
+      const ti = info as { aud?: string; azp?: string; error?: string };
+      const expected = env.GOOGLE_CLIENT_ID;
+      if (expected) {
+        const matches = ti.aud === expected || ti.azp === expected;
+        if (!matches) {
+          console.warn('[googleAuth] audience mismatch (לוג בלבד)', {
+            aud: ti.aud, azp: ti.azp, expected, error: ti.error,
           });
         }
-      } else {
-        // שגיאת HTTP מ-tokeninfo (למשל 400 = טוקן לא תקף) — חוסמים
-        console.warn('[googleAuth] tokeninfo HTTP error', { status: tiRes.status });
       }
-    } catch (e) {
-      // timeout / network — לא חוסמים כדי לא לשבור כניסה כשל-Google יש בעיה
-      console.warn('[googleAuth] tokeninfo fetch failed (not blocking)', { error: String(e) });
-      tokenInfoOk = true;
-    }
-    if (!tokenInfoOk) throw AuthError.googleAuthFailed();
-  }
+    })
+    .catch(() => { /* tokeninfo לא קריטי */ });
 
   // שליפת פרטי משתמש מ-Google
   const response = await fetch(
