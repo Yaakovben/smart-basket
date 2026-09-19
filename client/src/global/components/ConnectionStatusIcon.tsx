@@ -18,8 +18,9 @@ export const ConnectionStatusIcon = () => {
   const { t } = useSettings();
   const [dismissed, setDismissed] = useState(false);
 
-  // כשהמצב חוזר ל-online — מאפסים את הסתרה כך שיוצג שוב בבעיה הבאה
-  if (phase === 'online' && dismissed) setDismissed(false);
+  // מאפסים dismissed כשחוזרים ל-online, או כש-server-starting מתחיל
+  // (server-starting אין לו כפתור סגירה - אם dismissed נשאר מהפאזה הקודמת הוא מסתיר אותו)
+  if ((phase === 'online' || phase === 'server-starting') && dismissed) setDismissed(false);
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
 
@@ -76,7 +77,7 @@ export const ConnectionStatusIcon = () => {
         animation: 'connSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {isServerStarting
+      {(isServerStarting || phase === 'reconnecting')
         ? <CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
         : <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
       }
