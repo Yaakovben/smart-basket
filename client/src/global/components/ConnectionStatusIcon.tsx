@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { useSettings } from '../context/SettingsContext';
@@ -26,22 +26,27 @@ export const ConnectionStatusIcon = () => {
   if (phase === 'online' || phase === 'trying' || dismissed) return null;
 
   const isOffline = phase === 'offline';
+  const isServerStarting = phase === 'server-starting';
 
-  const mainText = isOffline ? t('offlineShort') : t('reconnectingMessage');
+  const mainText = isOffline
+    ? t('offlineShort')
+    : isServerStarting
+      ? t('connectingMessage')
+      : t('reconnectingMessage');
 
-  // תת-כיתוב רק במצב אין קליטה (ב-reconnecting זה רק ה-socket, אין מה להסביר)
+  // תת-כיתוב רק במצב אין קליטה (ב-reconnecting/server-starting אין מה להסביר)
   const subText = isOffline
     ? (pendingCount > 0
         ? t('offlineActionsPending').replace('{count}', String(pendingCount))
         : t('offlineWillSync'))
     : null;
 
-  // פלטת צבעים עמומה — נוכחת אך לא זועקת. offline מעט חם יותר מ-reconnecting.
-  // גרדיאנט עדין (לא flat) - עקבי עם שאר "אריחי הגרדיאנט" באפליקציה.
   const bg = isOffline
     ? 'linear-gradient(135deg, rgba(146,138,132,0.97), rgba(87,83,78,0.97))'
-    : 'linear-gradient(135deg, rgba(120,135,155,0.97), rgba(71,85,105,0.97))';
-  const accent = isOffline ? '#fdba74' : '#cbd5e1';
+    : isServerStarting
+      ? 'linear-gradient(135deg, rgba(15,118,110,0.95), rgba(13,148,136,0.95))'
+      : 'linear-gradient(135deg, rgba(120,135,155,0.97), rgba(71,85,105,0.97))';
+  const accent = isOffline ? '#fdba74' : isServerStarting ? '#99f6e4' : '#cbd5e1';
 
   return createPortal(
     <Box
@@ -71,8 +76,10 @@ export const ConnectionStatusIcon = () => {
         animation: 'connSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {/* האייקון עצמו כבר מונפש (fade) - בלי עיגול/רקע מאחוריו */}
-      <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
+      {isServerStarting
+        ? <CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+        : <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
+      }
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3, letterSpacing: 0.1 }}>
           {mainText}
@@ -98,19 +105,21 @@ export const ConnectionStatusIcon = () => {
           {pendingCount > 99 ? '99+' : pendingCount}
         </Box>
       )}
-      <IconButton
-        size="small"
-        onClick={handleDismiss}
-        aria-label={t('close')}
-        sx={{
-          color: 'rgba(255,255,255,0.75)',
-          p: '3px',
-          flexShrink: 0,
-          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
-        }}
-      >
-        <CloseIcon sx={{ fontSize: 15 }} />
-      </IconButton>
+      {!isServerStarting && (
+        <IconButton
+          size="small"
+          onClick={handleDismiss}
+          aria-label={t('close')}
+          sx={{
+            color: 'rgba(255,255,255,0.75)',
+            p: '3px',
+            flexShrink: 0,
+            '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
+          }}
+        >
+          <CloseIcon sx={{ fontSize: 15 }} />
+        </IconButton>
+      )}
     </Box>,
     document.body
   );
