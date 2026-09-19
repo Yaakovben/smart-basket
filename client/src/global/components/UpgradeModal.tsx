@@ -1,8 +1,11 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, Divider, Zoom } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Dialog, DialogContent, IconButton, Button, Typography, Box, Chip } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import EmailIcon from '@mui/icons-material/Email';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { ReactElement, Ref } from 'react';
 import { forwardRef } from 'react';
+import Zoom from '@mui/material/Zoom';
 import type { TransitionProps } from '@mui/material/transitions';
 import { useSettings } from '../context/SettingsContext';
 import type { PlanLimitFeature } from './UpgradeModalContext';
@@ -27,8 +30,12 @@ const FEATURE_LIMIT_KEY: Record<PlanLimitFeature, 'upgradeListLimit' | 'upgradeM
   priceComparison: 'upgradePriceLimit',
 };
 
+// אותה שפה עיצובית בדיוק כמו SubscriptionModal (הכרטיס "שדרג ל-Pro" שם) -
+// זו נקודת המגע הכי נפוצה בפועל (מופיעה כשמגיעים למגבלה), אז חשוב שתרגיש
+// באותה רמת "פרימיום" ולא כמו דיאלוג MUI גנרי.
 export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
 
   const features: Array<'upgradeListLimit' | 'upgradeMembersLimit' | 'upgradeAiLimit' | 'upgradePriceLimit'> = [
     'upgradeListLimit',
@@ -40,68 +47,137 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   const highlightedKey = feature ? FEATURE_LIMIT_KEY[feature] : undefined;
 
   return (
-    <Dialog open={open} onClose={onClose} TransitionComponent={Transition} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ textAlign: 'center', pt: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-          <StarIcon sx={{ color: '#F59E0B', fontSize: 40 }} />
-          <Typography variant="h6" fontWeight={700}>{t('upgradeTitle')}</Typography>
-          <Typography variant="body2" color="text.secondary">{t('upgradeSubtitle')}</Typography>
-        </Box>
-      </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      TransitionComponent={Transition}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3, overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
+      }}
+    >
+      {/* כותרת - זהה במבנה לכותרת SubscriptionModal (גרדיאנט סגול, עיגולי
+          קישוט, אייקון בתוך אריח) */}
+      <Box sx={{
+        background: isDark
+          ? 'linear-gradient(135deg, #4C1D95 0%, #6D28D9 50%, #7C3AED 100%)'
+          : 'linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #8B5CF6 100%)',
+        px: 3, pt: 3, pb: 3.5, position: 'relative', overflow: 'hidden',
+      }}>
+        <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+        <Box sx={{ position: 'absolute', bottom: -20, right: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-      <DialogContent sx={{ px: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ position: 'absolute', top: 10, left: 10, color: 'rgba(255,255,255,0.6)' }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+          <Box sx={{
+            width: 56, height: 56, borderRadius: 2.5,
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}>
+            <AutoAwesomeIcon sx={{
+              fontSize: 28, color: '#FCD34D',
+              animation: 'sbUpgradeIconPulse 1.8s ease-in-out infinite',
+              '@keyframes sbUpgradeIconPulse': {
+                '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+                '50%': { transform: 'scale(1.12) rotate(-6deg)' },
+              },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }} />
+          </Box>
+
+          <Chip
+            label="✦ Pro"
+            size="small"
+            sx={{ fontWeight: 700, fontSize: 12, bgcolor: '#FCD34D', color: '#4C1D95', border: 'none' }}
+          />
+
+          <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 20, mt: 0.5, textAlign: 'center' }}>
+            {t('upgradeTitle')}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', px: 1 }}>
+            {t('upgradeSubtitle')}
+          </Typography>
+        </Box>
+      </Box>
+
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {features.map(key => (
             <Box
               key={key}
               sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1.5,
-                p: 1.5,
-                borderRadius: '10px',
-                bgcolor: key === highlightedKey ? 'warning.light' : 'action.hover',
-                border: key === highlightedKey ? '1.5px solid' : '1.5px solid transparent',
-                borderColor: key === highlightedKey ? 'warning.main' : 'transparent',
+                display: 'flex', alignItems: 'center', gap: 1.25,
+                p: 1.25, borderRadius: 2,
+                bgcolor: key === highlightedKey
+                  ? (isDark ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.08)')
+                  : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
+                border: '1px solid',
+                borderColor: key === highlightedKey ? 'rgba(124,58,237,0.35)' : 'transparent',
               }}
             >
-              <CheckCircleOutlineIcon sx={{ color: key === highlightedKey ? 'warning.dark' : 'success.main', mt: '2px', flexShrink: 0 }} />
-              <Typography variant="body2" sx={{ fontWeight: key === highlightedKey ? 700 : 400 }}>
+              <CheckCircleIcon sx={{ fontSize: 18, color: '#7C3AED', flexShrink: 0 }} />
+              <Typography sx={{
+                fontSize: 13.5,
+                fontWeight: key === highlightedKey ? 700 : 500,
+                color: isDark ? 'rgba(255,255,255,0.9)' : 'text.primary',
+              }}>
                 {t(key)}
               </Typography>
             </Box>
           ))}
         </Box>
 
-        <Divider sx={{ my: 2 }} />
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" fontWeight={700} color="primary">
+        {/* מחיר */}
+        <Box sx={{ textAlign: 'center', mt: 2.5, mb: 0.5 }}>
+          <Typography sx={{ fontSize: 22, fontWeight: 800, color: isDark ? 'white' : '#4C1D95' }}>
             {t('upgradePrice')}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {t('upgradeContact')}
-          </Typography>
         </Box>
-      </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, flexDirection: 'column', gap: 1 }}>
+        {/* CTA - אותו "ברק" נע כמו כפתור השדרוג ב-SubscriptionModal */}
         <Button
           variant="contained"
           fullWidth
-          onClick={() => {
-            window.open('mailto:upgrade@smartbasket.app?subject=שדרוג ל-Pro', '_blank');
-            onClose();
+          startIcon={<EmailIcon />}
+          href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
+          onClick={onClose}
+          sx={{
+            position: 'relative', overflow: 'hidden',
+            mt: 2, borderRadius: 2, fontWeight: 800, fontSize: 15, py: 1.1,
+            textTransform: 'none',
+            background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
+            boxShadow: '0 6px 18px rgba(124,58,237,0.45)',
+            transition: 'transform 0.15s ease',
+            '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)', transform: 'translateY(-1px)' },
+            '&:active': { transform: 'scale(0.98)' },
+            '&::after': {
+              content: '""', position: 'absolute', inset: 0,
+              background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)',
+              backgroundSize: '250% 100%',
+              animation: 'sbUpgradeBtnShine 3.2s ease-in-out infinite',
+            },
+            '@keyframes sbUpgradeBtnShine': {
+              '0%, 60%': { backgroundPosition: '150% 0' },
+              '100%': { backgroundPosition: '-150% 0' },
+            },
+            '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
           }}
-          sx={{ borderRadius: '12px', fontWeight: 700, py: 1.25, textTransform: 'none' }}
-          startIcon={<StarIcon />}
         >
           {t('upgradeCta')}
         </Button>
-        <Button variant="text" onClick={onClose} sx={{ textTransform: 'none', color: 'text.secondary' }}>
+        <Button variant="text" fullWidth onClick={onClose} sx={{ mt: 0.5, textTransform: 'none', color: 'text.secondary', fontSize: 13 }}>
           {t('notNow')}
         </Button>
-      </DialogActions>
+      </DialogContent>
     </Dialog>
   );
 }

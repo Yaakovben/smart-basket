@@ -11,7 +11,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { subscriptionApi, type SubscriptionStatus } from '../../../services/api/subscription.api';
-import { ConfirmModal } from '../../../global/components';
+import { ConfirmModal, ShimmerBlock } from '../../../global/components';
 import type { ToastType } from '../../../global/types';
 
 interface SubscriptionModalProps {
@@ -168,8 +168,16 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
 
         <DialogContent sx={{ p: 0 }}>
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-              <CircularProgress size={32} />
+            // שלד בצורת התצוגה הצפויה (מגבלות free - המצב הנפוץ ביותר),
+            // לא ספינר גנרי - המשתמש רואה מיד את מבנה המסך, לא רק "טוען".
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <ShimmerBlock width={140} height={11} radius={4} />
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ShimmerBlock key={i} height={64} radius={16} />
+                ))}
+              </Box>
+              <ShimmerBlock height={168} radius={20} sx={{ mt: 0.5 }} />
             </Box>
           ) : status ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>

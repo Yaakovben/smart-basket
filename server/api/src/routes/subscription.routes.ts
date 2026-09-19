@@ -39,7 +39,7 @@ router.post('/upgrade', asyncHandler(async (_req: AuthRequest, res: Response) =>
   res.json({
     success: true,
     data: {
-      message: 'תשלומים בקרוב! צור קשר ל-upgrade@smartbasket.app',
+      message: 'תשלומים בקרוב! צור קשר ל-smartbasket129@gmail.com',
       priceMonthly: 9.90,
       currency: 'ILS',
     },
