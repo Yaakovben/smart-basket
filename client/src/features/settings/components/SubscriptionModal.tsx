@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Dialog, DialogContent, IconButton,
+  Box, Typography, Dialog, DialogContent,
   Button, CircularProgress, Chip, LinearProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -87,7 +87,7 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            borderRadius: '20px',
             overflow: 'hidden',
             bgcolor: isDark ? '#0F172A' : '#F8FAFC',
           },
@@ -118,13 +118,28 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
             background: 'rgba(255,255,255,0.05)',
           }} />
 
-          <IconButton
+          {/* כפתור סגירה - עיגול זכוכית מוגדר במפורש (רקע+גבול קבועים),
+              לא IconButton ברירת מחדל שנראה כמו "בועה" מקרית רק בזמן
+              hover/ripple. גודל מגע מלא (36px) עם אייקון קטן במרכז. */}
+          <Box
+            component="button"
             onClick={onClose}
-            size="small"
-            sx={{ position: 'absolute', top: 10, left: 10, color: 'rgba(255,255,255,0.6)' }}
+            aria-label={t('close')}
+            sx={{
+              position: 'absolute', top: 12, left: 12,
+              width: 32, height: 32, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: 'rgba(255,255,255,0.14)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              color: 'rgba(255,255,255,0.85)',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              transition: 'background-color 0.15s, transform 0.15s',
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' },
+              '&:active': { transform: 'scale(0.92)' },
+            }}
           >
-            <CloseIcon fontSize="small" />
-          </IconButton>
+            <CloseIcon sx={{ fontSize: 17 }} />
+          </Box>
 
           {/* אייקון + תוכנית */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
@@ -362,11 +377,12 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                       <Button
                         variant="contained"
                         fullWidth
-                        startIcon={<EmailIcon />}
                         href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
                         sx={{
                           position: 'relative', overflow: 'hidden',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
                           borderRadius: 2, fontWeight: 800, fontSize: 15, py: 1.1,
+                          textTransform: 'none',
                           background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
                           boxShadow: '0 6px 18px rgba(124,58,237,0.45)',
                           transition: 'transform 0.15s ease',
@@ -386,7 +402,8 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                           '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
                         }}
                       >
-                        {t('upgradeContact')}
+                        <EmailIcon sx={{ fontSize: 18 }} />
+                        <Box component="span">{t('upgradeContact')}</Box>
                       </Button>
                     </Box>
                   </Box>

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, IconButton, Button, Typography, Box, Chip } from '@mui/material';
+import { Dialog, DialogContent, Button, Typography, Box, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EmailIcon from '@mui/icons-material/Email';
@@ -54,7 +54,7 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
       maxWidth="xs"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 3, overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
+        sx: { borderRadius: '20px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
       }}
     >
       {/* כותרת - זהה במבנה לכותרת SubscriptionModal (גרדיאנט סגול, עיגולי
@@ -68,13 +68,27 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
         <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <Box sx={{ position: 'absolute', bottom: -20, right: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-        <IconButton
+        {/* כפתור סגירה - עיגול זכוכית מוגדר במפורש, לא IconButton ברירת
+            מחדל (ראו הערה מקבילה ב-SubscriptionModal). */}
+        <Box
+          component="button"
           onClick={onClose}
-          size="small"
-          sx={{ position: 'absolute', top: 10, left: 10, color: 'rgba(255,255,255,0.6)' }}
+          aria-label={t('close')}
+          sx={{
+            position: 'absolute', top: 12, left: 12,
+            width: 32, height: 32, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.14)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            color: 'rgba(255,255,255,0.85)',
+            cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            transition: 'background-color 0.15s, transform 0.15s',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' },
+            '&:active': { transform: 'scale(0.92)' },
+          }}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
+          <CloseIcon sx={{ fontSize: 17 }} />
+        </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
           <Box sx={{
@@ -147,11 +161,11 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
         <Button
           variant="contained"
           fullWidth
-          startIcon={<EmailIcon />}
           href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
           onClick={onClose}
           sx={{
             position: 'relative', overflow: 'hidden',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
             mt: 2, borderRadius: 2, fontWeight: 800, fontSize: 15, py: 1.1,
             textTransform: 'none',
             background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
@@ -172,7 +186,8 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
             '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
           }}
         >
-          {t('upgradeCta')}
+          <EmailIcon sx={{ fontSize: 18 }} />
+          <Box component="span">{t('upgradeCta')}</Box>
         </Button>
         <Button variant="text" fullWidth onClick={onClose} sx={{ mt: 0.5, textTransform: 'none', color: 'text.secondary', fontSize: 13 }}>
           {t('notNow')}
