@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./global/components";
 import { UpgradeModalProvider } from './global/components/UpgradeModalContext';
 import { useServiceWorker } from './global/hooks';
 import { diagLog } from './global/helpers/crashLog';
+import { reportError } from './global/helpers/errorReport';
 
 // עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
 //
@@ -128,6 +129,14 @@ function showUpdateOverlay() {
 }
 
 handleNewVersion();
+
+// לכידת שגיאות JS גלובליות (לא ב-React render) ושליחתן למייל
+window.addEventListener('error', (e) => {
+  if (e.error) reportError('global', e.error);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  reportError('unhandledRejection', e.reason ?? 'unhandled rejection');
+});
 
 const ThemedApp = () => {
   const { settings } = useSettings();
