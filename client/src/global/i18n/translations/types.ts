@@ -953,6 +953,8 @@ export type TranslationKeys =
   | 'upgradeMembersLimit'
   | 'upgradeAiLimit'
   | 'upgradePriceLimit'
+  | 'listLimitApproachingHint'
+  | 'listLimitReachedHint'
   | 'upgradeCta'
   | 'upgradePrice'
   | 'upgradeContact';

@@ -935,6 +935,8 @@ export const ru: Translations = {
   upgradeMembersLimit: 'До 3 участников в группе',
   upgradeAiLimit: '5 запросов AI в день',
   upgradePriceLimit: '3 сравнения цен в день',
+  listLimitApproachingHint: 'У вас остался ещё 1 список ({used}/{max}) в бесплатном плане',
+  listLimitReachedHint: 'Вы достигли лимита в {max} списков бесплатного плана',
   upgradeCta: 'Обновить сейчас',
   upgradePrice: '₪9.90 в месяц',
   upgradeContact: 'Связаться с нами',

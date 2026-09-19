@@ -5,6 +5,7 @@ import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
 import { haptic } from '../../../global/helpers';
 import { PlanLimitHandledError } from '../../../global/hooks/useLists.actions';
+import { subscriptionApi } from '../../../services/api/subscription.api';
 import type {
   NewListForm,
   HomeTab,
@@ -59,6 +60,10 @@ export const useHome = ({
   const [showMenu, setShowMenu] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  // מגבלת רשימות (Freemium) - נטען בעצלתיים רק כשפותחים את מודל היצירה
+  // (לא ב-mount של הבית, כדי לא להוסיף בקשת רשת לטעינה הראשונית). null
+  // עד שנטען, או שהמשתמש Pro (אין מגבלה להראות).
+  const [listLimitMax, setListLimitMax] = useState<number | null>(null);
   const [showJoin, setShowJoin] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -128,6 +133,13 @@ export const useHome = ({
     // קבוצות מוצגות קודם, אח"כ פרטיות
     return filtered.sort((a, b) => (a.isGroup === b.isGroup ? 0 : a.isGroup ? -1 : 1));
   }, [lists, user.id]);
+
+  // רשימות שהמשתמש הבעלים שלהן בפועל (לא רק חבר) - זה מה שמוגבל
+  // ב-Freemium (maxOwnedLists), לא סך כל הרשימות שהוא רואה.
+  const ownedListsCount = useMemo(
+    () => lists.filter((l: List) => l.owner.id === user.id).length,
+    [lists, user.id]
+  );
 
   const { my, groups } = useMemo(() => ({
     my: userLists.filter((l: List) => !l.isGroup),
@@ -224,8 +236,16 @@ export const useHome = ({
   // ===== טיפול בתפריט =====
   const openOption = useCallback((option: string) => {
     setShowMenu(false);
-    if (option === 'private') setShowCreate(true);
-    else if (option === 'group') setShowCreateGroup(true);
+    if (option === 'private' || option === 'group') {
+      if (option === 'private') setShowCreate(true);
+      else setShowCreateGroup(true);
+      // "עוד מעט ומגיעים למגבלה" - נטען כל פעם מחדש (לא cache), כי מספר
+      // הרשימות בבעלות יכול להשתנות בין פתיחה לפתיחה. best-effort: כשל
+      // כאן פשוט לא מציג את הרמז, לא חוסם את היצירה עצמה.
+      subscriptionApi.getStatus()
+        .then(s => setListLimitMax(s.plan === 'pro' ? null : (s.limits?.maxOwnedLists ?? null)))
+        .catch(() => setListLimitMax(null));
+    }
     else if (option === 'join') setShowJoin(true);
   }, []);
 
@@ -297,6 +317,8 @@ export const useHome = ({
     showMenu,
     showCreate,
     showCreateGroup,
+    listLimitMax,
+    ownedListsCount,
     showJoin,
     joinedFromLink,
     showNotifications,

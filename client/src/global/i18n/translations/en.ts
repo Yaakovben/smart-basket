@@ -935,6 +935,8 @@ export const en: Translations = {
   upgradeMembersLimit: 'Up to 3 members per group',
   upgradeAiLimit: '5 AI requests per day',
   upgradePriceLimit: '3 price comparisons per day',
+  listLimitApproachingHint: 'You have 1 list left ({used}/{max}) on the free plan',
+  listLimitReachedHint: 'You reached the {max}-list limit of the free plan',
   upgradeCta: 'Upgrade now',
   upgradePrice: '₪9.90/month',
   upgradeContact: 'Contact us',

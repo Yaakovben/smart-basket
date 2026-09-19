@@ -941,6 +941,8 @@ export const he: Translations = {
   upgradeMembersLimit: 'עד 3 חברים לכל קבוצה',
   upgradeAiLimit: '5 בקשות AI ביום',
   upgradePriceLimit: '3 השוואות מחיר ביום',
+  listLimitApproachingHint: 'נשארה לך עוד רשימה אחת ({used}/{max}) בתוכנית החינמית',
+  listLimitReachedHint: 'הגעת למגבלת {max} הרשימות של התוכנית החינמית',
   upgradeCta: 'שדרג עכשיו',
   upgradePrice: '₪9.90 לחודש',
   upgradeContact: 'צור קשר',

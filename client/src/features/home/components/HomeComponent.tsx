@@ -57,7 +57,7 @@ export const HomeComponent = memo(({
   const [menuClosing, setMenuClosing] = useState(false);
 
   const {
-    tab, search, showMenu, showCreate, showCreateGroup, showJoin, joinedFromLink,
+    tab, search, showMenu, showCreate, showCreateGroup, listLimitMax, ownedListsCount, showJoin, joinedFromLink,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
@@ -194,6 +194,8 @@ export const HomeComponent = memo(({
           newL={newL}
           createError={createError}
           creatingList={creatingList}
+          limitMax={listLimitMax}
+          limitUsed={ownedListsCount}
           onClose={closeCreateModal}
           onUpdateField={updateNewListField}
           onSubmit={() => handleCreate(false)}
@@ -208,6 +210,8 @@ export const HomeComponent = memo(({
           newL={newL}
           createError={createError}
           creatingList={creatingList}
+          limitMax={listLimitMax}
+          limitUsed={ownedListsCount}
           onClose={closeCreateGroupModal}
           onUpdateField={updateNewListField}
           onSubmit={() => handleCreate(true)}
