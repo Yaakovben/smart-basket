@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import StorageIcon from '@mui/icons-material/Storage';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
@@ -40,9 +40,13 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
   const active = tab === 'mongo' ? mongo : cloud;
   const lastUpdatedText = timeText(active.lastFetchAt);
 
-  // ריענון בגרירה - אותו דפוס בדיוק כמו דף הרשימה/דשבורד המנהל, במקום
-  // כפתור רענון ידני עם אייקון מסתובב.
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(active.load);
+  // pullRefreshing: מוצג רק כשהמשתמש משך בפועל, לא בטעינה ראשונית.
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(() => {
+    setPullRefreshing(true);
+    active.load();
+  });
+  useEffect(() => { if (!active.loading) setPullRefreshing(false); }, [active.loading]);
 
   const metaChip = (text: string) => (
     <Box sx={{
@@ -111,7 +115,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
       </Box>
 
       <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={active.loading} pullActive={pullActiveRef.current} lastRefreshedAt={active.lastFetchAt} />
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={active.lastFetchAt} />
         <Box
           sx={{
             height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',

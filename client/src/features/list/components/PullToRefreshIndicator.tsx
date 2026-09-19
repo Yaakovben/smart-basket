@@ -98,14 +98,15 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
           </Box>
         </Box>
 
-        <Typography sx={{
-          fontSize: 12.5, fontWeight: 700, lineHeight: 1,
-          color: ready || refreshing ? 'primary.main' : 'text.secondary',
-          whiteSpace: 'nowrap',
-          transition: pullActive ? 'color 0.15s ease' : 'none',
-        }}>
-          {refreshing ? 'מרענן…' : 'משכו לרענון'}
-        </Typography>
+        {refreshing && (
+          <Typography sx={{
+            fontSize: 12.5, fontWeight: 700, lineHeight: 1,
+            color: 'primary.main',
+            whiteSpace: 'nowrap',
+          }}>
+            מרענן…
+          </Typography>
+        )}
 
         {timeLabel && (
           <>

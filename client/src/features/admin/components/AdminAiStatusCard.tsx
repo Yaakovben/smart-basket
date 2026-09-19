@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
 import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
+import { PULL_MAX } from '../../list/helpers/list-helpers';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
 
@@ -82,10 +84,13 @@ interface Props {
 // (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
 // את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
 export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, refreshError, onRefresh, onClose }: Props) => {
-  // ריענון בגרירה - אותו דפוס בדיוק כמו DbHealthCard/דף הרשימה/דשבורד
-  // המנהל, במקום כפתור רענון ידני עם אייקון מסתובב בכותרת (שהיה גם
-  // מציג "מתי עודכן" פעמיים - פעם בכותרת ופעם למטה בפאנל הספק).
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(onRefresh);
+  // pullRefreshing: מוצג רק כשמשכו בפועל, לא בטעינה ראשונית (אותו דפוס כמו DbHealthCard).
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(() => {
+    setPullRefreshing(true);
+    onRefresh();
+  });
+  useEffect(() => { if (!refreshing) setPullRefreshing(false); }, [refreshing]);
 
   return (
     <Box sx={{
@@ -96,13 +101,18 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
     }}>
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
-      <Box
-        sx={{ flex: 1, position: 'relative', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}
-        onTouchStart={handlePullStart}
-        onTouchMove={handlePullMove}
-        onTouchEnd={handlePullEnd}
-      >
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
+      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
+        <Box
+          sx={{
+            height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',
+            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
+          }}
+          onTouchStart={handlePullStart}
+          onTouchMove={handlePullMove}
+          onTouchEnd={handlePullEnd}
+        >
         {refreshError && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
@@ -143,6 +153,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
             </Typography>
           </>
         )}
+        </Box>
       </Box>
     </Box>
   );

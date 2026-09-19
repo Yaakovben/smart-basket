@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, CircularProgress } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ShareIcon from '@mui/icons-material/Share';
@@ -41,7 +41,6 @@ interface ListHeaderProps {
   onShowInvite: () => void;
   onQuickAdd?: (name: string) => void;
   onlineUserIds?: Set<string>;
-  refreshing?: boolean;
   onClearList?: () => void;
   onShoppingMode?: () => void;
   hasProducts?: boolean;
@@ -57,7 +56,7 @@ export const ListHeader = memo(({
   list, user, filter, search, pendingCount, purchasedCount, allMembers,
   isOwner, onBack, onFilterChange, onSearchChange, onEditList, onDeleteList,
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
-  onShowInvite, onQuickAdd, onlineUserIds, refreshing = false,
+  onShowInvite, onQuickAdd, onlineUserIds,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
   savedLists = [], onSavedLists,
   costEstimate, productNames = [],
@@ -195,7 +194,7 @@ export const ListHeader = memo(({
           }}>
             {list.name}
           </Typography>
-          {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
+          {/* spinner הוסר - PullToRefreshIndicator מטפל בחיווי הרענון */}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
