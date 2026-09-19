@@ -948,6 +948,7 @@ export const en: Translations = {
   subscriptionCancelDesc: 'Keep enjoying all Pro benefits, uninterrupted, until the period you already paid for ends - the subscription just won\'t renew after that, on',
   subscriptionCancelled: 'Auto-renew cancelled - Pro stays active until the period ends',
   subscriptionAutoRenewOffDesc: 'Subscription won\'t auto-renew. Stays active until',
+  subscriptionPermanentDesc: 'Permanent Pro subscription with no expiry date',
   subscriptionFreeLimits: 'Free plan limits',
   subscriptionUpgradeHint: 'To upgrade to Pro, contact us',
   subscriptionActiveUntil: 'Active until',

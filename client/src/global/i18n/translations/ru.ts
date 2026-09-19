@@ -948,6 +948,7 @@ export const ru: Translations = {
   subscriptionCancelDesc: 'Вы продолжите пользоваться всеми преимуществами Pro до конца уже оплаченного периода - подписка просто не продлится после',
   subscriptionCancelled: 'Автопродление отменено - Pro активен до конца периода',
   subscriptionAutoRenewOffDesc: 'Подписка не продлится автоматически. Активна до',
+  subscriptionPermanentDesc: 'Постоянная подписка Pro без срока действия',
   subscriptionFreeLimits: 'Ограничения бесплатного плана',
   subscriptionUpgradeHint: 'Для перехода на Pro свяжитесь с нами',
   subscriptionActiveUntil: 'Активна до',

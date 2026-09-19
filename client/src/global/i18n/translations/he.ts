@@ -954,6 +954,7 @@ export const he: Translations = {
   subscriptionCancelDesc: 'תמשיך/י ליהנות מכל יתרונות Pro בלי הפרעה עד סוף התקופה שכבר שילמת עליה - המנוי פשוט לא יתחדש אחריה, בתאריך',
   subscriptionCancelled: 'החידוש האוטומטי בוטל - Pro נשאר פעיל עד תום התקופה',
   subscriptionAutoRenewOffDesc: 'המנוי לא יתחדש אוטומטית. יישאר פעיל עד',
+  subscriptionPermanentDesc: 'מנוי Pro קבוע ללא תאריך תפוגה',
   subscriptionFreeLimits: 'מגבלות תוכנית חינמית',
   subscriptionUpgradeHint: 'לשדרוג לתוכנית Pro צור איתנו קשר',
   subscriptionActiveUntil: 'פעיל עד',

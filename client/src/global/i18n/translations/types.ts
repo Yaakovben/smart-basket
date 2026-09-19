@@ -942,6 +942,7 @@ export type TranslationKeys =
   | 'subscriptionUpgradeHint'
   | 'subscriptionActiveUntil'
   | 'subscriptionAutoRenewOffDesc'
+  | 'subscriptionPermanentDesc'
   | 'upgradeBestValueBadge'
   | 'perMonthShort'
   | 'planFree'
