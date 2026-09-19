@@ -21,7 +21,7 @@ interface SubscriptionModalProps {
 
 const PRO_FEATURES = [
   'רשימות ללא הגבלה',
-  'קבוצות עם עד 10 חברים',
+  'קבוצות עם חברים ללא הגבלה',
   'עוזר AI ללא הגבלה',
   'השוואות מחיר ללא הגבלה',
 ];
@@ -252,7 +252,15 @@ export const SubscriptionModal = ({ onClose, showToast }: SubscriptionModalProps
                       לא בצבע אדום/מזמין-לחיצה כמו כפתור השדרוג - ה-UI לא
                       "מפתה" לבטל, רק מאפשר את זה בלי להסתיר. */}
                   <Box sx={{ pt: 0.5, textAlign: 'center' }}>
-                    {status.planAutoRenew ? (
+                    {!status.planExpiresAt ? (
+                      // מנוי קבוע (הוענק ידנית, בלי תאריך תפוגה) - "ביטול
+                      // חידוש אוטומטי" לא רלוונטי כשאין מה לחדש/לבטל. השרת
+                      // ממילא לא משנה כלום במקרה הזה (ראו subscription.routes.ts)
+                      // - עדיף לא להציג כפתור שנראה פעיל אבל לא עושה כלום.
+                      <Typography sx={{ fontSize: 12, color: 'text.disabled', lineHeight: 1.5 }}>
+                        {t('subscriptionPermanentDesc')}
+                      </Typography>
+                    ) : status.planAutoRenew ? (
                       <Box
                         component="button"
                         disabled={cancelling}
