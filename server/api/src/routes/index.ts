@@ -13,6 +13,7 @@ import aiAssistantRoutes from './aiAssistant.routes';
 import { dailyFaithRoutes } from '../features/daily-faith';
 import { priceComparisonRoutes } from '../features/priceComparison';
 import emailRoutes from './email.routes';
+import errorReportRoutes from './errorReport.routes';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/ai-assistant', aiAssistantRoutes);
 router.use('/price-comparison', priceComparisonRoutes);
 router.use('/daily-faith', dailyFaithRoutes);
 router.use('/email', emailRoutes);
+router.use('/error-report', errorReportRoutes);
 
 export default router;

@@ -3,6 +3,7 @@ import { getTranslationsSync } from '../i18n/translations';
 import type { Language } from '../types';
 import { ErrorBoundaryReloadingScreen } from './ErrorBoundaryReloadingScreen';
 import { ErrorBoundaryFallback } from './ErrorBoundaryFallback';
+import { reportError } from '../helpers/errorReport';
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
 // מזהה רק שגיאות טעינת chunk אמיתיות. הבדיקה הגנרית של
@@ -61,6 +62,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
+
+    reportError('react', error);
 
     // שגיאת טעינת chunk = גרסה חדשה נפרסה → ניקוי cache וריענון אוטומטי.
     // localStorage ולא sessionStorage: ב-PWA מותקן ב-iOS, sessionStorage

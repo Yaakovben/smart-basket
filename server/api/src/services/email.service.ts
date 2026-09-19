@@ -250,3 +250,35 @@ export async function sendEmailToUser(userId: string, payload: EmailPayload): Pr
   await sendSingle(user.email, payload.subject, payload.body, false);
   return { sent: true, email: user.email };
 }
+
+export interface ErrorReportPayload {
+  type: 'global' | 'unhandledRejection' | 'react';
+  message: string;
+  stack?: string;
+  url?: string;
+  userAgent?: string;
+  buildVersion?: string;
+  timestamp: string;
+}
+
+// שליחת דוח שגיאה למנהל המערכת (GMAIL_USER). no-op שקט אם המייל לא מוגדר.
+export async function sendAdminErrorReport(payload: ErrorReportPayload): Promise<void> {
+  if (!isEmailEnabled() || !env.GMAIL_USER) return;
+
+  const body = [
+    `סוג שגיאה: ${payload.type}`,
+    `הודעה: ${payload.message}`,
+    `זמן: ${payload.timestamp}`,
+    payload.buildVersion ? `גרסה: ${payload.buildVersion}` : null,
+    payload.url ? `URL: ${payload.url}` : null,
+    payload.userAgent ? `דפדפן: ${payload.userAgent}` : null,
+    payload.stack ? `\nStack trace:\n${payload.stack}` : null,
+  ].filter(Boolean).join('\n');
+
+  try {
+    await sendSingle(env.GMAIL_USER, `[Smart Basket] שגיאת לקוח: ${payload.message.slice(0, 80)}`, body, false);
+  } catch (err) {
+    // לא חוסמים - דוח שגיאה שנכשל לא צריך לגרום לעוד שגיאה
+    logger.warn('sendAdminErrorReport failed: %s', (err as Error).message);
+  }
+}
