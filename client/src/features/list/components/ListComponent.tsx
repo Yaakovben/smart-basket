@@ -469,7 +469,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onShowInvite={stableShowInvite}
         onQuickAdd={stableQuickAdd}
         onlineUserIds={onlineUserIds}
-        refreshing={refreshing}
         onClearList={stableClearList}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
