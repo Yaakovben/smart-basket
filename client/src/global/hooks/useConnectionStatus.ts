@@ -64,10 +64,7 @@ function handleOffline() {
 
 function handleOnline() {
   clearOfflineTimer();
-  // server-starting מנוהל ע"י subscribeFetchIssue - לא מאפסים אותו כאן
-  if (state.phase !== 'server-starting') {
-    setState({ phase: socketDown ? 'reconnecting' : 'online' });
-  }
+  setState({ phase: socketDown ? 'reconnecting' : 'online' });
 }
 
 window.addEventListener('offline', handleOffline);
