@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { useSettings } from '../context/SettingsContext';
@@ -77,10 +77,7 @@ export const ConnectionStatusIcon = () => {
         animation: 'connSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {(isServerStarting || phase === 'reconnecting')
-        ? <CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
-        : <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
-      }
+      <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3, letterSpacing: 0.1 }}>
           {mainText}
