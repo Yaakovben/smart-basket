@@ -29,7 +29,7 @@ interface InitialData {
 
 export function useAuth() {
   // בדיקת משתמש שמור לרינדור מיידי
-  const MAX_CACHE_AGE = 90 * 24 * 60 * 60 * 1000; // 90 יום - תואם ל-refresh token TTL
+  const MAX_CACHE_AGE = 40 * 24 * 60 * 60 * 1000; // 40 יום - תואם ל-refresh token TTL
   const [user, setUser] = useState<User | null>(() => {
     try {
       const cached = localStorage.getItem('cached_user');
