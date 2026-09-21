@@ -10,6 +10,7 @@ import { UserDAL, LoginActivityDAL } from '../dal';
 import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
 import { createTokens } from './token.service';
+import { newUserTrialFields } from './subscription.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
@@ -74,6 +75,7 @@ export async function register(
     email: data.email.toLowerCase(),
     password: data.password,
     isAdmin,
+    ...newUserTrialFields(),
   });
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
@@ -174,6 +176,7 @@ export async function googleAuth(
       googleId: googleUser.sub,
       avatarColor: '#4285F4', // כחול של Google
       isAdmin,
+      ...newUserTrialFields(),
     });
   } else if (!user.googleId) {
     // קישור חשבון אימייל קיים ל-Google

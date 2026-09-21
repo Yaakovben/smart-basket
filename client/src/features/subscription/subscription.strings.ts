@@ -4,6 +4,15 @@ import type { Language } from '../../global/types';
 // לפיצ'ר הזה. שלוש השפות חייבות להכיל בדיוק אותם מפתחות (נאכף בטיפוס).
 const he = {
   pageTitle: 'ניהול מנוי',
+  trialBadge: 'מתנה',
+  trialTitle: 'Pro במתנה בשבילך',
+  trialSub: 'נהנים מהכל ללא הגבלה עד',
+  trialEndedBadge: 'הניסיון הסתיים',
+  trialEndedTitle: 'תקופת הניסיון הסתיימה',
+  trialEndedSub: 'חזרתם לתוכנית החינמית. אפשר להמשיך ל-Pro בכל רגע.',
+  trialKeepCta: 'ממשיכים ליהנות מ-Pro',
+  trialKeepNote: 'ההמשך מתווסף אחרי סוף תקופת המתנה, בלי לאבד אף יום.',
+  welcomeToast: 'ברוכים הבאים! קיבלתם {n} חודשי Pro במתנה',
   loadError: 'לא הצלחנו לטעון את פרטי המנוי',
   retry: 'נסו שוב',
 
@@ -99,6 +108,15 @@ export type SubscriptionStrings = { [K in keyof typeof he]: string };
 
 const en: SubscriptionStrings = {
   pageTitle: 'Manage subscription',
+  trialBadge: 'Gift',
+  trialTitle: 'Pro is on us',
+  trialSub: 'Enjoy everything unlimited until',
+  trialEndedBadge: 'Trial ended',
+  trialEndedTitle: 'Your trial has ended',
+  trialEndedSub: 'You are back on the free plan. You can continue with Pro at any time.',
+  trialKeepCta: 'Keep enjoying Pro',
+  trialKeepNote: 'Your extension starts after the gift period ends, no days lost.',
+  welcomeToast: 'Welcome! You got {n} months of Pro as a gift',
   loadError: 'Could not load your subscription',
   retry: 'Try again',
 
@@ -192,6 +210,15 @@ const en: SubscriptionStrings = {
 
 const ru: SubscriptionStrings = {
   pageTitle: 'Управление подпиской',
+  trialBadge: 'Подарок',
+  trialTitle: 'Pro в подарок',
+  trialSub: 'Пользуйтесь всем без ограничений до',
+  trialEndedBadge: 'Пробный период закончился',
+  trialEndedTitle: 'Пробный период закончился',
+  trialEndedSub: 'Вы вернулись на бесплатный план. Перейти на Pro можно в любой момент.',
+  trialKeepCta: 'Продолжить с Pro',
+  trialKeepNote: 'Продление начнётся после подарочного периода, ни один день не теряется.',
+  welcomeToast: 'Добро пожаловать! Вам подарено {n} мес. Pro',
   loadError: 'Не удалось загрузить данные подписки',
   retry: 'Повторить',
 

@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { authenticate, validate } from '../middleware';
 import { asyncHandler } from '../utils';
 import { UserDAL } from '../dal';
-import { PLAN_LIMITS } from '../constants';
+import { PLAN_LIMITS, isPro } from '../constants';
 import { env } from '../config/environment';
 import { planUsage } from '../services/plan-usage.service';
 import {
@@ -37,7 +37,10 @@ const serializeRequest = (r: ISubscriptionRequest) => ({
 router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const user = await UserDAL.findById(userId);
-  const plan = user?.plan ?? 'free';
+  // מצב אפקטיבי: Pro שפג תוקפו נחשב חינמי (בלי זה משתמש שהניסיון שלו נגמר עדיין נראה Pro).
+  const plan = user && isPro(user) ? 'pro' : 'free';
+  const isTrial = plan === 'pro' && user?.planSource === 'trial';
+  const trialEnded = plan === 'free' && user?.planSource === 'trial';
   const methods = getPaymentMethods();
   const [openRequest, history] = await Promise.all([getOpenRequest(userId), listUserRequests(userId, 8)]);
 
@@ -46,6 +49,9 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
     data: {
       plan,
       planExpiresAt: user?.planExpiresAt ?? null,
+      isTrial,
+      trialEnded,
+      trialMonths: env.TRIAL_MONTHS,
       limits: plan === 'pro' ? null : PLAN_LIMITS.free,
       usage: plan === 'pro' ? null : {
         aiToday: planUsage.getAiCount(userId),

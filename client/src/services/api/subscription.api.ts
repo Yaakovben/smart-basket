@@ -21,6 +21,10 @@ export interface SubscriptionStatus {
   plan: 'free' | 'pro';
   // null + plan=pro = מנוי קבוע (הוענק ידנית, בלי תפוגה).
   planExpiresAt: string | null;
+  // Pro במתנה של הרשמה (פעיל) / ניסיון שהסתיים (חזר לחינמי).
+  isTrial: boolean;
+  trialEnded: boolean;
+  trialMonths: number;
   limits: {
     maxOwnedLists: number;
     maxGroupMembers: number;

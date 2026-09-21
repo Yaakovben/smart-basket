@@ -134,10 +134,10 @@ export const SubscriptionPage = ({ showToast }: Props) => {
                 <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
                   {busy
                     ? <CircularProgress size={22} sx={{ color: '#fff' }} />
-                    : `${isPro ? s.renewCta : s.upgradeCta} · ₪${priceFor(status, months)}`}
+                    : `${status.isTrial ? s.trialKeepCta : isPro ? s.renewCta : s.upgradeCta} · ₪${priceFor(status, months)}`}
                 </Button>
                 {isPro && (
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{s.renewNote}</Typography>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{status.isTrial ? s.trialKeepNote : s.renewNote}</Typography>
                 )}
               </>
             )}

@@ -50,6 +50,8 @@ export interface IUser extends Document {
   // מכבד את התאריך), רק לא "מחודש" אחריו. ברירת מחדל true (גם למשתמשי
   // free - לא רלוונטי להם, אבל עקבי).
   planAutoRenew: boolean;
+  // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין.
+  planSource?: 'trial' | 'paid';
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -144,6 +146,10 @@ const userSchema = new Schema<IUser>(
     planAutoRenew: {
       type: Boolean,
       default: true,
+    },
+    planSource: {
+      type: String,
+      enum: ['trial', 'paid'],
     },
   },
   {

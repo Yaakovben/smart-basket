@@ -139,6 +139,8 @@ const envSchema = Joi.object({
   PAYBOX_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
   // שם המקבל כפי שיוצג ללקוח לפני התשלום (לאימות שהעברה הולכת לאדם הנכון).
   PAYMENT_RECEIVER_NAME: Joi.string().max(60).optional(),
+  // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
+  TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -193,6 +195,7 @@ export interface Environment {
   BIT_PAYMENT_URL?: string;
   PAYBOX_PAYMENT_URL?: string;
   PAYMENT_RECEIVER_NAME?: string;
+  TRIAL_MONTHS: number;
 }
 
 export const env = parseEnv();

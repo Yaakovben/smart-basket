@@ -18,6 +18,8 @@ const DAY_MS = 86_400_000;
 // הצעת Pro למשתמש חינמי. גובה קבוע יחסית כדי שהעמוד לא "יקפוץ" בין מצבים.
 export const PlanHero = ({ status, s, isDark, locale }: Props) => {
   const isPro = status.plan === 'pro';
+  const isTrial = status.isTrial;
+  const trialEnded = status.trialEnded;
   const expires = status.planExpiresAt ? new Date(status.planExpiresAt) : null;
   const daysLeft = expires ? Math.max(0, Math.ceil((expires.getTime() - Date.now()) / DAY_MS)) : null;
   const expiringSoon = daysLeft !== null && daysLeft <= 7;
@@ -56,18 +58,18 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
             color: isPro ? '#4C1D95' : '#fff',
             fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
           }}>
-            {isPro ? `✦ ${s.proBadge}` : s.freeBadge}
+            {isTrial ? `🎁 ${s.trialBadge}` : isPro ? `✦ ${s.proBadge}` : trialEnded ? s.trialEndedBadge : s.freeBadge}
           </Box>
           <Typography sx={{ fontSize: 19, fontWeight: 800, lineHeight: 1.2 }}>
-            {isPro ? s.heroProTitle : s.heroFreeTitle}
+            {isTrial ? s.trialTitle : isPro ? s.heroProTitle : trialEnded ? s.trialEndedTitle : s.heroFreeTitle}
           </Typography>
         </Box>
       </Box>
 
       <Typography sx={{ position: 'relative', fontSize: 13.5, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5 }}>
-        {!isPro && s.heroFreeSub}
+        {!isPro && (trialEnded ? s.trialEndedSub : s.heroFreeSub)}
         {isPro && !expires && s.heroPermanentSub}
-        {isPro && expires && `${s.heroActiveUntil} ${expiryLabel}`}
+        {isPro && expires && `${isTrial ? s.trialSub : s.heroActiveUntil} ${expiryLabel}`}
       </Typography>
 
       {isPro && daysLeft !== null && (

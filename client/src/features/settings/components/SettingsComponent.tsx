@@ -5,6 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
+import { SubscriptionRowBadge } from '../../subscription/components/SubscriptionRowBadge';
 import { useReliableTap } from '../../../global/hooks/useReliableTap';
 import type { User, ToastType } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
@@ -145,6 +146,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
             <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
+            <SubscriptionRowBadge />
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>

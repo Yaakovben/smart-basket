@@ -167,7 +167,13 @@ export async function listAdminRequests(statuses: SubscriptionRequestStatus[], l
     .populate('userId', 'name email plan planExpiresAt');
 }
 
-function addMonths(from: Date, months: number): Date {
+/** שדות Pro במתנה למשתמש חדש (ריק אם TRIAL_MONTHS=0). */
+export function newUserTrialFields(): { plan: 'pro'; planExpiresAt: Date; planAutoRenew: false; planSource: 'trial' } | Record<string, never> {
+  if (!env.TRIAL_MONTHS) return {};
+  return { plan: 'pro', planExpiresAt: addMonths(new Date(), env.TRIAL_MONTHS), planAutoRenew: false, planSource: 'trial' };
+}
+
+export function addMonths(from: Date, months: number): Date {
   const d = new Date(from.getTime());
   d.setMonth(d.getMonth() + months);
   return d;
@@ -196,6 +202,7 @@ export async function approveRequest(adminId: string, requestId: string, note?: 
       plan: 'pro',
       planExpiresAt: addMonths(base, req.months),
       planAutoRenew: false,
+      planSource: 'paid',
     } as Partial<typeof user>);
   }
 

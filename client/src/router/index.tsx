@@ -9,6 +9,7 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
+import { getSubscriptionStrings } from "../features/subscription/subscription.strings";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
 import { clearListNotifications } from "../global/helpers";
@@ -154,6 +155,21 @@ export const AppRouter = () => {
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
+
+  // ברכת "Pro במתנה" - פעם אחת בלבד, למשתמש שנרשם ממש עכשיו (עד 15 דקות).
+  const { settings: appSettings } = useSettings();
+  useEffect(() => {
+    if (authLoading || !user?.id || user.plan !== 'pro' || !user.createdAt || !user.planExpiresAt) return;
+    const key = `sb_trial_welcome_${user.id}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      const ageMs = Date.now() - new Date(user.createdAt).getTime();
+      if (ageMs > 15 * 60_000) { localStorage.setItem(key, '1'); return; }
+      const months = Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - new Date(user.createdAt).getTime()) / (30 * 86_400_000)));
+      localStorage.setItem(key, '1');
+      showToast(getSubscriptionStrings(appSettings.language).welcomeToast.replace('{n}', String(months)), 'success');
+    } catch { /* localStorage חסום - מוותרים על הברכה */ }
+  }, [authLoading, user?.id, user?.plan, user?.createdAt, user?.planExpiresAt, showToast, appSettings.language]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
