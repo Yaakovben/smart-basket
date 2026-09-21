@@ -39,10 +39,11 @@ const handleNewVersion = () => {
   if (!storedVersion || storedVersion === buildVersion) return;
 
   diagLog('version', 'new version detected, clearing user cache + browser caches');
-  // ניקוי נתוני משתמש מקאש: כשיש deploy חדש, מבנה ה-User עשוי להשתנות.
-  // נתונים ישנים ב-cached_user גורמים לפעולות ברשימה להיכשל עד שניקוי ידני.
-  // שומרים רק את הטוקן - המשתמש לא ייזרק ל-login.
-  const keysToRemove = ['cached_user', 'cached_lists', 'cached_insights', 'cached_prices', 'hint_seen'];
+  // cached_user ו-cached_lists נשמרים בכוונה: מחיקתם בכל עדכון השאירה את
+  // המשתמש בלי משתמש שמור בעליית האפליקציה, ואם טעינת הפרופיל הייתה איטית או
+  // נכשלה (שרת קר) הוא נזרק למסך התחברות. checkAuth כותב אותם מחדש בכל פתיחה
+  // עם נתונים טריים מהשרת, אז אין סיכון לנתונים ישנים לאורך זמן.
+  const keysToRemove = ['cached_insights', 'cached_prices', 'hint_seen'];
   keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch { /* quota */ } });
 
   (async () => {
