@@ -1,6 +1,7 @@
 /**
  * סקריפט עדכון ידני של מחירים מרשתות.
- * הפעלה: npm run refresh-prices
+ * הפעלה: npm run refresh-prices [chainId ...]
+ * בלי ארגומנטים - כל הרשתות. עם מזהי רשתות - רק הן.
  *
  * מתחבר ל-MongoDB, מושך מחירים מכל ה-adapters הפעילים, וממיר לשורות במסד.
  *
@@ -24,7 +25,9 @@ async function main() {
   await mongoose.connect(env.MONGODB_URI);
   logger.info('Connected.');
 
-  const results = await syncAllChains();
+  // ארגומנטים אופציונליים: מזהי רשתות לסנכרון ממוקד, למשל `refresh-prices.js shufersal maayan_2000`
+  const only = process.argv.slice(2).filter(a => !a.startsWith('-'));
+  const results = await syncAllChains(only.length > 0 ? only : undefined);
   for (const r of results) {
     if (r.error) {
       logger.error(`[${r.chainId}] error: ${r.error}`);
