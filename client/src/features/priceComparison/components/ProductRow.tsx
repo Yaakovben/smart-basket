@@ -3,6 +3,7 @@ import { Box, Typography, Tooltip } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { TextAction } from './TextAction';
 import { formatILS } from '../../../global/helpers';
 
 interface ProductRowProps {
@@ -41,9 +42,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
             : t('productNotFound')}
         </Typography>
         {onFixMatch && (
-          <Typography onClick={() => onFixMatch(match)} sx={{ fontSize: 10.5, color: '#0D9488', fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
-            {t('matchFixAction')}
-          </Typography>
+          <TextAction fontSize={10.5} onClick={() => onFixMatch(match)}>{t('matchFixAction')}</TextAction>
         )}
       </Box>
     );
@@ -114,9 +113,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
           </Typography>
         )}
         {onFixMatch && (
-          <Typography onClick={() => onFixMatch(match)} sx={{ fontSize: 10.5, color: '#0D9488', fontWeight: 800, cursor: 'pointer', mt: 0.1, width: 'fit-content' }}>
-            {t('matchNotRightAction')}
-          </Typography>
+          <TextAction fontSize={10.5} onClick={() => onFixMatch(match)}>{t('matchNotRightAction')}</TextAction>
         )}
         {!match.userOverride && match.matchConfidence < LOW_CONFIDENCE && (
           <Typography sx={{ fontSize: 10, color: '#D97706', fontWeight: 700, mt: 0.1 }}>
@@ -136,6 +133,11 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
           {showBranchUnverified && (
             <Tooltip title={t('priceMayDifferAtBranch')} arrow>
               <InfoOutlinedIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+            </Tooltip>
+          )}
+          {!showBranchUnverified && match.branchPriceInferred && (
+            <Tooltip title={t('branchPriceTypicalHint')} arrow>
+              <InfoOutlinedIcon aria-label={t('branchPriceTypicalHint')} sx={{ fontSize: 12, color: '#0D9488' }} />
             </Tooltip>
           )}
           <Typography sx={{

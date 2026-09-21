@@ -66,7 +66,17 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
 
   return (
     <Box
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      aria-label={chain.chainName}
       onClick={() => { haptic('light'); onToggle(); }}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        // Enter/רווח פותחים וסוגרים את הכרטיס, כמו בלחיצה. מתעלמים ממקשים שנוצרו
+        // בתוך לחצן פנימי (החלף סניף, תיקון התאמה) כדי לא להפעיל אותם פעמיים.
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); haptic('light'); onToggle(); }
+      }}
       sx={{
         borderRadius: '14px',
         background: cardBg,
@@ -77,6 +87,7 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
         position: 'relative',
         transition: 'border-color 0.15s, transform 0.1s',
         '&:active': { transform: 'scale(0.99)' },
+        '&:focus-visible': { outline: '2px solid #0D9488', outlineOffset: 2 },
         // אפקט הילה רק כשהכרטיס באמת המוביל לפי המיון - לא סתם למקום ראשון.
         // במיון מחיר: רק אם isCheapest (יכול להיות שמקום ראשון הוא 'הכי שלם' אבל לא הכי זול).
         // במיון מרחק/משולב: rank 1 מספיק כי המיון הוא לפי המדד.
@@ -140,6 +151,14 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
               <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
                 {chain.hasData ? t('noMatches') : t('notPublished')}
               </Typography>
+            )}
+            {chain.nearestBranch && chain.matchedCount > 0 && chain.branchVerifiedCount === chain.matchedCount && (
+              <>
+                <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
+                <Typography sx={{ fontSize: 10.5, color: '#059669', fontWeight: 700 }}>
+                  ✓ {t('branchAllVerified')}
+                </Typography>
+              </>
             )}
             {(() => {
               // נתוני הרשת ישנים - המחירים עלולים לא לשקף את החנות היום

@@ -837,6 +837,8 @@ export type TranslationKeys =
   | 'matchChosenByYou'
   | 'matchExcludedByYou'
   | 'matchNotSoldHere'
+  | 'branchPriceTypicalHint'
+  | 'branchAllVerified'
   | 'noBranchesFound'
   | 'sourceLabel'
   | 'reportLabel'
