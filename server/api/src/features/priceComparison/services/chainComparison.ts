@@ -44,6 +44,7 @@ export async function buildChainTotals(
   // אופטימיזציה: פעם אחת לכל שם ייחודי - שאילתה אחת שמחזירה candidates מכל הרשתות יחד.
   // חוסך N×M שאילתות. limit גבוה כי candidates מ-10 רשתות צריכים מקום.
   const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
+  const saturatedNames = new Set<string>();
   await Promise.all(
     uniqueNames.map(async name => {
       const tokens = getSearchTokensForName(name);
@@ -52,8 +53,11 @@ export async function buildChainTotals(
         return;
       }
       try {
-        const items = await PriceDAL.findByAnyToken(tokens, undefined, 60 * Math.max(1, activeChains.length));
+        const limit = 60 * Math.max(1, activeChains.length);
+        const items = await PriceDAL.findByAnyToken(tokens, undefined, limit);
         candidatesByName.set(name, items);
+        // התוצאה מלאה עד הסוף = ייתכן שרשתות נדחקו החוצה, ורק אז שווה להשלים
+        if (items.length >= limit) saturatedNames.add(name);
       } catch {
         candidatesByName.set(name, []);
       }
@@ -62,10 +66,13 @@ export async function buildChainTotals(
 
   // השלמת מועמדים לכל רשת: השאילתה המשותפת לעיל מוגבלת במספר כולל, ורשת עם
   // הרבה מוצרים דומים יכולה לדחוק החוצה רשתות אחרות - ואז הן "לא מזהות" את
-  // המוצר. לכל רשת עם מעט מועמדים משלימים שאילתה ייעודית לרשת.
+  // המוצר. משלימים רק לשמות שהשאילתה המשותפת שלהם התמלאה עד הגבול (אחרת אין
+  // דחיקה ואין מה להשלים - חוסך עד 14 שאילתות לכל שם נדיר), ורק לרשתות עם
+  // מעט מועמדים.
   const MIN_CANDIDATES_PER_CHAIN = 5;
   await Promise.all(
     uniqueNames.flatMap(name => {
+      if (!saturatedNames.has(name)) return [];
       const tokens = getSearchTokensForName(name);
       if (tokens.length === 0) return [];
       const existing = candidatesByName.get(name) || [];
