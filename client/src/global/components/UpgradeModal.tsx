@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, Button, Typography, Box, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import EmailIcon from '@mui/icons-material/Email';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import { useNavigate } from 'react-router-dom';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { ReactElement, Ref } from 'react';
 import { forwardRef } from 'react';
@@ -35,6 +36,7 @@ const FEATURE_LIMIT_KEY: Record<PlanLimitFeature, 'upgradeListLimit' | 'upgradeM
 // באותה רמת "פרימיום" ולא כמו דיאלוג MUI גנרי.
 export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   const { t, settings } = useSettings();
+  const navigate = useNavigate();
   const isDark = settings.theme === 'dark';
 
   const features: Array<'upgradeListLimit' | 'upgradeMembersLimit' | 'upgradeAiLimit' | 'upgradePriceLimit'> = [
@@ -150,19 +152,12 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           ))}
         </Box>
 
-        {/* מחיר */}
-        <Box sx={{ textAlign: 'center', mt: 2.5, mb: 0.5 }}>
-          <Typography sx={{ fontSize: 22, fontWeight: 800, color: isDark ? 'white' : '#4C1D95' }}>
-            {t('upgradePrice')}
-          </Typography>
-        </Box>
 
         {/* CTA - אותו "ברק" נע כמו כפתור השדרוג ב-SubscriptionModal */}
         <Button
           variant="contained"
           fullWidth
-          href="mailto:smartbasket129@gmail.com?subject=שדרוג%20ל-Pro%20-%20Smart%20Basket"
-          onClick={onClose}
+          onClick={() => { onClose(); navigate('/subscription'); }}
           sx={{
             position: 'relative', overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
@@ -186,7 +181,7 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
             '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
           }}
         >
-          <EmailIcon sx={{ fontSize: 18 }} />
+          <StarRoundedIcon sx={{ fontSize: 19 }} />
           <Box component="span">{t('upgradeCta')}</Box>
         </Button>
         <Button variant="text" fullWidth onClick={onClose} sx={{ mt: 0.5, textTransform: 'none', color: 'text.secondary', fontSize: 13 }}>

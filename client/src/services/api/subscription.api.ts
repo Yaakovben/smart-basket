@@ -1,10 +1,26 @@
 import apiClient from './client';
 
+export type SubscriptionRequestStatus = 'pending' | 'reported' | 'approved' | 'rejected' | 'cancelled';
+export type SubscriptionPayMethod = 'bit' | 'paybox';
+
+export interface SubscriptionRequestDto {
+  id: string;
+  months: number;
+  amount: number;
+  currency: string;
+  method: SubscriptionPayMethod | 'bank';
+  reference: string;
+  status: SubscriptionRequestStatus;
+  createdAt: string;
+  reportedAt: string | null;
+  resolvedAt: string | null;
+  adminNote: string | null;
+}
+
 export interface SubscriptionStatus {
   plan: 'free' | 'pro';
+  // null + plan=pro = מנוי קבוע (הוענק ידנית, בלי תפוגה).
   planExpiresAt: string | null;
-  // false אחרי שהמשתמש ביטל - עדיין Pro עד planExpiresAt, פשוט לא יתחדש אחריו.
-  planAutoRenew: boolean;
   limits: {
     maxOwnedLists: number;
     maxGroupMembers: number;
@@ -15,8 +31,21 @@ export interface SubscriptionStatus {
     aiToday: number;
     priceToday: number;
   } | null;
-  priceMonthly: number;
-  currency: string;
+  catalog: {
+    currency: string;
+    monthly: number;
+    yearly: number | null;
+    yearlySavingsPercent: number | null;
+    allowedMonths: number[];
+  };
+  payment: {
+    bit: { phone: string | null; url: string | null } | null;
+    paybox: { url: string } | null;
+    receiverName: string | null;
+    supportEmail: string;
+  };
+  openRequest: SubscriptionRequestDto | null;
+  history: SubscriptionRequestDto[];
 }
 
 export const subscriptionApi = {
@@ -25,7 +54,17 @@ export const subscriptionApi = {
     return res.data.data;
   },
 
-  async cancel(): Promise<void> {
-    await apiClient.delete('/subscription');
+  async createRequest(months: number, method: SubscriptionPayMethod): Promise<SubscriptionRequestDto> {
+    const res = await apiClient.post<{ data: SubscriptionRequestDto }>('/subscription/requests', { months, method });
+    return res.data.data;
+  },
+
+  async reportPaid(id: string): Promise<SubscriptionRequestDto> {
+    const res = await apiClient.post<{ data: SubscriptionRequestDto }>(`/subscription/requests/${id}/paid`);
+    return res.data.data;
+  },
+
+  async cancelRequest(id: string): Promise<void> {
+    await apiClient.delete(`/subscription/requests/${id}`);
   },
 };

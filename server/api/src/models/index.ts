@@ -6,3 +6,4 @@ export { LoginActivity, type ILoginActivity, type LoginMethod } from './LoginAct
 export { Notification, type INotification as INotificationDoc, type NotificationType } from './Notification.model';
 export { PushSubscription, type IPushSubscription } from './PushSubscription.model';
 // Price model הועבר ל-features/priceComparison/models/Price.model.ts
+export { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionRequestStatus, type SubscriptionPayMethod } from './SubscriptionRequest.model';

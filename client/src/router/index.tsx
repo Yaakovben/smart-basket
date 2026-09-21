@@ -48,6 +48,7 @@ if (typeof requestIdleCallback === 'function') {
 } else {
   setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
 }
+const SubscriptionPage = lazy(() => import("../features/subscription/subscription").then(m => ({ default: m.SubscriptionPage })));
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
 const PageLoader = PageSkeleton;
@@ -466,6 +467,14 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute user={user}>
               <SettingsPage user={user!} hasUpdate={false} onDeleteAllData={handleDeleteAllData} showToast={showToast} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subscription"
+          element={
+            <ProtectedRoute user={user}>
+              <ErrorBoundary><SubscriptionPage showToast={showToast} /></ErrorBoundary>
             </ProtectedRoute>
           }
         />

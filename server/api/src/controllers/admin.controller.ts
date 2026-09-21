@@ -20,6 +20,8 @@ import { asyncHandler } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
+import { listAdminRequests, approveRequest, rejectRequest } from '../services/subscription.service';
+import type { SubscriptionRequestStatus } from '../models';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
 
@@ -355,4 +357,48 @@ export const getAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Re
 export const refreshAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const data = await refreshAiStatus();
   res.json({ success: true, data });
+});
+
+/**
+ * GET /api/admin/subscription-requests?status=open|all
+ * בקשות מנוי בתשלום ידני. ברירת מחדל: רק פתוחות (ממתינות לתשלום/לאישור).
+ */
+export const getSubscriptionRequests = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const all = req.query.status === 'all';
+  const statuses: SubscriptionRequestStatus[] = all
+    ? ['pending', 'reported', 'approved', 'rejected', 'cancelled']
+    : ['pending', 'reported'];
+  const requests = await listAdminRequests(statuses);
+  res.json({
+    success: true,
+    data: requests.map((r) => {
+      const u = r.userId as unknown as { _id: unknown; name?: string; email?: string; plan?: string; planExpiresAt?: Date } | null;
+      return {
+        id: String(r._id),
+        user: u ? { id: String(u._id), name: u.name ?? '', email: u.email ?? '', plan: u.plan ?? 'free', planExpiresAt: u.planExpiresAt ?? null } : null,
+        months: r.months,
+        amount: r.amount,
+        currency: r.currency,
+        method: r.method,
+        reference: r.reference,
+        status: r.status,
+        createdAt: r.createdAt,
+        reportedAt: r.reportedAt ?? null,
+        resolvedAt: r.resolvedAt ?? null,
+        adminNote: r.adminNote ?? null,
+      };
+    }),
+  });
+});
+
+/** POST /api/admin/subscription-requests/:id/approve - מאשר ומאריך את המנוי. */
+export const approveSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const request = await approveRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
+  res.json({ success: true, data: { id: String(request._id), status: request.status } });
+});
+
+/** POST /api/admin/subscription-requests/:id/reject */
+export const rejectSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const request = await rejectRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
+  res.json({ success: true, data: { id: String(request._id), status: request.status } });
 });

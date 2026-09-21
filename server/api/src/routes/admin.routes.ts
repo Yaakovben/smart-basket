@@ -21,6 +21,9 @@ import {
   getLocalImages,
   getAiStatusHandler,
   refreshAiStatusHandler,
+  getSubscriptionRequests,
+  approveSubscriptionRequest,
+  rejectSubscriptionRequest,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -37,6 +40,13 @@ const updatePlanBody = Joi.object({
   plan: Joi.string().valid('free', 'pro').required(),
   planExpiresAt: Joi.date().iso().allow(null).optional(),
 });
+
+const requestIdParams = Joi.object({ id: commonSchemas.objectId.required() });
+const requestNoteBody = Joi.object({ note: Joi.string().trim().max(300).allow('').optional() });
+
+router.get('/subscription-requests', getSubscriptionRequests);
+router.post('/subscription-requests/:id/approve', validate({ params: requestIdParams, body: requestNoteBody }), approveSubscriptionRequest);
+router.post('/subscription-requests/:id/reject', validate({ params: requestIdParams, body: requestNoteBody }), rejectSubscriptionRequest);
 
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);

@@ -5,6 +5,21 @@ import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHeal
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
 export type { DbHealthCollection, DbHealth, CloudinaryHealth, LocalImagesResult, LocalImagesMigrationResult, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
 
+export interface AdminSubscriptionRequest {
+  id: string;
+  user: { id: string; name: string; email: string; plan: string; planExpiresAt: string | null } | null;
+  months: number;
+  amount: number;
+  currency: string;
+  method: string;
+  reference: string;
+  status: 'pending' | 'reported' | 'approved' | 'rejected' | 'cancelled';
+  createdAt: string;
+  reportedAt: string | null;
+  resolvedAt: string | null;
+  adminNote: string | null;
+}
+
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
     const response = await apiClient.get<{ data: AdminUser[] }>('/admin/users');
@@ -95,5 +110,19 @@ export const adminApi = {
   async refreshAiStatus(): Promise<AiStatus> {
     const response = await apiClient.post<{ data: AiStatus }>('/admin/ai-status/refresh');
     return response.data.data;
+  },
+
+  /** בקשות מנוי בתשלום ידני (ברירת מחדל: רק פתוחות). */
+  async getSubscriptionRequests(all = false): Promise<AdminSubscriptionRequest[]> {
+    const response = await apiClient.get<{ data: AdminSubscriptionRequest[] }>('/admin/subscription-requests', { params: all ? { status: 'all' } : undefined });
+    return response.data.data;
+  },
+
+  async approveSubscriptionRequest(id: string, note?: string): Promise<void> {
+    await apiClient.post(`/admin/subscription-requests/${id}/approve`, { note: note ?? '' });
+  },
+
+  async rejectSubscriptionRequest(id: string, note?: string): Promise<void> {
+    await apiClient.post(`/admin/subscription-requests/${id}/reject`, { note: note ?? '' });
   },
 };
