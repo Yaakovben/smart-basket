@@ -76,6 +76,14 @@ export function needsExplicitRow(price: number, stats: BarcodeStats | undefined)
   return cents(price) !== cents(stats.modalPrice) || stats.coverage < TYPICAL_COVERAGE_THRESHOLD;
 }
 
+// למה שורה נשמרת: מחיר שונה מהנפוץ, או מוצר בכיסוי נמוך במחיר הנפוץ. הפיצול נחוץ
+// לכיוונון הסף והתקציב (ראו TYPICAL_COVERAGE_THRESHOLD ו-MAX_EXCEPTION_ROWS_PER_CHAIN).
+export function classifyExplicitRow(price: number, stats: BarcodeStats | undefined): 'priceDiffers' | 'lowCoverage' | null {
+  if (!stats) return 'lowCoverage';
+  if (cents(price) !== cents(stats.modalPrice)) return 'priceDiffers';
+  return stats.coverage < TYPICAL_COVERAGE_THRESHOLD ? 'lowCoverage' : null;
+}
+
 export interface ResolvedBranchPrice {
   price: number;
   // true = המחיר אומת לסניף (שורה מפורשת, או היסק בטוח מהמחיר הנפוץ)
