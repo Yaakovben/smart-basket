@@ -1,26 +1,30 @@
 /**
- * מחירי סניף באחסון חריגות בלבד.
+ * מחירי סניף באחסון חריגות בלבד, בתוך מסמך ה-Price.
  *
- * בפועל 89%-95% מהמחירים בסניפי רשת זהים למחיר הנפוץ ברשת. במקום לשמור שורה
- * לכל (סניף × מוצר) - מאות אלפי שורות לרשת ואשכול חינמי של 512MB - שומרים:
- *  1. ב-Price: המחיר הנפוץ (modalPrice) וכיסוי הסניפים של המוצר (storeCoverage).
- *  2. ב-branch_prices: שורה רק לסניף שמחירו שונה מהנפוץ, או למוצר שנמכר בחלק
- *     קטן מהסניפים (כיסוי נמוך) - שם היעדר שורה לא מעיד על "אותו מחיר".
+ * בפועל רוב המחירים בסניפי רשת זהים למחיר הנפוץ ברשת. לכן שומרים ב-Price של כל
+ * (ברקוד, רשת):
+ *  1. modalPrice: המחיר הנפוץ, וגם storeCoverage: חלק הסניפים שמוכרים את המוצר.
+ *  2. storePrices: רשימת "סניף:מחיר" רק לסניפים שמחירם שונה מהנפוץ.
  *
- * היעדר שורה למוצר בכיסוי גבוה = הסניף מוכר אותו במחיר הנפוץ.
+ * היעדר חריגה למוצר בכיסוי גבוה בסניף מסונכרן = המחיר הנפוץ.
+ *
+ * למה בתוך המסמך ולא באוסף נפרד: אוסף branch_prices עם שורה לכל (סניף, מוצר)
+ * ואינדקס מורכב מילא את מכסת 512MB של Atlas החינמי. מכסת Atlas נמדדת בגודל לוגי
+ * (נתונים ואינדקסים, לא דחוס) של כל בסיסי הנתונים באשכול, ולכן שורה לכל
+ * (סניף x מוצר) עלתה כ-260 בתים. חריגה בתוך המסמך עולה כ-15 בתים, בלי אינדקס.
+ *
  * לוגיקה טהורה (בלי DB) כדי שאפשר לבדוק אותה.
  */
 
 // מוצר שנמכר בלפחות 90% מסניפי הרשת: היעדר שורה בסניף מסונכרן = המחיר הנפוץ.
 export const TYPICAL_COVERAGE_THRESHOLD = 0.9;
 
-// תקציב שורות החריגה לרשת. נמדד: כ-130 בתים לשורה (נתונים ואינדקסים), ואשכול
-// Atlas חינמי הוא 512MB. 14 רשתות × 175 אלף שורות ≈ 320MB במקרה הקיצוני (בפועל
-// הרבה פחות), ועוד כ-90MB ל-prices, ומשאיר מרווח לשאר האוספים. נבחר 175 אלף כי
-// רמי לוי (הרשת הגדולה) עם 162 אלף שורות חובה מוכלת. רשת שחורגת (מחירים שמשתנים הרבה בין סניפים) לא נשמרת ברמת
-// סניף בכלל, ונשארת בהשוואה ברמת רשת מסומנת "לא מאומת". חלקי-נתונים היה גרוע
-// יותר: שורה חסרה למוצר בכיסוי גבוה מוסקת בטעות כמחיר הנפוץ.
-export const MAX_EXCEPTION_ROWS_PER_CHAIN = 175_000;
+// תקציב החריגות לרשת. כל חריגה כ-15 בתים בתוך המסמך (בלי אינדקס), כך ש-300 אלף
+// חריגות הן כ-4.5MB לרשת, ו-14 רשתות לכל היותר כ-63MB במקרה הקיצוני. רשת שחורגת
+// (מחירים שמשתנים מאוד בין סניפים) לא נשמרת ברמת סניף בכלל, ונשארת בהשוואה ברמת
+// רשת מסומנת "לא מאומת". חלקי-נתונים היה גרוע יותר: היעדר חריגה למוצר בכיסוי גבוה
+// מוסק בטעות כמחיר הנפוץ. הגבלה זו נמדדת בגודל לוגי, לא ב-storageSize הדחוס.
+export const MAX_EXCEPTION_ROWS_PER_CHAIN = 300_000;
 
 export const exceedsExceptionBudget = (rowCount: number): boolean => rowCount > MAX_EXCEPTION_ROWS_PER_CHAIN;
 
@@ -71,18 +75,25 @@ export function buildBarcodeStats(items: FeedItem[], totalStores: number): Map<s
   return result;
 }
 
-// האם צריך לשמור שורה מפורשת לסניף: מחיר חריג, או מוצר בכיסוי נמוך.
-export function needsExplicitRow(price: number, stats: BarcodeStats | undefined): boolean {
-  if (!stats) return true;
-  return cents(price) !== cents(stats.modalPrice) || stats.coverage < TYPICAL_COVERAGE_THRESHOLD;
+// האם מחיר הסניף שונה מהנפוץ (אז חובה לשמור אותו, אחרת היסק מהמחיר הנפוץ שגוי).
+// בלי סטטיסטיקה לברקוד - שומרים, כי אין על מה להסיק.
+export function isPriceException(price: number, stats: BarcodeStats | undefined): boolean {
+  return !stats || cents(price) !== cents(stats.modalPrice);
 }
 
-// למה שורה נשמרת: מחיר שונה מהנפוץ, או מוצר בכיסוי נמוך במחיר הנפוץ. הפיצול נחוץ
-// לכיוונון הסף והתקציב (ראו TYPICAL_COVERAGE_THRESHOLD ו-MAX_EXCEPTION_ROWS_PER_CHAIN).
-export function classifyExplicitRow(price: number, stats: BarcodeStats | undefined): 'priceDiffers' | 'lowCoverage' | null {
-  if (!stats) return 'lowCoverage';
-  if (cents(price) !== cents(stats.modalPrice)) return 'priceDiffers';
-  return stats.coverage < TYPICAL_COVERAGE_THRESHOLD ? 'lowCoverage' : null;
+// קידוד חריגה לשמירה במסמך: "סניף:מחיר". מזהה הסניף מנורמל ואינו מכיל נקודתיים.
+export const encodeStorePrice = (storeId: string, price: number): string => `${storeId}:${cents(price) / 100}`;
+
+// פענוח storePrices ממסמך Price למפה סניף -> מחיר. ערכים פגומים מדולגים.
+export function parseStorePrices(entries: string[] | undefined): Map<string, number> {
+  const result = new Map<string, number>();
+  for (const e of entries ?? []) {
+    const i = e.lastIndexOf(':');
+    if (i <= 0) continue;
+    const price = Number(e.slice(i + 1));
+    if (Number.isFinite(price) && price > 0) result.set(e.slice(0, i), price);
+  }
+  return result;
 }
 
 export interface ResolvedBranchPrice {

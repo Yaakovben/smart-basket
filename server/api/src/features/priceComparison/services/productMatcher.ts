@@ -204,12 +204,12 @@ export async function finalizeMatch(
   if (storeId) {
     try {
       const branchStoreId = normStoreId(storeId);
-      const [rows, syncedStores] = await Promise.all([
-        BranchPriceDAL.findByBarcodesAndStore([b.barcode], chainId, branchStoreId),
+      const [exceptions, syncedStores] = await Promise.all([
+        PriceDAL.getStorePrices(b.barcode, chainId),
         BranchPriceDAL.storeIdsWithPrices(chainId),
       ]);
       const resolved = resolveBranchPrice({
-        explicit: rows[0]?.price,
+        explicit: exceptions.get(branchStoreId),
         modalPrice: b.modalPrice,
         coverage: b.storeCoverage,
         storeHasPrices: syncedStores.has(branchStoreId),

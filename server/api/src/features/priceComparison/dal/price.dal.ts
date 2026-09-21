@@ -1,5 +1,6 @@
 import { Price, type IPriceDoc, type ChainId } from '../models/Price.model';
 import { createBaseDal } from '../../../dal/base.dal';
+import { parseStorePrices } from '../services/branchPricing';
 
 export interface UpsertPriceInput {
   barcode: string;
@@ -34,6 +35,7 @@ export interface UpsertPriceInput {
   cheapestStoreId?: string;
   modalPrice?: number;
   storeCoverage?: number;
+  storePrices?: string[];
 }
 
 export const PriceDAL = {
@@ -60,6 +62,13 @@ export const PriceDAL = {
     }));
     const res = await Price.bulkWrite(ops, { ordered: false });
     return (res.upsertedCount || 0) + (res.modifiedCount || 0);
+  },
+
+  // חריגות המחיר של סניפים למוצר ברשת, כמפה סניף -> מחיר. רק החריגות: סניף שלא
+  // מופיע כאן גובה את המחיר הנפוץ (ראו resolveBranchPrice).
+  async getStorePrices(barcode: string, chainId: ChainId): Promise<Map<string, number>> {
+    const doc = await Price.findOne({ barcode, chainId }).select('+storePrices').lean();
+    return parseStorePrices(doc?.storePrices);
   },
 
   // חיפוש לפי ברקוד: מחזיר מחירים מכל הרשתות
