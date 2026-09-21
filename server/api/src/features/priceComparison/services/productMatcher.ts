@@ -2,6 +2,8 @@ import type { ChainId } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { getBranchLabel } from './branches.service';
+import { normStoreId } from './storeId';
+import { resolveBranchPrice } from './branchPricing';
 import { normalizeProductName, stemHebrew } from '../chains';
 import type { PriceMatch } from './priceComparison.types';
 
@@ -192,18 +194,30 @@ export async function finalizeMatch(
 ): Promise<NameMatch> {
   const unmatched = base;
 
-  // אם יש סניף ספציפי - מנסים למצוא את המחיר האמיתי בו. אם אין נתון לסניף
-  // הזה (למשל המוצר לא נמכר בו, או שהמחיר עדיין לא סונכרן לקולקציה הזו) -
-  // נשארים עם המחיר הכלל-רשתי (b.price) אבל מסמנים שהוא לא מאומת לסניף.
-  let price = b.price;
+  // המחיר המוצג: בלי סניף - המחיר הנפוץ ברשת (מה שהלקוח ישלם בסניף רגיל), לא
+  // המינימום שנמצא אולי בסניף אחד רחוק. נתונים ישנים בלי מחיר נפוץ חוזרים
+  // למינימום. עם סניף - המחיר בסניף עצמו: שורה שמורה (חריגה), או היסק מהמחיר
+  // הנפוץ כשהסניף סונכרן והמוצר נמכר ברוב הסניפים (ראו resolveBranchPrice).
+  let price = b.modalPrice ?? b.price;
   let priceVerifiedAtBranch = false;
+  let branchPriceInferred = false;
   if (storeId) {
     try {
-      const branchRows = await BranchPriceDAL.findByBarcodesAndStore([b.barcode], chainId, storeId);
-      if (branchRows.length > 0) {
-        price = branchRows[0].price;
-        priceVerifiedAtBranch = true;
-      }
+      const branchStoreId = normStoreId(storeId);
+      const [rows, syncedStores] = await Promise.all([
+        BranchPriceDAL.findByBarcodesAndStore([b.barcode], chainId, branchStoreId),
+        BranchPriceDAL.storeIdsWithPrices(chainId),
+      ]);
+      const resolved = resolveBranchPrice({
+        explicit: rows[0]?.price,
+        modalPrice: b.modalPrice,
+        coverage: b.storeCoverage,
+        storeHasPrices: syncedStores.has(branchStoreId),
+        chainMin: b.price,
+      });
+      price = resolved.price;
+      priceVerifiedAtBranch = resolved.verified;
+      branchPriceInferred = resolved.inferred;
     } catch {
       // לא מפילים את ההתאמה כולה על שגיאת DB - ממשיכים עם המחיר הכלל-רשתי
     }
@@ -237,6 +251,7 @@ export async function finalizeMatch(
     matchedTokens,
     manufacturerName: b.manufacturerName,
     priceVerifiedAtBranch,
+    branchPriceInferred: branchPriceInferred || undefined,
     cheapestBranch,
   };
 }

@@ -17,6 +17,9 @@ export interface IBranchPriceDoc extends Document {
   storeId: string;
   barcode: string;
   price: number;
+  // מתי הסנכרון שכתב את השורה התחיל. שורות מסנכרון קודם נמחקות: חריגה שנעלמה
+  // (הסניף חזר למחיר הנפוץ) חייבת להימחק, אחרת תוצג מחיר ישן.
+  syncedAt?: Date;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -27,6 +30,7 @@ const branchPriceSchema = new Schema<IBranchPriceDoc>(
     storeId: { type: String, required: true },
     barcode: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
+    syncedAt: { type: Date },
   },
   {
     timestamps: true,
