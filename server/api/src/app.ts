@@ -19,7 +19,8 @@ const app = express();
 // ל-req.socket.remoteAddress = ה-IP של ה-proxy. התוצאה: כל המשתמשים חולקים
 // את אותו דלי rate-limit → "יותר מידי ניסיונות" אפילו בחיבור ראשון.
 // `1` = סומך על hop אחד של X-Forwarded-For ומזהה את ה-IP האמיתי של המשתמש.
-app.set('trust proxy', 1);
+// שני hops: Vercel (proxy של /api) ואז Render - כדי ש-req.ip יהיה ה-IP האמיתי של הלקוח
+app.set('trust proxy', 2);
 
 app.use(helmet());
 
