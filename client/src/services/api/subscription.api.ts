@@ -43,10 +43,9 @@ export interface SubscriptionStatus {
     allowedMonths: number[];
   };
   payment: {
-    bit: { phone: string | null; url: string | null } | null;
+    bit: { url: string } | null;
     paybox: { url: string } | null;
     bank: { bankName: string; branch: string; account: string } | null;
-    receiverName: string | null;
     supportEmail: string;
   };
   openRequest: SubscriptionRequestDto | null;

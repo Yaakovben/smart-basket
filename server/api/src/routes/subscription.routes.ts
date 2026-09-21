@@ -62,7 +62,6 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
         bit: methods.bit,
         paybox: methods.paybox,
         bank: methods.bank,
-        receiverName: env.PAYMENT_RECEIVER_NAME ?? null,
         supportEmail: 'smartbasket129@gmail.com',
       },
       openRequest: openRequest ? serializeRequest(openRequest) : null,

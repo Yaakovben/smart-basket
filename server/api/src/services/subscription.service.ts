@@ -24,15 +24,14 @@ export function priceForMonths(months: number): number {
 }
 
 export interface PaymentMethodsConfig {
-  bit: { phone: string | null; url: string | null } | null;
+  bit: { url: string } | null;
   paybox: { url: string } | null;
   bank: { bankName: string; branch: string; account: string } | null;
 }
 
 export function getPaymentMethods(): PaymentMethodsConfig {
-  const bit = env.BIT_PHONE || env.BIT_PAYMENT_URL
-    ? { phone: env.BIT_PHONE ?? null, url: env.BIT_PAYMENT_URL ?? null }
-    : null;
+  // ביט זמין רק עם קישור תשלום: לא חושפים מספר טלפון או שם מקבל ללקוחות.
+  const bit = env.BIT_PAYMENT_URL ? { url: env.BIT_PAYMENT_URL } : null;
   const paybox = env.PAYBOX_PAYMENT_URL ? { url: env.PAYBOX_PAYMENT_URL } : null;
   const bank = env.BANK_NAME && env.BANK_BRANCH && env.BANK_ACCOUNT
     ? { bankName: env.BANK_NAME, branch: env.BANK_BRANCH, account: env.BANK_ACCOUNT }

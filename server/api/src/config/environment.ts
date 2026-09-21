@@ -132,13 +132,9 @@ const envSchema = Joi.object({
   // מהם לא הוגדר, מסך התשלום בלקוח מציג "פנו אלינו" ולא פרטי תשלום מומצאים.
   PRO_PRICE_MONTHLY: Joi.number().positive().default(9.9),
   PRO_PRICE_YEARLY: Joi.number().positive().optional(),
-  // מספר הטלפון שמקבל תשלום בביט (10 ספרות, בלי מקפים). נשלח ללקוח.
-  BIT_PHONE: Joi.string().pattern(/^0\d{8,9}$/).optional(),
   // קישור תשלום ביט/PayBox (למשל bit.ly / payboxapp.page.link / bitpay). ה-QR נוצר ממנו.
   BIT_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
   PAYBOX_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
-  // שם המקבל כפי שיוצג ללקוח לפני התשלום (לאימות שהעברה הולכת לאדם הנכון).
-  PAYMENT_RECEIVER_NAME: Joi.string().max(60).optional(),
   // העברה בנקאית (אופציונלי) - שלושתם נדרשים יחד, אחרת האפשרות לא מוצגת.
   BANK_NAME: Joi.string().max(40).optional(),
   BANK_BRANCH: Joi.string().pattern(/^\d{2,4}$/).optional(),
@@ -195,10 +191,8 @@ export interface Environment {
   GMAIL_REFRESH_TOKEN?: string;
   PRO_PRICE_MONTHLY: number;
   PRO_PRICE_YEARLY?: number;
-  BIT_PHONE?: string;
   BIT_PAYMENT_URL?: string;
   PAYBOX_PAYMENT_URL?: string;
-  PAYMENT_RECEIVER_NAME?: string;
   BANK_NAME?: string;
   BANK_BRANCH?: string;
   BANK_ACCOUNT?: string;

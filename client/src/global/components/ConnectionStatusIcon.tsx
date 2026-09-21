@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,6 +22,19 @@ export const ConnectionStatusIcon = () => {
   if (phase === 'online' && dismissed) setDismissed(false);
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
+
+  // מפרסם את גובה הבאנר כמשתנה CSS (--conn-banner-h) כדי שטוסטים יוצגו *מתחתיו*
+  // ולא יוסתרו מאחוריו. מתאפס ל-0 כשהבאנר נעלם.
+  const [bannerEl, setBannerEl] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!bannerEl) { root.style.setProperty('--conn-banner-h', '0px'); return; }
+    const publish = () => root.style.setProperty('--conn-banner-h', `${bannerEl.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(bannerEl);
+    return () => { ro.disconnect(); root.style.setProperty('--conn-banner-h', '0px'); };
+  }, [bannerEl]);
 
   if (phase === 'online' || phase === 'trying' || dismissed) return null;
 
@@ -48,6 +61,7 @@ export const ConnectionStatusIcon = () => {
 
   return createPortal(
     <Box
+      ref={setBannerEl}
       role="status"
       aria-live="polite"
       sx={{

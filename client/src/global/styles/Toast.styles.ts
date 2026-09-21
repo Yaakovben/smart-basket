@@ -66,7 +66,9 @@ export const undoProgressSx: SxProps<Theme> = {
 
 // ===== Toast רגיל (success/error/info/warning) =====
 export const toastSnackbarSx: SxProps<Theme> = {
-  top: 'max(20px, calc(env(safe-area-inset-top) + 8px))',
+  // מתחת לבאנר החיבור כשהוא מוצג (--conn-banner-h), ותמיד מעליו בשכבות.
+  top: 'calc(var(--conn-banner-h, 0px) + max(14px, calc(env(safe-area-inset-top) + 8px)))',
+  zIndex: 10000,
   left: '50%', right: 'auto',
   transform: 'translateX(-50%)',
   width: 'auto', maxWidth: 'calc(100vw - 32px)',

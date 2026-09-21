@@ -6,7 +6,7 @@ import { trackEvent } from '../../../global/services/analytics';
 import { productsApi, uploadsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
-import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete, enqueueClear, enqueueReset, updateQueuedAddPendingPurchase } from '../../../services/offlineQueue';
+import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete, enqueueClear, enqueueReset, updateQueuedAddPendingPurchase, removeQueuedAdd, updateQueuedAddData } from '../../../services/offlineQueue';
 
 interface UseProductMutationsParams {
   list: List;
@@ -102,9 +102,15 @@ export const useProductMutations = ({
 
   const deleteProduct = useCallback(async (productId: string) => {
     if (isTempId(productId)) {
-      // מוצר שנוסף כרגע ועדיין לא קיבל מזהה אמיתי מהשרת - אי אפשר למחוק
-      // עדיין (אין productId אמיתי). מודיעים למשתמש במקום no-op שקט.
-      showToast(t('stillSyncingProduct'), 'info');
+      // הוספה שממתינה בתור (אין קליטה) - פשוט מבטלים אותה, המוצר לא נשמר בשרת בכלל.
+      // הוספה שכבר בדרך לשרת (אין עדיין מזהה אמיתי) אי אפשר לבטל בבטחה - מודיעים.
+      if (await removeQueuedAdd(productId)) {
+        pendingTempActions.current.delete(productId);
+        onUpdateProductsForList(list.id, (current) => current.filter(p => p.id !== productId));
+        showToast(t('removed'));
+      } else {
+        showToast(t('stillSyncingProduct'), 'info');
+      }
       return;
     }
     const currentProducts = productsRef.current;
@@ -242,8 +248,22 @@ export const useProductMutations = ({
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
     if (isTempId(showEdit.id)) {
-      // מוצר עדיין לא אושר מהשרת - אי אפשר לשמור עריכה עדיין
-      showToast(t('stillSyncingProduct'), 'info');
+      // הוספה שממתינה בתור - מעדכנים את הנתונים שיישלחו, בלי לחכות לשרת.
+      const edit = { ...showEdit };
+      const queued = await updateQueuedAddData(edit.id, {
+        name: edit.name, quantity: edit.quantity, unit: edit.unit, category: edit.category,
+        note: edit.note || undefined, image: edit.image || undefined,
+      });
+      if (!queued) {
+        showToast(t('stillSyncingProduct'), 'info');
+        return;
+      }
+      setShowEdit(null);
+      setOriginalEditProduct(null);
+      onUpdateProductsForList(list.id, (current) => current.map(p => p.id === edit.id
+        ? { ...p, name: edit.name, quantity: edit.quantity, unit: edit.unit, category: edit.category, note: edit.note, image: edit.image }
+        : p));
+      showToast(t('saved'));
       return;
     }
     haptic('medium');
