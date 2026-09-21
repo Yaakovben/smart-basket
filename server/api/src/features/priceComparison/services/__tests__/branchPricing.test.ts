@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildBarcodeStats, needsExplicitRow, resolveBranchPrice, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from '../branchPricing';
+import { buildBarcodeStats, isPriceException, resolveBranchPrice, exceedsExceptionBudget, encodeStorePrice, parseStorePrices, MAX_EXCEPTION_ROWS_PER_CHAIN } from '../branchPricing';
 
 const item = (storeId: string, barcode: string, price: number) => ({ storeId, barcode, price });
 
@@ -26,21 +26,35 @@ test('סניף שמופיע פעמיים לאותו ברקוד נספר פעם �
   assert.equal(stats.get('a')!.storeCount, 2);
 });
 
-test('שורה מפורשת נשמרת רק לחריגה או למוצר בכיסוי נמוך', () => {
+test('נשמרת רק חריגת מחיר: מחיר שווה לנפוץ לא נשמר, גם בכיסוי נמוך', () => {
   const wide = { modalPrice: 10, storeCount: 95, coverage: 0.95 };
-  assert.equal(needsExplicitRow(10, wide), false); // אותו מחיר, כיסוי גבוה: אין צורך
-  assert.equal(needsExplicitRow(8.9, wide), true); // חריגה
+  assert.equal(isPriceException(10, wide), false);
+  assert.equal(isPriceException(8.9, wide), true);
   const rare = { modalPrice: 10, storeCount: 10, coverage: 0.1 };
-  assert.equal(needsExplicitRow(10, rare), true); // כיסוי נמוך: היעדר שורה היה מטעה
-  assert.equal(needsExplicitRow(10, undefined), true);
+  assert.equal(isPriceException(10, rare), false); // זמינות לא נשמרת, רק מחיר
+  assert.equal(isPriceException(10, undefined), true);
 });
 
-test('חישוב אחוז החיסכון: ברשת אחידה כמעט לא נשמרות שורות', () => {
-  // 100 סניפים, מוצר אחד: 95 במחיר 10, חמישה במחיר 9
+test('רשת אחידה: מכל 100 סניפים נשמרות רק 5 חריגות', () => {
   const items = Array.from({ length: 100 }, (_, i) => item(String(i), 'a', i < 95 ? 10 : 9));
   const stats = buildBarcodeStats(items, 100);
-  const stored = items.filter(it => needsExplicitRow(it.price, stats.get(it.barcode))).length;
-  assert.equal(stored, 5);
+  assert.equal(items.filter(it => isPriceException(it.price, stats.get(it.barcode))).length, 5);
+});
+
+test('קידוד ופענוח חריגות: הלוך ושוב', () => {
+  const entries = [encodeStorePrice('65', 8.9), encodeStorePrice('120', 12), encodeStorePrice('7', 0.5)];
+  assert.deepEqual(entries, ['65:8.9', '120:12', '7:0.5']);
+  const parsed = parseStorePrices(entries);
+  assert.equal(parsed.get('65'), 8.9);
+  assert.equal(parsed.get('120'), 12);
+  assert.equal(parsed.get('7'), 0.5);
+});
+
+test('פענוח מדלג על ערכים פגומים וריקים', () => {
+  const parsed = parseStorePrices(['bad', ':5', '9:abc', '9:-1', '3:4.5']);
+  assert.equal(parsed.size, 1);
+  assert.equal(parsed.get('3'), 4.5);
+  assert.equal(parseStorePrices(undefined).size, 0);
 });
 
 test('שורה מפורשת מנצחת ומסומנת מאומתת', () => {

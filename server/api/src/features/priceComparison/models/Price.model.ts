@@ -59,6 +59,9 @@ export interface IPriceDoc extends Document {
   // חלק הסניפים שמוכרים את המוצר (0..1). כיסוי גבוה = היעדר שורה בסניף אומר
   // "המחיר הנפוץ".
   storeCoverage?: number;
+  // חריגות מחיר ברמת סניף, כ-"סניף:מחיר" לכל סניף שמחירו שונה מהנפוץ. לא נטען
+  // בשאילתות רגילות (select:false): רק לברקוד הנבחר. ראו services/branchPricing.ts.
+  storePrices?: string[];
   updatedAt: Date;
   createdAt: Date;
 }
@@ -94,6 +97,7 @@ const priceSchema = new Schema<IPriceDoc>(
     cheapestStoreId: { type: String },
     modalPrice: { type: Number },
     storeCoverage: { type: Number },
+    storePrices: { type: [String], select: false, default: undefined },
   },
   {
     timestamps: true,
