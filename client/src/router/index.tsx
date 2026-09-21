@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback, useEffect, useRef } from "react";
+import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
@@ -224,20 +224,9 @@ export const AppRouter = () => {
     addNotification: addPersistedNotification,
   } = useNotifications(user, initialData.notifications, authLoading);
 
-  // הצגת שגיאה כשטעינת רשימות או התראות נכשלת — פעם אחת בלבד לכל "פרק שגיאה".
-  // auto-retry ממחזר fetchError בין true→false→true בכל ניסיון; בלי ref היינו
-  // מציגים toast בכל ניסיון כושל — גם אחד בשנייה אם הניסיונות מהירים.
-  const fetchErrorShownRef = useRef(false);
-  useEffect(() => {
-    const hasError = !authLoading && !!(listsFetchError || notificationsFetchError);
-    if (hasError && !fetchErrorShownRef.current) {
-      fetchErrorShownRef.current = true;
-      showToast(t('errorOccurred'), 'error');
-    } else if (!hasError) {
-      fetchErrorShownRef.current = false;
-    }
-  }, [authLoading, listsFetchError, notificationsFetchError, showToast, t]);
-
+  // כשל טעינת רשימות/התראות מוצג רק דרך הבאנר הגלובלי (ConnectionStatusIcon,
+  // מצב "מתחבר לשרת") ולא גם כ-toast שגיאה - הצגת שניהם יחד (למשל בהתעוררות
+  // שרת קר) הייתה נראית כפולה ומבלבלת בכניסה לאפליקציה.
   // מדווח על כשל fetch לרכיב הגלובלי היחיד שמציג "אין קליטה" (OfflineBanner ב-App.tsx)
   // - כך אין רכיב נפרד ליד הפעמון, ואייקון החיבור מזהה גם כשל fetch וגם ניתוק socket.
   useEffect(() => {
