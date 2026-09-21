@@ -4,6 +4,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import type { NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { TextAction } from './TextAction';
 
 // סניף קרוב + כפתור ניווט - מוצג בתוך הפירוט המורחב של כרטיס רשת
 export const ChainBranchInfo = memo(({ branch, isDark, onNavigate, onChangeBranch, verifiedCount, matchedCount }: {
@@ -41,12 +42,7 @@ export const ChainBranchInfo = memo(({ branch, isDark, onNavigate, onChangeBranc
         </Typography>
       )}
       {onChangeBranch && (
-        <Typography
-          onClick={onChangeBranch}
-          sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', cursor: 'pointer', mt: 0.25, width: 'fit-content' }}
-        >
-          {t('changeBranch')}
-        </Typography>
+        <TextAction onClick={onChangeBranch}>{t('changeBranch')}</TextAction>
       )}
     </Box>
     <Button

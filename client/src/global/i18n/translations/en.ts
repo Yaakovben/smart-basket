@@ -832,6 +832,8 @@ export const en: Translations = {
   matchChosenByYou: 'Product chosen by you',
   matchExcludedByYou: 'Excluded by you',
   matchNotSoldHere: 'Not sold in this chain',
+  branchPriceTypicalHint: 'The usual price across this chain. This branch was scanned and the item is sold in most branches, so it is very likely the price here too',
+  branchAllVerified: 'Branch prices',
   noBranchesFound: 'No branches found for this chain',
   sourceLabel: 'Source:',
   reportLabel: '🚩 Report',
