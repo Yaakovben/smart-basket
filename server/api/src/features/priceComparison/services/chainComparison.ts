@@ -29,9 +29,9 @@ export async function buildChainTotals(
   chosenBranches?: Record<string, string>
 ): Promise<PriceChainTotal[]> {
   const registered = getRegisteredChains();
-  const activeCountsMap = new Map(
-    (await PriceDAL.getActiveChainsWithCounts()).map(c => [c.chainId, c.count])
-  );
+  const activeList = await PriceDAL.getActiveChainsWithCounts();
+  const activeCountsMap = new Map(activeList.map(c => [c.chainId, c.count]));
+  const lastUpdatedMap = new Map(activeList.map(c => [c.chainId, c.lastUpdated ? new Date(c.lastUpdated).toISOString() : undefined]));
   const activeChains = registered.map(r => ({
     chainId: r.chainId as ChainId,
     chainName: r.chainName,
@@ -181,6 +181,7 @@ export async function buildChainTotals(
         isComplete: false,
         savings: 0,
         hasData: true,
+        lastUpdatedISO: lastUpdatedMap.get(chainId),
         nearestBranch,
         branchVerifiedCount: nearestBranch ? verified : undefined,
         matches: chainMatches,

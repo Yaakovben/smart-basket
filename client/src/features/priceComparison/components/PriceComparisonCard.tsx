@@ -32,6 +32,7 @@ import {
   type SortMode,
   getCheapestChain,
   getSavings,
+  getSplitSavings,
   hasAnyChainLocation,
   getSortedChains,
   buildCheapestPriceMap,
@@ -60,8 +61,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const { settings, t } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
-  const [sortMode, setSortMode] = useState<SortMode>('distance');
+  // מצב מיון - ברירת המחדל "זול": הכרטיס הראשון והמסומן הוא הזול באמת. במיון
+  // "קרוב" ההדגשה הירוקה נפלה על הסניף הקרוב גם כשהוא היקר.
+  const [sortMode, setSortMode] = useState<SortMode>('price');
   // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
   // מפת כל הסניפים (Leaflet/OSM חינמי) - נפתחת במסך מלא, כפתור בבר המיון
@@ -94,6 +96,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const hasAnyLocation = hasAnyChainLocation(data.chainTotals);
   const sortedChains = getSortedChains(data.chainTotals, sortMode, hasAnyLocation);
   const cheapestPriceMap = buildCheapestPriceMap(data.chainTotals);
+  const splitSavings = getSplitSavings(cheapest, cheapestPriceMap);
 
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור פירוט. ההצגה
   // מתחילה במצב "סקירה" של כל הרשתות, וכל אחת נפתחת בלחיצה ידנית.
@@ -116,7 +119,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       <LocationStatusBanner locationStatus={locationStatus} hasLocation={hasLocation} onRequestLocation={onRequestLocation} isDark={isDark} />
 
       {/* HERO - חיסכון מובלט אבל לא צועק */}
-      {hasChainData && cheapest && <SavingsHero cheapest={cheapest} savings={savings} />}
+      {hasChainData && cheapest && <SavingsHero cheapest={cheapest} savings={savings} splitSavings={splitSavings} />}
 
       {/* מצבים ריקים */}
       <PriceComparisonEmptyStates

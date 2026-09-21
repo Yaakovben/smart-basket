@@ -76,6 +76,7 @@ export interface PriceChainTotal {
   savings: number;
   matches: PriceMatch[]; // כל המוצרים של המשתמש עם מחיר ברשת הזו
   hasData: boolean;      // האם הרשת פרסמה מחירים היום (false = הפורטל לא פרסם)
+  lastUpdatedISO?: string; // מתי עודכן לאחרונה מחיר כלשהו ברשת - להזהרת נתונים ישנים
   nearestBranch?: NearestBranch; // הסניף הקרוב - רק כשהמשתמש שיתף מיקום
   // כמה מהמוצרים שזוהו קיבלו מחיר מאומת מהסניף עצמו. מוגדר רק כשיש סניף.
   branchVerifiedCount?: number;

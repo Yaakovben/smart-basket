@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import type { PriceChainTotal } from '../types/priceComparison.types';
+import type { ProductPriceRange } from '../helpers/priceComparisonCardHelpers';
 import { ProductRow } from './ProductRow';
 import { ChainBranchInfo } from './ChainBranchInfo';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -11,7 +12,7 @@ interface ChainCardDetailsProps {
   onNavigate: (e: React.MouseEvent) => void;
   onChangeBranch?: (e: React.MouseEvent) => void;
   // מיפוי cheapestPrice לכל מוצר - לחוויית "הכי זול" per-product
-  cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
+  cheapestPriceMap?: Map<string, ProductPriceRange>;
 }
 
 // תוכן מורחב - רשימת מוצרים + סניף קרוב. מוצג בתוך ה-Collapse של כרטיס רשת.
@@ -39,7 +40,9 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, onChan
     {hasMatches ? (
       <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
         {chain.matches.map((m) => {
-          const priceInfo = cheapestPriceMap?.get(m.productId);
+          // משווים רק אם זה אותו מוצר בדיוק (אותו ברקוד) ובלפחות שתי רשתות
+          const range = cheapestPriceMap?.get(m.productId);
+          const priceInfo = range && range.barcode === m.barcode && range.chainCount >= 2 ? range : undefined;
           return (
             <ProductRow
               key={`${m.productId}-${m.chainId}`}

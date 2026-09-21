@@ -16,6 +16,9 @@ interface ProductRowProps {
   showBranchUnverified?: boolean;
 }
 
+// מתחת לסף הזה ההתאמה לפי שם חלשה - מבקשים מהמשתמש לוודא שזה המוצר הנכון
+const LOW_CONFIDENCE = 0.6;
+
 // שורת מוצר בתוך כרטיס מורחב - שם + מחיר + אינדיקטור "הכי זול"
 export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice, showBranchUnverified }: ProductRowProps) => {
   const { t } = useSettings();
@@ -94,6 +97,11 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
           }}>
             {t('identifiedAs')} <Box component="span" sx={{ fontStyle: 'normal', fontWeight: 600, color: 'text.primary' }}>{match.itemName}</Box>
             {match.manufacturerName ? <> · {match.manufacturerName}</> : null}
+          </Typography>
+        )}
+        {match.matchConfidence < LOW_CONFIDENCE && (
+          <Typography sx={{ fontSize: 10, color: '#D97706', fontWeight: 700, mt: 0.1 }}>
+            {t('lowConfidenceMatch')}
           </Typography>
         )}
         {match.userQuantity > 1 && (
