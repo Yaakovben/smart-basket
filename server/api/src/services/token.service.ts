@@ -42,9 +42,9 @@ export async function createTokens(userId: string, email: string, name: string, 
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken();
 
-  // תפוגה: 90 יום מעכשיו
+  // תפוגה: 40 יום מעכשיו (מתחדש בכל רענון)
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 90);
+  expiresAt.setDate(expiresAt.getDate() + 40);
 
   await TokenDAL.createToken(userId, refreshToken, expiresAt);
   return { accessToken, refreshToken };
@@ -124,7 +124,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshR
     tokenDoc._id.toString(),
     refreshToken,
     newRefreshToken,
-    new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    new Date(Date.now() + 40 * 24 * 60 * 60 * 1000),
     ROTATION_GRACE_MS
   );
 

@@ -33,7 +33,7 @@ const REFRESH_COOKIE_OPTS = {
   secure: env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
   path: '/api/auth',
-  maxAge: 90 * 24 * 60 * 60 * 1000, // 90 יום
+  maxAge: 40 * 24 * 60 * 60 * 1000, // 40 יום חוסר פעילות (מתחדש בכל רענון)
 };
 
 const setRefreshCookie = (res: Response, token: string) =>
