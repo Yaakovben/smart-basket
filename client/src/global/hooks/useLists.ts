@@ -5,6 +5,7 @@ import { convertApiList } from "./converters";
 import { readListsCache, writeListsCache } from "./useLists.cache";
 import { useListActions } from "./useLists.actions";
 import { useListsSocketSync } from "./useLists.socketSync";
+import { overlayQueuedMutations } from "./useLists.queueOverlay";
 
 export function useLists(user: User | null, initialLists?: ApiList[] | null, authLoading?: boolean) {
   // עדיפות לרינדור מיידי: initialLists (נטען מקבילית) > localStorage cache > [].
@@ -25,6 +26,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   // ומפעיל מחדש את כל ה-effects שתלויים בו, כולל ה-auto-retry/visibilitychange).
   const listsRef = useRef(lists);
   listsRef.current = lists;
+  const userNameRef = useRef(user?.name ?? '');
+  userNameRef.current = user?.name ?? '';
 
   const fetchLists = useCallback(async () => {
     setLoading(true);
@@ -42,7 +45,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // שקולה בלי לסרוק ולסריאלז את כל העץ המקונן בכל visibilitychange/reconnect.
       const signature = (list: typeof converted) => list.map(l => `${l.id}:${l.updatedAt}`).join('|');
       if (signature(converted) !== signature(listsRef.current)) {
-        setLists(converted);
+        setLists(await overlayQueuedMutations(converted, userNameRef.current));
       }
       writeListsCache(apiLists);
     } catch {
@@ -84,6 +87,18 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה מחדש רק כשמזהה המשתמש משתנה או האימות מסתיים
   }, [authLoading, user?.id, fetchLists]);
+
+  // פעולות שממתינות בתור האופליין (למשל מוצר שנוסף בלי קליטה ואז האפליקציה
+  // נסגרה/רועננה) - מציגים אותן מעל הרשימות שנטענו מהקאש, עם חיווי סנכרון.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    void overlayQueuedMutations(listsRef.current, user.name).then(next => {
+      if (!cancelled && next !== listsRef.current) setLists(next);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- פעם אחת לכל משתמש, אחרי שהרשימות הראשוניות נטענו
+  }, [user?.id, lists.length]);
 
   // Auto-retry: כשיש שגיאת רשת (אין רשת/השרת לא עונה), מנסים שוב עד שמצליחים.
   // מפסיקים אם המשתמש נותק. ככה הלקוח לא תקוע במסך 'אין חיבור' - האפליקציה

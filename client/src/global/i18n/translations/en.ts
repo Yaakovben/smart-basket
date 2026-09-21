@@ -912,6 +912,7 @@ export const en: Translations = {
   retrying: 'Retrying',
   reloadPageAction: 'Reload the page',
   offlineShort: 'Offline',
+  syncingShort: 'Saving...',
   offlineWillSync: 'Your changes are saved and will sync when you\'re back online',
   offlineActionsPending: '{count} actions queued — they\'ll send when you\'re back online',
   joinLandingTitle: 'Join a list',

@@ -27,12 +27,32 @@ function openDB(): Promise<IDBDatabase> {
 // מנויים לשינויי ספירת התור (לבאנר)
 const countSubs = new Set<(n: number) => void>();
 
+// מזהי מוצרים שיש להם פעולה שממתינה בתור (הוספה/סימון/עריכה) - לחיווי על הכרטיס
+let pendingIds: ReadonlySet<string> = new Set();
+const pendingSubs = new Set<() => void>();
+
+export function subscribePendingProductIds(cb: () => void): () => void {
+  pendingSubs.add(cb);
+  return () => { pendingSubs.delete(cb); };
+}
+
+export const isProductPendingSync = (productId: string): boolean => pendingIds.has(productId);
+
 async function broadcastCount() {
   try {
     const all = await getAllQueued();
     countSubs.forEach(cb => cb(all.length));
+    const next = new Set<string>();
+    for (const m of all) {
+      if (m.type === 'add') next.add(m.tempId);
+      else if (m.type === 'toggle' || m.type === 'update') next.add(m.productId);
+    }
+    pendingIds = next;
+    pendingSubs.forEach(cb => cb());
   } catch { /* ignore */ }
 }
+
+void broadcastCount();
 
 export function subscribeToQueueCount(cb: (n: number) => void): () => void {
   countSubs.add(cb);

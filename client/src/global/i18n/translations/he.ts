@@ -918,6 +918,7 @@ export const he: Translations = {
   retrying: 'מנסה שוב',
   reloadPageAction: 'טען מחדש את הדף',
   offlineShort: 'אין חיבור',
+  syncingShort: 'שומר...',
   offlineWillSync: 'הנתונים יישמרו וישלחו כשיחזור החיבור',
   offlineActionsPending: '{count} פעולות ממתינות — יישלחו כשיחזור החיבור',
   joinLandingTitle: 'הצטרפות לרשימה',
