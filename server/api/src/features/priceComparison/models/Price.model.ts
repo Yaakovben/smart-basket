@@ -53,6 +53,12 @@ export interface IPriceDoc extends Document {
   priceMin?: number;                    // המחיר הזול ביותר ברשת
   priceMax?: number;                    // המחיר היקר ביותר ברשת
   cheapestStoreId?: string;             // הסניף עם המחיר הזול ביותר
+  // המחיר הנפוץ ברשת (הכי הרבה סניפים גובים אותו) - מייצג את מה שהלקוח ישלם
+  // בסניף רגיל, בניגוד ל-price שהוא המינימום. ראו services/branchPricing.ts.
+  modalPrice?: number;
+  // חלק הסניפים שמוכרים את המוצר (0..1). כיסוי גבוה = היעדר שורה בסניף אומר
+  // "המחיר הנפוץ".
+  storeCoverage?: number;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -86,6 +92,8 @@ const priceSchema = new Schema<IPriceDoc>(
     priceMin: { type: Number },
     priceMax: { type: Number },
     cheapestStoreId: { type: String },
+    modalPrice: { type: Number },
+    storeCoverage: { type: Number },
   },
   {
     timestamps: true,

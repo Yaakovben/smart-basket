@@ -19,6 +19,8 @@ export interface PriceMatch {
   // true אם המחיר אומת מול הסניף הקרוב אליך בפועל. אם false/undefined -
   // המחיר הוא הערכה כללית ברמת הרשת ועשוי להיות שונה מהמחיר בסניף שלך.
   priceVerifiedAtBranch?: boolean;
+  // true = המחיר הוסק מהמחיר הנפוץ ברשת (הסניף סונכרן והמוצר נמכר ברוב הסניפים)
+  branchPriceInferred?: boolean;
   // הסניף הזול ביותר ברשת למוצר הזה - מוצג רק כשהוא זול יותר מהמחיר שכבר מוצג.
   cheapestBranch?: { storeId: string; price: number; branchName: string; city: string };
   // תיקון ידני של המשתמש: chosen = בחר מוצר, excluded = "אין התאמה",

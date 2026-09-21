@@ -32,6 +32,8 @@ export interface UpsertPriceInput {
   priceMin?: number;
   priceMax?: number;
   cheapestStoreId?: string;
+  modalPrice?: number;
+  storeCoverage?: number;
 }
 
 export const PriceDAL = {

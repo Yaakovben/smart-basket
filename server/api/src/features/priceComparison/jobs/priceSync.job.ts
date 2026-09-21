@@ -6,6 +6,7 @@ import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { geocodeAddress } from '../services/geocoder.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
 
 // כל chain adapter מזריק httpsAgent ייעודי (rejectUnauthorized: false) לבקשות
@@ -72,13 +73,7 @@ async function shouldRunStartupSync(): Promise<boolean> {
 // ככה רשתות חדשות שנוספו לקוד נכנסות אוטומטית למאגר בלי דריסה ידנית.
 async function reloadSeedBranches(trigger: 'cron' | 'startup'): Promise<void> {
   try {
-    const chainNames: Record<string, string> = {
-      shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
-      stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-      victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
-      shefa_birkat_hashem: 'שפע ברכת השם', super_sapir: 'סופר ספיר',
-    };
+    const chainNames = CHAIN_NAMES;
     const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
       chainId: b.chainId,
       chainName: chainNames[b.chainId] || b.chainId,

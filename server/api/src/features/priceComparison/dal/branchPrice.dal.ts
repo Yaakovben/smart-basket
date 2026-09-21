@@ -1,18 +1,21 @@
 import { BranchPrice, type IBranchPriceDoc } from '../models/BranchPrice.model';
+import { ChainPriceCoverage } from '../models/ChainPriceCoverage.model';
 import { createBaseDal } from '../../../dal/base.dal';
 import type { ChainId } from '../models/Price.model';
 
 export interface UpsertBranchPriceInput {
   chainId: ChainId;
+  // מזהה סניף מנורמל (normStoreId) - כך גם הסניף מקובץ הסניפים וגם מהפיד מתאימים
   storeId: string;
   barcode: string;
   price: number;
+  syncedAt?: Date;
 }
 
 export const BranchPriceDAL = {
   ...createBaseDal<IBranchPriceDoc>(BranchPrice),
 
-  // Bulk upsert — מחיר בפועל של מוצר בסניף ספציפי
+  // Bulk upsert — חריגות המחיר של סניף (ראו services/branchPricing.ts)
   async bulkUpsert(items: UpsertBranchPriceInput[]) {
     if (items.length === 0) return 0;
     const ops = items.map(item => ({
@@ -26,41 +29,36 @@ export const BranchPriceDAL = {
     return (res.upsertedCount || 0) + (res.modifiedCount || 0);
   },
 
-  // מחיר בפועל של ברקוד בסניף ספציפי - משמש להצגת "המחיר בסניף הקרוב אליי"
-  // במקום המחיר הזול ביותר שנמצא אי-שם ברשת (Price.model).
+  // מחיר שמור של ברקוד בסניף ספציפי (חריגה או מוצר בכיסוי נמוך). storeId מנורמל.
+  // אין שורה = ייתכן שהמחיר הנפוץ - ראו resolveBranchPrice.
   async findByBarcodesAndStore(barcodes: string[], chainId: ChainId, storeId: string) {
     if (barcodes.length === 0) return [];
     return BranchPrice.find({ barcode: { $in: barcodes }, chainId, storeId }).lean();
   },
 
-  // מחירים של כמה ברקודים בסניף אחד, במפה barcode -> price. שאילתה אחת לכל סניף
-  // במקום שאילתה לכל מוצר.
-  async priceMapForStore(barcodes: string[], chainId: ChainId, storeId: string): Promise<Map<string, number>> {
-    const rows = await this.findByBarcodesAndStore(barcodes, chainId, storeId);
-    return new Map(rows.map(r => [r.barcode, r.price]));
-  },
-
-  // הסניפים המתומחרים כרגע, בלי מטמון - לבחירת סניפים בסנכרון
-  async distinctStoreIds(chainId: ChainId): Promise<string[]> {
-    return await BranchPrice.distinct('storeId', { chainId }) as string[];
-  },
-
-  // מוחק מחירים של סניפים שלא נבחרו (ראו storeSelection.ts). מחזיר כמה נמחקו.
-  // מנקה גם את מטמון הסניפים המתומחרים כדי שלא יצביע על סניפים שנמחקו.
-  async pruneChain(chainId: ChainId, keepStoreIds: string[]): Promise<number> {
-    const res = await BranchPrice.deleteMany({ chainId, storeId: { $nin: keepStoreIds } });
-    storeIdsCache.delete(chainId);
+  // מוחק שורות של סנכרונים קודמים של הרשת. חובה אחרי כל סנכרון מוצלח: חריגה
+  // שנעלמה (הסניף חזר למחיר הנפוץ) אחרת הייתה נשארת ומציגה מחיר ישן.
+  async pruneStale(chainId: ChainId, syncStart: Date): Promise<number> {
+    const res = await BranchPrice.deleteMany({
+      chainId,
+      $or: [{ syncedAt: { $lt: syncStart } }, { syncedAt: { $exists: false } }],
+    });
     return res.deletedCount ?? 0;
   },
 
-  // הסניפים שיש להם נתוני מחיר בפועל, לפי רשת. בוחרים רק מביניהם "סניף קרוב",
-  // אחרת המשתמש מקבל סניף קרוב שאין לו אף מחיר ונופלים למחיר הזול ברשת.
+  // שומר אילו סניפים הופיעו בפיד האחרון של הרשת (מזהים מנורמלים)
+  async recordCoverage(chainId: ChainId, storeIds: string[], syncedAt: Date): Promise<void> {
+    await ChainPriceCoverage.updateOne({ chainId }, { $set: { storeIds, syncedAt } }, { upsert: true });
+    storeIdsCache.delete(chainId);
+  },
+
+  // הסניפים שסונכרנו (הופיעו בפיד המחירים האחרון). רק עליהם אפשר להסיק מחיר.
   // הנתון משתנה רק בסנכרון, לכן מטמון של שעה.
   async storeIdsWithPrices(chainId: ChainId): Promise<Set<string>> {
     const cached = storeIdsCache.get(chainId);
     if (cached && cached.expiresAt > Date.now()) return cached.ids;
-    const ids = await BranchPrice.distinct('storeId', { chainId }) as string[];
-    const set = new Set(ids);
+    const doc = await ChainPriceCoverage.findOne({ chainId }, { storeIds: 1 }).lean();
+    const set = new Set(doc?.storeIds ?? []);
     storeIdsCache.set(chainId, { ids: set, expiresAt: Date.now() + STORE_IDS_CACHE_TTL_MS });
     return set;
   },

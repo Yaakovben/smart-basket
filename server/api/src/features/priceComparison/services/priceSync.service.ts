@@ -20,9 +20,8 @@ import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchPriceDAL, type UpsertBranchPriceInput } from '../dal/branchPrice.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
-import { selectStoresToPrice } from './storeSelection';
 import { normStoreId } from './storeId';
-import { Branch } from '../models/Branch.model';
+import { buildBarcodeStats, needsExplicitRow } from './branchPricing';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
@@ -270,6 +269,18 @@ async function processChainItems(
   result: { items: import('../chains/types').ChainPriceItem[] },
   t0: number,
 ): Promise<SyncResult> {
+  const syncStart = new Date();
+  // פריטים תקינים: אותם כללי סינון לכל האגרגציות. מוצר חסום (אין במלאי) ומחירים
+  // אבסורדיים (0 או חריג גבוה) לא מוצגים ללקוח.
+  const validItems = result.items.filter(it => it.blockedItem !== true && it.price > 0 && it.price <= 10_000);
+  // מזהי סניף מנורמלים (בלי אפסים מובילים) - כך הם מתאימים לקובץ הסניפים
+  const feedStoreIds = new Set<string>();
+  for (const it of validItems) if (it.storeId) feedStoreIds.add(normStoreId(it.storeId));
+  const barcodeStats = buildBarcodeStats(
+    validItems.filter(it => it.storeId).map(it => ({ storeId: normStoreId(it.storeId!), barcode: it.barcode, price: it.price })),
+    feedStoreIds.size
+  );
+
   // ===== אגרגציה פר-סניף =====
   // ה-XML מהפורטל מכיל שורת מחיר לכל (סניף, מוצר). מקבצים לפי (chainId, barcode),
   // בוחרים את המחיר הזול כמייצג, ושומרים גם min/max/count + cheapestStoreId.
@@ -333,6 +344,8 @@ async function processChainItems(
       itemStatus: item.itemStatus,
       bikoretNo: item.bikoretNo,
       unitOfMeasurePrice: item.unitOfMeasurePrice,
+      modalPrice: barcodeStats.get(item.barcode)?.modalPrice,
+      storeCoverage: barcodeStats.get(item.barcode)?.coverage,
     };
   });
 
@@ -350,42 +363,25 @@ async function processChainItems(
     }
   }
 
-  // ===== מחירים פר-סניף =====
-  // בנפרד מהאגרגציה לעיל (שמייצרת "המחיר הזול ברשת" לצורכי השוואה בין
-  // רשתות) - שומרים כאן את המחיר הממשי בכל סניף, כדי שהצגת "המחיר בסניף
-  // הקרוב אליי" תהיה מדויקת ולא תציג בטעות מחיר מסניף אחר של הרשת.
-  //
-  // הנפח מוגבל: אשכול Atlas חינמי הוא 512MB, ורשת אחת יכולה להוסיף מאות אלפי
-  // שורות. שומרים רק מספר קטן של סניפים לכל רשת (ראו storeSelection.ts), ואחרי
-  // השמירה מוחקים מחירים של סניפים שלא נבחרו.
+  // ===== מחירים פר-סניף (חריגות בלבד) =====
+  // בנפרד מהאגרגציה לעיל (שמייצרת את המחיר לרמת הרשת). שומרים שורה לסניף רק
+  // כשמחירו שונה מהנפוץ ברשת או כשהמוצר נמכר בחלק קטן מהסניפים - כך מכסים את
+  // כל הסניפים בכל הרשתות בנפח קטן (ראו branchPricing.ts) ואשכול Atlas החינמי
+  // (512MB) לא מתמלא.
 
-  // סנכרון סניפים קודם: הבחירה נעזרת בקואורדינטות שלהם לפיזור גיאוגרפי.
-  // לא חוסם את המחירים אם נכשל.
+  // סנכרון סניפים - לא חוסם את המחירים אם נכשל
   const storesSummary = adapter.fetchLatestStores
     ? await syncStoresForChain(adapter)
     : { error: 'adapter_has_no_stores_support' };
 
-  const feedStoreIds = new Set<string>();
-  for (const item of result.items) if (item.storeId) feedStoreIds.add(item.storeId);
-  const branchDocs = await Branch.find({ chainId: adapter.chainId }, { storeId: 1, lat: 1, lng: 1, coordSource: 1 }).lean();
-  const coordsByStore = new Map<string, { lat: number; lng: number }>();
-  for (const b of branchDocs) {
-    if (typeof b.lat === 'number' && typeof b.lng === 'number' && b.coordSource !== 'unknown') {
-      coordsByStore.set(normStoreId(b.storeId), { lat: b.lat, lng: b.lng });
-    }
-  }
-  const alreadyPriced = await BranchPriceDAL.distinctStoreIds(adapter.chainId);
-  const pricedStores = new Set(selectStoresToPrice(
-    Array.from(feedStoreIds, storeId => ({ storeId, ...coordsByStore.get(normStoreId(storeId)) })),
-    new Set(alreadyPriced)
-  ));
-
   const branchPriceInputs: UpsertBranchPriceInput[] = [];
-  for (const item of result.items) {
-    if (item.blockedItem === true) continue;
-    if (item.price <= 0 || item.price > 10_000) continue;
-    if (!item.storeId || !pricedStores.has(item.storeId)) continue;
-    branchPriceInputs.push({ chainId: adapter.chainId, storeId: item.storeId, barcode: item.barcode, price: item.price });
+  for (const it of validItems) {
+    if (!it.storeId) continue;
+    if (!needsExplicitRow(it.price, barcodeStats.get(it.barcode))) continue;
+    branchPriceInputs.push({
+      chainId: adapter.chainId, storeId: normStoreId(it.storeId),
+      barcode: it.barcode, price: it.price, syncedAt: syncStart,
+    });
   }
   let branchPricesUpserted = 0;
   for (let i = 0; i < branchPriceInputs.length; i += BATCH_SIZE) {
@@ -395,12 +391,14 @@ async function processChainItems(
       await new Promise<void>(r => setImmediate(r));
     }
   }
-  // מנקים רק אחרי שמירה מוצלחת של פיד לא ריק - אחרת פיד ריק היה מוחק הכול
+  // מנקים שורות של סנכרונים קודמים ורושמים אילו סניפים סונכרנו - רק אחרי שכל
+  // הכתיבות הצליחו ורק לפיד שיש בו סניפים (אחרת פיד ריק היה מוחק הכול).
   let branchPricesPruned = 0;
-  if (branchPriceInputs.length > 0) {
-    branchPricesPruned = await BranchPriceDAL.pruneChain(adapter.chainId, Array.from(pricedStores));
+  if (feedStoreIds.size > 0) {
+    branchPricesPruned = await BranchPriceDAL.pruneStale(adapter.chainId, syncStart);
+    await BranchPriceDAL.recordCoverage(adapter.chainId, Array.from(feedStoreIds), syncStart);
   }
-  logger.info(`[price-sync] ${adapter.chainId}: branch-prices upserted=${branchPricesUpserted} stores=${pricedStores.size}/${feedStoreIds.size} pruned=${branchPricesPruned}`);
+  logger.info(`[price-sync] ${adapter.chainId}: branch-price exceptions upserted=${branchPricesUpserted} of ${validItems.length} items, stores=${feedStoreIds.size}, pruned=${branchPricesPruned}`);
 
   const elapsedMs = Date.now() - t0;
   logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
