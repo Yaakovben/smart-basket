@@ -78,3 +78,7 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # בדיקות השוואת המחירים (node:test, בלי תלויות נוספות). npm test בונה ואז מריץ.
+      - name: Test
+        run: npm test

@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "get-gmail-token": "ts-node-dev --transpile-only src/scripts/get-gmail-token.ts",
-    "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "test": "npm run build && node scripts/run-tests.js",
     "verify-store-ids": "node dist/features/priceComparison/scripts/verify-store-ids.js",
     "refresh-prices": "ts-node-dev --transpile-only src/features/priceComparison/scripts/refresh-prices.ts",
     "geocode-branches": "ts-node-dev --transpile-only src/features/priceComparison/scripts/geocode-branches.ts",
