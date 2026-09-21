@@ -20,6 +20,9 @@ import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchPriceDAL, type UpsertBranchPriceInput } from '../dal/branchPrice.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
+import { selectStoresToPrice } from './storeSelection';
+import { normStoreId } from './storeId';
+import { Branch } from '../models/Branch.model';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
@@ -351,11 +354,37 @@ async function processChainItems(
   // בנפרד מהאגרגציה לעיל (שמייצרת "המחיר הזול ברשת" לצורכי השוואה בין
   // רשתות) - שומרים כאן את המחיר הממשי בכל סניף, כדי שהצגת "המחיר בסניף
   // הקרוב אליי" תהיה מדויקת ולא תציג בטעות מחיר מסניף אחר של הרשת.
+  //
+  // הנפח מוגבל: אשכול Atlas חינמי הוא 512MB, ורשת אחת יכולה להוסיף מאות אלפי
+  // שורות. שומרים רק מספר קטן של סניפים לכל רשת (ראו storeSelection.ts), ואחרי
+  // השמירה מוחקים מחירים של סניפים שלא נבחרו.
+
+  // סנכרון סניפים קודם: הבחירה נעזרת בקואורדינטות שלהם לפיזור גיאוגרפי.
+  // לא חוסם את המחירים אם נכשל.
+  const storesSummary = adapter.fetchLatestStores
+    ? await syncStoresForChain(adapter)
+    : { error: 'adapter_has_no_stores_support' };
+
+  const feedStoreIds = new Set<string>();
+  for (const item of result.items) if (item.storeId) feedStoreIds.add(item.storeId);
+  const branchDocs = await Branch.find({ chainId: adapter.chainId }, { storeId: 1, lat: 1, lng: 1, coordSource: 1 }).lean();
+  const coordsByStore = new Map<string, { lat: number; lng: number }>();
+  for (const b of branchDocs) {
+    if (typeof b.lat === 'number' && typeof b.lng === 'number' && b.coordSource !== 'unknown') {
+      coordsByStore.set(normStoreId(b.storeId), { lat: b.lat, lng: b.lng });
+    }
+  }
+  const alreadyPriced = await BranchPriceDAL.distinctStoreIds(adapter.chainId);
+  const pricedStores = new Set(selectStoresToPrice(
+    Array.from(feedStoreIds, storeId => ({ storeId, ...coordsByStore.get(normStoreId(storeId)) })),
+    new Set(alreadyPriced)
+  ));
+
   const branchPriceInputs: UpsertBranchPriceInput[] = [];
   for (const item of result.items) {
     if (item.blockedItem === true) continue;
     if (item.price <= 0 || item.price > 10_000) continue;
-    if (!item.storeId) continue;
+    if (!item.storeId || !pricedStores.has(item.storeId)) continue;
     branchPriceInputs.push({ chainId: adapter.chainId, storeId: item.storeId, barcode: item.barcode, price: item.price });
   }
   let branchPricesUpserted = 0;
@@ -366,12 +395,12 @@ async function processChainItems(
       await new Promise<void>(r => setImmediate(r));
     }
   }
-  logger.info(`[price-sync] ${adapter.chainId}: branch-prices upserted=${branchPricesUpserted}`);
-
-  // סנכרון סניפים - לא חוסם את המחירים אם נכשל
-  const storesSummary = adapter.fetchLatestStores
-    ? await syncStoresForChain(adapter)
-    : { error: 'adapter_has_no_stores_support' };
+  // מנקים רק אחרי שמירה מוצלחת של פיד לא ריק - אחרת פיד ריק היה מוחק הכול
+  let branchPricesPruned = 0;
+  if (branchPriceInputs.length > 0) {
+    branchPricesPruned = await BranchPriceDAL.pruneChain(adapter.chainId, Array.from(pricedStores));
+  }
+  logger.info(`[price-sync] ${adapter.chainId}: branch-prices upserted=${branchPricesUpserted} stores=${pricedStores.size}/${feedStoreIds.size} pruned=${branchPricesPruned}`);
 
   const elapsedMs = Date.now() - t0;
   logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);

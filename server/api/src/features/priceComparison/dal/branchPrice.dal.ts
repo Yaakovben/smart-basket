@@ -40,6 +40,19 @@ export const BranchPriceDAL = {
     return new Map(rows.map(r => [r.barcode, r.price]));
   },
 
+  // הסניפים המתומחרים כרגע, בלי מטמון - לבחירת סניפים בסנכרון
+  async distinctStoreIds(chainId: ChainId): Promise<string[]> {
+    return await BranchPrice.distinct('storeId', { chainId }) as string[];
+  },
+
+  // מוחק מחירים של סניפים שלא נבחרו (ראו storeSelection.ts). מחזיר כמה נמחקו.
+  // מנקה גם את מטמון הסניפים המתומחרים כדי שלא יצביע על סניפים שנמחקו.
+  async pruneChain(chainId: ChainId, keepStoreIds: string[]): Promise<number> {
+    const res = await BranchPrice.deleteMany({ chainId, storeId: { $nin: keepStoreIds } });
+    storeIdsCache.delete(chainId);
+    return res.deletedCount ?? 0;
+  },
+
   // הסניפים שיש להם נתוני מחיר בפועל, לפי רשת. בוחרים רק מביניהם "סניף קרוב",
   // אחרת המשתמש מקבל סניף קרוב שאין לו אף מחיר ונופלים למחיר הזול ברשת.
   // הנתון משתנה רק בסנכרון, לכן מטמון של שעה.
