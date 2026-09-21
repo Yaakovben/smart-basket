@@ -21,7 +21,7 @@ import { BranchPriceDAL, type UpsertBranchPriceInput } from '../dal/branchPrice.
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
 import { normStoreId } from './storeId';
-import { buildBarcodeStats, needsExplicitRow } from './branchPricing';
+import { buildBarcodeStats, needsExplicitRow, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from './branchPricing';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
@@ -382,6 +382,13 @@ async function processChainItems(
       chainId: adapter.chainId, storeId: normStoreId(it.storeId),
       barcode: it.barcode, price: it.price, syncedAt: syncStart,
     });
+  }
+  // חריגה מהתקציב: לא שומרים מחירי סניף לרשת הזו, ומנקים את הישנים
+  if (exceedsExceptionBudget(branchPriceInputs.length)) {
+    const cleared = await BranchPriceDAL.clearChain(adapter.chainId);
+    logger.warn(`[price-sync] ${adapter.chainId}: ${branchPriceInputs.length} branch-price exceptions exceed budget of ${MAX_EXCEPTION_ROWS_PER_CHAIN}, storing chain-level prices only (cleared ${cleared} old rows)`);
+    branchPriceInputs.length = 0;
+    feedStoreIds.clear();
   }
   let branchPricesUpserted = 0;
   for (let i = 0; i < branchPriceInputs.length; i += BATCH_SIZE) {
