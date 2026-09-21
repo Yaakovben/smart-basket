@@ -18,9 +18,8 @@ export const ConnectionStatusIcon = () => {
   const { t } = useSettings();
   const [dismissed, setDismissed] = useState(false);
 
-  // מאפסים dismissed כשחוזרים ל-online, או כש-server-starting מתחיל
-  // (server-starting אין לו כפתור סגירה - אם dismissed נשאר מהפאזה הקודמת הוא מסתיר אותו)
-  if ((phase === 'online' || phase === 'server-starting') && dismissed) setDismissed(false);
+  // מאפסים dismissed כשחוזרים ל-online
+  if (phase === 'online' && dismissed) setDismissed(false);
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
 
@@ -44,10 +43,8 @@ export const ConnectionStatusIcon = () => {
 
   const bg = isOffline
     ? 'linear-gradient(135deg, rgba(146,138,132,0.97), rgba(87,83,78,0.97))'
-    : isServerStarting
-      ? 'linear-gradient(135deg, rgba(15,118,110,0.95), rgba(13,148,136,0.95))'
-      : 'linear-gradient(135deg, rgba(120,135,155,0.97), rgba(71,85,105,0.97))';
-  const accent = isOffline ? '#fdba74' : isServerStarting ? '#99f6e4' : '#cbd5e1';
+    : 'linear-gradient(135deg, rgba(120,135,155,0.97), rgba(71,85,105,0.97))';
+  const accent = isOffline ? '#fdba74' : '#cbd5e1';
 
   return createPortal(
     <Box
@@ -103,21 +100,19 @@ export const ConnectionStatusIcon = () => {
           {pendingCount > 99 ? '99+' : pendingCount}
         </Box>
       )}
-      {!isServerStarting && (
-        <IconButton
-          size="small"
-          onClick={handleDismiss}
-          aria-label={t('close')}
-          sx={{
-            color: 'rgba(255,255,255,0.75)',
-            p: '3px',
-            flexShrink: 0,
-            '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
-          }}
-        >
-          <CloseIcon sx={{ fontSize: 15 }} />
-        </IconButton>
-      )}
+      <IconButton
+        size="small"
+        onClick={handleDismiss}
+        aria-label={t('close')}
+        sx={{
+          color: 'rgba(255,255,255,0.75)',
+          p: '3px',
+          flexShrink: 0,
+          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
+        }}
+      >
+        <CloseIcon sx={{ fontSize: 15 }} />
+      </IconButton>
     </Box>,
     document.body
   );
