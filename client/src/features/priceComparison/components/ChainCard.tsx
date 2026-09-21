@@ -5,6 +5,7 @@ import NearMeIcon from '@mui/icons-material/NearMe';
 import type { PriceChainTotal, NearestBranch } from '../types/priceComparison.types';
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';
+import { daysSince, STALE_CHAIN_DAYS, type ProductPriceRange } from '../helpers/priceComparisonCardHelpers';
 import { haptic, formatILS } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -33,7 +34,7 @@ interface ChainCardProps {
   // צבע ההדגשה לפי מצב המיון - ירוק/תכלת/סגול
   winnerColor: { main: string; bgLight: string; bgDark: string; borderLight: string; borderDark: string };
   // מיפוי cheapestPrice לכל מוצר - לחוויית "הכי זול" per-product
-  cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
+  cheapestPriceMap?: Map<string, ProductPriceRange>;
 }
 
 export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, onChangeBranch, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
@@ -138,6 +139,18 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
                 {chain.hasData ? t('noMatches') : t('notPublished')}
               </Typography>
             )}
+            {(() => {
+              // נתוני הרשת ישנים - המחירים עלולים לא לשקף את החנות היום
+              const days = chain.hasData ? daysSince(chain.lastUpdatedISO) : undefined;
+              return days !== undefined && days >= STALE_CHAIN_DAYS ? (
+                <>
+                  <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
+                  <Typography sx={{ fontSize: 10.5, color: 'warning.main', fontWeight: 700 }}>
+                    {t('staleChainData').replace('{days}', String(days))}
+                  </Typography>
+                </>
+              ) : null;
+            })()}
             {chain.nearestBranch ? (
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>

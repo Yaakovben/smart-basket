@@ -109,20 +109,23 @@ export const PriceDAL = {
   // spending.service, status.controller) - בלי cache זה היה $group מלא על
   // כל collection ה-prices (מאות אלפי מסמכים) בכל בקשה. הנתון משתנה רק
   // פעמיים ביום (סנכרון) אז TTL של שעה מספיק בלי צורך ב-invalidation מפורש.
-  async getActiveChainsWithCounts(): Promise<Array<{ chainId: ChainId; chainName: string; count: number }>> {
+  async getActiveChainsWithCounts(): Promise<ActiveChain[]> {
     const cached = activeChainsCache;
     if (cached && cached.expiresAt > Date.now()) return cached.data;
 
     const result = await Price.aggregate([
-      { $group: { _id: { chainId: '$chainId', chainName: '$chainName' }, count: { $sum: 1 } } },
-      { $project: { _id: 0, chainId: '$_id.chainId', chainName: '$_id.chainName', count: 1 } },
+      { $group: { _id: { chainId: '$chainId', chainName: '$chainName' }, count: { $sum: 1 }, lastUpdated: { $max: '$updatedAt' } } },
+      { $project: { _id: 0, chainId: '$_id.chainId', chainName: '$_id.chainName', count: 1, lastUpdated: 1 } },
       { $sort: { count: -1 } },
-    ]) as Array<{ chainId: ChainId; chainName: string; count: number }>;
+    ]) as ActiveChain[];
 
     activeChainsCache = { data: result, expiresAt: Date.now() + ACTIVE_CHAINS_CACHE_TTL_MS };
     return result;
   },
 };
 
+// lastUpdated = מתי עודכן לאחרונה מחיר כלשהו של הרשת (טריות הנתונים שלה)
+export interface ActiveChain { chainId: ChainId; chainName: string; count: number; lastUpdated?: Date }
+
 const ACTIVE_CHAINS_CACHE_TTL_MS = 60 * 60_000;
-let activeChainsCache: { data: Array<{ chainId: ChainId; chainName: string; count: number }>; expiresAt: number } | null = null;
+let activeChainsCache: { data: ActiveChain[]; expiresAt: number } | null = null;

@@ -6,9 +6,14 @@ import { formatILS } from '../../../global/helpers';
 interface SavingsHeroProps {
   cheapest: PriceChainTotal;
   savings: number;
+  // חיסכון נוסף אם קונים כל מוצר ברשת הזולה שלו (פיצול קניות). 0 = לא מוצג.
+  splitSavings?: number;
 }
 
-export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => {
+// מתחת לסכום הזה פיצול הקניות בין רשתות לא שווה את הנסיעה הנוספת
+const MIN_SPLIT_SAVINGS = 5;
+
+export const SavingsHero = ({ cheapest, savings, splitSavings = 0 }: SavingsHeroProps) => {
   const { t } = useSettings();
   return (
   <Paper elevation={0} sx={{
@@ -77,6 +82,17 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => {
           </Box>
         )}
       </Box>
+
+      {/* פיצול קניות - רק כשהחיסכון משמעותי (לפחות 5 ש"ח), אחרת לא שווה את הטרחה */}
+      {splitSavings >= MIN_SPLIT_SAVINGS && (
+        <Typography sx={{
+          mt: 1, px: 1.25, py: 0.5, borderRadius: '10px', width: 'fit-content',
+          bgcolor: 'rgba(255,255,255,0.16)', color: 'white',
+          fontSize: 11, fontWeight: 700,
+        }}>
+          {t('splitSavingsHint').replace('{amount}', formatILS(splitSavings))}
+        </Typography>
+      )}
     </Box>
   </Paper>
   );
