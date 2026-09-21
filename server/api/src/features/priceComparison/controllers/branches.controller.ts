@@ -1,7 +1,9 @@
 import type { Response } from 'express';
 import { invalidateAllUsers } from '../services/priceComparison.service';
-import { invalidateBranchCache, getNearbyBranches, parseUserLocation } from '../services/branches.service';
+import { invalidateBranchCache, getNearbyBranches, parseUserLocation, listChainBranches } from '../services/branches.service';
+import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { CHAIN_NAMES } from '../data/chain-names.data';
 import { Branch } from '../models/Branch.model';
 import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
@@ -11,12 +13,6 @@ import type { AuthRequest } from '../../../types';
 const DEFAULT_NEARBY_RADIUS_KM = 15;
 const MAX_NEARBY_RADIUS_KM = 100;
 
-const CHAIN_NAMES: Record<string, string> = {
-  shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-  osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
-  stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-  victory: 'ויקטורי',
-};
 
 // POST /api/price-comparison/load-seed (admin only)
 // טעינה ידנית של 65 סניפים מוכרים. עובד תמיד - לולאה פשוטה,
@@ -252,4 +248,18 @@ export const deleteBranch = asyncHandler(async (req: AuthRequest, res: Response)
     const msg = err instanceof Error ? err.message : 'unknown';
     res.status(500).json({ success: false, message: msg });
   }
+});
+
+// GET /api/price-comparison/chain-branches/:chainId[?lat=&lng=] (פתוח למשתמש מאומת)
+// סניפי רשת לבורר "בחר סניף": קודם סניפים עם נתוני מחיר, ובתוכם לפי מרחק.
+export const getChainBranchOptions = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const chainId = String(req.params.chainId || '');
+  if (!/^[a-z0-9_]{1,40}$/.test(chainId)) {
+    res.status(400).json({ success: false, message: 'chainId לא תקין' });
+    return;
+  }
+  const user = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
+  const priced = await BranchPriceDAL.storeIdsWithPrices(chainId as never).catch(() => undefined);
+  const branches = await listChainBranches(chainId as never, user, priced);
+  res.json({ success: true, chainId, count: branches.length, branches });
 });

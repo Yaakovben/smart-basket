@@ -1,5 +1,5 @@
 import apiClient from '../../../services/api/client';
-import type { PriceComparisonData } from '../types/priceComparison.types';
+import type { PriceComparisonData, ChainBranchOption } from '../types/priceComparison.types';
 
 export interface PriceChainStatus {
   chainId: string;
@@ -91,9 +91,14 @@ export const priceComparisonApi = {
   // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש.
   // listId אופציונלי: אם מועבר, ההשוואה מצומצמת לרשימה הזו בלבד.
   // location אופציונלי: אם מועבר, כל רשת תקבל nearestBranch עם מרחק.
-  async getComparison(listId?: string, location?: UserLocation): Promise<PriceComparisonData> {
+  // chosenBranches אופציונלי: סניף שנבחר ידנית לכל רשת (chainId -> storeId).
+  async getComparison(listId?: string, location?: UserLocation, chosenBranches?: Record<string, string>): Promise<PriceComparisonData> {
     const params = new URLSearchParams();
     if (listId) params.set('listId', listId);
+    const chosen = chosenBranches
+      ? Object.entries(chosenBranches).map(([c, s]) => `${c}:${s}`).join(',')
+      : '';
+    if (chosen) params.set('branches', chosen);
     if (location) {
       params.set('lat', String(location.lat));
       params.set('lng', String(location.lng));
@@ -103,6 +108,19 @@ export const priceComparisonApi = {
     return response.data.data;
   },
 
+
+  // סניפי רשת לבורר "בחר סניף": קודם עם נתוני מחיר, ובתוכם לפי מרחק.
+  async getChainBranches(chainId: string, location?: UserLocation): Promise<ChainBranchOption[]> {
+    try {
+      const params = new URLSearchParams();
+      if (location) { params.set('lat', String(location.lat)); params.set('lng', String(location.lng)); }
+      const query = params.toString() ? `?${params}` : '';
+      const res = await apiClient.get<{ branches: ChainBranchOption[] }>(`/price-comparison/chain-branches/${encodeURIComponent(chainId)}${query}`);
+      return res.data.branches ?? [];
+    } catch {
+      return [];
+    }
+  },
 
   // ----- Admin only: ניהול המאגר -----
   async getStatus(): Promise<PriceSyncStatus> {

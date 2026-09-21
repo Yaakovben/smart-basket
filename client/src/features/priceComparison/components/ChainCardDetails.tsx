@@ -9,12 +9,13 @@ interface ChainCardDetailsProps {
   isDark: boolean;
   hasMatches: boolean;
   onNavigate: (e: React.MouseEvent) => void;
+  onChangeBranch?: (e: React.MouseEvent) => void;
   // מיפוי cheapestPrice לכל מוצר - לחוויית "הכי זול" per-product
   cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
 }
 
 // תוכן מורחב - רשימת מוצרים + סניף קרוב. מוצג בתוך ה-Collapse של כרטיס רשת.
-export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheapestPriceMap }: ChainCardDetailsProps) => {
+export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, onChangeBranch, cheapestPriceMap }: ChainCardDetailsProps) => {
   const { t } = useSettings();
   return (
   <Box sx={{
@@ -24,7 +25,14 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheape
   }}>
     {/* סניף קרוב + ניווט */}
     {chain.nearestBranch && (
-      <ChainBranchInfo branch={chain.nearestBranch} isDark={isDark} onNavigate={onNavigate} />
+      <ChainBranchInfo
+        branch={chain.nearestBranch}
+        isDark={isDark}
+        onNavigate={onNavigate}
+        onChangeBranch={onChangeBranch}
+        verifiedCount={chain.branchVerifiedCount}
+        matchedCount={chain.matchedCount}
+      />
     )}
 
     {/* רשימת מוצרים */}

@@ -6,8 +6,13 @@ import type { NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 // סניף קרוב + כפתור ניווט - מוצג בתוך הפירוט המורחב של כרטיס רשת
-export const ChainBranchInfo = memo(({ branch, isDark, onNavigate }: {
+export const ChainBranchInfo = memo(({ branch, isDark, onNavigate, onChangeBranch, verifiedCount, matchedCount }: {
   branch: NearestBranch; isDark: boolean; onNavigate: (e: React.MouseEvent) => void;
+  // פותח את בורר הסניפים. אם לא הועבר - אין כפתור החלפה.
+  onChangeBranch?: (e: React.MouseEvent) => void;
+  // כמה מהמוצרים שזוהו קיבלו מחיר מאומת מהסניף הזה, מתוך matchedCount
+  verifiedCount?: number;
+  matchedCount?: number;
 }) => {
   const { t } = useSettings();
   return (
@@ -24,8 +29,25 @@ export const ChainBranchInfo = memo(({ branch, isDark, onNavigate }: {
         {branch.branchName}
       </Typography>
       <Typography sx={{ fontSize: 10.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {branch.address}, {branch.city}
+        {[branch.address, branch.city].filter(Boolean).join(', ')}
       </Typography>
+      {typeof verifiedCount === 'number' && typeof matchedCount === 'number' && matchedCount > 0 && (
+        <Typography sx={{
+          fontSize: 10.5, fontWeight: 700,
+          color: verifiedCount === matchedCount ? '#059669' : 'warning.main',
+        }}>
+          {t('branchPricesVerified').replace('{n}', String(verifiedCount)).replace('{m}', String(matchedCount))}
+          {branch.isSelectedByUser ? ` · ${t('branchChosenByYou')}` : ''}
+        </Typography>
+      )}
+      {onChangeBranch && (
+        <Typography
+          onClick={onChangeBranch}
+          sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', cursor: 'pointer', mt: 0.25, width: 'fit-content' }}
+        >
+          {t('changeBranch')}
+        </Typography>
+      )}
     </Box>
     <Button
       size="small"

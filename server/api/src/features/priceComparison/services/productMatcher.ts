@@ -175,7 +175,22 @@ export async function matchNormalizedName(
   // סף ציון כולל מחמיר יותר אחרי המחסומים הקשיחים
   if (!best || best.score < 0.55) return unmatched;
 
-  const b = best.cand;
+  return finalizeMatch(unmatched, best.cand, best.coverage, best.matchedTokens, chainId, storeId);
+}
+
+type PriceCandidate = Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>[number];
+
+// בונה NameMatch ממוצר נבחר: מחיר בסניף (אם ידוע) + הסניף הזול ברשת.
+// משותף להתאמת שם ולעיגון לפי ברקוד משותף (ראו applyBarcodeConsensus).
+export async function finalizeMatch(
+  base: NameMatch,
+  b: PriceCandidate,
+  coverage: number,
+  matchedTokens: string[],
+  chainId: ChainId,
+  storeId?: string,
+): Promise<NameMatch> {
+  const unmatched = base;
 
   // אם יש סניף ספציפי - מנסים למצוא את המחיר האמיתי בו. אם אין נתון לסניף
   // הזה (למשל המוצר לא נמכר בו, או שהמחיר עדיין לא סונכרן לקולקציה הזו) -
@@ -218,8 +233,8 @@ export async function matchNormalizedName(
     itemNameNormalized: b.itemNameNormalized,
     price,
     barcode: b.barcode,
-    matchConfidence: Math.round(best.coverage * 100) / 100,
-    matchedTokens: best.matchedTokens,
+    matchConfidence: Math.round(coverage * 100) / 100,
+    matchedTokens,
     manufacturerName: b.manufacturerName,
     priceVerifiedAtBranch,
     cheapestBranch,

@@ -21,7 +21,24 @@ let adminSyncInProgress = false;
 // Render Free → לקוחות לא יכלו להיכנס. הקרון של 04:00/16:00 + סנכרון ידני
 // מאדמין UI מחליפים אותו לחלוטין.
 
-// GET /api/price-comparison[?listId=X][&lat=&lng=]
+const MAX_CHOSEN_BRANCHES = 20;
+
+// branches=chainId:storeId,chainId:storeId - סניפים שהמשתמש בחר ידנית.
+// מקבלים רק ערכים תקינים (אותיות/ספרות/_/-) ומוגבלים במספר, כדי שהקלט לא ישמש
+// לניפוח מפתחות מטמון או שאילתות.
+function parseChosenBranches(raw: unknown): Record<string, string> | undefined {
+  if (typeof raw !== 'string' || !raw) return undefined;
+  const result: Record<string, string> = {};
+  for (const part of raw.split(',').slice(0, MAX_CHOSEN_BRANCHES)) {
+    const [chainId, storeId] = part.split(':');
+    if (!chainId || !storeId) continue;
+    if (!/^[a-z0-9_]{1,40}$/.test(chainId) || !/^[A-Za-z0-9_-]{1,40}$/.test(storeId)) continue;
+    result[chainId] = storeId;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+// GET /api/price-comparison[?listId=X][&lat=&lng=][&branches=chain:store,...]
 // listId אופציונלי - מסנן את ההשוואה לרשימה יחידה. בלעדיו: איחוד כל הרשימות.
 // lat/lng אופציונליים - אם מועברים, כל רשת תכלול את הסניף הקרוב ביותר עם מרחק.
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -42,7 +59,8 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
     ? rawListId
     : undefined;
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
-  const data = await getComparisonForUser(userId, listId, userLocation);
+  const chosenBranches = parseChosenBranches(req.query.branches);
+  const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches);
 
   // increment אחרי הצלחה בלבד
   if (userIsFree) planUsage.incrementPrice(userId);

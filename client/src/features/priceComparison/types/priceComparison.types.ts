@@ -39,6 +39,8 @@ export interface PriceListGroup {
 
 // סניף קרוב ביותר לרשת - מוחזר רק כשהמשתמש שיתף מיקום
 export interface NearestBranch {
+  // מזהה הסניף בפורטל - משמש לבחירת סניף ידנית
+  storeId?: string;
   branchName: string;
   city: string;
   address: string;
@@ -48,6 +50,18 @@ export interface NearestBranch {
   // true = המרחק הוא הערכה (קואורדינטות מרכז עיר, לא כתובת מדויקת).
   // ה-UI חייב לסמן ~ או "בערך" כדי שהמשתמש ידע שזה לא מדויק.
   isApproximate?: boolean;
+  // true כשהמשתמש בחר את הסניף ידנית (ולא לפי קרבה)
+  isSelectedByUser?: boolean;
+}
+
+// סניף ברשימת הבחירה של רשת. lat/lng/distanceKm חסרים כשאין קואורדינטות מדויקות.
+export interface ChainBranchOption extends Omit<NearestBranch, 'lat' | 'lng' | 'distanceKm'> {
+  storeId: string;
+  lat?: number;
+  lng?: number;
+  distanceKm?: number;
+  // האם יש לסניף נתוני מחיר. בלעדיהם המחיר הוא הערכה ארצית.
+  hasPriceData: boolean;
 }
 
 // סיכום השוואתי לרשת - משמש לתצוגת רנק של כל הרשתות ב-UI
@@ -63,6 +77,8 @@ export interface PriceChainTotal {
   matches: PriceMatch[]; // כל המוצרים של המשתמש עם מחיר ברשת הזו
   hasData: boolean;      // האם הרשת פרסמה מחירים היום (false = הפורטל לא פרסם)
   nearestBranch?: NearestBranch; // הסניף הקרוב - רק כשהמשתמש שיתף מיקום
+  // כמה מהמוצרים שזוהו קיבלו מחיר מאומת מהסניף עצמו. מוגדר רק כשיש סניף.
+  branchVerifiedCount?: number;
 }
 
 export interface PriceComparisonData {

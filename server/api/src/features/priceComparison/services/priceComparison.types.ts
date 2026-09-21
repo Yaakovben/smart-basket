@@ -57,6 +57,9 @@ export interface PriceChainTotal {
   // הסניף הקרוב ביותר למיקום המשתמש (כשהמשתמש שיתף מיקום).
   // undefined כשהמשתמש לא שיתף מיקום או כשאין לרשת סניפים ב-seed.
   nearestBranch?: NearestBranch;
+  // כמה מהמוצרים שזוהו קיבלו מחיר מאומת מהסניף הקרוב עצמו (ולא הערכה ברמת
+  // הרשת). מוגדר רק כשיש סניף קרוב.
+  branchVerifiedCount?: number;
 }
 
 export interface PriceComparisonData {
