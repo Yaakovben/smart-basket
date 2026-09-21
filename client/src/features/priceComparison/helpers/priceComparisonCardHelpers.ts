@@ -3,6 +3,9 @@
 
 import type { PriceChainTotal } from '../types/priceComparison.types';
 
+// חייב להיות זהה ל-MIN_VERIFIED_CHAIN_SHARE בשרת (chainComparison.ts)
+const MIN_VERIFIED_CHAIN_SHARE = 0.6;
+
 export type SortMode = 'distance' | 'price' | 'combined';
 
 // הזולה ההוגנת: שלמות קודם לפי מחיר; אם אין שלמות, מבין הרשתות עם
@@ -49,7 +52,11 @@ export interface ProductPriceRange {
 // מחירים מאומתים בסניפים משווים רק אותם (מחיר ארצי הוא הטיה כלפי מטה).
 export const buildCheapestPriceMap = (chainTotals: PriceChainTotal[] | undefined): Map<string, ProductPriceRange> => {
   const chains = chainTotals || [];
-  const useVerifiedOnly = chains.some(c => c.matches.some(m => m.matched && m.priceVerifiedAtBranch));
+  // זהה לשרת: רק כשלפחות 60% מהרשתות עם התאמות מאומתות בסניף. אחרת רשת אחת
+  // מאומתת הייתה מוציאה את כל השאר מההשוואה.
+  const matchedChains = chains.filter(c => c.hasData && c.matchedCount > 0);
+  const verifiedChains = matchedChains.filter(c => c.matches.some(m => m.matched && m.priceVerifiedAtBranch));
+  const useVerifiedOnly = matchedChains.length > 0 && verifiedChains.length / matchedChains.length >= MIN_VERIFIED_CHAIN_SHARE;
 
   const byProduct = new Map<string, Map<string, number[]>>(); // productId -> barcode -> prices
   for (const chain of chains) {
