@@ -4,8 +4,8 @@ import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { getCachedComparison, setCachedComparison } from './comparisonCache';
 import { matchNormalizedName, BETA_CHAIN_ID, BETA_CHAIN_NAME, type NameMatch } from './productMatcher';
-import { buildChainTotals, type PendingProductLean } from './chainComparison';
-import { findNearestBranch, type UserLocation } from './branches.service';
+import { buildChainTotals, resolveBranchForChain, type PendingProductLean } from './chainComparison';
+import type { UserLocation } from './branches.service';
 import type { PriceMatch, PriceListGroup, PriceChainTotal, PriceComparisonData } from './priceComparison.types';
 
 export type { PriceMatch, PriceListGroup, PriceChainTotal, PriceComparisonData } from './priceComparison.types';
@@ -80,13 +80,18 @@ function buildListGroups(
 export async function getComparisonForUser(
   userId: string,
   filterListId?: string,
-  userLocation?: UserLocation
+  userLocation?: UserLocation,
+  // סניפים שנבחרו ידנית (chainId -> storeId) - גוברים על הסניף הקרוב ביותר
+  chosenBranches?: Record<string, string>
 ): Promise<PriceComparisonData> {
   // מפתח מטמון שונה לכל שילוב user+list+location(מעוגל ל-500מ') כדי למנוע ערבוב.
   // עיגול המיקום ל-3 ספרות אחרי הנקודה (~110 מ') מונע פסילת מטמון על כל תזוזה קטנה.
-  const locKey = userLocation
-    ? `:${userLocation.lat.toFixed(3)},${userLocation.lng.toFixed(3)}`
+  const chosenKey = chosenBranches && Object.keys(chosenBranches).length > 0
+    ? `:b=${Object.entries(chosenBranches).sort(([a], [b]) => a.localeCompare(b)).map(([c, s]) => `${c}.${s}`).join(',')}`
     : '';
+  const locKey = (userLocation
+    ? `:${userLocation.lat.toFixed(3)},${userLocation.lng.toFixed(3)}`
+    : '') + chosenKey;
   const cacheKey = filterListId ? `${userId}:${filterListId}${locKey}` : `${userId}${locKey}`;
   const cached = getCachedComparison(cacheKey);
   if (cached) return cached;
@@ -153,7 +158,9 @@ export async function getComparisonForUser(
   // אם יש מיקום משתמש - מאתרים את הסניף הקרוב ביותר של הרשת הראשית, כדי
   // שהמחירים המוצגים ישקפו את מה שהלקוח יראה בפועל באותו סניף ולא רק את
   // הזול ביותר שנמצא אי-שם ברשת.
-  const primaryNearestBranch = userLocation ? await findNearestBranch(BETA_CHAIN_ID, userLocation) : null;
+  const primaryNearestBranch = (userLocation || chosenBranches?.[BETA_CHAIN_ID])
+    ? await resolveBranchForChain(BETA_CHAIN_ID, true, userLocation, chosenBranches?.[BETA_CHAIN_ID])
+    : undefined;
 
   // דה-דופליקציה לפי שם מנורמל: פריט "חלב 3%" שמופיע ב-5 רשימות — match רץ פעם אחת בלבד
   const nameMatchCache = new Map<string, NameMatch>();
@@ -194,7 +201,7 @@ export async function getComparisonForUser(
   const grandTotal = listGroups.reduce((s, g) => s + g.estimatedTotal, 0);
 
   // השוואה רב-רשתית: לכל רשת פעילה, סך הסל + "הכי זול"/"סל שלם"
-  const chainTotals = await buildChainTotals(pendingProducts, uniqueNames, nameMatchCache, userLocation);
+  const chainTotals = await buildChainTotals(pendingProducts, uniqueNames, nameMatchCache, userLocation, chosenBranches);
 
   return cacheAndReturn({
     ...baseResponse,

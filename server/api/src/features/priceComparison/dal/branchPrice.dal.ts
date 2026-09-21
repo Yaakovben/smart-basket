@@ -32,4 +32,26 @@ export const BranchPriceDAL = {
     if (barcodes.length === 0) return [];
     return BranchPrice.find({ barcode: { $in: barcodes }, chainId, storeId }).lean();
   },
+
+  // מחירים של כמה ברקודים בסניף אחד, במפה barcode -> price. שאילתה אחת לכל סניף
+  // במקום שאילתה לכל מוצר.
+  async priceMapForStore(barcodes: string[], chainId: ChainId, storeId: string): Promise<Map<string, number>> {
+    const rows = await this.findByBarcodesAndStore(barcodes, chainId, storeId);
+    return new Map(rows.map(r => [r.barcode, r.price]));
+  },
+
+  // הסניפים שיש להם נתוני מחיר בפועל, לפי רשת. בוחרים רק מביניהם "סניף קרוב",
+  // אחרת המשתמש מקבל סניף קרוב שאין לו אף מחיר ונופלים למחיר הזול ברשת.
+  // הנתון משתנה רק בסנכרון, לכן מטמון של שעה.
+  async storeIdsWithPrices(chainId: ChainId): Promise<Set<string>> {
+    const cached = storeIdsCache.get(chainId);
+    if (cached && cached.expiresAt > Date.now()) return cached.ids;
+    const ids = await BranchPrice.distinct('storeId', { chainId }) as string[];
+    const set = new Set(ids);
+    storeIdsCache.set(chainId, { ids: set, expiresAt: Date.now() + STORE_IDS_CACHE_TTL_MS });
+    return set;
+  },
 };
+
+const STORE_IDS_CACHE_TTL_MS = 60 * 60_000;
+const storeIdsCache = new Map<string, { ids: Set<string>; expiresAt: number }>();

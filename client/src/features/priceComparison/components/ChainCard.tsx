@@ -25,6 +25,8 @@ interface ChainCardProps {
   expanded: boolean;
   onToggle: () => void;
   onOpenNav: (b: NearestBranch) => void;
+  // פותח את בורר הסניפים של הרשת
+  onChangeBranch: (chain: PriceChainTotal) => void;
   // האם המשתמש שיתף מיקום פעיל. רק אז הגיוני להציג "אין סניף במאגר"
   // - לפני אישור מיקום אין סיבה לטעון שהסניף "חסר", פשוט עוד לא נשאלנו.
   hasLocation: boolean;
@@ -34,7 +36,7 @@ interface ChainCardProps {
   cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
 }
 
-export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
+export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, onChangeBranch, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
   const { t } = useSettings();
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
@@ -53,6 +55,11 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
     // פותח picker עם Waze/Google Maps/Apple Maps - לא יורד ישר ל-Google
     onOpenNav(chain.nearestBranch);
   }, [chain.nearestBranch, onOpenNav]);
+
+  const handleChangeBranch = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChangeBranch(chain);
+  }, [chain, onChangeBranch]);
 
   return (
     <Box
@@ -212,7 +219,7 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
 
       {/* תוכן מורחב - רשימת מוצרים + סניף קרוב */}
       <Collapse in={expanded} unmountOnExit>
-        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} cheapestPriceMap={cheapestPriceMap} />
+        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} onChangeBranch={handleChangeBranch} cheapestPriceMap={cheapestPriceMap} />
       </Collapse>
     </Box>
   );

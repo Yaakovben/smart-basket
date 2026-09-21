@@ -70,6 +70,22 @@ export function useInsightsData(tab: InsightTab) {
     return readCachedListsFallback()[0]?.id ?? null;
   });
 
+  // סניפים שנבחרו ידנית לכל רשת (chainId -> storeId). נשמר בין כניסות - המשתמש
+  // בדרך כלל קונה באותו סניף. מעבר סניף מחשב מחדש את ההשוואה בשרת.
+  const [chosenBranches, setChosenBranches] = useState<Record<string, string>>(
+    () => safeStorage.getJSON<Record<string, string>>('sb_chosen_branches', {})
+  );
+  const chooseBranch = useCallback((chainId: string, storeId: string | null) => {
+    setChosenBranches(prev => {
+      const next = { ...prev };
+      if (storeId) next[chainId] = storeId; else delete next[chainId];
+      safeStorage.setJSON('sb_chosen_branches', next);
+      return next;
+    });
+    // הטאב 'רשימות' שומר השוואה לא-מסוננת ב-state; מבטלים כדי שייטען מחדש עם הסניף החדש
+    setAllListsPriceData(null);
+  }, []);
+
   const [allUserLists, setAllUserLists] = useState<InsightsListMeta[]>(() => readCachedListsFallback());
 
   // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
@@ -153,7 +169,7 @@ export function useInsightsData(tab: InsightTab) {
     // ולוקח עד דקה להתעורר. במקום לזרוק שגיאה מיד - מחכים 4ש' ומנסים שוב.
     const fetchWithRetry = async (): Promise<void> => {
       try {
-        const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined);
+        const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches);
         if (cancelled) return;
         setPriceData(res);
         writeCache(PRICE_CACHE_KEY, res);
@@ -166,7 +182,7 @@ export function useInsightsData(tab: InsightTab) {
         await new Promise(r => setTimeout(r, 4000));
         if (cancelled) return;
         try {
-          const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined);
+          const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches);
           if (cancelled) return;
           setPriceData(res);
           writeCache(PRICE_CACHE_KEY, res);
@@ -187,7 +203,7 @@ export function useInsightsData(tab: InsightTab) {
       fetchWithRetry().finally(() => { if (!cancelled) setPriceLoading(false); });
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [tab, selectedListId, userLocation]);
+  }, [tab, selectedListId, userLocation, chosenBranches]);
 
   // גרסה לא-מסוננת (כל הרשימות) לטאב "רשימות" בלבד - נטענת פעם אחת כשנכנסים
   // לטאב הזה (לא תלויה ב-selectedListId, אז לא נטענת שוב כשמחליפים רשימה
@@ -196,7 +212,7 @@ export function useInsightsData(tab: InsightTab) {
   useEffect(() => {
     if (tab !== 'lists' || allListsPriceData) return;
     let cancelled = false;
-    priceComparisonApi.getComparison(undefined, userLocation ?? undefined)
+    priceComparisonApi.getComparison(undefined, userLocation ?? undefined, chosenBranches)
       .then(res => {
         if (cancelled) return;
         setAllListsPriceData(res);
@@ -204,13 +220,13 @@ export function useInsightsData(tab: InsightTab) {
       })
       .catch(() => { /* טאב "רשימות" נופל בחזרה ל-groupStats אם זה נכשל */ });
     return () => { cancelled = true; };
-  }, [tab, allListsPriceData, userLocation]);
+  }, [tab, allListsPriceData, userLocation, chosenBranches]);
 
   // ניסיון ידני יחיד - משמש את כפתור "נסה שוב" במסך שגיאת מחירים
   const retryPriceFetch = () => {
     setPriceError(false);
     setPriceLoading(true);
-    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
+    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches)
       .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
       .catch(() => setPriceError(true))
       .finally(() => setPriceLoading(false));
@@ -221,5 +237,6 @@ export function useInsightsData(tab: InsightTab) {
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
+    chosenBranches, chooseBranch,
   };
 }

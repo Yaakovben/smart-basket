@@ -9,6 +9,7 @@
 import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
 
 export interface NearestBranch {
@@ -24,6 +25,8 @@ export interface NearestBranch {
   // האם המרחק שהוצג הוא הערכה (קואורדינטות לפי מרכז העיר) ולא מדויק.
   // הלקוח חייב להציג סימן (~/בערך) כדי שהמשתמש ידע. true רק כש-coordSource='unknown'.
   isApproximate?: boolean;
+  // true כשהסניף נבחר ידנית ע"י המשתמש ולא לפי קרבה.
+  isSelectedByUser?: boolean;
 }
 
 export interface UserLocation {
@@ -60,12 +63,7 @@ async function ensureSeedLoaded(): Promise<void> {
   if (seedLoadAttempted) return;
   seedLoadAttempted = true;
   try {
-    const chainNames: Record<string, string> = {
-      shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת', netto_hisachon: 'נטו חיסכון',
-      stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-      victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
-    };
+    const chainNames = CHAIN_NAMES;
     // טעינת KNOWN_BRANCHES בכל startup (idempotent דרך upsert על
     // chainId+storeId). חשוב: גם אם יש סניפים, רשתות חדשות שנוספו
     // ל-KNOWN_BRANCHES חייבות להיכנס - רק upsert בסניפים שכבר קיימים
@@ -112,14 +110,47 @@ export function invalidateBranchCache(): void {
 
 // מחזיר את הסניף הקרוב ביותר לרשת נתונה. אם יש שני סניפים במרחק דומה
 // (פער < 2 ק"מ), מעדיפים את זה עם כתובת מלאה — הלקוח יודע איפה זה.
-export async function findNearestBranch(chainId: ChainId, user: UserLocation): Promise<NearestBranch | null> {
+// pricedStoreIds אופציונלי: אם מועבר ולא ריק, נבחרים רק סניפים שיש להם נתוני מחיר.
+// אם אין אף סניף כזה קרוב (או שמזהי הסניפים לא תואמים) חוזרים לכל הסניפים.
+export async function findNearestBranch(
+  chainId: ChainId,
+  user: UserLocation,
+  pricedStoreIds?: Set<string>
+): Promise<NearestBranch | null> {
   const all = await getBranches();
+  const chainBranches = all.filter(b => b.chainId === chainId);
+  const resolveId = makeStoreIdResolver(pricedStoreIds);
+  if (pricedStoreIds && pricedStoreIds.size > 0) {
+    const priced = chainBranches.filter(b => resolveId.isPriced(b.storeId));
+    if (priced.length > 0) return pickNearest(priced, user, resolveId.resolve);
+  }
+  return pickNearest(chainBranches, user, resolveId.resolve);
+}
+
+// מזהה סניף בפורטל המחירים ובקובץ הסניפים עלול להיכתב אחרת (למשל "012" מול
+// "12"). מנרמלים אפסים מובילים כדי שההתאמה בין הסניף לבין מחירי הסניף תעבוד,
+// ומחזירים את המזהה כפי שהוא שמור בטבלת המחירים - זה המזהה לשאילתות מחיר.
+const normStoreId = (id: string): string => String(id).trim().replace(/^0+(?=.)/, '');
+
+function makeStoreIdResolver(pricedStoreIds?: Set<string>) {
+  const byNorm = new Map<string, string>();
+  if (pricedStoreIds) for (const id of pricedStoreIds) byNorm.set(normStoreId(id), id);
+  return {
+    isPriced: (storeId: string) => byNorm.has(normStoreId(storeId)),
+    resolve: (storeId: string) => byNorm.get(normStoreId(storeId)) ?? storeId,
+  };
+}
+
+function pickNearest(
+  chainBranches: IBranchDoc[],
+  user: UserLocation,
+  resolveId: (storeId: string) => string = id => id
+): NearestBranch | null {
   // 1. אוספים את כל הסניפים של הרשת עם קואורדינטות (לחישוב מרחק)
   const withCoords: Array<{ b: IBranchDoc; dist: number }> = [];
   // 2. סניפים עם כתובת אבל ללא קואורדינטות - מוצגים כ-fallback
   const addressOnly: IBranchDoc[] = [];
-  for (const b of all) {
-    if (b.chainId !== chainId) continue;
+  for (const b of chainBranches) {
     // סינון: סניף בלי קואורדינטות וגם בלי כתובת וגם בלי עיר - אין מה
     // להציג ללקוח (אי-אפשר לחשב מרחק, אי-אפשר לנווט). מסונן החוצה.
     const hasCoords = typeof b.lat === 'number' && typeof b.lng === 'number';
@@ -152,7 +183,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
     // כדי שהלקוח יציג סימן ברור (~/בערך) ולא יטעה את המשתמש.
     const isApproximate = best.coordSource === 'unknown';
     return {
-      storeId: best.storeId,
+      storeId: resolveId(best.storeId),
       branchName: best.storeName,
       city: best.city || '',
       address: best.address || '',
@@ -169,7 +200,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
   if (addressOnly.length > 0) {
     const best = addressOnly[0];
     return {
-      storeId: best.storeId,
+      storeId: resolveId(best.storeId),
       branchName: best.storeName,
       city: best.city || '',
       address: best.address || '',
@@ -185,7 +216,8 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
 // של כל הסניפים, אז לא עולה שאילתת DB נוספת.
 export async function getBranchLabel(chainId: ChainId, storeId: string): Promise<{ branchName: string; city: string } | null> {
   const all = await getBranches();
-  const b = all.find(x => x.chainId === chainId && x.storeId === storeId);
+  const target = normStoreId(storeId);
+  const b = all.find(x => x.chainId === chainId && normStoreId(x.storeId) === target);
   if (!b) return null;
   return { branchName: b.storeName, city: b.city || '' };
 }
@@ -251,4 +283,66 @@ export async function getNearbyBranches(
   }
 
   return withCoords.slice(0, NEARBY_NO_LOCATION_LIMIT).map(toNearbyBranch);
+}
+
+function toNearest(b: IBranchDoc, user: UserLocation | undefined, storeId: string): NearestBranch {
+  const hasPreciseCoords = typeof b.lat === 'number' && typeof b.lng === 'number' && b.coordSource !== 'unknown';
+  const dist = user && hasPreciseCoords ? haversineKm(user, { lat: b.lat!, lng: b.lng! }) : undefined;
+  return {
+    storeId,
+    branchName: b.storeName,
+    city: b.city || '',
+    address: b.address || '',
+    ...(hasPreciseCoords ? { lat: b.lat!, lng: b.lng! } : {}),
+    ...(dist !== undefined ? { distanceKm: Math.round(dist * 10) / 10 } : {}),
+    isSelectedByUser: true,
+  };
+}
+
+// סניף ספציפי שהמשתמש בחר ידנית (במקום "הקרוב ביותר"). מחזיר null אם הסניף לא
+// קיים - הקורא חוזר לסניף הקרוב. המזהה המוחזר הוא המזהה מטבלת המחירים.
+export async function getBranchByStore(
+  chainId: ChainId,
+  storeId: string,
+  user?: UserLocation,
+  pricedStoreIds?: Set<string>
+): Promise<NearestBranch | null> {
+  const all = await getBranches();
+  const target = normStoreId(storeId);
+  const b = all.find(x => x.chainId === chainId && normStoreId(x.storeId) === target);
+  if (!b) return null;
+  return toNearest(b, user, makeStoreIdResolver(pricedStoreIds).resolve(b.storeId));
+}
+
+export interface ChainBranchOption extends NearestBranch {
+  // האם יש לסניף הזה נתוני מחיר. בלעדיהם ההשוואה תישען על הערכה ארצית.
+  hasPriceData: boolean;
+}
+
+const CHAIN_BRANCH_LIST_LIMIT = 40;
+
+// סניפי רשת לבורר הסניפים בלקוח: קודם אלה עם נתוני מחיר, ובתוכם לפי מרחק.
+export async function listChainBranches(
+  chainId: ChainId,
+  user: UserLocation | undefined,
+  pricedStoreIds?: Set<string>
+): Promise<ChainBranchOption[]> {
+  const all = await getBranches();
+  const resolver = makeStoreIdResolver(pricedStoreIds);
+  const options = all
+    .filter(b => b.chainId === chainId && (b.address || b.city || typeof b.lat === 'number'))
+    .map(b => ({
+      ...toNearest(b, user, resolver.resolve(b.storeId)),
+      hasPriceData: resolver.isPriced(b.storeId),
+    }))
+    .map(({ isSelectedByUser: _drop, ...rest }) => rest as ChainBranchOption);
+
+  options.sort((x, y) => {
+    if (x.hasPriceData !== y.hasPriceData) return x.hasPriceData ? -1 : 1;
+    const dx = x.distanceKm ?? Number.POSITIVE_INFINITY;
+    const dy = y.distanceKm ?? Number.POSITIVE_INFINITY;
+    if (dx !== dy) return dx - dy;
+    return x.branchName.localeCompare(y.branchName, 'he');
+  });
+  return options.slice(0, CHAIN_BRANCH_LIST_LIMIT);
 }
