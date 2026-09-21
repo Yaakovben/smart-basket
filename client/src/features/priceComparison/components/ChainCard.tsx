@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import { Box, Typography, Collapse, keyframes } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import NearMeIcon from '@mui/icons-material/NearMe';
-import type { PriceChainTotal, NearestBranch } from '../types/priceComparison.types';
+import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';
 import { daysSince, STALE_CHAIN_DAYS, type ProductPriceRange } from '../helpers/priceComparisonCardHelpers';
@@ -28,6 +28,8 @@ interface ChainCardProps {
   onOpenNav: (b: NearestBranch) => void;
   // פותח את בורר הסניפים של הרשת
   onChangeBranch: (chain: PriceChainTotal) => void;
+  // פותח את בורר המוצר לתיקון התאמה שגויה
+  onFixMatch: (match: PriceMatch) => void;
   // האם המשתמש שיתף מיקום פעיל. רק אז הגיוני להציג "אין סניף במאגר"
   // - לפני אישור מיקום אין סיבה לטעון שהסניף "חסר", פשוט עוד לא נשאלנו.
   hasLocation: boolean;
@@ -37,7 +39,7 @@ interface ChainCardProps {
   cheapestPriceMap?: Map<string, ProductPriceRange>;
 }
 
-export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, onChangeBranch, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
+export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, onChangeBranch, onFixMatch, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
   const { t } = useSettings();
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
@@ -232,7 +234,7 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
 
       {/* תוכן מורחב - רשימת מוצרים + סניף קרוב */}
       <Collapse in={expanded} unmountOnExit>
-        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} onChangeBranch={handleChangeBranch} cheapestPriceMap={cheapestPriceMap} />
+        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} onChangeBranch={handleChangeBranch} onFixMatch={onFixMatch} cheapestPriceMap={cheapestPriceMap} />
       </Collapse>
     </Box>
   );

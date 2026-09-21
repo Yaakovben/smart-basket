@@ -20,6 +20,7 @@ interface PriceTabProps {
   userLocation: { lat: number; lng: number } | null;
   chosenBranches: Record<string, string>;
   onChooseBranch: (chainId: string, storeId: string | null) => void;
+  onMatchChanged: () => void;
   onRequestLocation: () => void;
   onResetLocationDenied: () => void;
   selectedListId: string | null;
@@ -36,7 +37,7 @@ interface PriceTabProps {
 // טאב "מחירים" של עמוד התובנות - השוואת מחירים בין רשתות לרשימה נבחרת.
 export const PriceTab = memo(({
   isDark, priceData, priceLoading, priceLoadingLabel, priceError, onRetry,
-  locationStatus, hasLocation, userLocation, chosenBranches, onChooseBranch, onRequestLocation, onResetLocationDenied,
+  locationStatus, hasLocation, userLocation, chosenBranches, onChooseBranch, onMatchChanged, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
   stickyHidden, stickyScrolled,
 }: PriceTabProps) => {
@@ -239,6 +240,7 @@ export const PriceTab = memo(({
         userLocation={userLocation}
         chosenBranches={chosenBranches}
         onChooseBranch={onChooseBranch}
+        onMatchChanged={onMatchChanged}
         onRequestLocation={onRequestLocation}
         onResetLocationDenied={onResetLocationDenied}
         selectedListName={

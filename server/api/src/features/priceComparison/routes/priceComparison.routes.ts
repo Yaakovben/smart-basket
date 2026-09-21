@@ -5,6 +5,7 @@ import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
 import { testOsm } from '../controllers/diagnostics.controller';
 import { getStatus } from '../controllers/status.controller';
 import { lookupBarcode } from '../controllers/barcode.controller';
+import { searchProducts, setOverride, clearOverride } from '../controllers/overrides.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();
@@ -14,6 +15,9 @@ router.use(authenticate);
 // פתוח לכל משתמש מאומת
 router.get('/', getComparison);
 router.get('/barcode/:barcode', lookupBarcode);
+router.get('/search', searchProducts);
+router.put('/overrides', setOverride);
+router.delete('/overrides', clearOverride);
 router.get('/branches-nearby', getBranchesNearby);
 router.get('/chain-branches/:chainId', getChainBranchOptions);
 

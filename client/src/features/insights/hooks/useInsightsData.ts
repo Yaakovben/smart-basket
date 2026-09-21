@@ -254,11 +254,17 @@ export function useInsightsData(tab: InsightTab) {
       .finally(() => setPriceLoading(false));
   };
 
+  // אחרי תיקון התאמה: רענון ההשוואה, וביטול ההשוואה הלא-מסוננת של טאב 'רשימות'
+  const onMatchChanged = () => {
+    setAllListsPriceData(null);
+    retryPriceFetch();
+  };
+
   return {
     data, priceData, allListsPriceData, loading, error, dataFresh, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
-    chosenBranches, chooseBranch,
+    chosenBranches, chooseBranch, onMatchChanged,
   };
 }

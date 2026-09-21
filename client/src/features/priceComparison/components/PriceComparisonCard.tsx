@@ -11,13 +11,14 @@
 
 import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
-import type { PriceComparisonData, NearestBranch, PriceChainTotal } from '../types/priceComparison.types';
+import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
 import { ChainBranchPicker } from './ChainBranchPicker';
+import { ProductMatchPicker } from './ProductMatchPicker';
 // טעינה עצלה: leaflet/react-leaflet הן ספריות כבדות שלא צריכות להיכנס
 // ל-chunk של השוואת המחירים לפני שמישהו בפועל פותח את המפה. prefetch
 // ב-useEffect למטה דואג שה-chunk כבר יהיה בקאש עד שהמשתמש בפועל ילחץ.
@@ -55,9 +56,11 @@ interface Props {
   // סניפים שנבחרו ידנית (chainId -> storeId) ופעולת הבחירה. storeId=null מבטל בחירה.
   chosenBranches?: Record<string, string>;
   onChooseBranch?: (chainId: string, storeId: string | null) => void;
+  // נקרא אחרי תיקון התאמה - מרענן את ההשוואה
+  onMatchChanged?: () => void;
 }
 
-export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, hasLocation = false, onRequestLocation, selectedListName, userLocation, chosenBranches, onChooseBranch }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, hasLocation = false, onRequestLocation, selectedListName, userLocation, chosenBranches, onChooseBranch, onMatchChanged }: Props) => {
   const { settings, t } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -70,6 +73,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const [mapOpen, setMapOpen] = useState(false);
   // הרשת שעבורה פתוח בורר הסניפים (null = סגור)
   const [pickerChain, setPickerChain] = useState<{ chainId: string; chainName: string } | null>(null);
+  // המוצר שההתאמה שלו מתוקנת כרגע (null = סגור)
+  const [fixMatch, setFixMatch] = useState<PriceMatch | null>(null);
   const openBranchPicker = useCallback((c: PriceChainTotal) => {
     setPickerChain({ chainId: c.chainId, chainName: c.chainName });
   }, []);
@@ -155,6 +160,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 onToggle={() => toggleExpanded(chain.chainId)}
                 onOpenNav={setNavBranch}
                 onChangeBranch={openBranchPicker}
+                onFixMatch={setFixMatch}
                 hasLocation={locationStatus === 'granted'}
                 winnerColor={winnerColor}
                 cheapestPriceMap={cheapestPriceMap}
@@ -166,6 +172,13 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
+
+      {/* בורר מוצר - תיקון התאמה שגויה */}
+      <ProductMatchPicker
+        match={fixMatch}
+        onChanged={() => onMatchChanged?.()}
+        onClose={() => setFixMatch(null)}
+      />
 
       {/* בורר סניף ידני לרשת */}
       <ChainBranchPicker

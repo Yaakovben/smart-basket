@@ -23,6 +23,9 @@ export interface PriceMatch {
   // הסניף הזול ביותר ברשת למוצר הזה (עשוי להיות שונה מהסניף המוצג ללקוח
   // אם price לעיל אומת בסניף אחר). undefined אם לא נמצא סניף עם שם.
   cheapestBranch?: { storeId: string; price: number; branchName: string; city: string };
+  // תיקון ידני של המשתמש: chosen = בחר מוצר, excluded = ביקש "אין התאמה",
+  // unavailable = בחר מוצר שהרשת הזו לא מוכרת. חסר = התאמה אוטומטית.
+  userOverride?: 'chosen' | 'excluded' | 'unavailable';
 }
 
 // קבוצת פריטים לפי רשימה - זה ה-unit המרכזי החדש

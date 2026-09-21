@@ -54,6 +54,15 @@ export interface PriceSyncStatus {
   branchSourceBreakdown?: BranchSourceBreakdown;
 }
 
+// תוצאת חיפוש מוצר לבחירה ידנית (מאוחד לפי ברקוד)
+export interface ProductSearchResult {
+  barcode: string;
+  itemName: string;
+  manufacturerName?: string;
+  chainCount: number;
+  minPrice: number;
+}
+
 export interface UserLocation {
   lat: number;
   lng: number;
@@ -108,6 +117,36 @@ export const priceComparisonApi = {
     return response.data.data;
   },
 
+
+  // חיפוש מוצר לבחירה ידנית כשההתאמה האוטומטית טעתה
+  async searchProducts(q: string): Promise<ProductSearchResult[]> {
+    try {
+      const res = await apiClient.get<{ results: ProductSearchResult[] }>(`/price-comparison/search?q=${encodeURIComponent(q)}`);
+      return res.data.results ?? [];
+    } catch {
+      return [];
+    }
+  },
+
+  // שמירת תיקון התאמה: ברקוד נבחר, או excluded=true ל"אין התאמה". true = הצליח.
+  async setMatchOverride(productName: string, choice: { barcode?: string; excluded?: boolean }): Promise<boolean> {
+    try {
+      await apiClient.put('/price-comparison/overrides', { productName, ...choice });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // ביטול תיקון - חזרה להתאמה האוטומטית. true = הצליח.
+  async clearMatchOverride(productName: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/price-comparison/overrides?productName=${encodeURIComponent(productName)}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
 
   // סניפי רשת לבורר "בחר סניף": קודם עם נתוני מחיר, ובתוכם לפי מרחק.
   async getChainBranches(chainId: string, location?: UserLocation): Promise<ChainBranchOption[]> {
