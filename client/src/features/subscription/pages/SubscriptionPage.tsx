@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Button, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -14,6 +14,8 @@ import { PeriodPicker, priceFor } from '../components/PeriodPicker';
 import { PaymentPanel } from '../components/PaymentPanel';
 import { ReportedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
+import { StepIndicator } from '../components/StepIndicator';
+import { ActivatedDialog } from '../components/ActivatedDialog';
 import { primaryCtaSx } from '../subscription.styles';
 
 interface Props {
@@ -32,6 +34,8 @@ export const SubscriptionPage = ({ showToast }: Props) => {
   const { status, loading, error, busy, reload, createRequest, reportPaid, cancelRequest } = useSubscription();
   const [monthsChoice, setMonthsChoice] = useState<number | null>(null);
   const [showUnavailable, setShowUnavailable] = useState(false);
+  const [activated, setActivated] = useState(false);
+  const wasReportedRef = useRef(false);
 
   const months = useMemo(() => {
     if (!status) return 1;
@@ -42,11 +46,31 @@ export const SubscriptionPage = ({ showToast }: Props) => {
 
   const isPro = status?.plan === 'pro';
   const isPermanent = isPro && !status?.planExpiresAt;
-  const hasPaymentMethod = !!(status?.payment.bit || status?.payment.paybox);
-  const defaultMethod: SubscriptionPayMethod = status?.payment.bit ? 'bit' : 'paybox';
+  const hasPaymentMethod = !!(status?.payment.bit || status?.payment.paybox || status?.payment.bank);
+  const defaultMethod: SubscriptionPayMethod = status?.payment.bit ? 'bit' : status?.payment.paybox ? 'paybox' : 'bank';
   const open = status?.openRequest ?? null;
   const lastResolved = status?.history.find((h) => h.status !== 'pending' && h.status !== 'reported' && h.status !== 'cancelled');
   const showRejected = !open && lastResolved?.status === 'rejected';
+
+  const reportedNow = open?.status === 'reported';
+
+  // בזמן שהתשלום בבדיקה - בודקים שקט כל 20 שניות אם הופעל, וגם כשחוזרים לאפליקציה.
+  useEffect(() => {
+    if (!reportedNow) return;
+    const poll = () => { if (document.visibilityState === 'visible') void reload(true); };
+    const id = window.setInterval(poll, 20_000);
+    document.addEventListener('visibilitychange', poll);
+    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', poll); };
+  }, [reportedNow, reload]);
+
+  // הבקשה עברה מ"בבדיקה" ל"אושרה" בזמן שהמשתמש כאן - חוגגים.
+  useEffect(() => {
+    if (!status) return;
+    if (wasReportedRef.current && !status.openRequest && status.plan === 'pro' && status.history[0]?.status === 'approved') {
+      setActivated(true);
+    }
+    wasReportedRef.current = status.openRequest?.status === 'reported';
+  }, [status]);
 
   const errorMessage = (code?: string) => (code === 'REQUEST_ALREADY_REPORTED' ? s.errorAlreadyReported : s.errorGeneric);
 
@@ -111,6 +135,10 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <PlanHero status={status} s={s} isDark={isDark} locale={locale} />
 
+            {!isPermanent && (
+              <StepIndicator step={open?.status === 'pending' ? 2 : open?.status === 'reported' ? 3 : 1} s={s} isDark={isDark} />
+            )}
+
             {open?.status === 'pending' && (
               <PaymentPanel
                 status={status} request={open} s={s} isDark={isDark} busy={busy}
@@ -150,6 +178,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           </Box>
         ) : null}
       </Box>
+      <ActivatedDialog open={activated} s={s} isDark={isDark} onClose={() => setActivated(false)} />
     </Box>
   );
 };

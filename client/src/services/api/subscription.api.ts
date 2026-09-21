@@ -1,14 +1,14 @@
 import apiClient from './client';
 
 export type SubscriptionRequestStatus = 'pending' | 'reported' | 'approved' | 'rejected' | 'cancelled';
-export type SubscriptionPayMethod = 'bit' | 'paybox';
+export type SubscriptionPayMethod = 'bit' | 'paybox' | 'bank';
 
 export interface SubscriptionRequestDto {
   id: string;
   months: number;
   amount: number;
   currency: string;
-  method: SubscriptionPayMethod | 'bank';
+  method: SubscriptionPayMethod;
   reference: string;
   status: SubscriptionRequestStatus;
   createdAt: string;
@@ -45,6 +45,7 @@ export interface SubscriptionStatus {
   payment: {
     bit: { phone: string | null; url: string | null } | null;
     paybox: { url: string } | null;
+    bank: { bankName: string; branch: string; account: string } | null;
     receiverName: string | null;
     supportEmail: string;
   };

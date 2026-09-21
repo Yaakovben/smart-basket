@@ -5,7 +5,9 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { useNavigate } from 'react-router-dom';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { ReactElement, Ref } from 'react';
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
+import { subscriptionApi } from '../../services/api/subscription.api';
+import { getSubscriptionStrings } from '../../features/subscription/subscription.strings';
 import Zoom from '@mui/material/Zoom';
 import type { TransitionProps } from '@mui/material/transitions';
 import { useSettings } from '../context/SettingsContext';
@@ -37,6 +39,15 @@ const FEATURE_LIMIT_KEY: Record<PlanLimitFeature, 'upgradeListLimit' | 'upgradeM
 export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   const { t, settings } = useSettings();
   const navigate = useNavigate();
+  const subStrings = getSubscriptionStrings(settings.language);
+  // המחיר האמיתי מהשרת (לא טקסט קבוע) - נטען כשהחלון נפתח; כשל = בלי שורת מחיר.
+  const [monthly, setMonthly] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    subscriptionApi.getStatus().then((st) => { if (!cancelled) setMonthly(st.catalog.monthly); }).catch(() => { /* ללא מחיר */ });
+    return () => { cancelled = true; };
+  }, [open]);
   const isDark = settings.theme === 'dark';
 
   const features: Array<'upgradeListLimit' | 'upgradeMembersLimit' | 'upgradeAiLimit' | 'upgradePriceLimit'> = [
@@ -152,6 +163,16 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           ))}
         </Box>
 
+
+        {monthly !== null && (
+          <Box sx={{ textAlign: 'center', mt: 2.25 }}>
+            <Typography sx={{ fontSize: 24, fontWeight: 900, color: isDark ? 'white' : '#4C1D95', lineHeight: 1.1 }}>
+              {subStrings.from}₪{Number.isInteger(monthly) ? monthly : monthly.toFixed(2)}
+              <Typography component="span" sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}> {subStrings.perMonth}</Typography>
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.4 }}>{subStrings.upgradeModalPrice}</Typography>
+          </Box>
+        )}
 
         {/* CTA - אותו "ברק" נע כמו כפתור השדרוג ב-SubscriptionModal */}
         <Button

@@ -15,6 +15,7 @@ import { useHomePushPrompt } from '../hooks/useHomePushPrompt';
 import { useFeedbackPopup } from '../hooks/useFeedbackPopup';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
+import { SubscriptionBanner } from '../../subscription/components/SubscriptionBanner';
 import { HomeMenuSheet } from './HomeMenuSheet';
 import { HomeListContent } from './HomeListContent';
 import { PwaInstallPrompt } from './PwaInstallPrompt';
@@ -148,6 +149,8 @@ export const HomeComponent = memo(({
         onSettingsClick={() => navigate('/settings')}
         t={t}
       />
+
+      <SubscriptionBanner />
 
       <HomeListContent
         contentRef={contentRef}

@@ -26,6 +26,7 @@ export function priceForMonths(months: number): number {
 export interface PaymentMethodsConfig {
   bit: { phone: string | null; url: string | null } | null;
   paybox: { url: string } | null;
+  bank: { bankName: string; branch: string; account: string } | null;
 }
 
 export function getPaymentMethods(): PaymentMethodsConfig {
@@ -33,7 +34,10 @@ export function getPaymentMethods(): PaymentMethodsConfig {
     ? { phone: env.BIT_PHONE ?? null, url: env.BIT_PAYMENT_URL ?? null }
     : null;
   const paybox = env.PAYBOX_PAYMENT_URL ? { url: env.PAYBOX_PAYMENT_URL } : null;
-  return { bit, paybox };
+  const bank = env.BANK_NAME && env.BANK_BRANCH && env.BANK_ACCOUNT
+    ? { bankName: env.BANK_NAME, branch: env.BANK_BRANCH, account: env.BANK_ACCOUNT }
+    : null;
+  return { bit, paybox, bank };
 }
 
 export function getPlansCatalog() {
@@ -54,7 +58,7 @@ function isMethodAvailable(method: SubscriptionPayMethod): boolean {
   const m = getPaymentMethods();
   if (method === 'bit') return !!m.bit;
   if (method === 'paybox') return !!m.paybox;
-  return false;
+  return !!m.bank;
 }
 
 function generateReference(): string {

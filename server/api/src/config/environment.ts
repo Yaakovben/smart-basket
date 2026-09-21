@@ -139,6 +139,10 @@ const envSchema = Joi.object({
   PAYBOX_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
   // שם המקבל כפי שיוצג ללקוח לפני התשלום (לאימות שהעברה הולכת לאדם הנכון).
   PAYMENT_RECEIVER_NAME: Joi.string().max(60).optional(),
+  // העברה בנקאית (אופציונלי) - שלושתם נדרשים יחד, אחרת האפשרות לא מוצגת.
+  BANK_NAME: Joi.string().max(40).optional(),
+  BANK_BRANCH: Joi.string().pattern(/^\d{2,4}$/).optional(),
+  BANK_ACCOUNT: Joi.string().pattern(/^\d{4,12}$/).optional(),
   // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
   TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
 }).unknown(true); // מאפשר משתני סביבה נוספים
@@ -195,6 +199,9 @@ export interface Environment {
   BIT_PAYMENT_URL?: string;
   PAYBOX_PAYMENT_URL?: string;
   PAYMENT_RECEIVER_NAME?: string;
+  BANK_NAME?: string;
+  BANK_BRANCH?: string;
+  BANK_ACCOUNT?: string;
   TRIAL_MONTHS: number;
 }
 

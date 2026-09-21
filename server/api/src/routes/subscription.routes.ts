@@ -61,6 +61,7 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
       payment: {
         bit: methods.bit,
         paybox: methods.paybox,
+        bank: methods.bank,
         receiverName: env.PAYMENT_RECEIVER_NAME ?? null,
         supportEmail: 'smartbasket129@gmail.com',
       },
@@ -78,11 +79,11 @@ router.post(
   validate({
     body: Joi.object({
       months: Joi.number().valid(...ALLOWED_MONTHS).required(),
-      method: Joi.string().valid('bit', 'paybox').required(),
+      method: Joi.string().valid('bit', 'paybox', 'bank').required(),
     }),
   }),
   asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { months, method } = req.body as { months: number; method: 'bit' | 'paybox' };
+    const { months, method } = req.body as { months: number; method: 'bit' | 'paybox' | 'bank' };
     const request = await createRequest(req.user!.id, months, method);
     res.status(201).json({ success: true, data: serializeRequest(request) });
   }),
