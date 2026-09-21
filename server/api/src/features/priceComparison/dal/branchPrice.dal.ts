@@ -46,6 +46,15 @@ export const BranchPriceDAL = {
     return res.deletedCount ?? 0;
   },
 
+  // מוחק את כל נתוני הסניף של הרשת (שורות וכיסוי). לרשת שחרגה מתקציב השורות:
+  // שורות ישנות בלי כיסוי היו ממשיכות להציג מחירים מפורשים שכבר לא עדכניים.
+  async clearChain(chainId: ChainId): Promise<number> {
+    const res = await BranchPrice.deleteMany({ chainId });
+    await ChainPriceCoverage.deleteOne({ chainId });
+    storeIdsCache.delete(chainId);
+    return res.deletedCount ?? 0;
+  },
+
   // שומר אילו סניפים הופיעו בפיד האחרון של הרשת (מזהים מנורמלים)
   async recordCoverage(chainId: ChainId, storeIds: string[], syncedAt: Date): Promise<void> {
     await ChainPriceCoverage.updateOne({ chainId }, { $set: { storeIds, syncedAt } }, { upsert: true });

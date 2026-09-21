@@ -14,6 +14,15 @@
 // מוצר שנמכר בלפחות 90% מסניפי הרשת: היעדר שורה בסניף מסונכרן = המחיר הנפוץ.
 export const TYPICAL_COVERAGE_THRESHOLD = 0.9;
 
+// תקציב שורות החריגה לרשת. נמדד: כ-130 בתים לשורה (נתונים ואינדקסים), ואשכול
+// Atlas חינמי הוא 512MB. 14 רשתות × 150 אלף שורות ≈ 275MB, ומשאיר מקום ל-prices
+// ולשאר האוספים. רשת שחורגת (מחירים שמשתנים הרבה בין סניפים) לא נשמרת ברמת
+// סניף בכלל, ונשארת בהשוואה ברמת רשת מסומנת "לא מאומת". חלקי-נתונים היה גרוע
+// יותר: שורה חסרה למוצר בכיסוי גבוה מוסקת בטעות כמחיר הנפוץ.
+export const MAX_EXCEPTION_ROWS_PER_CHAIN = 150_000;
+
+export const exceedsExceptionBudget = (rowCount: number): boolean => rowCount > MAX_EXCEPTION_ROWS_PER_CHAIN;
+
 export interface FeedItem {
   storeId: string;
   barcode: string;

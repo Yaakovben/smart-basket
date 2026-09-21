@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildBarcodeStats, needsExplicitRow, resolveBranchPrice } from '../branchPricing';
+import { buildBarcodeStats, needsExplicitRow, resolveBranchPrice, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from '../branchPricing';
 
 const item = (storeId: string, barcode: string, price: number) => ({ storeId, barcode, price });
 
@@ -66,4 +66,10 @@ test('מוצר בכיסוי נמוך בלי שורה: לא מסיקים שהסנ
 test('בלי מחיר נפוץ (נתונים ישנים) חוזרים למחיר הזול ברשת', () => {
   const r = resolveBranchPrice({ storeHasPrices: true, chainMin: 8 });
   assert.deepEqual(r, { price: 8, verified: false, inferred: false });
+});
+
+test('תקציב שורות: עד התקרה מותר, מעליה לא', () => {
+  assert.equal(exceedsExceptionBudget(MAX_EXCEPTION_ROWS_PER_CHAIN), false);
+  assert.equal(exceedsExceptionBudget(MAX_EXCEPTION_ROWS_PER_CHAIN + 1), true);
+  assert.equal(exceedsExceptionBudget(0), false);
 });
