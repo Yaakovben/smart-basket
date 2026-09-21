@@ -920,6 +920,7 @@ export type TranslationKeys =
   | 'retrying'
   | 'reloadPageAction'
   | 'offlineShort'
+  | 'syncingShort'
   | 'offlineWillSync'
   | 'offlineActionsPending'
   | 'joinLandingTitle'

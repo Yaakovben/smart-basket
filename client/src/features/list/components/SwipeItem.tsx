@@ -1,7 +1,11 @@
-import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useState, useRef, useEffect, memo, useCallback, useSyncExternalStore } from 'react';
+import { subscribePendingProductIds, isProductPendingSync } from '../../../services/offlineQueue';
 import { Box, Typography } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
+import CloudOffRoundedIcon from '@mui/icons-material/CloudOffRounded';
 import type { Product, ProductCategory } from '../../../global/types';
+import { isTempId } from '../helpers/list-helpers';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { cldThumb, cldBlur } from '../../../global/helpers/cloudinaryImage';
 import { IconTile, ProgressiveImage } from '../../../global/components';
@@ -26,6 +30,15 @@ interface SwipeItemProps {
   onOpen: (productId: string) => void;
   onClose: () => void;
 }
+
+const subscribeOnlineStatus = (cb: () => void) => {
+  window.addEventListener('online', cb);
+  window.addEventListener('offline', cb);
+  return () => {
+    window.removeEventListener('online', cb);
+    window.removeEventListener('offline', cb);
+  };
+};
 
 const actionBtnStyle = {
   flex: 1,
@@ -65,6 +78,12 @@ const renderHighlighted = (text: string, term: string) => {
 export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, onExitSelectionMode, isPurchased, isOpen, isSelected, selectionMode, currentUserName, searchTerm, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
+  const queuedPending = useSyncExternalStore(
+    subscribePendingProductIds,
+    () => isProductPendingSync(product.id),
+  );
+  const isOnline = useSyncExternalStore(subscribeOnlineStatus, () => navigator.onLine);
+  const PendingIcon = isOnline ? SyncRoundedIcon : CloudOffRoundedIcon;
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
   // תמונת המוצר נכשלה לטעון (URL מת, מכסת Cloudinary, וכו') - נופל
@@ -571,6 +590,34 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             )}
           </Typography>
         </Box>
+        {(isTempId(product.id) || queuedPending) && (
+          // חיווי סנכרון שקט: עיגול קטן בלי טקסט ובלי הבהוב מתמשך. אין אינטרנט =
+          // ענן חתוך בענבר; יש חיבור והשרת עוד לא אישר = ענן מסתנכרן בטורקיז עדין
+          // (מסתובב לאט). הטקסט המלא בטולטיפ/קורא מסך.
+          <Box
+            role="status"
+            aria-label={isOnline ? t('stillSyncingProduct') : t('offlineWillSync')}
+            title={isOnline ? t('stillSyncingProduct') : t('offlineWillSync')}
+            sx={{
+              width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: isOnline ? (isDark ? '#5EEAD4' : '#0F766E') : (isDark ? '#FCD34D' : '#B45309'),
+              bgcolor: isOnline
+                ? (isDark ? 'rgba(20,184,166,0.16)' : 'rgba(20,184,166,0.11)')
+                : (isDark ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.13)'),
+              animation: 'sbPendingIn 0.25s ease-out',
+              '@keyframes sbPendingIn': { from: { opacity: 0, transform: 'scale(0.6)' }, to: { opacity: 1, transform: 'scale(1)' } },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }}
+          >
+            <PendingIcon sx={{
+              fontSize: 14,
+              animation: isOnline ? 'sbPendingSpin 2.4s linear infinite' : 'none',
+              '@keyframes sbPendingSpin': { to: { transform: 'rotate(360deg)' } },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }} />
+          </Box>
+        )}
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>
         )}

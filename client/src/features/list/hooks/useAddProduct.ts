@@ -147,6 +147,7 @@ export const useAddProduct = ({
         const pendingAction = pendingTempActions.current.get(tempId);
         pendingTempActions.current.delete(tempId);
         void enqueueAdd(list.id, productData, tempId, pendingAction === 'toggle');
+        if (showToastOnAdd) showToast(t('offlineWillSync'), 'info');
         return;
       }
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
@@ -263,6 +264,7 @@ export const useAddProduct = ({
     } catch (error) {
       if (isNetworkError(error)) {
         void enqueueUpdate(list.id, existing.id, { quantity: newQuantity });
+        showToast(t('offlineWillSync'), 'info');
         return;
       }
       onUpdateProductsForList(list.id, (currentProducts) =>

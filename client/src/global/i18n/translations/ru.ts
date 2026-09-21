@@ -915,6 +915,7 @@ export const ru: Translations = {
   retrying: 'Повтор',
   reloadPageAction: 'Перезагрузить страницу',
   offlineShort: 'Не в сети',
+  syncingShort: 'Сохраняем...',
   offlineWillSync: 'Изменения сохранены и синхронизируются, когда вы снова будете в сети',
   offlineActionsPending: '{count} действий в очереди — отправятся, когда вы снова будете в сети',
   joinLandingTitle: 'Присоединение к списку',
