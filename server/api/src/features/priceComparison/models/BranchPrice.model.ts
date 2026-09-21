@@ -23,9 +23,9 @@ export interface IBranchPriceDoc extends Document {
 
 const branchPriceSchema = new Schema<IBranchPriceDoc>(
   {
-    chainId: { type: String, required: true, index: true },
+    chainId: { type: String, required: true },
     storeId: { type: String, required: true },
-    barcode: { type: String, required: true, index: true },
+    barcode: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
   },
   {
@@ -40,7 +40,9 @@ const branchPriceSchema = new Schema<IBranchPriceDoc>(
   }
 );
 
-// ייחודיות: מחיר אחד לכל (סניף, ברקוד)
+// ייחודיות: מחיר אחד לכל (סניף, ברקוד). האינדקס הזה מכסה את כל השאילתות
+// (chainId ו-storeId הם prefix שלו), ולכן אין אינדקסים נפרדים ל-chainId/barcode:
+// הם היו רוב נפח האינדקסים ונוגעים בזיכרון ובנפח ה-DB בלי תועלת.
 branchPriceSchema.index({ chainId: 1, storeId: 1, barcode: 1 }, { unique: true });
 
 export const BranchPrice = model<IBranchPriceDoc>('BranchPrice', branchPriceSchema);

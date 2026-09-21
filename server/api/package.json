@@ -10,6 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "get-gmail-token": "ts-node-dev --transpile-only src/scripts/get-gmail-token.ts",
     "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "slim-branch-prices": "node dist/features/priceComparison/scripts/slim-branch-prices.js",
     "verify-store-ids": "node dist/features/priceComparison/scripts/verify-store-ids.js",
     "refresh-prices": "ts-node-dev --transpile-only src/features/priceComparison/scripts/refresh-prices.ts",
     "geocode-branches": "ts-node-dev --transpile-only src/features/priceComparison/scripts/geocode-branches.ts",
