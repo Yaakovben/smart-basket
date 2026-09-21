@@ -263,7 +263,9 @@ export const shufersalAdapter: ChainAdapter = {
       // לכן מורידים מספר קבצים ומאחדים. מגבלים ל-15 סניפים כדי לא לחרוג
       // מ-2 דקות (גם 15 סניפים זה ~75k פריטים אחרי dedup, מספיק לרשת).
       let urls: string[] = [];
-      const catIdsToTry = [0, 1, 2];
+      // catID=2 הוא PriceFull (מלא, אלפי פריטים לקובץ). catID=0 הוא Price (delta, כ-10
+      // פריטים לקובץ) והוא ראשון ברשימה הישנה, ולכן ההשוואה הסתמכה על 232 פריטים בלבד.
+      const catIdsToTry = [2, 1, 0];
       const prefixesToTry = ['PriceFull', 'Price'];
       for (const cat of catIdsToTry) {
         try {

@@ -22,6 +22,7 @@
 import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
+import { extractDateStamp, extractStoreIdFromName } from './binaFileNames';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
 } from './types';
@@ -112,18 +113,6 @@ async function resolveAndDownload(
   });
   if (fileRes.status >= 400) throw new Error(`bina_download_http_${fileRes.status}`);
   return Buffer.from(fileRes.data as ArrayBuffer);
-}
-
-// מחלץ את חתימת התאריך משם-קובץ (yyyymmddhhmm).
-function extractDateStamp(filename: string): string {
-  const m = filename.match(/(\d{12})\.(?:gz|xml)$/i);
-  return m ? m[1] : '';
-}
-
-// מחלץ את storeId משם-קובץ - תבנית: PriceFull{chainId}-{storeId}-{stamp}.gz
-function extractStoreIdFromName(filename: string): string {
-  const m = filename.match(/-(\d+)-\d{12}\.(?:gz|xml)$/i);
-  return m ? m[1] : '';
 }
 
 // מחזיר את הקובץ הטרי ביותר לכל סניף בנפרד (PriceFull). לקובץ Stores

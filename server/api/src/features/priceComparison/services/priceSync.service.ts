@@ -215,7 +215,8 @@ async function syncSingleChain(adapter: ChainAdapter): Promise<SyncResult> {
 const DELAY_BETWEEN_CHAINS_MS = 3000;
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
-export async function syncAllChains(): Promise<SyncResult[]> {
+// chainIds אופציונלי: סנכרון רשתות מסוימות בלבד (הרצה ידנית ממוקדת, למשל אחרי תיקון adapter)
+export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> {
   // מנעול יחיד ומשותף - קודם זה נבדק בנפרד ע"י sync.controller.ts (טריגר
   // אדמין) ו-priceSync.job.ts (cron), כל אחד עם boolean משלו שלא ידע על
   // השני. סנכרון-אדמין יכול היה להתחיל בדיוק כשה-cron של 04:00 כבר רץ -
@@ -228,15 +229,16 @@ export async function syncAllChains(): Promise<SyncResult[]> {
   }
 
   const results: SyncResult[] = [];
+  const selected = chainIds ? adapters.filter(a => chainIds.includes(a.chainId)) : adapters;
 
   syncProgress = {
     active: true, currentIndex: 0, currentChainName: '',
-    totalChains: adapters.length, completedChains: 0,
+    totalChains: selected.length, completedChains: 0,
     startedAt: new Date().toISOString(),
   };
 
-  for (let i = 0; i < adapters.length; i++) {
-    const adapter = adapters[i];
+  for (let i = 0; i < selected.length; i++) {
+    const adapter = selected[i];
     syncProgress.currentIndex = i;
     syncProgress.currentChainName = adapter.chainName;
     if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
