@@ -29,8 +29,9 @@ const MAX_DECOMPRESSED_BYTES = 300 * 1024 * 1024;
 // axiosGetWithTlsFallback מנסה TLS תקין תחילה — fallback רק בשגיאת CERT.
 
 interface PriceFullXml {
-  Root?: { Items?: { Item?: RawItem[] | RawItem } };
-  root?: { Items?: { Item?: RawItem[] | RawItem } };
+  // מזהה הסניף בשופרסל מופיע ברמת הקובץ (Root/StoreID) ולא בכל פריט
+  Root?: { StoreID?: string | number; StoreId?: string | number; Items?: { Item?: RawItem[] | RawItem } };
+  root?: { StoreID?: string | number; StoreId?: string | number; Items?: { Item?: RawItem[] | RawItem } };
 }
 
 interface RawItem {
@@ -106,6 +107,11 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
   const parsed = parser.parse(xml) as PriceFullXml;
   const itemsNode = parsed.Root?.Items?.Item || parsed.root?.Items?.Item;
   if (!itemsNode) return [];
+  // בלי מזהה סניף לא אפשר לשמור מחיר ברמת סניף. הפריט עצמו לא נושא אותו, ולכן
+  // לוקחים מרמת הקובץ.
+  const root = parsed.Root ?? parsed.root;
+  const fileStoreIdRaw = root?.StoreID ?? root?.StoreId;
+  const fileStoreId = fileStoreIdRaw !== undefined && String(fileStoreIdRaw).trim() !== '' ? String(fileStoreIdRaw).trim() : undefined;
   const priceItems = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
 
   const results: ChainPriceItem[] = [];
@@ -139,7 +145,7 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
       unitOfMeasure: get('UnitOfMeasure'),
       manufacturerName: get('ManufacturerName'),
       quantity: getNum('Quantity'),
-      storeId: get('StoreId'),
+      storeId: get('StoreId') ?? fileStoreId,
       manufactureCountry: get('ManufactureCountry'),
       manufacturerItemDescription: get('ManufacturerItemDescription'),
       qtyInPackage: getNum('QtyInPackage'),

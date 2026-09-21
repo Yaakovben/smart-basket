@@ -21,7 +21,7 @@ import { BranchPriceDAL, type UpsertBranchPriceInput } from '../dal/branchPrice.
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
 import { normStoreId } from './storeId';
-import { buildBarcodeStats, needsExplicitRow, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from './branchPricing';
+import { buildBarcodeStats, classifyExplicitRow, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from './branchPricing';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
@@ -376,19 +376,31 @@ async function processChainItems(
     ? await syncStoresForChain(adapter)
     : { error: 'adapter_has_no_stores_support' };
 
-  const branchPriceInputs: UpsertBranchPriceInput[] = [];
+  // שתי סיבות לשמור שורה: מחיר שונה מהנפוץ (חובה: בלעדיהן היסק מהמחיר הנפוץ יהיה
+  // שגוי), ומוצר בכיסוי נמוך במחיר הנפוץ (מידע על זמינות בסניף, רצוי אבל לא חובה).
+  const requiredRows: UpsertBranchPriceInput[] = [];
+  const optionalRows: UpsertBranchPriceInput[] = [];
   for (const it of validItems) {
     if (!it.storeId) continue;
-    if (!needsExplicitRow(it.price, barcodeStats.get(it.barcode))) continue;
-    branchPriceInputs.push({
+    const reason = classifyExplicitRow(it.price, barcodeStats.get(it.barcode));
+    if (!reason) continue;
+    const row = {
       chainId: adapter.chainId, storeId: normStoreId(it.storeId),
       barcode: it.barcode, price: it.price, syncedAt: syncStart,
-    });
+    };
+    (reason === 'priceDiffers' ? requiredRows : optionalRows).push(row);
   }
-  // חריגה מהתקציב: לא שומרים מחירי סניף לרשת הזו, ומנקים את הישנים
+  const rowReasons = { priceDiffers: requiredRows.length, lowCoverage: optionalRows.length };
+  // שורות זמינות נשמרות רק אם נכנסות לתקציב. בלעדיהן מוצר בכיסוי נמוך נשאר מחיר
+  // נפוץ לא מאומת, שזה נכון: אנחנו לא יודעים אם הסניף מוכר אותו.
+  const branchPriceInputs = exceedsExceptionBudget(requiredRows.length + optionalRows.length)
+    ? requiredRows
+    : [...requiredRows, ...optionalRows];
+  // גם שורות החובה לבדן חורגות: המחירים משתנים הרבה בין הסניפים. לא שומרים
+  // מחירי סניף לרשת הזו, ומנקים את הישנים
   if (exceedsExceptionBudget(branchPriceInputs.length)) {
     const cleared = await BranchPriceDAL.clearChain(adapter.chainId);
-    logger.warn(`[price-sync] ${adapter.chainId}: ${branchPriceInputs.length} branch-price exceptions exceed budget of ${MAX_EXCEPTION_ROWS_PER_CHAIN}, storing chain-level prices only (cleared ${cleared} old rows)`);
+    logger.warn(`[price-sync] ${adapter.chainId}: ${branchPriceInputs.length} branch-price exceptions exceed budget of ${MAX_EXCEPTION_ROWS_PER_CHAIN} (priceDiffers=${rowReasons.priceDiffers}, lowCoverage=${rowReasons.lowCoverage}), storing chain-level prices only (cleared ${cleared} old rows)`);
     branchPriceInputs.length = 0;
     feedStoreIds.clear();
   }
@@ -407,7 +419,7 @@ async function processChainItems(
     branchPricesPruned = await BranchPriceDAL.pruneStale(adapter.chainId, syncStart);
     await BranchPriceDAL.recordCoverage(adapter.chainId, Array.from(feedStoreIds), syncStart);
   }
-  logger.info(`[price-sync] ${adapter.chainId}: branch-price exceptions upserted=${branchPricesUpserted} of ${validItems.length} items, stores=${feedStoreIds.size}, pruned=${branchPricesPruned}`);
+  logger.info(`[price-sync] ${adapter.chainId}: branch-price exceptions upserted=${branchPricesUpserted} of ${validItems.length} items (priceDiffers=${rowReasons.priceDiffers}, lowCoverage=${rowReasons.lowCoverage}), stores=${feedStoreIds.size}, pruned=${branchPricesPruned}`);
 
   const elapsedMs = Date.now() - t0;
   logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
