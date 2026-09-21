@@ -6,10 +6,11 @@ import { getAccessToken, getRefreshToken, setTokens } from './token-storage';
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
 import { consumeLegacyRefreshToken } from './token-storage';
 
-export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
-if (!API_URL) {
-  console.error('CRITICAL: VITE_API_URL is not configured for production!');
-}
+// בפרודקשן ה-API נגיש תחת אותו דומיין של האתר: '/api' מועבר ל-Render ע"י
+// rewrite ב-client/vercel.json (reverse proxy). כך ה-refresh cookie הוא
+// first-party ונשלח תמיד (גם ב-Safari), והוא נשאר httpOnly + SameSite=Strict.
+// VITE_API_URL נדרש רק כדי לעקוף (פיתוח מקומי / בדיקות).
+export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // no-op: היה דגל למניעת redirect אוטומטי בזמן תהליך אימות פעיל, אבל אותו
 // redirect הוסר לגמרי (ראו redirectToSessionExpiredLogin למטה) - אין יותר
