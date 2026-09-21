@@ -14,13 +14,15 @@ interface ProductRowProps {
   // יש סניף קרוב מוצג אבל המחיר לא אומת דווקא באותו סניף - עדיף להזהיר
   // מאשר לגרום ללקוח לראות מחיר שונה בפועל בחנות.
   showBranchUnverified?: boolean;
+  // פותח את בורר המוצר כדי לתקן התאמה שגויה. אם לא הועבר - אין אפשרות תיקון.
+  onFixMatch?: (match: PriceMatch) => void;
 }
 
 // מתחת לסף הזה ההתאמה לפי שם חלשה - מבקשים מהמשתמש לוודא שזה המוצר הנכון
 const LOW_CONFIDENCE = 0.6;
 
 // שורת מוצר בתוך כרטיס מורחב - שם + מחיר + אינדיקטור "הכי זול"
-export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice, showBranchUnverified }: ProductRowProps) => {
+export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice, showBranchUnverified, onFixMatch }: ProductRowProps) => {
   const { t } = useSettings();
   if (!match.matched) {
     return (
@@ -34,8 +36,15 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
           {match.userProductName}
         </Typography>
         <Typography sx={{ fontSize: 10.5, color: '#D97706', fontWeight: 700, flexShrink: 0 }}>
-          {t('productNotFound')}
+          {match.userOverride === 'excluded' ? t('matchExcludedByYou')
+            : match.userOverride === 'unavailable' ? t('matchNotSoldHere')
+            : t('productNotFound')}
         </Typography>
+        {onFixMatch && (
+          <Typography onClick={() => onFixMatch(match)} sx={{ fontSize: 10.5, color: '#0D9488', fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
+            {t('matchFixAction')}
+          </Typography>
+        )}
       </Box>
     );
   }
@@ -99,7 +108,17 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
             {match.manufacturerName ? <> · {match.manufacturerName}</> : null}
           </Typography>
         )}
-        {match.matchConfidence < LOW_CONFIDENCE && (
+        {match.userOverride === 'chosen' && (
+          <Typography sx={{ fontSize: 10, color: '#059669', fontWeight: 700, mt: 0.1 }}>
+            ✓ {t('matchChosenByYou')}
+          </Typography>
+        )}
+        {onFixMatch && (
+          <Typography onClick={() => onFixMatch(match)} sx={{ fontSize: 10.5, color: '#0D9488', fontWeight: 800, cursor: 'pointer', mt: 0.1, width: 'fit-content' }}>
+            {t('matchNotRightAction')}
+          </Typography>
+        )}
+        {!match.userOverride && match.matchConfidence < LOW_CONFIDENCE && (
           <Typography sx={{ fontSize: 10, color: '#D97706', fontWeight: 700, mt: 0.1 }}>
             {t('lowConfidenceMatch')}
           </Typography>

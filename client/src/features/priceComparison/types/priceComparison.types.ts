@@ -21,6 +21,9 @@ export interface PriceMatch {
   priceVerifiedAtBranch?: boolean;
   // הסניף הזול ביותר ברשת למוצר הזה - מוצג רק כשהוא זול יותר מהמחיר שכבר מוצג.
   cheapestBranch?: { storeId: string; price: number; branchName: string; city: string };
+  // תיקון ידני של המשתמש: chosen = בחר מוצר, excluded = "אין התאמה",
+  // unavailable = בחר מוצר שהרשת הזו לא מוכרת. חסר = התאמה אוטומטית.
+  userOverride?: 'chosen' | 'excluded' | 'unavailable';
 }
 
 // קבוצת פריטים לפי רשימה - unit מרכזי של UI

@@ -4,6 +4,7 @@ import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { getCachedComparison, setCachedComparison } from './comparisonCache';
 import { matchNormalizedName, BETA_CHAIN_ID, BETA_CHAIN_NAME, type NameMatch } from './productMatcher';
+import { loadOverrideContext, applyOverridesToCache } from './matchOverrides';
 import { buildChainTotals, resolveBranchForChain, type PendingProductLean } from './chainComparison';
 import type { UserLocation } from './branches.service';
 import type { PriceMatch, PriceListGroup, PriceChainTotal, PriceComparisonData } from './priceComparison.types';
@@ -183,6 +184,10 @@ export async function getComparisonForUser(
     })
   );
 
+  // תיקוני התאמה של המשתמש - מוחלים גם על הרשת הראשית (חלוקה לרשימות)
+  const overrideCtx = await loadOverrideContext(userId);
+  await applyOverridesToCache(nameMatchCache, overrideCtx, BETA_CHAIN_ID, primaryNearestBranch?.storeId);
+
   // קיבוץ מוצרים לפי רשימה
   const productsByList = new Map<string, typeof pendingProducts>();
   for (const p of pendingProducts) {
@@ -201,7 +206,7 @@ export async function getComparisonForUser(
   const grandTotal = listGroups.reduce((s, g) => s + g.estimatedTotal, 0);
 
   // השוואה רב-רשתית: לכל רשת פעילה, סך הסל + "הכי זול"/"סל שלם"
-  const chainTotals = await buildChainTotals(pendingProducts, uniqueNames, nameMatchCache, userLocation, chosenBranches);
+  const chainTotals = await buildChainTotals(pendingProducts, uniqueNames, nameMatchCache, userLocation, chosenBranches, overrideCtx);
 
   return cacheAndReturn({
     ...baseResponse,

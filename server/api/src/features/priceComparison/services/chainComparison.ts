@@ -1,6 +1,7 @@
 import type { ChainId } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { getRegisteredChains } from './priceSync.service';
+import { applyOverridesToCache, type OverrideContext } from './matchOverrides';
 import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { findNearestBranch, getBranchByStore, type NearestBranch, type UserLocation } from './branches.service';
 import { matchNormalizedName, finalizeMatch, getSearchTokensForName, BETA_CHAIN_ID, type NameMatch } from './productMatcher';
@@ -26,7 +27,9 @@ export async function buildChainTotals(
   nameMatchCache: Map<string, NameMatch>,
   userLocation?: UserLocation,
   // סניף שהמשתמש בחר ידנית לכל רשת (chainId -> storeId). גובר על "הקרוב ביותר".
-  chosenBranches?: Record<string, string>
+  chosenBranches?: Record<string, string>,
+  // תיקוני התאמה של המשתמש - גוברים על ההתאמה האוטומטית ועל העיגון לברקוד
+  overrideCtx?: OverrideContext
 ): Promise<PriceChainTotal[]> {
   const registered = getRegisteredChains();
   const activeList = await PriceDAL.getActiveChainsWithCounts();
@@ -116,6 +119,10 @@ export async function buildChainTotals(
 
   // שלב 2: עיגון לברקוד משותף, כדי שכל הרשתות ישוו את אותו מוצר בדיוק
   await applyBarcodeConsensus(phases, uniqueNames);
+  // שלב 3: תיקוני המשתמש מנצחים הכול
+  await Promise.all(phases.filter(p => p.cache).map(p =>
+    applyOverridesToCache(p.cache!, overrideCtx, p.chainId, p.nearestBranch?.storeId)
+  ));
 
   const chainTotals: PriceChainTotal[] = await Promise.all(
     phases.map(async ({ chainId, chainName, hasData, nearestBranch, cache }) => {
