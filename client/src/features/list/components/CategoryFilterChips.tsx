@@ -25,17 +25,17 @@ export const CategoryFilterChips = memo(({
 }: CategoryFilterChipsProps) => {
   const { t } = useSettings();
 
-  // trailing (כפתור "סידור מוצרים") הוא flex sibling ליד רצועת הצ'יפים
-  // הגוללת, לא צף מעליה - כך שאף פעם לא מכוסה על ידי צ'יפ שנגלל (הבאג
-  // מהגרסה הקודמת עם absolute). אבל הרוחב שלו כן מתכווץ ל-0 ככל שגוללים
-  // (לא רק opacity/transform) - כי רצועת הצ'יפים היא flex:1, אז השטח
-  // שהכפתור משחרר חוזר אוטומטית אליה: הקטגוריות "זורמות" לתוך המקום שלו.
-  // זה בדיוק הרעיון - לא שטח מת קבוע ליד הכפתור, אלא שהוא נבלע וממש
-  // מפנה מקום. שינוי width בזמן גלילה *של אותו מיכל* עלול לכאורה לגרום
-  // ללולאת משוב (clientWidth גדל -> הדפדפן תופס scrollLeft בחזרה -> אירוע
-  // scroll נוסף) - בפועל, בגלל שה-paint מוגבל ל-rAF אחד בפריים והחישוב
-  // אידמפוטנטי (progress תמיד נגזר מ-scrollLeft הנוכחי בפועל), זה מתכנס
-  // תוך פריים אחד ולא נראה כריצוד. נבדק ואומת חזותית בדפדפן אמיתי.
+  // trailing (כפתור "סידור מוצרים") הוא flex sibling קבוע ליד רצועת
+  // הצ'יפים הגוללת - לא צף מעליה (הבאג מהגרסה עם absolute: צ'יפ שנגלל
+  // מכסה אותו). נוסה גם לכווץ את ה-width שלו בזמן גלילה (כדי שהקטגוריות
+  // "יזרמו" לתוך המקום שמתפנה) - בבדיקה סינתטית עם עכבר זה נראה תקין,
+  // אבל במגע אמיתי על מכשיר זה גרם לריצוד קשה: גלילה אינרציאלית אמיתית
+  // יורה הרבה יותר אירועי scroll ברציפות מסימולציה, ושינוי ה-width של
+  // trailing (סיבלינג flex) בזמן שהמיכל הסמוך גולל בפועל כן יוצר את
+  // לולאת המשוב שחששנו ממנה מלכתחילה (clientWidth זז -> הדפדפן מתקן
+  // scrollLeft -> עוד אירוע -> עוד תיקון width). בוטל - רק opacity+
+  // transform מונפשים, לא width, בדיוק כדי שלא יהיה שום שינוי layout
+  // בזמן הגלילה בכלל.
   const TRAILING_WIDTH = 32;
   // מרחק הגלילה (px) שמעליו הכפתור נעלם כליל - קשור לרוחב שלו עצמו
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
@@ -49,7 +49,6 @@ export const CategoryFilterChips = memo(({
     // Math.abs - המוסכמה של סימן scrollLeft ב-RTL לא אחידה בין דפדפנים,
     // אבל |scrollLeft| קטן תמיד אומר "קרוב להתחלה" בכל המוסכמות.
     const progress = Math.min(1, Math.abs(scrollLeft) / COLLAPSE_DISTANCE);
-    el.style.width = `${(1 - progress) * TRAILING_WIDTH}px`;
     el.style.opacity = String(1 - progress);
     el.style.transform = `scale(${1 - progress * 0.4})`;
     el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
@@ -134,15 +133,13 @@ export const CategoryFilterChips = memo(({
         })}
       </Box>
       {trailing && (
-        // flex sibling - לעולם לא מכוסה על ידי צ'יפ שנגלל. width/opacity/
-        // transform מעודכנים ישירות ב-DOM (paintTrailing למעלה) - בלי sx
-        // מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה (1:1, פריים-
-        // פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה. overflow:hidden -
-        // כשה-width מתכווץ, הכפתור הפנימי (רוחב קבוע 32 משלו) "נבלע" לתוך
-        // הקצה במקום לגלוש החוצה.
+        // flex sibling עם רוחב קבוע - שומר מקום משלו, אף פעם לא מכוסה על
+        // ידי צ'יפ שנגלל. opacity/transform בלבד מעודכנים ישירות ב-DOM
+        // (paintTrailing למעלה) - בלי שינוי width, כדי שלא תהיה שום
+        // תזוזת layout בזמן הגלילה (ראו ההערה למעלה על הריצוד שזה גרם לו).
         <Box
           ref={trailingRef}
-          sx={{ flexShrink: 0, width: 32, height: 32, opacity: 1, transform: 'scale(1)', overflow: 'hidden' }}
+          sx={{ flexShrink: 0, width: 32, height: 32, opacity: 1, transform: 'scale(1)' }}
         >
           {trailing}
         </Box>
