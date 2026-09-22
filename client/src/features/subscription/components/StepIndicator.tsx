@@ -4,7 +4,10 @@ import type { SubscriptionStrings } from '../subscription.strings';
 import { PRO_PURPLE } from '../subscription.styles';
 
 interface Props {
-  step: 1 | 2 | 3;
+  // 1-3: השלב הנוכחי עדיין בתהליך (השלב הזה מודגש, לא מסומן כהושלם).
+  // 4: שלב סופי אמיתי - כל השלבים, כולל "אישור", מסומנים כהושלמו (וי, לא
+  // מספר) - כדי שיהיה ברור בעין שהתהליך *נגמר* ולא רק "עדיין מאשרים".
+  step: 1 | 2 | 3 | 4;
   s: SubscriptionStrings;
   isDark: boolean;
 }
@@ -31,7 +34,7 @@ export const StepIndicator = ({ step, s, isDark }: Props) => {
               }}>
                 {done ? <CheckRoundedIcon sx={{ fontSize: 16 }} /> : n}
               </Box>
-              <Typography sx={{ fontSize: 11, fontWeight: active ? 800 : 600, color: active ? PRO_PURPLE : 'text.secondary' }}>
+              <Typography sx={{ fontSize: 11, fontWeight: active || (done && n === 3) ? 800 : 600, color: active || (done && n === 3) ? PRO_PURPLE : 'text.secondary' }}>
                 {label}
               </Typography>
             </Box>

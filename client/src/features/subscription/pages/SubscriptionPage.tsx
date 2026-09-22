@@ -13,7 +13,7 @@ import { PlanHero } from '../components/PlanHero';
 import { UsageCard } from '../components/UsageAndCompare';
 import { PeriodPicker, priceFor } from '../components/PeriodPicker';
 import { PaymentPanel } from '../components/PaymentPanel';
-import { ReportedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
+import { ReportedCard, ApprovedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { StepIndicator } from '../components/StepIndicator';
 import { WelcomeProDialog } from '../components/WelcomeProDialog';
@@ -108,7 +108,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
     else showToast(errorMessage(res.code), 'error');
   };
 
-  const showCheckout = !!status && !open && !isPermanent;
+  const showCheckout = !!status && !open && !isPermanent && !activated;
 
   return (
     <Box sx={{
@@ -148,23 +148,27 @@ export const SubscriptionPage = ({ showToast }: Props) => {
             <Reveal i={1}><PlanComparisonTable status={status} s={s} isDark={isDark} /></Reveal>
 
             {/* מחוון השלבים מוצג רק אחרי שנבחרה תקופה ונפתחה בקשת תשלום - בתחילת
-                הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר. */}
-            {open && (
-              <Reveal i={1}><StepIndicator step={open.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
+                הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר.
+                step=4 (activated) = שלב סופי אמיתי, לא רק "3 - עדיין מאשרים". */}
+            {(open || activated) && (
+              <Reveal i={1}><StepIndicator step={activated ? 4 : open?.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
             )}
 
-            {open?.status === 'pending' && (
+            {/* אושר בזמן שהמשתמש עדיין כאן - מסך מנוחה "זהו, נגמר", לא רק
+                חלון קופץ שנעלם. נשאר עד שלוחצים "מתחילים" (אותו onClose
+                כמו בחלון). */}
+            {activated ? (
+              <Reveal i={2}><ApprovedCard expiryDate={activatedExpiry} s={s} isDark={isDark} onDismiss={() => setActivated(false)} /></Reveal>
+            ) : open?.status === 'pending' ? (
               <Reveal i={2}>
                 <PaymentPanel
                   status={status} request={open} s={s} isDark={isDark} busy={busy}
                   onChangeMethod={handleChangeMethod} onPaid={handlePaid} onCancel={handleCancel}
                 />
               </Reveal>
-            )}
-
-            {open?.status === 'reported' && (
+            ) : open?.status === 'reported' ? (
               <Reveal i={2}><ReportedCard request={open} s={s} isDark={isDark} locale={locale} /></Reveal>
-            )}
+            ) : null}
 
             {showRejected && lastResolved && <Reveal i={1}><RejectedNotice request={lastResolved} s={s} isDark={isDark} /></Reveal>}
 

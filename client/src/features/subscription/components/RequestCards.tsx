@@ -59,6 +59,27 @@ export const ReportedCard = ({ request, s, isDark, locale }: ReportedProps) => (
   </Box>
 );
 
+interface ApprovedProps { expiryDate?: string; s: SubscriptionStrings; isDark: boolean; onDismiss: () => void }
+
+// שלב סופי אמיתי: מוצג במקום ReportedCard ברגע שהאישור מגיע בזמן שהמשתמש
+// עדיין בעמוד - מסך מנוחה שאומר "זהו, נגמר", לא רק חלון קופץ שנעלם. תואם
+// את StepIndicator (step=4, כל השלבים מסומנים) שמוצג ישר מעליו.
+export const ApprovedCard = ({ expiryDate, s, isDark, onDismiss }: ApprovedProps) => (
+  <Box sx={{ ...cardSx(isDark), textAlign: 'center', py: 3.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+    <Box sx={{
+      width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      bgcolor: isDark ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.10)', color: PRO_PURPLE,
+    }}>
+      <CheckRoundedIcon sx={{ fontSize: 30 }} />
+    </Box>
+    <Typography sx={{ fontSize: 17, fontWeight: 800 }}>{s.paidWelcomeTitle}</Typography>
+    <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.6, maxWidth: 320 }}>
+      {expiryDate ? s.paidWelcomeBody.replace('{date}', expiryDate) : s.paidWelcomeBodyPermanent}
+    </Typography>
+    <Button onClick={onDismiss} sx={{ ...ghostCtaSx, mt: 0.5 }}>{s.welcomeCta}</Button>
+  </Box>
+);
+
 interface RejectedProps { request: SubscriptionRequestDto; s: SubscriptionStrings; isDark: boolean }
 
 export const RejectedNotice = ({ request, s, isDark }: RejectedProps) => (
