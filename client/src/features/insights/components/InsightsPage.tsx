@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -74,26 +74,6 @@ export const InsightsPage = memo(() => {
 
   const tStr = t as (k: string) => string;
 
-  // בורר "איזו רשימה להשוות" (PriceTab) נדבק לראש העמוד - נחמד כשגוללים
-  // מעט, אבל ברשימת תוצאות ארוכה הוא פשוט מסתיר תוכן לצמיתות. מסתירים
-  // אותו (אנימציה, לא unmount) כשגוללים למטה מעבר לסף קטן, וחוזרים
-  // להראות אותו כשגוללים למעלה או מתקרבים לראש העמוד. סף (לא כל שינוי
-  // scrollTop זעיר) כדי לא "לרפרף" סביב תזוזות קטנות.
-  const [priceStickyHidden, setPriceStickyHidden] = useState(false);
-  const [priceStickyScrolled, setPriceStickyScrolled] = useState(false);
-  const lastScrollTopRef = useRef(0);
-  const SCROLL_HIDE_THRESHOLD_PX = 6;
-  const SCROLL_NEAR_TOP_PX = 24;
-  const handlePageScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop;
-    const delta = top - lastScrollTopRef.current;
-    lastScrollTopRef.current = top;
-    setPriceStickyScrolled(top > SCROLL_NEAR_TOP_PX);
-    if (top < SCROLL_NEAR_TOP_PX) { setPriceStickyHidden(false); return; }
-    if (delta > SCROLL_HIDE_THRESHOLD_PX) setPriceStickyHidden(true);
-    else if (delta < -SCROLL_HIDE_THRESHOLD_PX) setPriceStickyHidden(false);
-  }, []);
-
   if (loading) return <InsightsLoadingState isDark={isDark} />;
 
   // מסך שגיאה - חיבור נכשל. נפרד ממצב "משתמש חדש" שמטופל למטה.
@@ -142,7 +122,6 @@ export const InsightsPage = memo(() => {
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
 
         <Box
-          onScroll={tab === 'price' ? handlePageScroll : undefined}
           onTouchStart={handlePullStart}
           onTouchMove={handlePullMove}
           onTouchEnd={handlePullEnd}
@@ -188,8 +167,6 @@ export const InsightsPage = memo(() => {
               selectedListId={selectedListId}
               onSelectListId={setSelectedListId}
               allUserLists={allUserLists}
-              stickyHidden={priceStickyHidden}
-              stickyScrolled={priceStickyScrolled}
             />
           </ErrorBoundary>
         )}
