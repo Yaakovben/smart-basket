@@ -34,12 +34,6 @@ const useCountUp = (target: number | null, ms = 900): number | null => {
   return target === null ? null : value;
 };
 
-const SPARKLES = [
-  { top: '14%', insetInlineEnd: '18%', size: 10, delay: 0 },
-  { top: '58%', insetInlineEnd: '8%', size: 7, delay: 0.7 },
-  { top: '30%', insetInlineEnd: '34%', size: 6, delay: 1.3 },
-];
-
 // כרטיס המצב בראש העמוד: Pro פעיל (עם ספירה לאחור אמיתית מהשרת / קבוע) או
 // הצעת Pro למשתמש חינמי. גובה קבוע יחסית כדי שהעמוד לא "יקפוץ" בין מצבים.
 export const PlanHero = ({ status, s, isDark, locale }: Props) => {
@@ -60,30 +54,11 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       minHeight: 148, p: 2.5,
       display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0.75,
       background: isDark
-        ? 'linear-gradient(135deg, #4C1D95, #6D28D9, #7C3AED, #5B21B6)'
-        : 'linear-gradient(135deg, #5B21B6, #7C3AED, #8B5CF6, #6D28D9)',
-      backgroundSize: '240% 240%',
-      animation: 'sbHeroFlow 9s ease-in-out infinite',
-      '@keyframes sbHeroFlow': {
-        '0%, 100%': { backgroundPosition: '0% 50%' },
-        '50%': { backgroundPosition: '100% 50%' },
-      },
-      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-      boxShadow: '0 14px 34px rgba(91,33,182,0.32)',
+        ? 'linear-gradient(135deg, #4C1D95, #5B21B6)'
+        : 'linear-gradient(135deg, #5B21B6, #7C3AED)',
+      boxShadow: '0 10px 26px rgba(91,33,182,0.28)',
       color: '#fff',
     }}>
-      {SPARKLES.map((sp, i) => (
-        <Box key={i} aria-hidden sx={{
-          position: 'absolute', top: sp.top, insetInlineEnd: sp.insetInlineEnd, width: sp.size, height: sp.size,
-          background: PRO_LILAC, borderRadius: '2px', transform: 'rotate(45deg)',
-          animation: `sbSparkle 2.6s ${sp.delay}s ease-in-out infinite`,
-          '@keyframes sbSparkle': {
-            '0%, 100%': { opacity: 0.15, transform: 'rotate(45deg) scale(0.6)' },
-            '50%': { opacity: 0.95, transform: 'rotate(45deg) scale(1.15)' },
-          },
-          '@media (prefers-reduced-motion: reduce)': { animation: 'none', opacity: 0.4 },
-        }} />
-      ))}
       <Box aria-hidden sx={{ position: 'absolute', top: -40, insetInlineEnd: -30, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
       <Box aria-hidden sx={{ position: 'absolute', bottom: -34, insetInlineStart: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 

@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import AllInclusiveRoundedIcon from '@mui/icons-material/AllInclusiveRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, sectionLabelSx, PRO_PURPLE, PRO_SOFT } from '../subscription.styles';
@@ -10,8 +10,8 @@ interface Props {
   isDark: boolean;
 }
 
-// שורה אחת: תווית + ערך חינמי + ערך Pro. פשוט וברור - מספר מול "ללא הגבלה",
-// לא טבלת ✓/∞ עמוסה (שהוסרה קודם כי כפלה את PerksGrid ובלבלה יותר משהסבירה).
+// שורה אחת: תווית + ערך חינמי + וי ב-Pro. וי לבד = "כלול", בלי סימן שצריך
+// לפענח (לא ∞, לא צירוף של שני סמלים לאותו רעיון) - הכי קריא וקליל.
 const Row = ({ label, freeValue, isDark }: { label: string; freeValue: number; isDark: boolean }) => (
   <Box sx={{
     display: 'flex', alignItems: 'center', gap: 1, py: 0.85,
@@ -21,11 +21,10 @@ const Row = ({ label, freeValue, isDark }: { label: string; freeValue: number; i
     <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
     <Typography sx={{ width: 44, textAlign: 'center', fontSize: 13, fontWeight: 800 }}>{freeValue}</Typography>
     <Box sx={{
-      width: 78, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.3,
-      py: 0.3, borderRadius: '999px', bgcolor: isDark ? 'rgba(124,58,237,0.18)' : PRO_SOFT,
+      width: 44, height: 22, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      borderRadius: '999px', bgcolor: isDark ? 'rgba(124,58,237,0.20)' : PRO_SOFT,
     }}>
-      <AllInclusiveRoundedIcon sx={{ fontSize: 13, color: PRO_PURPLE }} />
-      <Typography sx={{ fontSize: 11, fontWeight: 800, color: PRO_PURPLE }}>{'∞'}</Typography>
+      <CheckRoundedIcon sx={{ fontSize: 16, color: PRO_PURPLE }} />
     </Box>
   </Box>
 );
@@ -50,7 +49,7 @@ export const PlanComparisonTable = ({ status, s, isDark }: Props) => {
         <Typography sx={{ width: 44, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: 'text.disabled' }}>
           {s.compareFree}
         </Typography>
-        <Typography sx={{ width: 78, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: PRO_PURPLE }}>
+        <Typography sx={{ width: 44, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: PRO_PURPLE }}>
           {s.comparePro}
         </Typography>
       </Box>

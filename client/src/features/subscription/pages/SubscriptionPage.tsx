@@ -137,7 +137,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
         ) : error && !status ? (
           <Box sx={{ textAlign: 'center', py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <Typography sx={{ color: 'text.secondary' }}>{s.loadError}</Typography>
-            <Button variant="outlined" onClick={() => void reload()}>{s.retry}</Button>
+            <Button variant="outlined" onClick={() => void reload()} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: '#7C3AED', borderColor: '#7C3AED', '&:hover': { borderColor: '#6D28D9', bgcolor: 'rgba(124,58,237,0.06)' } }}>{s.retry}</Button>
           </Box>
         ) : status ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>

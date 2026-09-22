@@ -69,12 +69,8 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
       {/* כותרת - זהה במבנה לכותרת עמוד המנוי (גרדיאנט סגול חי, עיגולי קישוט, אייקון בתוך אריח) */}
       <Box sx={{
         background: isDark
-          ? 'linear-gradient(135deg, #4C1D95, #6D28D9, #7C3AED)'
-          : 'linear-gradient(135deg, #5B21B6, #7C3AED, #8B5CF6)',
-        backgroundSize: '200% 200%',
-        animation: 'sbUpgradeFlow 8s ease-in-out infinite',
-        '@keyframes sbUpgradeFlow': { '0%, 100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
-        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+          ? 'linear-gradient(135deg, #4C1D95, #5B21B6)'
+          : 'linear-gradient(135deg, #5B21B6, #7C3AED)',
         px: 3, pt: 3, pb: 3.5, position: 'relative', overflow: 'hidden',
       }}>
         <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
@@ -175,26 +171,13 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           fullWidth
           onClick={() => { onClose(); navigate('/subscription'); }}
           sx={{
-            position: 'relative', overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
             mt: 2, borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
             textTransform: 'none',
-            background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
-            boxShadow: '0 8px 22px rgba(124,58,237,0.38)',
-            transition: 'transform 0.15s ease',
-            '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)', transform: 'translateY(-1px)' },
+            bgcolor: '#7C3AED',
+            boxShadow: 'none',
+            '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' },
             '&:active': { transform: 'scale(0.98)' },
-            '&::after': {
-              content: '""', position: 'absolute', inset: 0,
-              background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.32) 50%, transparent 70%)',
-              backgroundSize: '260% 100%',
-              animation: 'sbUpgradeBtnShine 3.6s ease-in-out infinite',
-            },
-            '@keyframes sbUpgradeBtnShine': {
-              '0%, 55%': { backgroundPosition: '160% 0' },
-              '100%': { backgroundPosition: '-160% 0' },
-            },
-            '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
           }}
         >
           <StarRoundedIcon sx={{ fontSize: 19 }} />

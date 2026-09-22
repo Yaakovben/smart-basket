@@ -20,28 +20,18 @@ export const sectionLabelSx: SxProps<Theme> = {
   letterSpacing: 0.3, mb: 1.25,
 };
 
+// כפתור שקט ובטוח: צבע אחיד, בלי הברקה חוזרת-לנצח - זה נראה "נדחף" יותר
+// משהוא עוזר. תשומת לב מגיעה מהצבע והמשקל, לא מתנועה מתמשכת.
 export const primaryCtaSx: SxProps<Theme> = {
-  position: 'relative', overflow: 'hidden',
   borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
   textTransform: 'none',
-  background: `linear-gradient(135deg, ${PRO_PURPLE} 0%, ${PRO_PURPLE_DARK} 100%)`,
-  boxShadow: '0 8px 22px rgba(124,58,237,0.38)',
+  bgcolor: PRO_PURPLE,
+  boxShadow: 'none',
   color: '#fff',
-  '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)' },
+  transition: 'background-color 0.15s ease',
+  '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' },
   '&:active': { transform: 'scale(0.985)' },
   '&.Mui-disabled': { color: 'rgba(255,255,255,0.7)', opacity: 0.65 },
-  // ברק עדין שעובר על הכפתור - מזמין ללחיצה בלי להציק
-  '&:not(.Mui-disabled)::after': {
-    content: '""', position: 'absolute', inset: 0, pointerEvents: 'none',
-    background: 'linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.32) 50%, transparent 68%)',
-    backgroundSize: '260% 100%',
-    animation: 'sbCtaShine 3.6s ease-in-out infinite',
-  },
-  '@keyframes sbCtaShine': {
-    '0%, 55%': { backgroundPosition: '160% 0' },
-    '100%': { backgroundPosition: '-160% 0' },
-  },
-  '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
 };
 
 export const ghostCtaSx: SxProps<Theme> = {

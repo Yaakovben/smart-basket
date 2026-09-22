@@ -78,12 +78,7 @@ export const WelcomeProDialog = ({ open, months, expiryDate, onClose, onDetails 
           <CloseRoundedIcon sx={{ fontSize: 19 }} />
         </IconButton>
         <Box sx={{ position: 'relative', width: 104, height: 104, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Box aria-hidden sx={{
-            position: 'absolute', inset: 0,
-            animation: 'sbWelcomeSpin 14s linear infinite',
-            '@keyframes sbWelcomeSpin': { to: { transform: 'rotate(360deg)' } },
-            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-          }}>
+          <Box aria-hidden sx={{ position: 'absolute', inset: 0 }}>
             {RAYS.map((_, i) => (
               <Box key={i} sx={{
                 position: 'absolute', top: '50%', left: '50%', width: 4, height: 14, borderRadius: 2,
