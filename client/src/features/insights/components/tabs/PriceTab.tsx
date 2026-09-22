@@ -26,12 +26,6 @@ interface PriceTabProps {
   selectedListId: string | null;
   onSelectListId: (id: string | null) => void;
   allUserLists: InsightsListMeta[];
-  // true כשגוללים למטה מעבר לסף - מסתירים את בורר "איזו רשימה להשוות"
-  // באנימציה (לא unmount) כדי שלא יחסום תוצאות לצמיתות ברשימות ארוכות.
-  stickyHidden: boolean;
-  // true ברגע שהתרחקנו מראש העמוד (גם אם עדיין גלוי) - נותן לבורר מראה
-  // "כרטיס צף" (פינות מעוגלות + צל) במקום פס שטוח שממוזג בקצה העמוד.
-  stickyScrolled: boolean;
 }
 
 // טאב "מחירים" של עמוד התובנות - השוואת מחירים בין רשתות לרשימה נבחרת.
@@ -39,7 +33,6 @@ export const PriceTab = memo(({
   isDark, priceData, priceLoading, priceLoadingLabel, priceError, onRetry,
   locationStatus, hasLocation, userLocation, chosenBranches, onChooseBranch, onMatchChanged, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
-  stickyHidden, stickyScrolled,
 }: PriceTabProps) => {
   const { t } = useSettings();
 
@@ -58,6 +51,42 @@ export const PriceTab = memo(({
     const delta = (cRect.left - sRect.left) - (scroller.clientWidth - cRect.width) / 2;
     if (Math.abs(delta) > 4) scroller.scrollBy({ left: delta, behavior: 'smooth' });
   }, [selectedListId, allUserLists.length, priceData]);
+
+  // הקשר הרשימה נדבק (sticky) רק בתחילת הגלילה האנכית של העמוד - ברגע
+  // שגוללים למטה הוא מתכווץ ונעלם לגמרי (לא נשאר צף קבוע שתופס מקום/מכסה
+  // תוכן). progress מחושב לפי scrollTop של מכל הגלילה של כל עמוד התובנות
+  // (לא רק הטאב הזה - data-insights-scroll-root ב-InsightsPage), בדיוק
+  // אותה טכניקה כמו trailing ב-CategoryFilterChips: opacity+maxHeight
+  // מצוירים ישירות ב-DOM דרך ref, לא state, כדי שזה יהיה חלק וללא ריצוד.
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const stickyRafRef = useRef<number | null>(null);
+  const STICKY_COLLAPSE_DISTANCE = 70;
+  useEffect(() => {
+    const el = stickyRef.current;
+    if (!el) return;
+    const root = el.closest<HTMLElement>('[data-insights-scroll-root]');
+    if (!root) return;
+    const paint = (scrollTop: number) => {
+      const progress = Math.min(1, Math.max(0, scrollTop) / STICKY_COLLAPSE_DISTANCE);
+      el.style.opacity = String(1 - progress);
+      el.style.maxHeight = `${(1 - progress) * el.scrollHeight}px`;
+      el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
+    };
+    const onScroll = () => {
+      if (stickyRafRef.current != null) return;
+      stickyRafRef.current = requestAnimationFrame(() => {
+        stickyRafRef.current = null;
+        paint(root.scrollTop);
+      });
+    };
+    el.style.maxHeight = 'none'; // מדידת scrollHeight האמיתי לפני הציור הראשון
+    paint(root.scrollTop);
+    root.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      root.removeEventListener('scroll', onScroll);
+      if (stickyRafRef.current != null) cancelAnimationFrame(stickyRafRef.current);
+    };
+  }, []);
 
   if (!priceData) {
     // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
@@ -90,33 +119,21 @@ export const PriceTab = memo(({
 
   return (
     <>
-      {/* הקשר הרשימה שעליה מתבצע הניתוח - נדבק לראש העמוד בזמן גלילה כך
-          שתמיד ברור על מה ההשוואה נעשית, גם כשגוללים עמוק לתוך התוצאות
-          (למשל אחרי כניסה ישירה לתובנות מתוך רשימה מסוימת). רקע אטום +
-          zIndex כדי שהתוכן שנגלל מתחת לא יציץ דרכו. */}
+      {/* הקשר הרשימה שעליה מתבצע הניתוח - נדבק (sticky) רק בתחילת הגלילה,
+          ואז מתכווץ ונעלם ככל שגוללים למטה (ראו האפקט למעלה - stickyRef).
+          כך ברור מיד עם הכניסה לטאב על איזו רשימה הניתוח מתבצע, בלי
+          שהוא נשאר צף לצמיתות ותופס מקום/מסתיר תוכן בזמן קריאת התוצאות. */}
       {allUserLists.length > 0 && (
-        <Box sx={{
-          position: 'sticky',
-          top: 'env(safe-area-inset-top, 0px)',
-          zIndex: 5,
-          bgcolor: 'background.default',
-          // ברגע שהתרחקנו מראש העמוד - "כרטיס צף": מתכנס פנימה מהקצוות,
-          // פינות מעוגלות וצל, במקום פס שטוח שממוזג עם קצה המסך.
-          mx: stickyScrolled ? 0 : -2,
-          mt: stickyScrolled ? 1 : 0,
-          px: 2, pt: 1, pb: 1,
-          borderRadius: stickyScrolled ? '16px' : 0,
-          border: stickyScrolled ? '1px solid' : 'none',
-          borderBottom: '1px solid',
-          borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-          boxShadow: stickyScrolled ? (isDark ? '0 8px 22px rgba(0,0,0,0.35)' : '0 8px 22px rgba(0,0,0,0.09)') : 'none',
-          // מוסתר (לא unmount) בגלילה למטה - ברשימת תוצאות ארוכה הבורר
-          // פשוט חוסם תוכן; חוזר להופיע בגלילה למעלה או קרוב לראש העמוד.
-          transform: stickyHidden ? 'translateY(-130%)' : 'translateY(0)',
-          opacity: stickyHidden ? 0 : 1,
-          pointerEvents: stickyHidden ? 'none' : 'auto',
-          transition: 'transform 0.28s cubic-bezier(0.34,1.4,0.64,1), opacity 0.22s ease, border-radius 0.25s ease, box-shadow 0.25s ease, margin 0.25s ease',
-        }}>
+        <Box
+          ref={stickyRef}
+          sx={{
+            position: 'sticky', top: 0, zIndex: 3, overflow: 'hidden',
+            bgcolor: 'background.default',
+            px: 2, mx: -2, pt: 1, pb: 1,
+            borderBottom: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          }}
+        >
           {/* תווית מידע - מוצגת כשיש רשימה אחת. המשתמש יודע על מה הניתוח נעשה. */}
           {allUserLists.length === 1 && allUserLists[0] && (
             <Box sx={{
