@@ -4,6 +4,10 @@ import type { Language } from '../../global/types';
 // לפיצ'ר הזה. שלוש השפות חייבות להכיל בדיוק אותם מפתחות (נאכף בטיפוס).
 const he = {
   pageTitle: 'ניהול מנוי',
+  welcomeTitle: 'ברוכים הבאים ל-Pro!',
+  welcomeBody: 'קיבלתם {n} חודשי Pro במתנה. הכל פתוח, בלי הגבלות ובלי כרטיס אשראי.',
+  welcomeCta: 'מתחילים',
+  welcomeDetails: 'פרטי המנוי',
   perksTitle: 'מה מקבלים ב-Pro',
   perkLists: 'רשימות ללא הגבלה',
   perkGroups: 'קבוצות בלי מגבלת חברים',
@@ -135,6 +139,10 @@ export type SubscriptionStrings = { [K in keyof typeof he]: string };
 
 const en: SubscriptionStrings = {
   pageTitle: 'Manage subscription',
+  welcomeTitle: 'Welcome to Pro!',
+  welcomeBody: 'You got {n} months of Pro as a gift. Everything unlocked, no limits and no credit card.',
+  welcomeCta: 'Let us start',
+  welcomeDetails: 'Subscription details',
   perksTitle: 'What you get with Pro',
   perkLists: 'Unlimited lists',
   perkGroups: 'Groups with no member cap',
@@ -264,6 +272,10 @@ const en: SubscriptionStrings = {
 
 const ru: SubscriptionStrings = {
   pageTitle: 'Управление подпиской',
+  welcomeTitle: 'Добро пожаловать в Pro!',
+  welcomeBody: 'Вам подарено {n} мес. Pro. Всё открыто, без лимитов и без банковской карты.',
+  welcomeCta: 'Начнём',
+  welcomeDetails: 'Детали подписки',
   perksTitle: 'Что даёт Pro',
   perkLists: 'Неограниченные списки',
   perkGroups: 'Группы без лимита участников',

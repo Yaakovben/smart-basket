@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
+import { lazy, Suspense, useMemo, useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
@@ -9,7 +9,7 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
-import { getSubscriptionStrings } from "../features/subscription/subscription.strings";
+import { WelcomeProDialog } from "../features/subscription/components/WelcomeProDialog";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
 import { clearListNotifications } from "../global/helpers";
@@ -157,7 +157,7 @@ export const AppRouter = () => {
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
   // ברכת "Pro במתנה" - פעם אחת בלבד, למשתמש שנרשם ממש עכשיו (עד 15 דקות).
-  const { settings: appSettings } = useSettings();
+  const [welcomeMonths, setWelcomeMonths] = useState<number | null>(null);
   useEffect(() => {
     if (authLoading || !user?.id || user.plan !== 'pro' || !user.createdAt || !user.planExpiresAt) return;
     const key = `sb_trial_welcome_${user.id}`;
@@ -167,9 +167,9 @@ export const AppRouter = () => {
       if (ageMs > 15 * 60_000) { localStorage.setItem(key, '1'); return; }
       const months = Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - new Date(user.createdAt).getTime()) / (30 * 86_400_000)));
       localStorage.setItem(key, '1');
-      showToast(getSubscriptionStrings(appSettings.language).welcomeToast.replace('{n}', String(months)), 'success');
+      setWelcomeMonths(months);
     } catch { /* localStorage חסום - מוותרים על הברכה */ }
-  }, [authLoading, user?.id, user?.plan, user?.createdAt, user?.planExpiresAt, showToast, appSettings.language]);
+  }, [authLoading, user?.id, user?.plan, user?.createdAt, user?.planExpiresAt]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
@@ -533,6 +533,11 @@ export const AppRouter = () => {
           דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
           useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
       <ConnectionStatusIcon />
+      <WelcomeProDialog
+        months={welcomeMonths}
+        onClose={() => setWelcomeMonths(null)}
+        onDetails={() => { setWelcomeMonths(null); navigate('/subscription'); }}
+      />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* טיפ "ידעת ש...?" - פעם בכמה פתיחות, אחרי 12ש', רק אם לא הוצג פופאפ
           אחר בסשן (popupCoordinator) ורק במסך הבית. */}
