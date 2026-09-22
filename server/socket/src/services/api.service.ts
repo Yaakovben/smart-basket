@@ -26,11 +26,20 @@ export type UserRole = 'owner' | 'admin' | 'member' | null;
 
 const baseUrl = env.API_URL;
 
-/** אימות שמשתמש חבר ברשימה. מחזיר true אם יש לו גישה. */
+export type MembershipResult =
+  | { ok: true }
+  // השרת אמר בפירוש שאין גישה (401/403/404) - יש להוציא מהחדר
+  | { ok: false; reason: 'denied' }
+  // לא הצלחנו להשלים את הבדיקה (timeout/רשת/5xx, למשל Render cold start
+  // או access token שפג באמצע ריצה ברקע) - לא ידוע אם עדיין חבר, לכן לא
+  // מוציאים משתמש לגיטימי מהחדר על תקלת תשתית חולפת (ראו הערת verifyUser).
+  | { ok: false; reason: 'unreachable' };
+
+/** אימות שמשתמש חבר ברשימה. מבחין בין "אין גישה" ל"לא הצלחנו לבדוק". */
 async function verifyMembership(
   listId: string,
   accessToken: string
-): Promise<boolean> {
+): Promise<MembershipResult> {
   try {
     const response = await fetch(`${baseUrl}/lists/${listId}`, {
       method: 'GET',
@@ -39,10 +48,16 @@ async function verifyMembership(
       },
       signal: AbortSignal.timeout(10000),
     });
-    return response.ok;
+    if (response.status === 401 || response.status === 403 || response.status === 404) {
+      return { ok: false, reason: 'denied' };
+    }
+    if (!response.ok) {
+      return { ok: false, reason: 'unreachable' };
+    }
+    return { ok: true };
   } catch (error) {
     logger.error('verifyMembership failed:', error);
-    return false;
+    return { ok: false, reason: 'unreachable' };
   }
 }
 

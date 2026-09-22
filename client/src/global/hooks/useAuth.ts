@@ -6,6 +6,18 @@ import { getAccessToken, rehydrateTokensFromIdb, setAuthInProgress } from "../..
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 import { diagLog } from "../helpers/crashLog";
 import { countAppOpen } from "../helpers/appOpenCount";
+import { clearOfflineQueue } from "../../services/offlineQueue";
+import { INSIGHTS_CACHE_KEY } from "../../features/insights/helpers/insightsCache";
+
+// נתונים ששייכים למשתמש הספציפי (לא הטוקן/cached_user עצמו) - חייבים להימחק
+// ביציאה ובכל מעבר בין משתמשים על אותו מכשיר, אחרת המשתמש הבא רואה לרגע
+// רשימות/תובנות/פעולות ממתינות שלא שייכות לו.
+function clearPerUserCache() {
+  ['cached_lists', INSIGHTS_CACHE_KEY, 'cached_prices'].forEach(k => {
+    try { localStorage.removeItem(k); } catch { /* quota */ }
+  });
+  void clearOfflineQueue();
+}
 
 // מעקב אחר זמן כניסות וחזרות מרקע (מודולרי, שורד StrictMode re-mount).
 let _lastAppOpenLogAt = 0;
@@ -230,6 +242,13 @@ export function useAuth() {
   const login = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
+      // אם זה מכשיר ששימש משתמש אחר קודם (לדוגמה אחרי logout לא תקין, או
+      // כניסה עם חשבון אחר), לא משאירים את הנתונים הישנים שלו במטמון
+      try {
+        const prevRaw = localStorage.getItem('cached_user');
+        const prevId = prevRaw ? (JSON.parse(prevRaw) as { id?: string }).id : null;
+        if (prevId && prevId !== userData.id) clearPerUserCache();
+      } catch { /* ignore */ }
       // שמירת משתמש לטעינה מיידית בביקור הבא
       try { localStorage.setItem('cached_user', JSON.stringify({ ...userData, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(userData);
@@ -258,6 +277,7 @@ export function useAuth() {
     socketService.disconnect();
     localStorage.removeItem('cached_user');
     localStorage.removeItem('pushPromptDismissed');
+    clearPerUserCache();
     setInitialData({ lists: null, notifications: null });
     setUser(null);
   }, []);
