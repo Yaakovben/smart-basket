@@ -1,10 +1,12 @@
 import { Dialog, DialogContent, Button, Typography, Box, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import SellRoundedIcon from '@mui/icons-material/SellRounded';
 import { useNavigate } from 'react-router-dom';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import type { ReactElement, Ref } from 'react';
+import type { ReactElement, Ref, ComponentType } from 'react';
 import { forwardRef, useEffect, useState } from 'react';
 import { subscriptionApi } from '../../services/api/subscription.api';
 import { getSubscriptionStrings } from '../../features/subscription/subscription.strings';
@@ -26,20 +28,23 @@ const Transition = forwardRef(function Transition(
   return <Zoom ref={ref} {...props} />;
 });
 
-const FEATURE_LIMIT_KEY: Record<PlanLimitFeature, 'upgradeListLimit' | 'upgradeMembersLimit' | 'upgradeAiLimit' | 'upgradePriceLimit'> = {
-  lists: 'upgradeListLimit',
-  members: 'upgradeMembersLimit',
-  ai: 'upgradeAiLimit',
-  priceComparison: 'upgradePriceLimit',
-};
+// אותם 4 יתרונות, באותה שפה עיצובית בדיוק כמו PerksGrid בעמוד המנוי (אריח
+// צבעוני + אייקון) - כדי שמי שנתקל בחלון הזה (הכי נפוץ בפועל, קופץ כשמגיעים
+// למגבלה) יזהה מיד את אותו "שפה" כשהוא מגיע אחר כך לעמוד המנוי עצמו.
+const FEATURES: Array<{ feature: PlanLimitFeature; icon: ComponentType<{ sx?: object }>; grad: string; key: 'perkLists' | 'perkGroups' | 'perkAi' | 'perkPrice' }> = [
+  { feature: 'lists', icon: PlaylistAddCheckRoundedIcon, grad: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', key: 'perkLists' },
+  { feature: 'members', icon: GroupsRoundedIcon, grad: 'linear-gradient(135deg,#A78BFA,#7C3AED)', key: 'perkGroups' },
+  { feature: 'ai', icon: AutoAwesomeRoundedIcon, grad: 'linear-gradient(135deg,#C4B5FD,#8B5CF6)', key: 'perkAi' },
+  { feature: 'priceComparison', icon: SellRoundedIcon, grad: 'linear-gradient(135deg,#6D28D9,#4C1D95)', key: 'perkPrice' },
+];
 
-// אותה שפה עיצובית בדיוק כמו SubscriptionModal (הכרטיס "שדרג ל-Pro" שם) -
-// זו נקודת המגע הכי נפוצה בפועל (מופיעה כשמגיעים למגבלה), אז חשוב שתרגיש
-// באותה רמת "פרימיום" ולא כמו דיאלוג MUI גנרי.
+// אותה שפה עיצובית בדיוק כמו עמוד המנוי - זו נקודת המגע הכי נפוצה בפועל
+// (מופיעה כשמגיעים למגבלה), אז חשוב שתרגיש באותה רמת "פרימיום" ולא כמו
+// דיאלוג MUI גנרי.
 export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   const { t, settings } = useSettings();
   const navigate = useNavigate();
-  const subStrings = getSubscriptionStrings(settings.language);
+  const s = getSubscriptionStrings(settings.language);
   // המחיר האמיתי מהשרת (לא טקסט קבוע) - נטען כשהחלון נפתח; כשל = בלי שורת מחיר.
   const [monthly, setMonthly] = useState<number | null>(null);
   useEffect(() => {
@@ -50,15 +55,6 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   }, [open]);
   const isDark = settings.theme === 'dark';
 
-  const features: Array<'upgradeListLimit' | 'upgradeMembersLimit' | 'upgradeAiLimit' | 'upgradePriceLimit'> = [
-    'upgradeListLimit',
-    'upgradeMembersLimit',
-    'upgradeAiLimit',
-    'upgradePriceLimit',
-  ];
-
-  const highlightedKey = feature ? FEATURE_LIMIT_KEY[feature] : undefined;
-
   return (
     <Dialog
       open={open}
@@ -67,26 +63,28 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
       maxWidth="xs"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: '20px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
+        sx: { borderRadius: '24px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
       }}
     >
-      {/* כותרת - זהה במבנה לכותרת SubscriptionModal (גרדיאנט סגול, עיגולי
-          קישוט, אייקון בתוך אריח) */}
+      {/* כותרת - זהה במבנה לכותרת עמוד המנוי (גרדיאנט סגול חי, עיגולי קישוט, אייקון בתוך אריח) */}
       <Box sx={{
         background: isDark
-          ? 'linear-gradient(135deg, #4C1D95 0%, #6D28D9 50%, #7C3AED 100%)'
-          : 'linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #8B5CF6 100%)',
+          ? 'linear-gradient(135deg, #4C1D95, #6D28D9, #7C3AED)'
+          : 'linear-gradient(135deg, #5B21B6, #7C3AED, #8B5CF6)',
+        backgroundSize: '200% 200%',
+        animation: 'sbUpgradeFlow 8s ease-in-out infinite',
+        '@keyframes sbUpgradeFlow': { '0%, 100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
         px: 3, pt: 3, pb: 3.5, position: 'relative', overflow: 'hidden',
       }}>
         <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <Box sx={{ position: 'absolute', bottom: -20, right: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-        {/* כפתור סגירה - עיגול זכוכית מוגדר במפורש, לא IconButton ברירת
-            מחדל (ראו הערה מקבילה ב-SubscriptionModal). */}
+        {/* כפתור סגירה - עיגול זכוכית מוגדר במפורש, לא IconButton ברירת מחדל */}
         <Box
           component="button"
           onClick={onClose}
-          aria-label={t('close')}
+          aria-label="close"
           sx={{
             position: 'absolute', top: 12, left: 12,
             width: 32, height: 32, borderRadius: '50%',
@@ -105,76 +103,73 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
           <Box sx={{
-            width: 56, height: 56, borderRadius: 2.5,
+            width: 56, height: 56, borderRadius: '18px',
             background: 'rgba(255,255,255,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '1px solid rgba(255,255,255,0.2)',
+            animation: 'sbUpgradePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+            '@keyframes sbUpgradePop': { from: { transform: 'scale(0.4)', opacity: 0 }, to: { transform: 'scale(1)', opacity: 1 } },
+            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
           }}>
-            <AutoAwesomeIcon sx={{
-              fontSize: 28, color: '#fff',
-              animation: 'sbUpgradeIconPulse 1.8s ease-in-out infinite',
-              '@keyframes sbUpgradeIconPulse': {
-                '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
-                '50%': { transform: 'scale(1.12) rotate(-6deg)' },
-              },
-              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-            }} />
+            <StarRoundedIcon sx={{ fontSize: 30, color: '#fff' }} />
           </Box>
 
           <Chip
             label="✦ Pro"
             size="small"
-            sx={{ fontWeight: 700, fontSize: 12, bgcolor: '#fff', color: '#7C3AED', border: 'none' }}
+            sx={{ fontWeight: 800, fontSize: 12, bgcolor: '#fff', color: '#7C3AED', border: 'none' }}
           />
 
-          <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 20, mt: 0.5, textAlign: 'center' }}>
-            {t('upgradeTitle')}
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', px: 1 }}>
-            {t('upgradeSubtitle')}
+          <Typography sx={{ color: 'white', fontWeight: 800, fontSize: 21, mt: 0.5, textAlign: 'center' }}>
+            {s.perksTitle}
           </Typography>
         </Box>
       </Box>
 
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {features.map(key => (
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+          {FEATURES.map(({ feature: f, icon: Icon, grad, key }, i) => (
             <Box
-              key={key}
+              key={f}
               sx={{
-                display: 'flex', alignItems: 'center', gap: 1.25,
-                p: 1.25, borderRadius: 2,
-                bgcolor: key === highlightedKey
-                  ? (isDark ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.08)')
-                  : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
-                border: '1px solid',
-                borderColor: key === highlightedKey ? 'rgba(124,58,237,0.35)' : 'transparent',
+                display: 'flex', alignItems: 'center', gap: 1.1, p: 1.1, borderRadius: '14px',
+                bgcolor: f === feature
+                  ? (isDark ? 'rgba(124,58,237,0.20)' : 'rgba(124,58,237,0.09)')
+                  : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.03)'),
+                border: '1.5px solid',
+                borderColor: f === feature ? 'rgba(124,58,237,0.45)' : 'transparent',
+                animation: `sbUpgradePerkIn 0.4s ${100 + i * 70}ms cubic-bezier(0.34,1.56,0.64,1) both`,
+                '@keyframes sbUpgradePerkIn': { from: { opacity: 0, transform: 'scale(0.85)' }, to: { opacity: 1, transform: 'scale(1)' } },
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
               }}
             >
-              <CheckCircleIcon sx={{ fontSize: 18, color: '#7C3AED', flexShrink: 0 }} />
+              <Box sx={{
+                width: 32, height: 32, borderRadius: '10px', flexShrink: 0, background: grad,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 8px rgba(15,23,42,0.18)',
+              }}>
+                <Icon sx={{ fontSize: 17, color: '#fff' }} />
+              </Box>
               <Typography sx={{
-                fontSize: 13.5,
-                fontWeight: key === highlightedKey ? 700 : 500,
+                fontSize: 12, fontWeight: f === feature ? 800 : 700, lineHeight: 1.25,
                 color: isDark ? 'rgba(255,255,255,0.9)' : 'text.primary',
               }}>
-                {t(key)}
+                {s[key]}
               </Typography>
             </Box>
           ))}
         </Box>
 
-
         {monthly !== null && (
-          <Box sx={{ textAlign: 'center', mt: 2.25 }}>
-            <Typography sx={{ fontSize: 24, fontWeight: 900, color: isDark ? 'white' : '#4C1D95', lineHeight: 1.1 }}>
-              {subStrings.from}₪{Number.isInteger(monthly) ? monthly : monthly.toFixed(2)}
-              <Typography component="span" sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}> {subStrings.perMonth}</Typography>
+          <Box sx={{ textAlign: 'center', mt: 2.5 }}>
+            <Typography sx={{ fontSize: 26, fontWeight: 900, color: isDark ? 'white' : '#4C1D95', lineHeight: 1.1 }}>
+              {s.from}₪{Number.isInteger(monthly) ? monthly : monthly.toFixed(2)}
+              <Typography component="span" sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}> {s.perMonth}</Typography>
             </Typography>
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.4 }}>{subStrings.upgradeModalPrice}</Typography>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.4 }}>{s.upgradeModalPrice}</Typography>
           </Box>
         )}
 
-        {/* CTA - אותו "ברק" נע כמו כפתור השדרוג ב-SubscriptionModal */}
+        {/* CTA - אותו "ברק" נע כמו כפתור ההמשך בעמוד המנוי */}
         <Button
           variant="contained"
           fullWidth
@@ -182,22 +177,22 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           sx={{
             position: 'relative', overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
-            mt: 2, borderRadius: 2, fontWeight: 800, fontSize: 15, py: 1.1,
+            mt: 2, borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
             textTransform: 'none',
             background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
-            boxShadow: '0 6px 18px rgba(124,58,237,0.45)',
+            boxShadow: '0 8px 22px rgba(124,58,237,0.38)',
             transition: 'transform 0.15s ease',
             '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)', transform: 'translateY(-1px)' },
             '&:active': { transform: 'scale(0.98)' },
             '&::after': {
               content: '""', position: 'absolute', inset: 0,
-              background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)',
-              backgroundSize: '250% 100%',
-              animation: 'sbUpgradeBtnShine 3.2s ease-in-out infinite',
+              background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.32) 50%, transparent 70%)',
+              backgroundSize: '260% 100%',
+              animation: 'sbUpgradeBtnShine 3.6s ease-in-out infinite',
             },
             '@keyframes sbUpgradeBtnShine': {
-              '0%, 60%': { backgroundPosition: '150% 0' },
-              '100%': { backgroundPosition: '-150% 0' },
+              '0%, 55%': { backgroundPosition: '160% 0' },
+              '100%': { backgroundPosition: '-160% 0' },
             },
             '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
           }}

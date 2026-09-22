@@ -1,6 +1,10 @@
 import { Box, Typography, Button } from '@mui/material';
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import type { SubscriptionRequestDto, SubscriptionRequestStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, sectionLabelSx, ghostCtaSx, PRO_PURPLE } from '../subscription.styles';
@@ -13,6 +17,11 @@ const statusLabel = (st: SubscriptionRequestStatus, s: SubscriptionStrings) => (
   pending: s.statusPending, reported: s.statusReported, approved: s.statusApproved,
   rejected: s.statusRejected, cancelled: s.statusCancelled,
 }[st]);
+
+const STATUS_ICON: Record<SubscriptionRequestStatus, typeof CheckRoundedIcon> = {
+  pending: ScheduleRoundedIcon, reported: ScheduleRoundedIcon, approved: CheckRoundedIcon,
+  rejected: CloseRoundedIcon, cancelled: CloseRoundedIcon,
+};
 
 const fmtDate = (iso: string, locale: string) =>
   new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -89,9 +98,11 @@ export const HistoryCard = ({ history, s, isDark, locale }: HistoryProps) => {
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled' }}>{fmtDate(h.createdAt, locale)} · <span dir="ltr">{h.reference}</span></Typography>
             </Box>
             <Box sx={{
+              display: 'flex', alignItems: 'center', gap: 0.4,
               px: 1, py: '2px', borderRadius: '999px', fontSize: 11, fontWeight: 800,
               color: STATUS_COLOR[h.status], bgcolor: `${STATUS_COLOR[h.status]}1A`,
             }}>
+              {(() => { const Icon = STATUS_ICON[h.status]; return <Icon sx={{ fontSize: 12 }} />; })()}
               {statusLabel(h.status, s)}
             </Box>
           </Box>
@@ -105,6 +116,12 @@ interface UnavailableProps { s: SubscriptionStrings; isDark: boolean; email: str
 
 export const PaymentUnavailableCard = ({ s, isDark, email, onBack }: UnavailableProps) => (
   <Box sx={{ ...cardSx(isDark), textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 3 }}>
+    <Box sx={{
+      width: 52, height: 52, borderRadius: '50%', mb: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      bgcolor: isDark ? 'rgba(124,58,237,0.16)' : 'rgba(124,58,237,0.09)', color: PRO_PURPLE,
+    }}>
+      <MailOutlineRoundedIcon sx={{ fontSize: 24 }} />
+    </Box>
     <Typography sx={{ fontSize: 16, fontWeight: 800 }}>{s.payUnavailableTitle}</Typography>
     <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.6 }}>{s.payUnavailableBody}</Typography>
     <Button
