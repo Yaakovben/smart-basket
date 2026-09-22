@@ -83,8 +83,11 @@ export const CategoryFilterChips = memo(({
           // גלילה חלקה/יציבה ב-iOS (momentum) - בלי זה overflow-x:auto נגלל
           // "קשה"/לא רציף במיוחד כשיש הרבה צ'יפים.
           WebkitOverflowScrolling: 'touch',
-          maskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
-          WebkitMaskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
+          // הערה: הוסרה דעיכת mask-image שהייתה כאן בקצה הרצועה - היא
+          // תוכננה לתקופה שבה trailing (כפתור הסידור) ישב absolute *מעל*
+          // הצ'יפים, כדי שצ'יפ שנגלל מתחתיו ייעלם בעדינות. עכשיו ש-trailing
+          // הוא flex sibling רגיל עם המרווח (gap) שלו משלו, אותה דעיכה רק
+          // גרמה לטקסט של הצ'יפ האחרון להיראות "קטוע"/שבור בלי שום צורך.
         }}>
         <Chip
           label={`${t('all')} (${totalCount})`}
