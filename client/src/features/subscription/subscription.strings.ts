@@ -140,6 +140,16 @@ const he = {
   errorAlreadyReported: 'כבר יש תשלום שממתין לאישור',
   cancelledToast: 'הבקשה בוטלה',
   reportedToast: 'הדיווח נשלח, נעדכן ברגע שהמנוי יופעל',
+
+  compareTitle: 'מה כלול בכל תוכנית',
+  compareFree: 'חינמי',
+  comparePro: 'Pro',
+  compareLists: 'רשימות בבעלותך',
+  compareGroups: 'חברים בקבוצה',
+  compareAi: 'בקשות AI ביום',
+  comparePriceChecks: 'השוואות מחיר ביום',
+  compareUnlimited: 'ללא הגבלה',
+  welcomeWhatYouGet: 'מה זה נותן לך',
 } as const;
 
 export type SubscriptionStrings = { [K in keyof typeof he]: string };
@@ -282,6 +292,16 @@ const en: SubscriptionStrings = {
   errorAlreadyReported: 'You already have a payment awaiting approval',
   cancelledToast: 'Request cancelled',
   reportedToast: 'Report sent, we will update you once your plan is active',
+
+  compareTitle: 'What is included in each plan',
+  compareFree: 'Free',
+  comparePro: 'Pro',
+  compareLists: 'Lists you own',
+  compareGroups: 'Members per group',
+  compareAi: 'AI requests per day',
+  comparePriceChecks: 'Price comparisons per day',
+  compareUnlimited: 'Unlimited',
+  welcomeWhatYouGet: 'What this gives you',
 };
 
 const ru: SubscriptionStrings = {
@@ -422,6 +442,16 @@ const ru: SubscriptionStrings = {
   errorAlreadyReported: 'У вас уже есть платёж на подтверждении',
   cancelledToast: 'Запрос отменён',
   reportedToast: 'Сообщение отправлено, сообщим, когда подписка будет активна',
+
+  compareTitle: 'Что включено в каждый тариф',
+  compareFree: 'Бесплатно',
+  comparePro: 'Pro',
+  compareLists: 'Списков в собственности',
+  compareGroups: 'Участников в группе',
+  compareAi: 'Запросов AI в день',
+  comparePriceChecks: 'Сравнений цен в день',
+  compareUnlimited: 'Без ограничений',
+  welcomeWhatYouGet: 'Что это даёт',
 };
 
 const DICTS: Record<Language, SubscriptionStrings> = { he, en, ru };

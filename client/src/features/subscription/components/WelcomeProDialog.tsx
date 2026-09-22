@@ -1,10 +1,23 @@
-import { Dialog, Box, Typography, Button } from '@mui/material';
+import { Dialog, Box, Typography, Button, IconButton } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import SellRoundedIcon from '@mui/icons-material/SellRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getSubscriptionStrings } from '../subscription.strings';
 import { PRO_LILAC, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
+
+// שלושה יתרונות מרכזיים בתמצית - עונה מיד על "אז מה זה נותן לי בפועל",
+// לא רק "קיבלת מתנה" בלי הקשר. אותם אייקונים כמו PerksGrid בעמוד המנוי,
+// כדי שיהיה מוכר כשמגיעים לשם.
+const QUICK_PERKS = [
+  { icon: PlaylistAddCheckRoundedIcon, key: 'perkLists' as const },
+  { icon: AutoAwesomeRoundedIcon, key: 'perkAi' as const },
+  { icon: SellRoundedIcon, key: 'perkPrice' as const },
+];
 
 export type PlanWelcomeVariant = 'trial' | 'paid' | 'manual';
 
@@ -53,6 +66,17 @@ export const WelcomeProDialog = ({ open, months, expiryDate, onClose, onDetails 
           ? 'radial-gradient(circle at 50% 0%, rgba(124,58,237,0.35), transparent 65%)'
           : 'radial-gradient(circle at 50% 0%, rgba(124,58,237,0.16), transparent 65%)',
       }}>
+        <IconButton
+          onClick={onClose}
+          aria-label="close"
+          sx={{
+            position: 'absolute', top: 10, insetInlineEnd: 10, zIndex: 1,
+            color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(15,23,42,0.4)',
+            '&:hover': { color: isDark ? '#fff' : '#0F172A' },
+          }}
+        >
+          <CloseRoundedIcon sx={{ fontSize: 19 }} />
+        </IconButton>
         <Box sx={{ position: 'relative', width: 104, height: 104, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Box aria-hidden sx={{
             position: 'absolute', inset: 0,
@@ -89,6 +113,33 @@ export const WelcomeProDialog = ({ open, months, expiryDate, onClose, onDetails 
         <Typography sx={{ fontSize: 14, color: 'text.secondary', lineHeight: 1.65, maxWidth: 290 }}>
           {body}
         </Typography>
+
+        {/* תמצית "מה זה נותן לך" - עונה מיד על השאלה, לא רק "קיבלת מתנה" */}
+        <Box sx={{ width: '100%', mt: 0.5 }}>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.disabled', letterSpacing: 0.3, mb: 0.75 }}>
+            {s.welcomeWhatYouGet.toUpperCase()}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5 }}>
+            {QUICK_PERKS.map(({ icon: PerkIcon, key }, i) => (
+              <Box key={key} sx={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, width: 84,
+                animation: `sbPerkIn 0.4s ${300 + i * 90}ms cubic-bezier(0.34,1.56,0.64,1) both`,
+                '@keyframes sbPerkIn': { from: { opacity: 0, transform: 'translateY(6px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }}>
+                <Box sx={{
+                  width: 34, height: 34, borderRadius: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isDark ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.1)',
+                }}>
+                  <PerkIcon sx={{ fontSize: 18, color: PRO_LILAC }} />
+                </Box>
+                <Typography sx={{ fontSize: 10.5, fontWeight: 700, lineHeight: 1.3, color: 'text.secondary' }}>
+                  {s[key]}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
 
         <Button variant="contained" fullWidth onClick={onClose} sx={{ ...primaryCtaSx, mt: 1.5 }}>{s.welcomeCta}</Button>
         <Button fullWidth onClick={onDetails} sx={ghostCtaSx}>{s.welcomeDetails}</Button>

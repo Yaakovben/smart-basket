@@ -18,6 +18,7 @@ import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { StepIndicator } from '../components/StepIndicator';
 import { WelcomeProDialog } from '../components/WelcomeProDialog';
 import { PerksGrid, TrustRow } from '../components/PerksAndTrust';
+import { PlanComparisonTable } from '../components/PlanComparisonTable';
 import { primaryCtaSx, revealSx } from '../subscription.styles';
 
 interface Props {
@@ -141,6 +142,10 @@ export const SubscriptionPage = ({ showToast }: Props) => {
         ) : status ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Reveal i={0}><PlanHero status={status} s={s} isDark={isDark} locale={locale} /></Reveal>
+
+            {/* מה כלול בכל תוכנית - תמיד מוצג (גם למי שכבר Pro), כדי שברור בכל
+                רגע מה ההבדל, לא רק ברגע השדרוג. */}
+            <Reveal i={1}><PlanComparisonTable status={status} s={s} isDark={isDark} /></Reveal>
 
             {/* מחוון השלבים מוצג רק אחרי שנבחרה תקופה ונפתחה בקשת תשלום - בתחילת
                 הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר. */}

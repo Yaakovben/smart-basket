@@ -12,7 +12,7 @@ import { useSettings } from "../global/context/SettingsContext";
 import { WelcomeProDialog, type PlanWelcomeVariant } from "../features/subscription/components/WelcomeProDialog";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
-import { clearListNotifications } from "../global/helpers";
+import { clearListNotifications, canShowSecondaryPopup, markPopupShown } from "../global/helpers";
 import { setFetchIssue } from "../global/services/connectionIssue";
 import { writeCache } from "../features/insights/helpers/insightsCache";
 import { INSIGHTS_CACHE_KEY } from "../features/insights/helpers/insightsCache";
@@ -163,6 +163,14 @@ export const AppRouter = () => {
   // המצב המעודכן. מפתח ה-localStorage כולל את מקור המנוי ותאריך התפוגה,
   // כך שגם חידוש/הארכה מציג את הפופאפ מחדש (זה "מצב" חדש), אבל אותו מצב
   // בדיוק לא חוזר על עצמו בכל כניסה.
+  //
+  // השהיה של 10 שניות (אותו דפוס כמו DailyFaithAutoPopup) - בלי זה המשתמש
+  // רואה "קיבלת מנוי!" כתגובה הראשונה של האפליקציה, לפני שהספיק להבין
+  // בכלל מה זה Smart Basket. נותנים לו לראות את מסך הבית קודם.
+  // התור עם popupCoordinator: המפתח ב-localStorage נכתב רק אחרי שבאמת
+  // מציגים (לא מראש) - כך אם daily-faith תפס את הסשן, המשתמש עדיין יראה
+  // את ברכת ה-Pro בכניסה הבאה, ולא מפספס אותה לצמיתות.
+  const WELCOME_PRO_DELAY_MS = 10_000;
   const [welcomePlan, setWelcomePlan] = useState<{ variant: PlanWelcomeVariant; months?: number; expiryDate?: string } | null>(null);
   useEffect(() => {
     if (authLoading || !user?.id || user.plan !== 'pro') return;
@@ -170,7 +178,15 @@ export const AppRouter = () => {
     const key = `sb_plan_welcome_${user.id}_${variant}_${user.planExpiresAt ?? 'permanent'}`;
     try {
       if (localStorage.getItem(key)) return;
-      localStorage.setItem(key, '1');
+    } catch { return; /* localStorage חסום - מוותרים על הברכה */ }
+
+    const timer = setTimeout(() => {
+      if (!canShowSecondaryPopup()) return; // פופאפ אחר (בעדיפות גבוהה יותר) כבר תפס את הסשן
+      try {
+        if (localStorage.getItem(key)) return; // כבר הוצג בינתיים (למשל טאב אחר)
+        localStorage.setItem(key, '1');
+      } catch { return; }
+      markPopupShown('welcome-pro');
       const months = user.planExpiresAt
         ? Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - Date.now()) / (30 * 86_400_000)))
         : undefined;
@@ -181,7 +197,8 @@ export const AppRouter = () => {
           )
         : undefined;
       setWelcomePlan({ variant, months, expiryDate });
-    } catch { /* localStorage חסום - מוותרים על הברכה */ }
+    }, WELCOME_PRO_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.

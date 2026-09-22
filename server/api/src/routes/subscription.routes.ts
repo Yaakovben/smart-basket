@@ -52,7 +52,9 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
       isTrial,
       trialEnded,
       trialMonths: env.TRIAL_MONTHS,
-      limits: plan === 'pro' ? null : PLAN_LIMITS.free,
+      // תמיד מגבלות החינמי (לא null גם ל-Pro) - כך עמוד המנוי יכול להציג
+      // "מה חינמי מול מה Pro" גם למי שכבר Pro, לא רק בזמן שדרוג.
+      limits: PLAN_LIMITS.free,
       usage: plan === 'pro' ? null : {
         aiToday: planUsage.getAiCount(userId),
         priceToday: planUsage.getPriceCount(userId),
