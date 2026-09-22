@@ -25,24 +25,14 @@ export const CategoryFilterChips = memo(({
 }: CategoryFilterChipsProps) => {
   const { t } = useSettings();
 
-  // trailing (כפתור "סידור מוצרים") מתכווץ ונעלם כשגוללים את רצועת הצ'יפים
-  // הרחק מההתחלה - *בדיוק* לפי מרחק הגלילה, לא "נעלם/מופיע" בסוף/בהתחלה של
-  // איזה סף. שני יתרונות על פני מצב בינארי + טיימר (איך שזה היה קודם):
-  //  1. הרוחב עצמו מתכווץ עם הגלילה (לא נשאר "חור" קבוע) - הצ'יפים כבר
-  //     פרושים על פני כל הרוחב מתחתיו (ראו למטה - trailing כבר לא flex
-  //     sibling), אז כשהוא נעלם רואים אותם, לא שטח ריק.
-  //  2. בחזרה - הכפתור מתחיל "לחזור" כבר מהרגע שגוללים לכיוון ההתחלה, לא
-  //     רק כשמגיעים ממש לאפס. בדיוק ההתנהגות של רצועות סינון באפליקציות
-  //     מוקפדות (למשל טאבים שמתכווצים/מתרווחים בהתאם למיקום הגלילה עצמו).
-  //
-  // trailing מוצב absolute *מעל* רצועת הצ'יפים (לא flex sibling שלה) - זה
-  // קריטי ליציבות: בגרסה הקודמת trailing היה flex:0 בתוך אותה שורה כמו
-  // רצועת הצ'יפים (flex:1), אז כיווץ הרוחב שלו שינה את ה-clientWidth של
-  // רצועת הצ'יפים *בזמן שהיא נגללת*. כש-clientWidth גדל, ה-scrollLeft
-  // המקסימלי האפשרי קטן - והדפדפן "תופס" את scrollLeft הנוכחי בחזרה כדי
-  // שיישאר בטווח, מה שיורה אירוע scroll חדש עם ערך שונה -> משנה שוב את
-  // הרוחב -> לולאת משוב שנראית כ"ריצוד". עם absolute, שינוי הרוחב של
-  // trailing לא משפיע בכלל על ה-layout של רצועת הצ'יפים - אין תלות הדדית.
+  // trailing (כפתור "סידור מוצרים") הוא flex sibling קבוע ליד רצועת
+  // הצ'יפים הגוללת - לא צף מעליה. זה קודם היה מוצב absolute *מעל* רצועת
+  // הצ'יפים כדי למנוע לולאת משוב בגלילה, אבל בפועל זה יצר באג חזותי הפוך
+  // וגרוע יותר: כשגוללים עד הסוף, הצ'יפ האחרון נגלל *מתחת* לכפתור הצף
+  // ומסתיר אותו כמעט לגמרי (נראה כאילו הכפתור "נעלם"/שבור). הפתרון: רק
+  // opacity+transform מונפשים (לא width) אז אין שינוי layout בזמן הגלילה
+  // בכלל - "flex sibling עם רוחב קבוע" בטוח לגמרי מבחינת לולאת המשוב שהיה
+  // עליה חשש בעבר, כי היא הייתה קשורה ספציפית לשינוי width, לא ל-transform.
   const TRAILING_WIDTH = 32;
   // מרחק הגלילה (px) שמעליו הכפתור נעלם כליל - קשור לרוחב שלו עצמו
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
@@ -79,12 +69,11 @@ export const CategoryFilterChips = memo(({
   }, [paintTrailing]);
 
   return (
-    // position:relative - עוגן ל-trailing (absolute) למטה.
-    <Box sx={{ position: 'relative', mb: 1.5 }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 1.5 }}>
       <Box
         onScroll={handleScroll}
         sx={{
-          display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, width: '100%',
+          display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, minWidth: 0, flex: 1,
           // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent
           // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
           // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת).
@@ -139,43 +128,16 @@ export const CategoryFilterChips = memo(({
             />
           );
         })}
-        {/* Spacer אמיתי בסוף הרשימה (לא padding על מיכל הגלילה) - מבטיח
-            שגלילה עד הסוף חושפת את הצ'יפ האחרון *במלואו*, בלי שום חלק
-            ממנו מוסתר מתחת ל-trailing (כפתור הסידור הצף). padding על
-            המיכל הגלילה עצמו התברר לא אמין לחלוטין - גם עם רזרבה, גלילה
-            "כמעט עד הסוף" (למשל flick קצר) יכלה לעצור כשעוד כמה פיקסלים
-            מהצ'יפ האחרון מתחת לכפתור, ונראה כאילו הרשימה "שבורה"/לא גוללת. */}
-        {trailing && <Box sx={{ flexShrink: 0, width: 44, height: 1 }} aria-hidden="true" />}
       </Box>
       {trailing && (
-        // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
-        // שזה פותר. insetInlineEnd:0 = הפינה השמאלית-עליונה הפיזית ב-RTL
-        // (אותה פינה שבה trailing ישב קודם כ-flex sibling). opacity/
-        // transform מעודכנים ישירות ב-DOM (paintTrailing למעלה) - בלי sx
-        // מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה (1:1, פריים-
-        // פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה. ערכי ה-sx כאן הם
-        // רק ה"מנוחה" ההתחלתית (לפני שה-effect הראשון רץ).
+        // flex sibling אמיתי - שומר מקום קבוע משלו, אף פעם לא מכוסה על ידי
+        // צ'יפ שנגלל. opacity/transform מעודכנים ישירות ב-DOM (paintTrailing
+        // למעלה) - בלי sx מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה
+        // (1:1, פריים-פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה.
         <Box
           ref={trailingRef}
-          sx={{
-            position: 'absolute', insetInlineEnd: 0, top: 0,
-            width: 32, height: 32, opacity: 1, transform: 'scale(1)',
-          }}
+          sx={{ flexShrink: 0, width: 32, height: 32, opacity: 1, transform: 'scale(1)' }}
         >
-          {/* מרווח חזותי מצד הצ'יפים הנכנסים - דעיכה הדרגתית לצבע הרקע
-              לפני הכפתור, לא גבול חד. בלי זה צ'יפ שנגלל ממש עד מתחת לכפתור
-              הצף נראה דחוס/צמוד אליו. רחב יותר מהכפתור עצמו (overflow
-              visible על ה-Box שלמעלה) כדי שהדעיכה תתחיל כמה פיקסלים לפניו. */}
-          <Box
-            aria-hidden="true"
-            sx={{
-              position: 'absolute', insetInlineEnd: 0, top: 0,
-              width: 64, height: '100%',
-              background: (theme) =>
-                `linear-gradient(to right, ${theme.palette.background.default} 55%, transparent)`,
-              pointerEvents: 'none',
-            }}
-          />
           {trailing}
         </Box>
       )}
