@@ -24,11 +24,10 @@ export const authValidator = {
     }),
   }),
 
+  // ה-refresh token מגיע בעיקר מ-cookie httpOnly; הגוף אופציונלי (תאימות אחורה).
+  // הקונטרולר מחזיר 401 אם אין טוקן לא ב-cookie ולא בגוף.
   refreshToken: Joi.object({
-    refreshToken: Joi.string().min(1).required().messages({
-      'string.min': 'Refresh token is required',
-      'any.required': 'Refresh token is required',
-    }),
+    refreshToken: Joi.string().allow('').optional(),
   }),
 };
 
