@@ -162,6 +162,20 @@ export const CategoryFilterChips = memo(({
             width: 32, height: 32, opacity: 1, transform: 'scale(1)',
           }}
         >
+          {/* מרווח חזותי מצד הצ'יפים הנכנסים - דעיכה הדרגתית לצבע הרקע
+              לפני הכפתור, לא גבול חד. בלי זה צ'יפ שנגלל ממש עד מתחת לכפתור
+              הצף נראה דחוס/צמוד אליו. רחב יותר מהכפתור עצמו (overflow
+              visible על ה-Box שלמעלה) כדי שהדעיכה תתחיל כמה פיקסלים לפניו. */}
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute', insetInlineEnd: 0, top: 0,
+              width: 64, height: '100%',
+              background: (theme) =>
+                `linear-gradient(to right, ${theme.palette.background.default} 55%, transparent)`,
+              pointerEvents: 'none',
+            }}
+          />
           {trailing}
         </Box>
       )}
