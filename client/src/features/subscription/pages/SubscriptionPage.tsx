@@ -16,7 +16,7 @@ import { PaymentPanel } from '../components/PaymentPanel';
 import { ReportedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { StepIndicator } from '../components/StepIndicator';
-import { ActivatedDialog } from '../components/ActivatedDialog';
+import { WelcomeProDialog } from '../components/WelcomeProDialog';
 import { PerksGrid, TrustRow } from '../components/PerksAndTrust';
 import { primaryCtaSx, revealSx } from '../subscription.styles';
 
@@ -40,6 +40,9 @@ export const SubscriptionPage = ({ showToast }: Props) => {
   const [showUnavailable, setShowUnavailable] = useState(false);
   const [activated, setActivated] = useState(false);
   const wasReportedRef = useRef(false);
+  const activatedExpiry = status?.planExpiresAt
+    ? new Date(status.planExpiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+    : undefined;
 
   const months = useMemo(() => {
     if (!status) return 1;
@@ -187,7 +190,12 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           </Box>
         ) : null}
       </Box>
-      <ActivatedDialog open={activated} s={s} isDark={isDark} onClose={() => setActivated(false)} />
+      <WelcomeProDialog
+        open={activated ? 'paid' : null}
+        expiryDate={activatedExpiry}
+        onClose={() => setActivated(false)}
+        onDetails={() => setActivated(false)}
+      />
     </Box>
   );
 };

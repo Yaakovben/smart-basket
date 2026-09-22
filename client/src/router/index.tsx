@@ -9,7 +9,7 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
-import { WelcomeProDialog } from "../features/subscription/components/WelcomeProDialog";
+import { WelcomeProDialog, type PlanWelcomeVariant } from "../features/subscription/components/WelcomeProDialog";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
 import { clearListNotifications } from "../global/helpers";
@@ -144,7 +144,7 @@ const ListPageWrapper = ({
 export const AppRouter = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useSettings();
+  const { t, settings: appSettings } = useSettings();
 
   // hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, saveSavedLists, loading: authLoading, initialData } = useAuth();
@@ -156,21 +156,33 @@ export const AppRouter = () => {
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
-  // ברכת "Pro במתנה" - פעם אחת בלבד לכל משתמש שה-Pro שלו מקורו במתנה
-  // (planSource==='trial'), בין אם הוא נרשם ממש עכשיו ובין אם קיבל את המענק
-  // החד-פעמי למשתמשים ותיקים (legacyTrialGrantedAt בשרת). לא תלוי בגיל
-  // החשבון - ה-localStorage הוא מה שמונע הצגה חוזרת.
-  const [welcomeMonths, setWelcomeMonths] = useState<number | null>(null);
+  // פופאפ קבלת פנים ל-Pro - פעם אחת לכל "מצב מנוי" חדש שהמשתמש עוד לא ראה
+  // (מתנה/תשלום שאושר/הפעלה ידנית ע"י אדמין), בין אם זה קרה ממש עכשיו
+  // (הרשמה) ובין אם זה קרה בזמן שהמשתמש לא היה באפליקציה (מענק למשתמשים
+  // ותיקים, אישור תשלום מהאדמין) - checkAuth רץ בכל כניסה/רענון ומביא את
+  // המצב המעודכן. מפתח ה-localStorage כולל את מקור המנוי ותאריך התפוגה,
+  // כך שגם חידוש/הארכה מציג את הפופאפ מחדש (זה "מצב" חדש), אבל אותו מצב
+  // בדיוק לא חוזר על עצמו בכל כניסה.
+  const [welcomePlan, setWelcomePlan] = useState<{ variant: PlanWelcomeVariant; months?: number; expiryDate?: string } | null>(null);
   useEffect(() => {
-    if (authLoading || !user?.id || user.plan !== 'pro' || user.planSource !== 'trial' || !user.planExpiresAt) return;
-    const key = `sb_trial_welcome_${user.id}`;
+    if (authLoading || !user?.id || user.plan !== 'pro') return;
+    const variant: PlanWelcomeVariant = user.planSource === 'trial' ? 'trial' : user.planSource === 'paid' ? 'paid' : 'manual';
+    const key = `sb_plan_welcome_${user.id}_${variant}_${user.planExpiresAt ?? 'permanent'}`;
     try {
       if (localStorage.getItem(key)) return;
-      const months = Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - Date.now()) / (30 * 86_400_000)));
       localStorage.setItem(key, '1');
-      setWelcomeMonths(months);
+      const months = user.planExpiresAt
+        ? Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - Date.now()) / (30 * 86_400_000)))
+        : undefined;
+      const expiryDate = user.planExpiresAt
+        ? new Date(user.planExpiresAt).toLocaleDateString(
+            appSettings.language === 'he' ? 'he-IL' : appSettings.language === 'ru' ? 'ru-RU' : 'en-GB',
+            { day: 'numeric', month: 'long', year: 'numeric' },
+          )
+        : undefined;
+      setWelcomePlan({ variant, months, expiryDate });
     } catch { /* localStorage חסום - מוותרים על הברכה */ }
-  }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt]);
+  }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
@@ -535,9 +547,11 @@ export const AppRouter = () => {
           useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
       <ConnectionStatusIcon />
       <WelcomeProDialog
-        months={welcomeMonths}
-        onClose={() => setWelcomeMonths(null)}
-        onDetails={() => { setWelcomeMonths(null); navigate('/subscription'); }}
+        open={welcomePlan?.variant ?? null}
+        months={welcomePlan?.months}
+        expiryDate={welcomePlan?.expiryDate}
+        onClose={() => setWelcomePlan(null)}
+        onDetails={() => { setWelcomePlan(null); navigate('/subscription'); }}
       />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* טיפ "ידעת ש...?" - פעם בכמה פתיחות, אחרי 12ש', רק אם לא הוצג פופאפ

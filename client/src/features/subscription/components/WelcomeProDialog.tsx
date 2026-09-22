@@ -1,28 +1,48 @@
 import { Dialog, Box, Typography, Button } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getSubscriptionStrings } from '../subscription.strings';
 import { PRO_LILAC, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
 
+export type PlanWelcomeVariant = 'trial' | 'paid' | 'manual';
+
 interface Props {
-  // null = סגור. מספר החודשים שהמשתמש קיבל במתנה.
-  months: number | null;
+  // null = סגור.
+  open: PlanWelcomeVariant | null;
+  // trial: חודשי המתנה. paid/manual: תאריך התפוגה (undefined = מנוי קבוע).
+  months?: number;
+  expiryDate?: string;
   onClose: () => void;
   onDetails: () => void;
 }
 
 const RAYS = Array.from({ length: 8 });
 
-// מסך קבלת פנים חד-פעמי למשתמש חדש: "קיבלת N חודשי Pro במתנה". הילה מסתובבת
-// סביב כוכב, כניסה עם קפיצה, ושני כפתורים (להתחיל / לפרטי המנוי).
-export const WelcomeProDialog = ({ months, onClose, onDetails }: Props) => {
+const VARIANT_ICON = { trial: CardGiftcardRoundedIcon, paid: CheckCircleRoundedIcon, manual: StarRoundedIcon };
+
+// מסך קבלת פנים אחיד לכל דרך שבה משתמש הופך ל-Pro: מתנה (הרשמה/מענק
+// למשתמשים ותיקים), תשלום שאושר, או הפעלה ידנית ע"י אדמין - אותו עיצוב
+// בדיוק (הילה מסתובבת סביב אריח סגול), רק הכותרת/התג/הטקסט משתנים לפי
+// האמת בפועל, כדי שלא ייווצר רושם מוטעה על איך המנוי הופעל.
+export const WelcomeProDialog = ({ open, months, expiryDate, onClose, onDetails }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const s = getSubscriptionStrings(settings.language);
 
+  const title = open === 'trial' ? s.welcomeTitle : open === 'paid' ? s.paidWelcomeTitle : s.manualWelcomeTitle;
+  const body = open === 'trial'
+    ? s.welcomeBody.replace('{n}', String(months ?? 3))
+    : open === 'paid'
+      ? (expiryDate ? s.paidWelcomeBody.replace('{date}', expiryDate) : s.paidWelcomeBodyPermanent)
+      : (expiryDate ? s.manualWelcomeBody.replace('{date}', expiryDate) : s.manualWelcomeBodyPermanent);
+  const badge = open === 'trial' ? s.trialBadge : open === 'paid' ? s.paidWelcomeBadge : s.proBadge;
+  const Icon = open ? VARIANT_ICON[open] : StarRoundedIcon;
+
   return (
     <Dialog
-      open={months !== null}
+      open={open !== null}
       onClose={onClose}
       PaperProps={{ sx: { borderRadius: '28px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(350px, calc(100vw - 40px))' } }}
     >
@@ -55,13 +75,19 @@ export const WelcomeProDialog = ({ months, onClose, onDetails }: Props) => {
             '@keyframes sbWelcomePop': { from: { transform: 'scale(0.3) rotate(-20deg)', opacity: 0 }, to: { transform: 'scale(1) rotate(0)', opacity: 1 } },
             '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
           }}>
-            <StarRoundedIcon sx={{ fontSize: 46, color: '#fff' }} />
+            <Icon sx={{ fontSize: 44, color: '#fff' }} />
           </Box>
         </Box>
 
-        <Typography sx={{ fontSize: 23, fontWeight: 900, mt: 1 }}>{s.welcomeTitle}</Typography>
+        <Box sx={{
+          px: 1.2, py: 0.3, borderRadius: '999px', bgcolor: isDark ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.1)',
+          color: isDark ? PRO_LILAC : '#6D28D9', fontSize: 11.5, fontWeight: 800, letterSpacing: 0.3,
+        }}>
+          {badge}
+        </Box>
+        <Typography sx={{ fontSize: 22, fontWeight: 900 }}>{title}</Typography>
         <Typography sx={{ fontSize: 14, color: 'text.secondary', lineHeight: 1.65, maxWidth: 290 }}>
-          {s.welcomeBody.replace('{n}', String(months ?? 3))}
+          {body}
         </Typography>
 
         <Button variant="contained" fullWidth onClick={onClose} sx={{ ...primaryCtaSx, mt: 1.5 }}>{s.welcomeCta}</Button>
