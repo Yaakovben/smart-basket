@@ -45,7 +45,11 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
     : undefined;
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const chosenBranches = parseChosenBranches(req.query.branches);
-  const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches);
+  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" בלקוח), כדי שלא יישאר תקוע על
+  // תוצאה ישנה עד 15 דקות (למשל מיד אחרי סנכרון מחירים).
+  const bypassCache = req.query.force === '1';
+  const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches, bypassCache);
+
   res.json({ success: true, data });
   // הוסר: lazy auto-sync שגרם לסנכרון מלא ברקע בזמן בקשות של לקוחות.
   // הקרון של 04:00 ו-16:00 + סנכרון startup מספיקים. אם נדרש סנכרון דחוף -

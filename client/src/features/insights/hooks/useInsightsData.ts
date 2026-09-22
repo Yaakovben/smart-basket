@@ -222,11 +222,13 @@ export function useInsightsData(tab: InsightTab) {
     return () => { cancelled = true; };
   }, [tab, allListsPriceData, userLocation, chosenBranches]);
 
-  // ניסיון ידני יחיד - משמש את כפתור "נסה שוב" במסך שגיאת מחירים
+  // ניסיון ידני יחיד - משמש את כפתור "נסה שוב" במסך שגיאת מחירים, וגם אחרי תיקון
+  // התאמה. force=true עוקף את מטמון ה-15 דקות בשרת, כדי שבקשה יזומה של המשתמש
+  // לא תיתקע על תוצאה ישנה.
   const retryPriceFetch = () => {
     setPriceError(false);
     setPriceLoading(true);
-    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches)
+    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches, true)
       .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
       .catch(() => setPriceError(true))
       .finally(() => setPriceLoading(false));
