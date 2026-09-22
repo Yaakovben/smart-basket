@@ -38,7 +38,9 @@ export interface IBranchDoc extends Document {
 
 const branchSchema = new Schema<IBranchDoc>(
   {
-    chainId: { type: String, required: true, index: true },
+    // אין index:true - chainId כבר מכוסה ע"י הפריפיקס של האינדקסים
+    // הייחודיים {chainId,storeId} ו-{chainId,lat,lng} למטה
+    chainId: { type: String, required: true },
     chainName: { type: String, required: true },
     storeId: { type: String, required: true },
     storeName: { type: String, required: true },

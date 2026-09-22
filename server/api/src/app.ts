@@ -26,6 +26,11 @@ app.use(helmet());
 
 // הגדרת CORS - תמיכה במספר origins
 const allowedOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
+// '*' עם credentials:true היה מאשר כל אתר לשלוח בקשות מאומתות עם ה-cookie -
+// בפרודקשן זו טעות קונפיגורציה מסוכנת, לא הגדרה לגיטימית, ולכן לא מותרת
+if (env.NODE_ENV === 'production' && allowedOrigins.includes('*')) {
+  throw new Error('CORS_ORIGIN="*" is not allowed in production (credentials:true would allow any site to send authenticated requests)');
+}
 app.use(cors({
   origin: (origin, callback) => {
     // אפשר בקשות ללא origin (אפליקציות מובייל, Postman וכו')

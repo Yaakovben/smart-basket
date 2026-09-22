@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import Joi from 'joi';
-import { validate } from '../middleware';
+import { validate, errorReportLimiter } from '../middleware';
 import { reportClientError } from '../controllers/errorReport.controller';
 
 const router = Router();
@@ -16,6 +16,6 @@ const errorReportSchema = Joi.object({
 });
 
 // endpoint ציבורי (ללא auth) - כדי לתפוס גם שגיאות לפני login
-router.post('/', validate(errorReportSchema), reportClientError);
+router.post('/', errorReportLimiter, validate(errorReportSchema), reportClientError);
 
 export default router;

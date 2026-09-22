@@ -19,10 +19,20 @@ function idbOpen(): Promise<IDBDatabase | null> {
   });
 }
 
-async function idbSet(key: string, value: string) {
+// כל פעולה סוגרת את החיבור אחרי שהטרנזקציה מסתיימת - בלי זה, indexedDB.
+// deleteDatabase('sb_auth') (למשל ב-ErrorBoundary/router בזמן ניקוי מלא)
+// נחסם עד שהטאב נסגר, כי עדיין יש חיבור פתוח ל-DB.
+async function idbSet(key: string, value: string): Promise<void> {
   const db = await idbOpen();
   if (!db) return;
-  try { db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, key); } catch { /* ignore */ }
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(value, key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    } catch { db.close(); resolve(); }
+  });
 }
 
 async function idbGet(key: string): Promise<string | null> {
@@ -30,17 +40,25 @@ async function idbGet(key: string): Promise<string | null> {
   if (!db) return null;
   return new Promise((resolve) => {
     try {
-      const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
-      req.onsuccess = () => resolve((req.result as string) ?? null);
-      req.onerror = () => resolve(null);
-    } catch { resolve(null); }
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(key);
+      req.onsuccess = () => { const v = (req.result as string) ?? null; db.close(); resolve(v); };
+      req.onerror = () => { db.close(); resolve(null); };
+    } catch { db.close(); resolve(null); }
   });
 }
 
-async function idbDelete(key: string) {
+async function idbDelete(key: string): Promise<void> {
   const db = await idbOpen();
   if (!db) return;
-  try { db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).delete(key); } catch { /* ignore */ }
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).delete(key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    } catch { db.close(); resolve(); }
+  });
 }
 
 // שחזור מ-IDB אם localStorage נמחק (למשל iOS Safari ITP)
