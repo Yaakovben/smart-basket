@@ -110,13 +110,9 @@ const FaqItem = ({ q, a, isDark }: { q: string; a: string; isDark: boolean }) =>
 };
 
 const StepHeader = ({ n, title }: { n: number; title: string }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
-    <Box sx={{
-      width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      bgcolor: PRO_PURPLE, color: '#fff', fontSize: 12.5, fontWeight: 800,
-    }}>{n}</Box>
-    <Typography sx={{ fontSize: 14, fontWeight: 800 }}>{title}</Typography>
-  </Box>
+  <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: PRO_PURPLE, mb: 1 }}>
+    {n}. {title}
+  </Typography>
 );
 
 // מסך התשלום: פרטים אמיתיים מהשרת בלבד (ביט/PayBox דרך קישור+QR, או העברה
@@ -152,25 +148,14 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
   const soft = isDark ? 'rgba(124,58,237,0.16)' : 'rgba(124,58,237,0.07)';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <Box sx={{
-        ...cardSx(isDark), textAlign: 'center', py: 2.25,
-        background: isDark
-          ? 'linear-gradient(160deg, rgba(124,58,237,0.20), rgba(30,41,59,0.6))'
-          : 'linear-gradient(160deg, #F5F3FF, #FFFFFF)',
-      }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ ...cardSx(isDark), textAlign: 'center', py: 2.5 }}>
         <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary' }}>{s.payAmount}</Typography>
         <Typography sx={{ fontSize: 42, fontWeight: 900, lineHeight: 1.15, color: PRO_PURPLE, fontVariantNumeric: 'tabular-nums' }}>
           ₪{fmt(request.amount)}
         </Typography>
-        <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.25 }}>{s.payFor} {monthsLabel}</Typography>
-        <Box sx={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mx: 'auto', mb: 1.5, px: 1.5, py: 0.9,
-          borderRadius: '12px', maxWidth: 320, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(124,58,237,0.06)',
-        }}>
-          <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 600 }}>{s.summaryValidUntil}</Typography>
-          <Typography sx={{ fontSize: 13, fontWeight: 800 }}>{validUntil}</Typography>
-        </Box>
+        <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{s.payFor} {monthsLabel}</Typography>
+        <Typography sx={{ fontSize: 12, color: 'text.disabled', mb: 1.5 }}>{s.summaryValidUntil} {validUntil}</Typography>
         <CopyChip copied={copiedKey === 'amount'} label={s.copyAmount} copiedLabel={s.copied} onClick={() => copy('amount', fmt(request.amount))} isDark={isDark} />
       </Box>
 
@@ -214,7 +199,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
               rel="noopener noreferrer"
               onClick={() => setLeftForPayment(true)}
               startIcon={<OpenInNewRoundedIcon sx={{ fontSize: 18 }} />}
-              sx={{ borderRadius: '14px', py: 1.35, textTransform: 'none', fontWeight: 800, fontSize: 15.5, gap: 1, bgcolor: PRO_PURPLE, boxShadow: '0 8px 20px rgba(124,58,237,0.32)', '&:hover': { bgcolor: '#6D28D9', boxShadow: '0 8px 20px rgba(124,58,237,0.32)' } }}
+              sx={{ borderRadius: '14px', py: 1.35, textTransform: 'none', fontWeight: 800, fontSize: 15.5, gap: 1, bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' } }}
             >
               {method === 'bit' ? s.payOpenBit : s.payOpenPaybox}
             </Button>
@@ -237,7 +222,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pt: 1 }}>
                   <Box sx={{
                     p: 1.25, bgcolor: '#fff', borderRadius: '18px', lineHeight: 0,
-                    border: '2px solid', borderColor: soft, boxShadow: '0 4px 16px rgba(124,58,237,0.12)',
+                    border: '1.5px solid', borderColor: soft,
                   }}>
                     <QRCodeSVG value={url} size={148} level="M" />
                   </Box>
@@ -255,8 +240,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
           </Box>
         )}
 
-        <Box sx={{ height: '1px', bgcolor: 'divider', my: 2 }} />
-
+        <Box sx={{ mt: 2 }} />
         <StepHeader n={2} title={s.payStep2} />
         <CopyRow id="reference" label={s.payReference} value={request.reference} emphasize {...rowProps} />
         <Typography sx={{ fontSize: 12, color: 'text.secondary', px: 0.5, mt: 0.75 }}>{s.payReferenceHint}</Typography>
@@ -272,24 +256,26 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
         </Box>
       )}
 
-      <Button fullWidth disabled={busy} onClick={onCancel} sx={ghostCtaSx}>
-        {s.changePlan}
-      </Button>
-
       <Box sx={cardSx(isDark)}>
-        <Typography sx={{ fontSize: 13.5, fontWeight: 800, mb: 0.5 }}>{s.faqTitle}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography sx={{ fontSize: 13.5, fontWeight: 800 }}>{s.faqTitle}</Typography>
+          <Button
+            size="small"
+            href={`mailto:${status.payment.supportEmail}?subject=${encodeURIComponent(`Smart Basket Pro ${request.reference}`)}`}
+            startIcon={<SupportAgentRoundedIcon sx={{ fontSize: 16 }} />}
+            sx={{ textTransform: 'none', fontSize: 12, fontWeight: 700, color: PRO_PURPLE, minWidth: 0, gap: 0.5 }}
+          >
+            {s.helpLink}
+          </Button>
+        </Box>
         <FaqItem q={s.faq1q} a={s.faq1a} isDark={isDark} />
         <FaqItem q={s.faq2q} a={s.faq2a} isDark={isDark} />
         <FaqItem q={s.faq3q} a={s.faq3a} isDark={isDark} />
-        <Button
-          fullWidth
-          href={`mailto:${status.payment.supportEmail}?subject=${encodeURIComponent(`Smart Basket Pro ${request.reference}`)}`}
-          startIcon={<SupportAgentRoundedIcon sx={{ fontSize: 18 }} />}
-          sx={{ ...ghostCtaSx, mt: 0.75, gap: 1, color: PRO_PURPLE, fontWeight: 700 }}
-        >
-          {s.helpLink}
-        </Button>
       </Box>
+
+      <Button fullWidth disabled={busy} onClick={onCancel} sx={{ ...ghostCtaSx, fontSize: 12.5 }}>
+        {s.changePlan}
+      </Button>
 
       {/* פס תחתון דביק: "שילמתי" תמיד בהישג יד בלי לגלול */}
       <Box sx={{
