@@ -103,6 +103,7 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
   const refreshTokenValue: string =
     (req.cookies as Record<string, string>)[REFRESH_COOKIE] ||
     (req.body as { refreshToken?: string }).refreshToken || '';
+  if (!refreshTokenValue) throw AuthError.invalidToken();
   const result = await refreshAccessToken(refreshTokenValue);
   if (result.status === 'invalid') throw AuthError.invalidToken();
   if (result.status === 'race') throw new ConflictError('Refresh already in progress, retry');
