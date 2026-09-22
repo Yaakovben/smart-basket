@@ -36,7 +36,11 @@ export const useListActions = ({
   const [showEditList, setShowEditList] = useState(false);
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastFetchAt, setLastFetchAt] = useState<Date | null>(null);
+  // מאותחל ל"עכשיו" ולא ל-null: הרשימה שכבר מוצגת כשהמסך הזה עולה כבר טעונה
+  // (מ-cache או מבקשה קודמת), אז "מעודכן ל-HH:MM" נכון להציג מיד. בלי זה
+  // המשתמש לא רואה שום זמן במשיכה הראשונה - רק setLastFetchAt(refreshList)
+  // עדכן את הערך, וזה קרה רק *אחרי* שהמשיכה הראשונה כבר הסתיימה.
+  const [lastFetchAt, setLastFetchAt] = useState<Date | null>(() => new Date());
 
   const hasListChanges = useMemo(() => {
     if (!editListData) return false;

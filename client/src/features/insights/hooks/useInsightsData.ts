@@ -268,5 +268,8 @@ export function useInsightsData(tab: InsightTab) {
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
     chosenBranches, chooseBranch, onMatchChanged,
+    // חשוף לרענון גרירה-למטה ברמת העמוד (InsightsPage) - מרענן את נתוני
+    // הפעילות/הוצאות שמשותפים לכל הטאבים, לא רק את השוואת המחירים.
+    fetchInsights,
   };
 }
