@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Button, ButtonBase, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, ButtonBase, CircularProgress, Dialog } from '@mui/material';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { haptic } from '../../../global/helpers';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { QRCodeSVG } from 'qrcode.react';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
@@ -27,6 +31,7 @@ const useCopy = () => {
   const copy = async (key: string, value: string) => {
     try {
       await navigator.clipboard.writeText(value);
+      haptic('light');
       setCopiedKey(key);
       setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1600);
     } catch { /* אין הרשאת לוח - אפשר להעתיק ידנית */ }
@@ -76,6 +81,33 @@ const CopyRow = ({ id, label, value, emphasize, s, isDark, copiedKey, onCopy }: 
   </Box>
 );
 
+const addMonths = (from: Date, months: number) => {
+  const d = new Date(from.getTime());
+  d.setMonth(d.getMonth() + months);
+  return d;
+};
+
+const FaqItem = ({ q, a, isDark }: { q: string; a: string; isDark: boolean }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
+      <ButtonBase
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        sx={{ width: '100%', justifyContent: 'space-between', textAlign: 'start', gap: 1, py: 1.25, px: 0.25 }}
+      >
+        <Typography sx={{ fontSize: 13.5, fontWeight: 700 }}>{q}</Typography>
+        <ExpandMoreRoundedIcon sx={{ fontSize: 20, color: 'text.secondary', transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </ButtonBase>
+      <Box sx={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <Box sx={{ overflow: 'hidden' }}>
+          <Typography sx={{ fontSize: 12.5, color: isDark ? 'rgba(255,255,255,0.72)' : 'text.secondary', lineHeight: 1.6, pb: 1.25, px: 0.25 }}>{a}</Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 const StepHeader = ({ n, title }: { n: number; title: string }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
     <Box sx={{
@@ -95,6 +127,12 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
   const { copiedKey, copy } = useCopy();
   const [leftForPayment, setLeftForPayment] = useState(false);
   const [backFromPayment, setBackFromPayment] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { settings } = useSettings();
+  const locale = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-GB';
+  const currentExpiry = status.planExpiresAt ? new Date(status.planExpiresAt) : null;
+  const startsFrom = status.plan === 'pro' && currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+  const validUntil = addMonths(startsFrom, request.months).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   useEffect(() => {
     if (!leftForPayment) return;
@@ -124,6 +162,13 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
           ₪{fmt(request.amount)}
         </Typography>
         <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.25 }}>{s.payFor} {monthsLabel}</Typography>
+        <Box sx={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mx: 'auto', mb: 1.5, px: 1.5, py: 0.9,
+          borderRadius: '12px', maxWidth: 320, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(124,58,237,0.06)',
+        }}>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 600 }}>{s.summaryValidUntil}</Typography>
+          <Typography sx={{ fontSize: 13, fontWeight: 800 }}>{validUntil}</Typography>
+        </Box>
         <CopyChip copied={copiedKey === 'amount'} label={s.copyAmount} copiedLabel={s.copied} onClick={() => copy('amount', fmt(request.amount))} isDark={isDark} />
       </Box>
 
@@ -206,6 +251,21 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
         {s.changePlan}
       </Button>
 
+      <Box sx={cardSx(isDark)}>
+        <Typography sx={{ fontSize: 13.5, fontWeight: 800, mb: 0.5 }}>{s.faqTitle}</Typography>
+        <FaqItem q={s.faq1q} a={s.faq1a} isDark={isDark} />
+        <FaqItem q={s.faq2q} a={s.faq2a} isDark={isDark} />
+        <FaqItem q={s.faq3q} a={s.faq3a} isDark={isDark} />
+        <Button
+          fullWidth
+          href={`mailto:${status.payment.supportEmail}?subject=${encodeURIComponent(`Smart Basket Pro ${request.reference}`)}`}
+          startIcon={<SupportAgentRoundedIcon sx={{ fontSize: 18 }} />}
+          sx={{ ...ghostCtaSx, mt: 0.75, color: PRO_PURPLE, fontWeight: 700 }}
+        >
+          {s.helpLink}
+        </Button>
+      </Box>
+
       {/* פס תחתון דביק: "שילמתי" תמיד בהישג יד בלי לגלול */}
       <Box sx={{
         position: 'sticky', bottom: 'calc(-28px - env(safe-area-inset-bottom))', zIndex: 2, mx: -2, px: 2, pt: 1.5,
@@ -218,7 +278,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
           {s.payStep3}
         </Typography>
         <Button
-          variant="contained" fullWidth disabled={busy} onClick={onPaid}
+          variant="contained" fullWidth disabled={busy} onClick={() => { haptic('medium'); setConfirmOpen(true); }}
           sx={{
             ...primaryCtaSx,
             ...(backFromPayment && {
@@ -238,6 +298,28 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
           <Typography sx={{ fontSize: 11.5 }}>{s.paidHint}</Typography>
         </Box>
       </Box>
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: '22px', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(340px, calc(100vw - 40px))' } }}
+      >
+        <Box sx={{ p: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 900 }}>{s.confirmTitle}</Typography>
+          <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.65 }}>
+            {s.confirmBody.replace('{amount}', fmt(request.amount))}
+          </Typography>
+          <Box dir="ltr" sx={{ alignSelf: 'center', px: 1.5, py: 0.6, borderRadius: '10px', bgcolor: soft, color: PRO_PURPLE, fontWeight: 900, letterSpacing: 1.4, fontSize: 16 }}>
+            {request.reference}
+          </Box>
+          <Button
+            variant="contained" fullWidth sx={{ ...primaryCtaSx, mt: 1 }}
+            onClick={() => { setConfirmOpen(false); onPaid(); }}
+          >
+            {s.confirmYes}
+          </Button>
+          <Button fullWidth onClick={() => setConfirmOpen(false)} sx={ghostCtaSx}>{s.confirmNo}</Button>
+        </Box>
+      </Dialog>
     </Box>
   );
 };
