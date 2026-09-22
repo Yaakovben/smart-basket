@@ -50,8 +50,15 @@ export const notificationValidator = {
 
   broadcast: Joi.object({
     listId: commonSchemas.objectId.required(),
+    // member_removed/list_deleted/removed מוחרגים בכוונה: אלה "אירועים
+    // קריטיים" היחידים שעוקפים את סינון ה-mute (ראה notification.service.ts,
+    // createNotificationsForListMembers). הם נוצרים אך ורק מקוד השרת עצמו
+    // (list.service.ts/list-membership.service.ts) כשהאירוע באמת קרה - לא
+    // דרך ה-endpoint הציבורי הזה. בלעדי ההחרגה, כל חבר ברשימה יכול היה
+    // לקרוא ל-/broadcast ישירות עם type='list_deleted' ולשלוח push מפחיד
+    // ושקרי לכל חברי הקבוצה, כולל למי שהשתיק אותה.
     type: Joi.string()
-      .valid(...notificationTypes)
+      .valid(...notificationTypes.filter(t => !['member_removed', 'list_deleted', 'removed'].includes(t)))
       .required(),
     actorId: commonSchemas.objectId.required(),
     productId: commonSchemas.objectId,
