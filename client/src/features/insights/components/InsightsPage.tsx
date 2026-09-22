@@ -5,6 +5,9 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { SlowLoadIndicator, ErrorBoundary } from '../../../global/components';
 import { haptic } from '../../../global/helpers';
 import { useInsightsData } from '../hooks/useInsightsData';
+import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
+import { PULL_MAX } from '../../list/helpers/list-helpers';
 import { tabEnter, InsightsEmptyState } from './insightsShared';
 import type { InsightTab } from '../types/insights-types';
 import { InsightsHeader } from './InsightsHeader';
@@ -47,7 +50,27 @@ export const InsightsPage = memo(() => {
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
     chosenBranches, chooseBranch, onMatchChanged,
+    fetchInsights,
   } = useInsightsData(tab);
+
+  // גרירה-למטה לרענון - אחיד עם רשימה/מנהל (usePullToRefresh + PullToRefreshIndicator
+  // המשותפים). מרענן תמיד את נתוני הפעילות/הוצאות, ובטאב 'מחירים' גם את השוואת
+  // המחירים. lastRefreshedAt מאותחל ל"עכשיו" (לא null) כדי ש"מעודכן ל-HH:MM"
+  // יופיע כבר במשיכה הראשונה, לא רק בשנייה.
+  const [pageRefreshing, setPageRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(() => new Date());
+  const handlePageRefresh = useCallback(() => {
+    setPageRefreshing(true);
+    fetchInsights();
+    if (tab === 'price') retryPriceFetch();
+    // fetchInsights/retryPriceFetch לא חושפים Promise (עדכון אופטימיסטי מיידי
+    // כבר קיים דרך ה-state שלהם) - חיווי "מרענן" קצר וקבוע, כמו ב-AdminDashboard.
+    setTimeout(() => {
+      setPageRefreshing(false);
+      setLastRefreshedAt(new Date());
+    }, 900);
+  }, [fetchInsights, retryPriceFetch, tab]);
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePageRefresh);
 
   const tStr = t as (k: string) => string;
 
@@ -106,10 +129,25 @@ export const InsightsPage = memo(() => {
   );
 
   return (
-    <Box
-      onScroll={tab === 'price' ? handlePageScroll : undefined}
-      sx={{ height: 'var(--app-height, 100dvh)', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
-    >
+    <Box sx={{ height: 'var(--app-height, 100dvh)', position: 'relative', overflow: 'hidden', bgcolor: 'background.default' }}>
+      {/* גרירה-למטה לרענון - אחיד עם רשימה/מנהל. הכרטיס יושב מחוץ למכל הגלילה
+          (ראו הערה ב-ListComponent) כדי שיישאר צמוד לראש המסך במקום לגלול איתו. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
+      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
+
+      <Box
+        onScroll={tab === 'price' ? handlePageScroll : undefined}
+        onTouchStart={handlePullStart}
+        onTouchMove={handlePullMove}
+        onTouchEnd={handlePullEnd}
+        sx={{
+          height: '100%', pb: 'calc(80px + env(safe-area-inset-bottom))',
+          overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
+          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+          // eslint-disable-next-line react-hooks/refs
+          transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
+        }}
+      >
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
@@ -176,6 +214,7 @@ export const InsightsPage = memo(() => {
             <SpendingTab data={data} isDark={isDark} t={tStr} dataFresh={dataFresh} />
           </ErrorBoundary>
         )}
+      </Box>
       </Box>
 
       <InsightsBottomNav isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
