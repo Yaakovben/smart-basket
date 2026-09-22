@@ -6,7 +6,7 @@ import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, sectionLabelSx, ghostCtaSx, PRO_PURPLE } from '../subscription.styles';
 
 const STATUS_COLOR: Record<SubscriptionRequestStatus, string> = {
-  pending: '#6B7280', reported: '#D97706', approved: '#059669', rejected: '#DC2626', cancelled: '#6B7280',
+  pending: '#6B7280', reported: '#7C3AED', approved: '#059669', rejected: '#DC2626', cancelled: '#6B7280',
 };
 
 const statusLabel = (st: SubscriptionRequestStatus, s: SubscriptionStrings) => ({
@@ -29,7 +29,7 @@ export const ReportedCard = ({ request, s, isDark, locale }: ReportedProps) => (
   <Box sx={{ ...cardSx(isDark), textAlign: 'center', py: 3.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
     <Box sx={{
       width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      bgcolor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(245,158,11,0.14)', color: '#D97706',
+      bgcolor: isDark ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.10)', color: '#7C3AED',
     }}>
       <HourglassTopRoundedIcon sx={{
         fontSize: 28,

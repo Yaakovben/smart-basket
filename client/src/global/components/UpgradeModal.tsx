@@ -111,7 +111,7 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
             border: '1px solid rgba(255,255,255,0.2)',
           }}>
             <AutoAwesomeIcon sx={{
-              fontSize: 28, color: '#FCD34D',
+              fontSize: 28, color: '#fff',
               animation: 'sbUpgradeIconPulse 1.8s ease-in-out infinite',
               '@keyframes sbUpgradeIconPulse': {
                 '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
@@ -124,7 +124,7 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           <Chip
             label="✦ Pro"
             size="small"
-            sx={{ fontWeight: 700, fontSize: 12, bgcolor: '#FCD34D', color: '#4C1D95', border: 'none' }}
+            sx={{ fontWeight: 700, fontSize: 12, bgcolor: '#fff', color: '#7C3AED', border: 'none' }}
           />
 
           <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 20, mt: 0.5, textAlign: 'center' }}>

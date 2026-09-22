@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { subscriptionApi, type SubscriptionStatus } from '../../../services/api/subscription.api';
 import { getSubscriptionStrings } from '../subscription.strings';
-import { PRO_GOLD } from '../subscription.styles';
+import { PRO_SOFT, PRO_PURPLE } from '../subscription.styles';
 
 const DAY_MS = 86_400_000;
 
@@ -34,8 +34,8 @@ export const SubscriptionRowBadge = () => {
   return (
     <Box component="span" sx={{
       px: 1, py: '2px', borderRadius: '999px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap',
-      bgcolor: isPro ? PRO_GOLD : 'action.selected',
-      color: isPro ? '#4C1D95' : 'text.secondary',
+      bgcolor: isPro ? PRO_SOFT : 'action.selected',
+      color: isPro ? PRO_PURPLE : 'text.secondary',
     }}>
       {label}
     </Box>

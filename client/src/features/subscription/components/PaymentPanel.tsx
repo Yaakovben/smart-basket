@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, Button, ButtonBase, CircularProgress, Dialog } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded';
 import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
@@ -44,10 +45,10 @@ const CopyChip = ({ copied, label, copiedLabel, onClick, isDark }: { copied: boo
     onClick={onClick}
     aria-label={label}
     sx={{
-      flexShrink: 0, gap: 0.5, px: 1.1, py: 0.6, borderRadius: '10px',
-      fontSize: 12, fontWeight: 700, color: copied ? '#059669' : PRO_PURPLE,
+      flexShrink: 0, gap: 0.65, px: 1.1, py: 0.6, borderRadius: '10px',
+      fontSize: 12, fontWeight: 700, color: copied ? '#5B21B6' : PRO_PURPLE,
       bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#fff',
-      border: '1px solid', borderColor: copied ? '#059669' : 'divider',
+      border: '1px solid', borderColor: copied ? '#5B21B6' : 'divider',
       transition: 'color 0.15s, border-color 0.15s',
     }}
   >
@@ -128,6 +129,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
   const [leftForPayment, setLeftForPayment] = useState(false);
   const [backFromPayment, setBackFromPayment] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const { settings } = useSettings();
   const locale = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-GB';
   const currentExpiry = status.planExpiresAt ? new Date(status.planExpiresAt) : null;
@@ -200,14 +202,10 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
       <Box sx={cardSx(isDark)}>
         <StepHeader n={1} title={method === 'bank' ? s.payStep1Bank : s.payStep1Link} />
         {url && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25 }}>
-            <Box sx={{
-              p: 1.25, bgcolor: '#fff', borderRadius: '18px', lineHeight: 0,
-              border: '2px solid', borderColor: soft, boxShadow: '0 4px 16px rgba(124,58,237,0.12)',
-            }}>
-              <QRCodeSVG value={url} size={156} level="M" />
-            </Box>
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{s.payScan}</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            {/* פתיחה ישירה באפליקציית התשלום - הדרך הראשית והכי נוחה. ה-QR
+                נשאר זמין למי שצריך (למשל תשלום ממכשיר אחר) אבל לא תופס את
+                תשומת הלב הראשונה - פחות "טכני", יותר "לחצו וזהו". */}
             <Button
               variant="contained"
               fullWidth
@@ -215,11 +213,38 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setLeftForPayment(true)}
-              endIcon={<OpenInNewRoundedIcon sx={{ fontSize: 17 }} />}
-              sx={{ borderRadius: '12px', py: 1.1, textTransform: 'none', fontWeight: 800, fontSize: 14.5, bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' } }}
+              startIcon={<OpenInNewRoundedIcon sx={{ fontSize: 18 }} />}
+              sx={{ borderRadius: '14px', py: 1.35, textTransform: 'none', fontWeight: 800, fontSize: 15.5, gap: 1, bgcolor: PRO_PURPLE, boxShadow: '0 8px 20px rgba(124,58,237,0.32)', '&:hover': { bgcolor: '#6D28D9', boxShadow: '0 8px 20px rgba(124,58,237,0.32)' } }}
             >
               {method === 'bit' ? s.payOpenBit : s.payOpenPaybox}
             </Button>
+
+            <ButtonBase
+              onClick={() => setShowQr((v) => !v)}
+              aria-expanded={showQr}
+              sx={{
+                gap: 0.75, px: 1.25, py: 0.6, borderRadius: '999px', mt: 0.25,
+                fontSize: 12.5, fontWeight: 700, color: 'text.secondary',
+              }}
+            >
+              <QrCode2RoundedIcon sx={{ fontSize: 16 }} />
+              {s.payShowQr}
+              <ExpandMoreRoundedIcon sx={{ fontSize: 17, transition: 'transform 0.25s', transform: showQr ? 'rotate(180deg)' : 'none' }} />
+            </ButtonBase>
+
+            <Box sx={{ display: 'grid', gridTemplateRows: showQr ? '1fr' : '0fr', width: '100%', transition: 'grid-template-rows 0.3s ease' }}>
+              <Box sx={{ overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pt: 1 }}>
+                  <Box sx={{
+                    p: 1.25, bgcolor: '#fff', borderRadius: '18px', lineHeight: 0,
+                    border: '2px solid', borderColor: soft, boxShadow: '0 4px 16px rgba(124,58,237,0.12)',
+                  }}>
+                    <QRCodeSVG value={url} size={148} level="M" />
+                  </Box>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{s.payScan}</Typography>
+                </Box>
+              </Box>
+            </Box>
           </Box>
         )}
         {method === 'bank' && bank && (
@@ -260,7 +285,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
           fullWidth
           href={`mailto:${status.payment.supportEmail}?subject=${encodeURIComponent(`Smart Basket Pro ${request.reference}`)}`}
           startIcon={<SupportAgentRoundedIcon sx={{ fontSize: 18 }} />}
-          sx={{ ...ghostCtaSx, mt: 0.75, color: PRO_PURPLE, fontWeight: 700 }}
+          sx={{ ...ghostCtaSx, mt: 0.75, gap: 1, color: PRO_PURPLE, fontWeight: 700 }}
         >
           {s.helpLink}
         </Button>
@@ -293,7 +318,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
         >
           {busy ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : s.paidCta}
         </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.9, color: 'text.disabled' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, mt: 0.9, color: 'text.disabled' }}>
           <LockRoundedIcon sx={{ fontSize: 13 }} />
           <Typography sx={{ fontSize: 11.5 }}>{s.paidHint}</Typography>
         </Box>

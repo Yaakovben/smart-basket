@@ -4,7 +4,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
-import { PRO_GOLD } from '../subscription.styles';
+import { PRO_SOFT, PRO_LILAC, PRO_PURPLE } from '../subscription.styles';
 
 interface Props {
   status: SubscriptionStatus;
@@ -75,7 +75,7 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       {SPARKLES.map((sp, i) => (
         <Box key={i} aria-hidden sx={{
           position: 'absolute', top: sp.top, insetInlineEnd: sp.insetInlineEnd, width: sp.size, height: sp.size,
-          background: '#FDE68A', borderRadius: '2px', transform: 'rotate(45deg)',
+          background: PRO_LILAC, borderRadius: '2px', transform: 'rotate(45deg)',
           animation: `sbSparkle 2.6s ${sp.delay}s ease-in-out infinite`,
           '@keyframes sbSparkle': {
             '0%, 100%': { opacity: 0.15, transform: 'rotate(45deg) scale(0.6)' },
@@ -94,14 +94,14 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {isPro
-            ? <StarRoundedIcon sx={{ fontSize: 26, color: PRO_GOLD }} />
-            : <AutoAwesomeRoundedIcon sx={{ fontSize: 24, color: PRO_GOLD }} />}
+            ? <StarRoundedIcon sx={{ fontSize: 26, color: '#fff' }} />
+            : <AutoAwesomeRoundedIcon sx={{ fontSize: 24, color: PRO_LILAC }} />}
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Box sx={{
             display: 'inline-block', px: 1, py: '1px', borderRadius: '999px', mb: 0.4,
-            bgcolor: isPro ? PRO_GOLD : 'rgba(255,255,255,0.18)',
-            color: isPro ? '#4C1D95' : '#fff',
+            bgcolor: isPro ? '#fff' : 'rgba(255,255,255,0.18)',
+            color: isPro ? PRO_PURPLE : '#fff',
             fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
           }}>
             {isTrial ? `🎁 ${s.trialBadge}` : isPro ? `✦ ${s.proBadge}` : trialEnded ? s.trialEndedBadge : s.freeBadge}
@@ -130,7 +130,7 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
         </Box>
       )}
       {isPro && expiringSoon && (
-        <Typography sx={{ position: 'relative', fontSize: 12, color: PRO_GOLD, fontWeight: 600 }}>
+        <Typography sx={{ position: 'relative', fontSize: 12, color: PRO_SOFT, fontWeight: 700 }}>
           {s.expiringSoon}
         </Typography>
       )}

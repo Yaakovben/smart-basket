@@ -57,7 +57,7 @@ export const PeriodPicker = ({ status, s, isDark, months, onChange }: Props) => 
               {savings ? (
                 <Box sx={{
                   position: 'absolute', top: -9, px: 0.9, py: '1px', borderRadius: '999px',
-                  bgcolor: '#F59E0B', color: '#4C1D95', fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap',
+                  bgcolor: PRO_PURPLE, color: '#fff', fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap',
                 }}>
                   {s.saveBadge} {savings}%
                 </Box>

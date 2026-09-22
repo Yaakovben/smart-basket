@@ -78,7 +78,7 @@ export const CompareCard = ({ status, s, isDark }: Props) => {
               {r.free}
             </Typography>
             <Box sx={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4, py: 1.1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, py: 1.1,
               borderTop: '1px solid', borderColor: 'divider', color: PRO_PURPLE, fontWeight: 800, fontSize: 12.5,
               bgcolor: isDark ? 'rgba(124,58,237,0.10)' : 'rgba(124,58,237,0.06)',
             }}>

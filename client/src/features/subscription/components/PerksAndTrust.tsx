@@ -13,9 +13,9 @@ interface Props { s: SubscriptionStrings; isDark: boolean }
 
 const PERKS = [
   { icon: PlaylistAddCheckRoundedIcon, key: 'perkLists', grad: 'linear-gradient(135deg,#8B5CF6,#6D28D9)' },
-  { icon: GroupsRoundedIcon, key: 'perkGroups', grad: 'linear-gradient(135deg,#14B8A6,#0D9488)' },
-  { icon: AutoAwesomeRoundedIcon, key: 'perkAi', grad: 'linear-gradient(135deg,#F59E0B,#D97706)' },
-  { icon: SellRoundedIcon, key: 'perkPrice', grad: 'linear-gradient(135deg,#EC4899,#BE185D)' },
+  { icon: GroupsRoundedIcon, key: 'perkGroups', grad: 'linear-gradient(135deg,#A78BFA,#7C3AED)' },
+  { icon: AutoAwesomeRoundedIcon, key: 'perkAi', grad: 'linear-gradient(135deg,#C4B5FD,#8B5CF6)' },
+  { icon: SellRoundedIcon, key: 'perkPrice', grad: 'linear-gradient(135deg,#6D28D9,#4C1D95)' },
 ] as const;
 
 // ארבע יתרונות Pro כאריחים צבעוניים - "מה מקבלים" במבט אחד.

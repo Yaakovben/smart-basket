@@ -139,8 +139,10 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Reveal i={0}><PlanHero status={status} s={s} isDark={isDark} locale={locale} /></Reveal>
 
-            {!isPermanent && (
-              <Reveal i={1}><StepIndicator step={open?.status === 'pending' ? 2 : open?.status === 'reported' ? 3 : 1} s={s} isDark={isDark} /></Reveal>
+            {/* מחוון השלבים מוצג רק אחרי שנבחרה תקופה ונפתחה בקשת תשלום - בתחילת
+                הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר. */}
+            {open && (
+              <Reveal i={1}><StepIndicator step={open.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
             )}
 
             {open?.status === 'pending' && (

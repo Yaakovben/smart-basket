@@ -2,7 +2,7 @@ import { Dialog, Box, Typography, Button } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getSubscriptionStrings } from '../subscription.strings';
-import { PRO_GOLD, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
+import { PRO_LILAC, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
 
 interface Props {
   // null = סגור. מספר החודשים שהמשתמש קיבל במתנה.
@@ -43,7 +43,7 @@ export const WelcomeProDialog = ({ months, onClose, onDetails }: Props) => {
             {RAYS.map((_, i) => (
               <Box key={i} sx={{
                 position: 'absolute', top: '50%', left: '50%', width: 4, height: 14, borderRadius: 2,
-                bgcolor: PRO_GOLD, opacity: 0.55,
+                bgcolor: PRO_LILAC, opacity: 0.55,
                 transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-48px)`,
               }} />
             ))}
@@ -55,7 +55,7 @@ export const WelcomeProDialog = ({ months, onClose, onDetails }: Props) => {
             '@keyframes sbWelcomePop': { from: { transform: 'scale(0.3) rotate(-20deg)', opacity: 0 }, to: { transform: 'scale(1) rotate(0)', opacity: 1 } },
             '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
           }}>
-            <StarRoundedIcon sx={{ fontSize: 46, color: PRO_GOLD }} />
+            <StarRoundedIcon sx={{ fontSize: 46, color: '#fff' }} />
           </Box>
         </Box>
 

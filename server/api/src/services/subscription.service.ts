@@ -5,7 +5,7 @@ import { logger } from '../config';
 import { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionPayMethod, type SubscriptionRequestStatus } from '../models';
 import { UserDAL } from '../dal';
 import { ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
-import { sendToUser } from './push.service';
+import { sendToUser, sendToUsers } from './push.service';
 import { sendAdminNotice } from './email.service';
 
 // ===== מחירים ושיטות תשלום =====
@@ -136,18 +136,25 @@ export async function reportPaid(userId: string, requestId: string): Promise<ISu
   await req.save();
 
   void (async () => {
-    const user = await UserDAL.findById(userId);
-    await sendAdminNotice(
-      `דיווח תשלום מנוי: ${req.reference}`,
-      [
-        `משתמש: ${user?.name ?? '?'} (${user?.email ?? '?'})`,
-        `סכום: ₪${req.amount} עבור ${req.months} חודשים`,
-        `אמצעי: ${req.method}`,
-        `קוד הפניה: ${req.reference}`,
-        '',
-        'בדוק שההעברה נכנסה ואשר בפאנל האדמין.',
-      ].join('\n'),
-    );
+    const [user, adminIds] = await Promise.all([UserDAL.findById(userId), UserDAL.findAdminIds()]);
+    await Promise.all([
+      sendAdminNotice(
+        `דיווח תשלום מנוי: ${req.reference}`,
+        [
+          `משתמש: ${user?.name ?? '?'} (${user?.email ?? '?'})`,
+          `סכום: ₪${req.amount} עבור ${req.months} חודשים`,
+          `אמצעי: ${req.method}`,
+          `קוד הפניה: ${req.reference}`,
+          '',
+          'בדוק שההעברה נכנסה ואשר בפאנל האדמין.',
+        ].join('\n'),
+      ),
+      sendToUsers(adminIds, {
+        title: '💳 תשלום מנוי ממתין לאישור',
+        body: `${user?.name ?? 'משתמש'} · ₪${req.amount} · קוד ${req.reference}`,
+        data: { url: '/admin', type: 'subscription_request' },
+      }),
+    ]);
   })().catch((e) => logger.warn('subscription admin notice failed: %s', (e as Error).message));
 
   return req;

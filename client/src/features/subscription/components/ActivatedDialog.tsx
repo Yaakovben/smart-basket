@@ -1,7 +1,7 @@
 import { Dialog, Box, Typography, Button } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import type { SubscriptionStrings } from '../subscription.strings';
-import { PRO_GOLD, primaryCtaSx } from '../subscription.styles';
+import { primaryCtaSx } from '../subscription.styles';
 
 interface Props {
   open: boolean;
@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-const CONFETTI = ['#FCD34D', '#A78BFA', '#34D399', '#F472B6', '#60A5FA', '#FBBF24'];
+const CONFETTI = ['#C4B5FD', '#A78BFA', '#8B5CF6', '#DDD6FE', '#7C3AED', '#EDE9FE'];
 
 // חגיגת הפעלת מנוי: מופיעה רק כשהמנוי הופעל בזמן שהמשתמש בעמוד (אחרי אישור אדמין).
 export const ActivatedDialog = ({ open, s, isDark, onClose }: Props) => (
@@ -41,7 +41,7 @@ export const ActivatedDialog = ({ open, s, isDark, onClose }: Props) => (
         '@keyframes sbPop': { from: { transform: 'scale(0.4)', opacity: 0 }, to: { transform: 'scale(1)', opacity: 1 } },
         '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
       }}>
-        <StarRoundedIcon sx={{ fontSize: 48, color: PRO_GOLD }} />
+        <StarRoundedIcon sx={{ fontSize: 48, color: '#fff' }} />
       </Box>
       <Typography sx={{ fontSize: 22, fontWeight: 900 }}>{s.activatedTitle}</Typography>
       <Typography sx={{ fontSize: 14, color: 'text.secondary', lineHeight: 1.6 }}>{s.activatedBody}</Typography>

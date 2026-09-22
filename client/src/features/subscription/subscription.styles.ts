@@ -2,7 +2,9 @@ import type { SxProps, Theme } from '@mui/material';
 
 export const PRO_PURPLE = '#7C3AED';
 export const PRO_PURPLE_DARK = '#5B21B6';
-export const PRO_GOLD = '#FCD34D';
+// גוון סגול בהיר לתגים/רקעים עדינים (לא זהב) - כל צבעי המינוי מגיעים ממשפחת הסגול
+export const PRO_SOFT = '#EDE9FE';
+export const PRO_LILAC = '#C4B5FD';
 
 export const cardSx = (isDark: boolean): SxProps<Theme> => ({
   bgcolor: 'background.paper',
