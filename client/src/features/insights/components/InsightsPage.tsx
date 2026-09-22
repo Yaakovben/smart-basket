@@ -122,6 +122,7 @@ export const InsightsPage = memo(() => {
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
 
         <Box
+          data-insights-scroll-root
           onTouchStart={handlePullStart}
           onTouchMove={handlePullMove}
           onTouchEnd={handlePullEnd}

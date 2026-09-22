@@ -52,6 +52,42 @@ export const PriceTab = memo(({
     if (Math.abs(delta) > 4) scroller.scrollBy({ left: delta, behavior: 'smooth' });
   }, [selectedListId, allUserLists.length, priceData]);
 
+  // הקשר הרשימה נדבק (sticky) רק בתחילת הגלילה האנכית של העמוד - ברגע
+  // שגוללים למטה הוא מתכווץ ונעלם לגמרי (לא נשאר צף קבוע שתופס מקום/מכסה
+  // תוכן). progress מחושב לפי scrollTop של מכל הגלילה של כל עמוד התובנות
+  // (לא רק הטאב הזה - data-insights-scroll-root ב-InsightsPage), בדיוק
+  // אותה טכניקה כמו trailing ב-CategoryFilterChips: opacity+maxHeight
+  // מצוירים ישירות ב-DOM דרך ref, לא state, כדי שזה יהיה חלק וללא ריצוד.
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const stickyRafRef = useRef<number | null>(null);
+  const STICKY_COLLAPSE_DISTANCE = 70;
+  useEffect(() => {
+    const el = stickyRef.current;
+    if (!el) return;
+    const root = el.closest<HTMLElement>('[data-insights-scroll-root]');
+    if (!root) return;
+    const paint = (scrollTop: number) => {
+      const progress = Math.min(1, Math.max(0, scrollTop) / STICKY_COLLAPSE_DISTANCE);
+      el.style.opacity = String(1 - progress);
+      el.style.maxHeight = `${(1 - progress) * el.scrollHeight}px`;
+      el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
+    };
+    const onScroll = () => {
+      if (stickyRafRef.current != null) return;
+      stickyRafRef.current = requestAnimationFrame(() => {
+        stickyRafRef.current = null;
+        paint(root.scrollTop);
+      });
+    };
+    el.style.maxHeight = 'none'; // מדידת scrollHeight האמיתי לפני הציור הראשון
+    paint(root.scrollTop);
+    root.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      root.removeEventListener('scroll', onScroll);
+      if (stickyRafRef.current != null) cancelAnimationFrame(stickyRafRef.current);
+    };
+  }, []);
+
   if (!priceData) {
     // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
     if (priceError) {
@@ -83,17 +119,21 @@ export const PriceTab = memo(({
 
   return (
     <>
-      {/* הקשר הרשימה שעליה מתבצע הניתוח - מוצג רק בראש העמוד ונגלל יחד עם
-          התוכן (לא נדבק/צף). כך תמיד ברור בדיוק מתי הוא מוצג (רק בתחילת
-          הדף) ומתי לא (אחרי שגוללים ממנו) - בלי הופעה/היעלמות דינמית לפי
-          כיוון גלילה שהייתה מרגישה לא יציבה. */}
+      {/* הקשר הרשימה שעליה מתבצע הניתוח - נדבק (sticky) רק בתחילת הגלילה,
+          ואז מתכווץ ונעלם ככל שגוללים למטה (ראו האפקט למעלה - stickyRef).
+          כך ברור מיד עם הכניסה לטאב על איזו רשימה הניתוח מתבצע, בלי
+          שהוא נשאר צף לצמיתות ותופס מקום/מסתיר תוכן בזמן קריאת התוצאות. */}
       {allUserLists.length > 0 && (
-        <Box sx={{
-          bgcolor: 'background.default',
-          px: 2, mx: -2, pt: 1, pb: 1,
-          borderBottom: '1px solid',
-          borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-        }}>
+        <Box
+          ref={stickyRef}
+          sx={{
+            position: 'sticky', top: 0, zIndex: 3, overflow: 'hidden',
+            bgcolor: 'background.default',
+            px: 2, mx: -2, pt: 1, pb: 1,
+            borderBottom: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          }}
+        >
           {/* תווית מידע - מוצגת כשיש רשימה אחת. המשתמש יודע על מה הניתוח נעשה. */}
           {allUserLists.length === 1 && allUserLists[0] && (
             <Box sx={{
