@@ -156,20 +156,21 @@ export const AppRouter = () => {
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
-  // ברכת "Pro במתנה" - פעם אחת בלבד, למשתמש שנרשם ממש עכשיו (עד 15 דקות).
+  // ברכת "Pro במתנה" - פעם אחת בלבד לכל משתמש שה-Pro שלו מקורו במתנה
+  // (planSource==='trial'), בין אם הוא נרשם ממש עכשיו ובין אם קיבל את המענק
+  // החד-פעמי למשתמשים ותיקים (legacyTrialGrantedAt בשרת). לא תלוי בגיל
+  // החשבון - ה-localStorage הוא מה שמונע הצגה חוזרת.
   const [welcomeMonths, setWelcomeMonths] = useState<number | null>(null);
   useEffect(() => {
-    if (authLoading || !user?.id || user.plan !== 'pro' || !user.createdAt || !user.planExpiresAt) return;
+    if (authLoading || !user?.id || user.plan !== 'pro' || user.planSource !== 'trial' || !user.planExpiresAt) return;
     const key = `sb_trial_welcome_${user.id}`;
     try {
       if (localStorage.getItem(key)) return;
-      const ageMs = Date.now() - new Date(user.createdAt).getTime();
-      if (ageMs > 15 * 60_000) { localStorage.setItem(key, '1'); return; }
-      const months = Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - new Date(user.createdAt).getTime()) / (30 * 86_400_000)));
+      const months = Math.max(1, Math.round((new Date(user.planExpiresAt).getTime() - Date.now()) / (30 * 86_400_000)));
       localStorage.setItem(key, '1');
       setWelcomeMonths(months);
     } catch { /* localStorage חסום - מוותרים על הברכה */ }
-  }, [authLoading, user?.id, user?.plan, user?.createdAt, user?.planExpiresAt]);
+  }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React

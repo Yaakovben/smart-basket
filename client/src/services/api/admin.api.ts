@@ -125,4 +125,16 @@ export const adminApi = {
   async rejectSubscriptionRequest(id: string, note?: string): Promise<void> {
     await apiClient.post(`/admin/subscription-requests/${id}/reject`, { note: note ?? '' });
   },
+
+  /** ספירת משתמשים ותיקים שזכאים למענק Pro חד-פעמי (dry-run, לא משנה כלום). */
+  async previewLegacyTrialGrant(): Promise<number> {
+    const res = await apiClient.get<{ data: { eligible: number } }>('/admin/subscription/legacy-trial');
+    return res.data.data.eligible;
+  },
+
+  /** ביצוע בפועל של המענק - Pro ל-TRIAL_MONTHS מהיום לכל מי שזכאי. */
+  async executeLegacyTrialGrant(): Promise<{ granted: number; skipped: number }> {
+    const res = await apiClient.post<{ data: { granted: number; skipped: number } }>('/admin/subscription/legacy-trial', { confirm: true });
+    return res.data.data;
+  },
 };

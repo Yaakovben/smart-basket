@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { env } from '../config/environment';
 import { logger } from '../config';
-import { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionPayMethod, type SubscriptionRequestStatus } from '../models';
+import { SubscriptionRequest, User, type ISubscriptionRequest, type SubscriptionPayMethod, type SubscriptionRequestStatus } from '../models';
 import { UserDAL } from '../dal';
 import { ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
 import { sendToUser, sendToUsers } from './push.service';
@@ -181,6 +181,52 @@ export async function listAdminRequests(statuses: SubscriptionRequestStatus[], l
 export function newUserTrialFields(): { plan: 'pro'; planExpiresAt: Date; planAutoRenew: false; planSource: 'trial' } | Record<string, never> {
   if (!env.TRIAL_MONTHS) return {};
   return { plan: 'pro', planExpiresAt: addMonths(new Date(), env.TRIAL_MONTHS), planAutoRenew: false, planSource: 'trial' };
+}
+
+// ===== מענק Pro חד-פעמי למשתמשים ותיקים (backfill) =====
+// כל משתמש שנרשם *לפני* שהמתנה הופעלה מקבל אותה פעם אחת, מהיום, באותו
+// אורך כמו TRIAL_MONTHS. לא נוגעים במשתמש שכבר Pro באופן שווה-או-טוב-יותר
+// (מנוי קבוע, או מנוי בתוקף עד אחרי תאריך היעד) - לא מקצרים אף מנוי בתשלום.
+// legacyTrialGrantedAt מסמן שהמשתמש כבר "טופל" (גם אם דולג עליו) - הרצה
+// חוזרת של הפונקציה לא תיגע בו שוב.
+function legacySkipFilter(targetExpiry: Date) {
+  return {
+    plan: 'pro',
+    $or: [
+      { planExpiresAt: { $exists: false } },
+      { planExpiresAt: null },
+      { planExpiresAt: { $gt: targetExpiry } },
+    ],
+  };
+}
+
+export async function countLegacyTrialEligible(): Promise<number> {
+  if (!env.TRIAL_MONTHS) return 0;
+  const targetExpiry = addMonths(new Date(), env.TRIAL_MONTHS);
+  return User.countDocuments({
+    legacyTrialGrantedAt: { $exists: false },
+    $nor: [legacySkipFilter(targetExpiry)],
+  });
+}
+
+export interface LegacyTrialResult { granted: number; skipped: number }
+
+export async function grantLegacyTrialToExistingUsers(): Promise<LegacyTrialResult> {
+  if (!env.TRIAL_MONTHS) return { granted: 0, skipped: 0 };
+  const now = new Date();
+  const targetExpiry = addMonths(now, env.TRIAL_MONTHS);
+  const skipFilter = legacySkipFilter(targetExpiry);
+
+  const skipped = await User.updateMany(
+    { legacyTrialGrantedAt: { $exists: false }, ...skipFilter },
+    { $set: { legacyTrialGrantedAt: now } },
+  );
+  const granted = await User.updateMany(
+    { legacyTrialGrantedAt: { $exists: false }, $nor: [skipFilter] },
+    { $set: { plan: 'pro', planExpiresAt: targetExpiry, planAutoRenew: false, planSource: 'trial', legacyTrialGrantedAt: now } },
+  );
+
+  return { granted: granted.modifiedCount, skipped: skipped.modifiedCount };
 }
 
 export function addMonths(from: Date, months: number): Date {

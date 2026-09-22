@@ -24,6 +24,7 @@ import {
   getSubscriptionRequests,
   approveSubscriptionRequest,
   rejectSubscriptionRequest,
+  getLegacyTrialGrant,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -47,6 +48,9 @@ const requestNoteBody = Joi.object({ note: Joi.string().trim().max(300).allow(''
 router.get('/subscription-requests', getSubscriptionRequests);
 router.post('/subscription-requests/:id/approve', validate({ params: requestIdParams, body: requestNoteBody }), approveSubscriptionRequest);
 router.post('/subscription-requests/:id/reject', validate({ params: requestIdParams, body: requestNoteBody }), rejectSubscriptionRequest);
+// מענק Pro חד-פעמי למשתמשים ותיקים - dry-run כברירת מחדל, ביצוע רק עם confirm=true.
+router.get('/subscription/legacy-trial', getLegacyTrialGrant);
+router.post('/subscription/legacy-trial', getLegacyTrialGrant);
 
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);

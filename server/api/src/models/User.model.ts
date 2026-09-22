@@ -52,6 +52,9 @@ export interface IUser extends Document {
   planAutoRenew: boolean;
   // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין.
   planSource?: 'trial' | 'paid';
+  // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
+  // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
+  legacyTrialGrantedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -150,6 +153,9 @@ const userSchema = new Schema<IUser>(
     planSource: {
       type: String,
       enum: ['trial', 'paid'],
+    },
+    legacyTrialGrantedAt: {
+      type: Date,
     },
   },
   {

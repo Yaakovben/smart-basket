@@ -20,7 +20,7 @@ import { asyncHandler } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
-import { listAdminRequests, approveRequest, rejectRequest } from '../services/subscription.service';
+import { listAdminRequests, approveRequest, rejectRequest, countLegacyTrialEligible, grantLegacyTrialToExistingUsers } from '../services/subscription.service';
 import type { SubscriptionRequestStatus } from '../models';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
@@ -401,4 +401,24 @@ export const approveSubscriptionRequest = asyncHandler(async (req: AuthRequest, 
 export const rejectSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
   const request = await rejectRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
   res.json({ success: true, data: { id: String(request._id), status: request.status } });
+});
+
+/**
+ * GET/POST /api/admin/subscription/legacy-trial
+ * מענק Pro חד-פעמי (TRIAL_MONTHS, מהיום) לכל המשתמשים הוותיקים שעוד לא
+ * קיבלו אותו. אותו דפוס dry-run/confirm כמו cloudinary-orphans: GET (או
+ * POST בלי confirm) רק סופר כמה משתמשים יושפעו, POST עם confirm=true
+ * מבצע בפועל. אין השפעה על מי שכבר Pro בתשלום שווה-או-טוב-יותר.
+ */
+export const getLegacyTrialGrant = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const confirm = req.query.confirm === 'true' || (req.body as { confirm?: boolean } | undefined)?.confirm === true;
+
+  if (!confirm) {
+    const eligible = await countLegacyTrialEligible();
+    res.json({ success: true, data: { dryRun: true, eligible } });
+    return;
+  }
+
+  const { granted, skipped } = await grantLegacyTrialToExistingUsers();
+  res.json({ success: true, data: { dryRun: false, granted, skipped } });
 });

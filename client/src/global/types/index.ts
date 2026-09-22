@@ -32,6 +32,7 @@ export interface User {
   createdAt?: string;
   plan?: 'free' | 'pro';
   planExpiresAt?: string | null;
+  planSource?: 'trial' | 'paid';
 }
 
 // ===== מוצר =====
