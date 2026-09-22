@@ -968,6 +968,8 @@ export const ru: Translations = {
   upgradePrice: '₪9.90 в месяц',
   upgradeContact: 'Связаться с нами',
   manageSubscription: 'Управление подпиской',
+  daysShort: 'дн.',
+  upgradeToProShort: 'Перейти на Pro',
   subscriptionCurrentPlan: 'Текущий план',
   subscriptionExpiresOn: 'Действует до',
   subscriptionCancelBtn: 'Отменить автопродление',

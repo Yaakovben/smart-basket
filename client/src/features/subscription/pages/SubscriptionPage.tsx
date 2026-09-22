@@ -146,19 +146,19 @@ export const SubscriptionPage = ({ showToast }: Props) => {
             )}
 
             {open?.status === 'pending' && (
-              <PaymentPanel
-                status={status} request={open} s={s} isDark={isDark} busy={busy}
-                onChangeMethod={handleChangeMethod} onPaid={handlePaid} onCancel={handleCancel}
-              />
+              <Reveal i={2}>
+                <PaymentPanel
+                  status={status} request={open} s={s} isDark={isDark} busy={busy}
+                  onChangeMethod={handleChangeMethod} onPaid={handlePaid} onCancel={handleCancel}
+                />
+              </Reveal>
             )}
 
             {open?.status === 'reported' && (
-              <>
-                <ReportedCard request={open} s={s} isDark={isDark} locale={locale} />
-              </>
+              <Reveal i={2}><ReportedCard request={open} s={s} isDark={isDark} locale={locale} /></Reveal>
             )}
 
-            {showRejected && lastResolved && <RejectedNotice request={lastResolved} s={s} isDark={isDark} />}
+            {showRejected && lastResolved && <Reveal i={1}><RejectedNotice request={lastResolved} s={s} isDark={isDark} /></Reveal>}
 
             {showCheckout && !showUnavailable && (
               <>
@@ -180,7 +180,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
             )}
 
             {showCheckout && showUnavailable && (
-              <PaymentUnavailableCard s={s} isDark={isDark} email={status.payment.supportEmail} onBack={() => setShowUnavailable(false)} />
+              <Reveal i={2}><PaymentUnavailableCard s={s} isDark={isDark} email={status.payment.supportEmail} onBack={() => setShowUnavailable(false)} /></Reveal>
             )}
 
             <HistoryCard history={status.history} s={s} isDark={isDark} locale={locale} />

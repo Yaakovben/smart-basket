@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, Button, Paper, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Button, Paper, CircularProgress, ButtonBase } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { User } from '../../../global/types';
 import { ConfirmModal, ClearableTextField, AvatarRing } from '../../../global/components';
 import { getIconGradient } from '../../../global/theme/iconArt';
@@ -37,6 +39,13 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   const backTap = useReliableTap(() => { closeEdit(); navigate('/'); });
   const editTap = useReliableTap(openEditProfile);
 
+  // מקור האמת ל-Pro הוא user.plan/planExpiresAt (מגיע כבר עם המשתמש המחובר,
+  // בלי fetch נוסף) - אותו תנאי בדיוק כמו התג הזהוב ליד האווטאר בדף הבית.
+  const isProActive = user.plan === 'pro' && (!user.planExpiresAt || new Date(user.planExpiresAt) > new Date());
+  const daysLeft = isProActive && user.planExpiresAt
+    ? Math.max(0, Math.ceil((new Date(user.planExpiresAt).getTime() - Date.now()) / 86_400_000))
+    : null;
+
   return (
     <Box sx={{ height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
       {/* Header */}
@@ -68,7 +77,19 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         {!editProfile && (
           <>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-              <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
+              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
+                {isProActive && (
+                  <Box aria-label="Pro" sx={{
+                    position: 'absolute', bottom: -2, insetInlineEnd: -2, width: 26, height: 26, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #FCD34D, #F59E0B)', border: '2.5px solid rgba(255,255,255,0.95)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                  }}>
+                    <StarRoundedIcon sx={{ fontSize: 15, color: '#4C1D95' }} />
+                  </Box>
+                )}
+              </Box>
             </Box>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
@@ -77,6 +98,22 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 {t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))}
               </Typography>
             )}
+            <ButtonBase
+              onClick={() => navigate('/subscription')}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 1.25,
+                px: 1.5, py: 0.6, borderRadius: '999px',
+                bgcolor: isProActive ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                color: 'white', fontSize: 12.5, fontWeight: 800, WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {isProActive ? <StarRoundedIcon sx={{ fontSize: 15, color: '#FCD34D' }} /> : null}
+              {isProActive
+                ? `Pro${daysLeft !== null ? ` · ${daysLeft} ${t('daysShort')}` : ''}`
+                : t('upgradeToProShort')}
+              <ChevronLeftRoundedIcon sx={{ fontSize: 15, opacity: 0.8 }} />
+            </ButtonBase>
           </>
         )}
       </Box>

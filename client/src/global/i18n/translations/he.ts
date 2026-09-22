@@ -974,6 +974,8 @@ export const he: Translations = {
   upgradePrice: '₪9.90 לחודש',
   upgradeContact: 'צור קשר',
   manageSubscription: 'ניהול מנוי',
+  daysShort: 'ימים',
+  upgradeToProShort: 'שדרוג ל-Pro',
   subscriptionCurrentPlan: 'תוכנית נוכחית',
   subscriptionExpiresOn: 'תוקף עד',
   subscriptionCancelBtn: 'בטל חידוש אוטומטי',

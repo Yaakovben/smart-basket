@@ -968,6 +968,8 @@ export const en: Translations = {
   upgradePrice: '₪9.90/month',
   upgradeContact: 'Contact us',
   manageSubscription: 'Manage Subscription',
+  daysShort: 'days',
+  upgradeToProShort: 'Upgrade to Pro',
   subscriptionCurrentPlan: 'Current plan',
   subscriptionExpiresOn: 'Expires on',
   subscriptionCancelBtn: 'Cancel auto-renew',
