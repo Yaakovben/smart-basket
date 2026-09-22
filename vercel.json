@@ -36,6 +36,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets|.*\\..*).*)", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "https://smart-basket-api-prod.onrender.com/api/:path*" },
+    { "source": "/((?!api|assets|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
