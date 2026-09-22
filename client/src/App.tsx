@@ -9,6 +9,7 @@ import { UpgradeModalProvider } from './global/components/UpgradeModalContext';
 import { useServiceWorker } from './global/hooks';
 import { diagLog } from './global/helpers/crashLog';
 import { reportError } from './global/helpers/errorReport';
+import { INSIGHTS_CACHE_KEY } from './features/insights/helpers/insightsCache';
 
 // עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
 //
@@ -43,7 +44,7 @@ const handleNewVersion = () => {
   // המשתמש בלי משתמש שמור בעליית האפליקציה, ואם טעינת הפרופיל הייתה איטית או
   // נכשלה (שרת קר) הוא נזרק למסך התחברות. checkAuth כותב אותם מחדש בכל פתיחה
   // עם נתונים טריים מהשרת, אז אין סיכון לנתונים ישנים לאורך זמן.
-  const keysToRemove = ['cached_insights', 'cached_prices', 'hint_seen'];
+  const keysToRemove = [INSIGHTS_CACHE_KEY, 'cached_prices', 'hint_seen'];
   keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch { /* quota */ } });
 
   (async () => {

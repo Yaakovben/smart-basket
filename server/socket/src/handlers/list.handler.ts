@@ -69,8 +69,8 @@ export const registerListHandlers = (
       if (!checkRateLimit(socket.id)) return;
       if (typeof listId !== 'string' || !listId) return;
 
-      const isMember = await ApiService.verifyMembership(listId, socket.accessToken!);
-      if (!isMember) {
+      const membership = await ApiService.verifyMembership(listId, socket.accessToken!);
+      if (!membership.ok) {
         return;
       }
 
@@ -188,8 +188,11 @@ export const revalidateListMemberships = async (
     const accessToken = activeSocket?.accessToken;
     if (!accessToken) continue;
 
-    const isMember = await ApiService.verifyMembership(listId, accessToken);
-    if (isMember) continue;
+    const membership = await ApiService.verifyMembership(listId, accessToken);
+    // מוציאים מהחדר רק אם השרת אמר בפירוש "אין גישה" - לא כשה-access token
+    // של הסוקט פג (טאב ברקע) או שהשרת לא הגיב (cold start), שגם הם עונים
+    // ל-!ok ולפני התיקון גרמו לניתוק ממשתמשים לגיטימיים מהרשימה החיה
+    if (membership.ok || membership.reason === 'unreachable') continue;
 
     io.in(`user:${memberUserId}`).socketsLeave(`list:${listId}`);
     for (const socketId of Array.from(socketIds)) {

@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { socketService } from '../socket/socket.service';
 import { debugLog } from './debug-log';
-import { getAccessToken, getRefreshToken, setTokens } from './token-storage';
+import { getAccessToken, setTokens } from './token-storage';
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
 import { consumeLegacyRefreshToken } from './token-storage';
@@ -42,6 +42,13 @@ const apiClient = axios.create({
 // פונקציה אחת משותפת ל HTTP interceptor ול socket service
 // מונעת race condition כשגם ה HTTP וגם הsocket מנסים לרענן במקביל
 let sharedRefreshPromise: Promise<string | null> | null = null;
+
+// "סשן מת": אחרי 401/403 מאומת (לא שגיאת רשת), אין טעם לנסות לרענן שוב
+// למשך חלון קצר - בלעדי זה, כל בקשה ממתינה ~6 שניות (3 ניסיונות רענון עם
+// backoff) לפני שהיא נכשלת, וזה חוזר על כל בקשה עד שהמשתמש מתחבר מחדש.
+const DEAD_SESSION_BACKOFF_MS = 60000;
+let sessionConfirmedDeadUntil = 0;
+export const isSessionConfirmedDead = () => Date.now() < sessionConfirmedDeadUntil;
 
 // JWT מקודד ב-base64url (RFC 7519) - שונה מ-base64 הרגיל שאותו atob() מצפה
 // לו (מחליף +/ ב-/_ ומשמיט padding). בלי ההמרה, atob() זורק חריגה על כל
@@ -95,6 +102,7 @@ export async function refreshAccessToken(): Promise<string | null> {
 
       const { accessToken } = response.data.data;
       setTokens(accessToken);
+      sessionConfirmedDeadUntil = 0;
       return accessToken;
     } catch (error) {
       const axiosError = error as AxiosError;
@@ -115,6 +123,7 @@ export async function refreshAccessToken(): Promise<string | null> {
             });
             const { accessToken } = retryResponse.data.data;
             setTokens(accessToken);
+            sessionConfirmedDeadUntil = 0;
             return accessToken;
           } catch (retryError) {
             const retryStatus = (retryError as AxiosError).response?.status;
@@ -123,6 +132,7 @@ export async function refreshAccessToken(): Promise<string | null> {
           }
         }
         if (lastStatus === 401 || lastStatus === 403) {
+          sessionConfirmedDeadUntil = Date.now() + DEAD_SESSION_BACKOFF_MS;
           reportAuthDiagnostic('refresh_exhausted_not_clearing', { initialStatus: status, finalStatus: lastStatus });
         }
       }
@@ -147,7 +157,7 @@ if (typeof document !== 'undefined') {
       refreshAccessToken().then(newToken => {
         if (newToken) {
           socketService.updateToken(newToken);
-        } else if (!getRefreshToken()) {
+        } else if (isSessionConfirmedDead()) {
           redirectToSessionExpiredLogin('forced_login_redirect_background', { trigger: 'visibilitychange' });
         }
       });
@@ -162,8 +172,9 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     let token = getAccessToken();
 
-    // רענון פרואקטיבי אם הטוקן פג תוקף או עומד לפוג
-    if (token && isTokenExpired()) {
+    // רענון פרואקטיבי אם הטוקן פג תוקף או עומד לפוג - מדלגים בזמן "סשן מת"
+    // (401/403 מאומת לאחרונה) כדי לא להוסיף עוד השהיה של שניות לכל בקשה
+    if (token && isTokenExpired() && !isSessionConfirmedDead()) {
       const newToken = await refreshAccessToken();
       if (newToken) {
         token = newToken;
@@ -266,6 +277,12 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // בזמן "סשן מת" מוותרים על ניסיון רענון נוסף (שגם ככה ייכשל) ונכשלים
+      // מיד, במקום להוסיף עוד סבב backoff של שניות על הבקשה הזו
+      if (isSessionConfirmedDead()) {
+        return Promise.reject(error);
+      }
+
       // רענון משותף עם dedup, מונע race condition עם socket
       const newAccessToken = await refreshAccessToken();
 
@@ -280,7 +297,7 @@ apiClient.interceptors.response.use(
       // הרענון נכשל
       // בדיקה אם הטוקנים נוקו (שגיאת אימות) או לא (שגיאת רשת)
       // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש (מטופל בתוך הפונקציה)
-      if (!getRefreshToken()) {
+      if (isSessionConfirmedDead()) {
         redirectToSessionExpiredLogin('forced_login_redirect', { url: originalRequest.url, status: error.response?.status });
       }
       // שגיאת רשת: הטוקנים נשמרו, המשתמש יישאר מחובר ויוכל לנסות שוב
