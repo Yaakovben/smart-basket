@@ -31,7 +31,16 @@ const REFRESH_COOKIE = 'sb_refresh';
 const REFRESH_COOKIE_OPTS = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  // strict/lax לא נשלחים בבקשת fetch/XHR cross-site (כמו קליינט ב-Vercel
+  // מול API ב-Render) - גם עם ה-/api proxy הכי טוב שיוגדר, אם מישהו
+  // ישאיר את VITE_API_URL מצביע ישירות ל-Render (בטעות, או כי redeploy לא
+  // כלל את שינוי ה-proxy), ה-cookie פשוט לא יישלח בכלל וההתחברות תתנתק
+  // אחרי 24 שעות בלי תלות בכלום אחר. none מאפשר שליחה cross-site תמיד -
+  // מוגן ע"י httpOnly (JS לא יכול לקרוא אותו) + רשימת CORS_ORIGIN שמאשרת
+  // רק את הדומיינים שלנו (בקשת cross-site מאתר לא-מורשה נחסמת ב-preflight
+  // לפני שהיא בכלל נשלחת). זה דפוס תקני לארכיטקטורת client/api בדומיינים
+  // נפרדים, לא חשיפת הטוקן עצמו כמו החלופה שנדחתה (שמירתו ב-localStorage).
+  sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
   path: '/api/auth',
   maxAge: 40 * 24 * 60 * 60 * 1000, // 40 יום חוסר פעילות (מתחדש בכל רענון)
 };
