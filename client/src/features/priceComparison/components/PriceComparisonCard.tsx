@@ -10,7 +10,7 @@
  */
 
 import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { Box, Typography, CircularProgress, IconButton, keyframes } from '@mui/material';
+import { Box, Typography, CircularProgress, keyframes } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
@@ -115,25 +115,35 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   return (
     <Box sx={{ animation: `${fadeIn} 0.5s ease 0.45s both`, mb: 2 }}>
       {/* כותרת קומפקטית */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25, px: 0.25 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.35, px: 0.25 }}>
         <Typography sx={{ fontSize: 16, fontWeight: 800 }}>{t('priceComparisonTitle')}</Typography>
         <BetaBadge size="sm" />
-        {/* לחצן עזרה עדין - לא צועק, רק זמין למי שמתעניין איך לבחור סניף/לתקן התאמה */}
-        <IconButton
-          size="small"
-          onClick={() => setShowHelp(true)}
-          sx={{ p: 0.25, color: 'text.disabled', '&:hover': { color: '#0D9488' } }}
-          aria-label={t('priceHelpTitle')}
-          title={t('priceHelpTitle')}
-        >
-          <HelpOutlineIcon sx={{ fontSize: 15 }} />
-        </IconButton>
         <Box sx={{ flex: 1 }} />
         {data.lastUpdatedISO && (
           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 600 }}>
             {t('priceComparisonUpdated').replace('{time}', freshness || '')}
           </Typography>
         )}
+      </Box>
+
+      {/* שורת עזרה עדינה - לא צועקת, רק זמינה למי שמתעניין איך לבחור סניף/לתקן התאמה */}
+      <Box sx={{ mb: 1.25, px: 0.25 }}>
+        <Box
+          component="button"
+          onClick={() => setShowHelp(true)}
+          sx={{
+            display: 'inline-flex', alignItems: 'center', gap: 0.4,
+            background: 'none', border: 'none', p: 0, cursor: 'pointer',
+            color: 'text.disabled', '&:hover': { color: '#0D9488' },
+          }}
+          aria-label={t('priceHelpTitle')}
+          title={t('priceHelpTitle')}
+        >
+          <HelpOutlineIcon sx={{ fontSize: 13 }} />
+          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'inherit' }}>
+            {t('priceHelpTitle')}
+          </Typography>
+        </Box>
       </Box>
 
       {/* באנר מיקום - רק אם רלוונטי */}
