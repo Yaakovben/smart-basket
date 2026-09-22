@@ -568,7 +568,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
                 sx={getReorderEntrySx(isDark)}
               >
-                <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                <SwapVertRoundedIcon />
               </Box>
             ) : undefined}
           />
@@ -609,7 +609,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
                   sx={getReorderEntrySx(isDark)}
                 >
-                  <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                  <SwapVertRoundedIcon />
                 </Box>
               )}
             </Box>
