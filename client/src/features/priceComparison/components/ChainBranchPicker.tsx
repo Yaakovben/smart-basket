@@ -1,8 +1,9 @@
 import { memo, useEffect, useState } from 'react';
-import { Box, Typography, Dialog, ButtonBase } from '@mui/material';
+import { Box, Typography, Dialog, ButtonBase, IconButton } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import type { ChainBranchOption } from '../types/priceComparison.types';
 import { priceComparisonApi, type UserLocation } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -47,15 +48,20 @@ export const ChainBranchPicker = memo(({ chain, location, selectedStoreId, isDar
       onClose={onClose}
       fullWidth
       maxWidth="xs"
-      PaperProps={{ sx: { borderRadius: '16px', maxHeight: '80vh' } }}
+      PaperProps={{ sx: { borderRadius: '16px', height: '80vh', maxHeight: 560, display: 'flex', flexDirection: 'column' } }}
     >
-      <Box sx={{ p: 2, pb: 1 }}>
-        <Typography sx={{ fontSize: 15, fontWeight: 800 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, p: 2, pb: 1, flexShrink: 0 }}>
+        <Typography sx={{ flex: 1, fontSize: 15, fontWeight: 800 }}>
           {t('chooseBranchTitle').replace('{chain}', chain?.chainName ?? '')}
         </Typography>
+        <IconButton onClick={onClose} aria-label={t('close')} size="small" sx={{ mt: -0.5, mr: -0.5 }}>
+          <CloseIcon sx={{ fontSize: 20 }} />
+        </IconButton>
       </Box>
 
-      <Box sx={{ overflowY: 'auto', px: 1.5, pb: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+      {/* גובה קבוע (לא minHeight) - כך כשהמידע מגיע (מ-shimmer למספר סניפים
+          כלשהו) הפופאפ לא "קופץ" בגודל; פשוט נוסף גלילה פנימית אם צריך. */}
+      <Box sx={{ flex: 1, overflowY: 'auto', px: 1.5, pb: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         {chain && (
           <ButtonBase
             onClick={() => { haptic('light'); onSelect(chain.chainId, null); }}

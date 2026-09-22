@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { Box, Typography, Dialog, ButtonBase, TextField, Button } from '@mui/material';
+import { Box, Typography, Dialog, ButtonBase, TextField, Button, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { priceComparisonApi, type ProductSearchResult } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -74,13 +75,20 @@ export const ProductMatchPicker = memo(({ match, onChanged, onClose }: ProductMa
       onClose={onClose}
       fullWidth
       maxWidth="xs"
-      PaperProps={{ sx: { borderRadius: '16px', maxHeight: '85vh' } }}
+      PaperProps={{ sx: { borderRadius: '16px', height: '85vh', maxHeight: 620, display: 'flex', flexDirection: 'column' } }}
     >
-      <Box sx={{ p: 2, pb: 1 }}>
-        <Typography sx={{ fontSize: 15, fontWeight: 800 }}>{t('matchPickerTitle')}</Typography>
-        <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
-          {t('matchPickerSubtitle')}
-        </Typography>
+      <Box sx={{ p: 2, pb: 1, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 800 }}>{t('matchPickerTitle')}</Typography>
+            <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
+              {t('matchPickerSubtitle')}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} aria-label={t('close')} size="small" sx={{ mt: -0.5, mr: -0.5 }}>
+            <CloseIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Box>
         <TextField
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -93,7 +101,9 @@ export const ProductMatchPicker = memo(({ match, onChanged, onClose }: ProductMa
         />
       </Box>
 
-      <Box sx={{ overflowY: 'auto', px: 1.5, pb: 1, display: 'flex', flexDirection: 'column', gap: 0.75, minHeight: 80 }}>
+      {/* גובה קבוע (לא minHeight) - כך כשתוצאות החיפוש מגיעות (מ-shimmer
+          למספר תוצאות כלשהו) הפופאפ לא "קופץ" בגודל; רק גלילה פנימית. */}
+      <Box sx={{ flex: 1, overflowY: 'auto', px: 1.5, pb: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         {results === null && (
           <Box sx={{ py: 0.5 }}><ShimmerList count={3} rowHeight={54} gap={8} /></Box>
         )}
