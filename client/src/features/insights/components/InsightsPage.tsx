@@ -129,25 +129,31 @@ export const InsightsPage = memo(() => {
   );
 
   return (
-    <Box sx={{ height: 'var(--app-height, 100dvh)', position: 'relative', overflow: 'hidden', bgcolor: 'background.default' }}>
-      {/* גרירה-למטה לרענון - אחיד עם רשימה/מנהל. הכרטיס יושב מחוץ למכל הגלילה
-          (ראו הערה ב-ListComponent) כדי שיישאר צמוד לראש המסך במקום לגלול איתו. */}
-      {/* eslint-disable-next-line react-hooks/refs */}
-      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
+    <Box sx={{ height: 'var(--app-height, 100dvh)', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+      {/* הכותרת מחוץ למכל הגלילה/גרירה לגמרי - קבועה במקומה, לא נגררת עם
+          התוכן. גם כדי ש-top:0 המוחלט של הספינר יתחיל ממש מתחתיה ולא
+          יציף אותה (אותו טעם בדיוק כמו ב-ListComponent). */}
+      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
 
-      <Box
-        onScroll={tab === 'price' ? handlePageScroll : undefined}
-        onTouchStart={handlePullStart}
-        onTouchMove={handlePullMove}
-        onTouchEnd={handlePullEnd}
-        sx={{
-          height: '100%', pb: 'calc(80px + env(safe-area-inset-bottom))',
-          overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
-          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
-          // eslint-disable-next-line react-hooks/refs
-          transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
-        }}
-      >
+      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {/* גרירה-למטה לרענון - אחיד עם רשימה/מנהל. הכרטיס יושב מחוץ למכל הגלילה
+            כדי שיישאר צמוד לראש התוכן (מתחת לכותרת) במקום לגלול איתו. */}
+        {/* eslint-disable-next-line react-hooks/refs */}
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
+
+        <Box
+          onScroll={tab === 'price' ? handlePageScroll : undefined}
+          onTouchStart={handlePullStart}
+          onTouchMove={handlePullMove}
+          onTouchEnd={handlePullEnd}
+          sx={{
+            height: '100%', pb: 'calc(80px + env(safe-area-inset-bottom))',
+            overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
+            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+            // eslint-disable-next-line react-hooks/refs
+            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
+          }}
+        >
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
@@ -157,7 +163,6 @@ export const InsightsPage = memo(() => {
         delayMs={5000}
       />
 
-      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
       <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} t={tStr} />
 
@@ -214,6 +219,7 @@ export const InsightsPage = memo(() => {
             <SpendingTab data={data} isDark={isDark} t={tStr} dataFresh={dataFresh} />
           </ErrorBoundary>
         )}
+      </Box>
       </Box>
       </Box>
 
