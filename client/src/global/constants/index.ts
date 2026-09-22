@@ -195,19 +195,26 @@ export const COMMON_STYLES = {
 // כפתור כניסה ל"מצב סידור" (מוצרים ברשימה / רשימות בבית) - מקור אמת יחיד
 // ומודע-כהה, כך ששני המקומות ייראו זהים תמיד. ריבוע קטן שבולט מעל הרקע
 // שהוא יושב עליו (צ'יפים/כרטיסים), לא כפתור-אייקון אפור רגיל - זו פעולה,
-// לא עוד פריט תפריט. במצב כהה בלי לבן-על-כהה (ניגודיות מוגזמת) - משטח
-// מעט בהיר יותר מהרקע + מסגרת עדינה במקום צל.
+// לא עוד פריט תפריט.
+//
+// '& svg': ולא רק color על ה-Box - ה-sx.color היה אמור לרדת בירושת CSS
+// לאייקון (fill:currentColor), אבל התלות הזו שברירית (כל sx על האייקון
+// עצמו, גם רק fontSize, יוצר style tag חדש שיכול לדרוס). קובעים את הצבע
+// ישירות על ה-svg הפנימי כדי שלעולם לא ייעלם.
+// מסגרת גם במצב בהיר (לא רק צל) - ריבוע לבן-על-לבן כמעט בלי הפרדה מהרקע
+// היה נראה "לא מעוצב"/שקוף; מסגרת דקה נותנת לו גבול ברור בכל רקע.
 export const getReorderEntrySx = (isDark: boolean) => ({
-  width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
+  width: 32, height: 32, borderRadius: '9px', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
-  color: 'primary.main',
-  border: isDark ? '1px solid rgba(255,255,255,0.12)' : 'none',
+  border: '1.5px solid',
+  borderColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(20,184,166,0.35)',
   boxShadow: isDark ? 'none' : '0 2px 6px rgba(0,0,0,0.15)',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.12s, background-color 0.15s',
+  transition: 'transform 0.12s, background-color 0.15s, border-color 0.15s',
+  '& svg': { color: '#0D9488', fontSize: 19 },
   '&:active': { transform: 'scale(0.9)' },
-  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.14)' : '#F8FAFC' },
+  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.14)' : '#F8FAFC', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(20,184,166,0.55)' },
 } as const);
 
 // ===== אפשרויות תפריט הוספה =====

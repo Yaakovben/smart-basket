@@ -329,7 +329,7 @@ export const HomeListContent = ({
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onEnterReorder(); }}
                   sx={getReorderEntrySx(isDark)}
                 >
-                  <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                  <SwapVertRoundedIcon />
                 </Box>
               )
             )}
