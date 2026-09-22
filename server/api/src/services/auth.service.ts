@@ -179,9 +179,23 @@ export async function googleAuth(
       ...newUserTrialFields(),
     });
   } else if (!user.googleId) {
-    // קישור חשבון אימייל קיים ל-Google
-    await UserDAL.updateById(user._id.toString(), { googleId: googleUser.sub });
+    // קישור חשבון אימייל קיים ל-Google. Google כבר אימת ש-googleUser.email
+    // שייך בפועל למי שמבצע את הקישור הזה (email_verified נבדק למעלה) - לכן
+    // אם לחשבון יש סיסמה מקומית, מבטלים אותה ומגדילים tokenVersion (מנתק
+    // סשנים קיימים). בלי זה, מי שנרשם קודם עם המייל הזה בסיסמה בלבד
+    // (register() לא מאמת בעלות על מייל) יכול היה להמשיך ולהתחבר עם אותה
+    // סיסמה גם אחרי שהבעלים האמיתי קישר את Google - השתלטות שקטה על חשבון.
+    const update: Record<string, unknown> = { googleId: googleUser.sub };
+    const hadPassword = !!user.password;
+    if (hadPassword) {
+      update.$unset = { password: '' };
+      update.$inc = { tokenVersion: 1 };
+    }
+    await UserDAL.updateById(user._id.toString(), update);
     user.googleId = googleUser.sub;
+    // מעדכנים גם באובייקט המקומי - אחרת הטוקן שמונפק כאן למטה נחתם עם
+    // tokenVersion הישן, וייכשל מיד ב-401 מול הערך המעודכן ב-DB
+    if (hadPassword) user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   }
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent);
