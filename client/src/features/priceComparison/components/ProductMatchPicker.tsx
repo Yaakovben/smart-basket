@@ -1,10 +1,11 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { Box, Typography, Dialog, CircularProgress, ButtonBase, TextField, Button } from '@mui/material';
+import { Box, Typography, Dialog, ButtonBase, TextField, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { priceComparisonApi, type ProductSearchResult } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic, formatILS } from '../../../global/helpers';
+import { ShimmerList } from '../../../global/components';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const MIN_QUERY_LENGTH = 2;
@@ -94,7 +95,7 @@ export const ProductMatchPicker = memo(({ match, onChanged, onClose }: ProductMa
 
       <Box sx={{ overflowY: 'auto', px: 1.5, pb: 1, display: 'flex', flexDirection: 'column', gap: 0.75, minHeight: 80 }}>
         {results === null && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>
+          <Box sx={{ py: 0.5 }}><ShimmerList count={3} rowHeight={54} gap={8} /></Box>
         )}
         {results?.length === 0 && query.trim().length >= MIN_QUERY_LENGTH && (
           <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', py: 2 }}>

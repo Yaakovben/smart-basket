@@ -241,6 +241,9 @@ export const PriceTab = memo(({
         chosenBranches={chosenBranches}
         onChooseBranch={onChooseBranch}
         onMatchChanged={onMatchChanged}
+        // priceData כבר קיים כאן (זה הענף אחרי ה-`if (!priceData)` למעלה) - אז
+        // priceLoading כאן הוא תמיד רענון ברקע, לא הטעינה הראשונית.
+        isRefreshing={priceLoading}
         onRequestLocation={onRequestLocation}
         onResetLocationDenied={onResetLocationDenied}
         selectedListName={

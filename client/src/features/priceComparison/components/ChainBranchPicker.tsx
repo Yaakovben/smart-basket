@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Box, Typography, Dialog, CircularProgress, ButtonBase } from '@mui/material';
+import { Box, Typography, Dialog, ButtonBase } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import CheckIcon from '@mui/icons-material/Check';
@@ -7,6 +7,7 @@ import type { ChainBranchOption } from '../types/priceComparison.types';
 import { priceComparisonApi, type UserLocation } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
+import { ShimmerList } from '../../../global/components';
 
 interface ChainBranchPickerProps {
   // הרשת לבחירת סניף. null = הבורר סגור.
@@ -71,7 +72,7 @@ export const ChainBranchPicker = memo(({ chain, location, selectedStoreId, isDar
         )}
 
         {branches === null && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>
+          <Box sx={{ py: 0.5 }}><ShimmerList count={4} rowHeight={58} gap={8} /></Box>
         )}
 
         {branches?.length === 0 && (

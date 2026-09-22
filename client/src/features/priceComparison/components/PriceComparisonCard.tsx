@@ -10,7 +10,7 @@
  */
 
 import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { Box, Typography, keyframes } from '@mui/material';
+import { Box, Typography, CircularProgress, keyframes } from '@mui/material';
 import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -58,9 +58,12 @@ interface Props {
   onChooseBranch?: (chainId: string, storeId: string | null) => void;
   // נקרא אחרי תיקון התאמה - מרענן את ההשוואה
   onMatchChanged?: () => void;
+  // true כשמתבצע רענון ברקע (למשל אחרי החלפת סניף) על נתונים שכבר מוצגים.
+  // מדמם את הכרטיסים במקום להחליף מספרים בפתאומיות בלי שום סימן טעינה.
+  isRefreshing?: boolean;
 }
 
-export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, hasLocation = false, onRequestLocation, selectedListName, userLocation, chosenBranches, onChooseBranch, onMatchChanged }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, hasLocation = false, onRequestLocation, selectedListName, userLocation, chosenBranches, onChooseBranch, onMatchChanged, isRefreshing = false }: Props) => {
   const { settings, t } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -145,27 +148,49 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         // צבע אחיד למנצח בכל מצב מיון - ירוק "זול" של האפליקציה
         const winnerColor = { main: '#10B981', bgLight: 'rgba(16,185,129,0.12)', bgDark: 'rgba(16,185,129,0.20)', borderLight: 'rgba(16,185,129,0.45)', borderDark: 'rgba(16,185,129,0.5)' };
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {sortedChains.map((chain, idx) => (
-              <ChainCard
-                key={chain.chainId}
-                chain={chain}
-                rank={idx + 1}
-                // המנצח = השורה הראשונה בסדר הנוכחי (תקף לכל מצב מיון).
-                // ככה תמיד יש הדגשה ויזואלית בראש - זול / קרוב / משולב.
-                isWinner={idx === 0 && chain.matchedCount > 0}
-                cheapestTotal={cheapest?.total || 0}
-                isDark={isDark}
-                expanded={expandedId === chain.chainId}
-                onToggle={() => toggleExpanded(chain.chainId)}
-                onOpenNav={setNavBranch}
-                onChangeBranch={openBranchPicker}
-                onFixMatch={setFixMatch}
-                hasLocation={locationStatus === 'granted'}
-                winnerColor={winnerColor}
-                cheapestPriceMap={cheapestPriceMap}
-              />
-            ))}
+          <Box sx={{ position: 'relative' }}>
+            {/* מסך רענון עדין - הכרטיסים מתעמעמים ומקבלים ספינר מרכזי, במקום
+                שהמספרים יתחלפו פתאום בלי שום רמז שמתבצע חישוב מחדש (למשל
+                אחרי החלפת סניף או תיקון התאמה). */}
+            {isRefreshing && (
+              <Box sx={{
+                position: 'absolute', inset: 0, zIndex: 2,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: isDark ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.65)',
+                borderRadius: '16px', backdropFilter: 'blur(1.5px)',
+                transition: 'opacity 0.2s ease',
+              }}>
+                <CircularProgress size={26} sx={{ color: '#0D9488' }} />
+              </Box>
+            )}
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', gap: 1,
+              opacity: isRefreshing ? 0.5 : 1,
+              filter: isRefreshing ? 'blur(1px)' : 'none',
+              transition: 'opacity 0.2s ease, filter 0.2s ease',
+              pointerEvents: isRefreshing ? 'none' : 'auto',
+            }}>
+              {sortedChains.map((chain, idx) => (
+                <ChainCard
+                  key={chain.chainId}
+                  chain={chain}
+                  rank={idx + 1}
+                  // המנצח = השורה הראשונה בסדר הנוכחי (תקף לכל מצב מיון).
+                  // ככה תמיד יש הדגשה ויזואלית בראש - זול / קרוב / משולב.
+                  isWinner={idx === 0 && chain.matchedCount > 0}
+                  cheapestTotal={cheapest?.total || 0}
+                  isDark={isDark}
+                  expanded={expandedId === chain.chainId}
+                  onToggle={() => toggleExpanded(chain.chainId)}
+                  onOpenNav={setNavBranch}
+                  onChangeBranch={openBranchPicker}
+                  onFixMatch={setFixMatch}
+                  hasLocation={locationStatus === 'granted'}
+                  winnerColor={winnerColor}
+                  cheapestPriceMap={cheapestPriceMap}
+                />
+              ))}
+            </Box>
           </Box>
         );
       })()}

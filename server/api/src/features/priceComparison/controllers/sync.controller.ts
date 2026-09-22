@@ -60,7 +60,10 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
     : undefined;
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const chosenBranches = parseChosenBranches(req.query.branches);
-  const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches);
+  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" בלקוח). לא נספר כבקשה חדשה נגד
+  // מגבלת ה-Freemium שלא הייתה קיימת ממילא - הבקשה המקורית כבר נספרה.
+  const bypassCache = req.query.force === '1';
+  const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches, bypassCache);
 
   // increment אחרי הצלחה בלבד
   if (userIsFree) planUsage.incrementPrice(userId);

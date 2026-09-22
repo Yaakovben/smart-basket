@@ -101,7 +101,9 @@ export const priceComparisonApi = {
   // listId אופציונלי: אם מועבר, ההשוואה מצומצמת לרשימה הזו בלבד.
   // location אופציונלי: אם מועבר, כל רשת תקבל nearestBranch עם מרחק.
   // chosenBranches אופציונלי: סניף שנבחר ידנית לכל רשת (chainId -> storeId).
-  async getComparison(listId?: string, location?: UserLocation, chosenBranches?: Record<string, string>): Promise<PriceComparisonData> {
+  // force אופציונלי: מתעלם מהמטמון בשרת (15 דק') - לכפתור "נסה שוב" בלבד, כדי
+  // שמשתמש שנתקל בתוצאה ישנה לא יישאר תקוע עד שהמטמון יפוג בעצמו.
+  async getComparison(listId?: string, location?: UserLocation, chosenBranches?: Record<string, string>, force?: boolean): Promise<PriceComparisonData> {
     const params = new URLSearchParams();
     if (listId) params.set('listId', listId);
     const chosen = chosenBranches
@@ -112,6 +114,7 @@ export const priceComparisonApi = {
       params.set('lat', String(location.lat));
       params.set('lng', String(location.lng));
     }
+    if (force) params.set('force', '1');
     const query = params.toString() ? `?${params.toString()}` : '';
     const response = await apiClient.get<{ data: PriceComparisonData }>(`/price-comparison${query}`);
     return response.data.data;

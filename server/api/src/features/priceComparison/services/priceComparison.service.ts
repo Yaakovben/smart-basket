@@ -83,7 +83,10 @@ export async function getComparisonForUser(
   filterListId?: string,
   userLocation?: UserLocation,
   // סניפים שנבחרו ידנית (chainId -> storeId) - גוברים על הסניף הקרוב ביותר
-  chosenBranches?: Record<string, string>
+  chosenBranches?: Record<string, string>,
+  // true - מתעלמים מהמטמון הקיים ומחשבים מחדש. משמש לכפתור "נסה שוב" של המשתמש,
+  // כדי שהוא לא יישאר תקוע עד 15 דקות על תוצאה ישנה (למשל מיד אחרי סנכרון מחירים).
+  bypassCache = false
 ): Promise<PriceComparisonData> {
   // מפתח מטמון שונה לכל שילוב user+list+location(מעוגל ל-500מ') כדי למנוע ערבוב.
   // עיגול המיקום ל-3 ספרות אחרי הנקודה (~110 מ') מונע פסילת מטמון על כל תזוזה קטנה.
@@ -94,8 +97,10 @@ export async function getComparisonForUser(
     ? `:${userLocation.lat.toFixed(3)},${userLocation.lng.toFixed(3)}`
     : '') + chosenKey;
   const cacheKey = filterListId ? `${userId}:${filterListId}${locKey}` : `${userId}${locKey}`;
-  const cached = getCachedComparison(cacheKey);
-  if (cached) return cached;
+  if (!bypassCache) {
+    const cached = getCachedComparison(cacheKey);
+    if (cached) return cached;
+  }
 
   // סופרים את כל המאגר — לא רק רשת אחת. אם לפחות רשת אחת יש בה נתונים,
   // הפיצ'ר נחשב "זמין" ומציגים את ההשוואה.
