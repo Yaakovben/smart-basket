@@ -57,7 +57,12 @@ export const SubscriptionBanner = () => {
   };
 
   return (
-    <Box sx={{ px: { xs: 2, sm: 2.5 }, pt: 1.5, flexShrink: 0 }}>
+    <Box sx={{
+      px: { xs: 2, sm: 2.5 }, pt: 1.5, flexShrink: 0,
+      animation: 'sbBannerIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both',
+      '@keyframes sbBannerIn': { from: { opacity: 0, transform: 'translateY(-10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+    }}>
       <ButtonBase
         onClick={() => navigate('/subscription')}
         sx={{

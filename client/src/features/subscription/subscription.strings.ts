@@ -4,6 +4,14 @@ import type { Language } from '../../global/types';
 // לפיצ'ר הזה. שלוש השפות חייבות להכיל בדיוק אותם מפתחות (נאכף בטיפוס).
 const he = {
   pageTitle: 'ניהול מנוי',
+  perksTitle: 'מה מקבלים ב-Pro',
+  perkLists: 'רשימות ללא הגבלה',
+  perkGroups: 'קבוצות בלי מגבלת חברים',
+  perkAi: 'עוזר AI בלי הגבלה',
+  perkPrice: 'השוואות מחיר בלי הגבלה',
+  trustNoAuto: 'בלי חיוב אוטומטי',
+  trustManual: 'כל תשלום מאומת אישית',
+  trustExtend: 'הארכה בלי לאבד ימים',
   payBank: 'העברה בנקאית',
   bankName: 'בנק',
   bankBranch: 'סניף',
@@ -127,6 +135,14 @@ export type SubscriptionStrings = { [K in keyof typeof he]: string };
 
 const en: SubscriptionStrings = {
   pageTitle: 'Manage subscription',
+  perksTitle: 'What you get with Pro',
+  perkLists: 'Unlimited lists',
+  perkGroups: 'Groups with no member cap',
+  perkAi: 'Unlimited AI assistant',
+  perkPrice: 'Unlimited price comparisons',
+  trustNoAuto: 'No automatic billing',
+  trustManual: 'Every payment verified personally',
+  trustExtend: 'Extend without losing days',
   payBank: 'Bank transfer',
   bankName: 'Bank',
   bankBranch: 'Branch',
@@ -248,6 +264,14 @@ const en: SubscriptionStrings = {
 
 const ru: SubscriptionStrings = {
   pageTitle: 'Управление подпиской',
+  perksTitle: 'Что даёт Pro',
+  perkLists: 'Неограниченные списки',
+  perkGroups: 'Группы без лимита участников',
+  perkAi: 'AI-помощник без лимита',
+  perkPrice: 'Сравнение цен без лимита',
+  trustNoAuto: 'Без автосписаний',
+  trustManual: 'Каждый платёж проверяется лично',
+  trustExtend: 'Продление без потери дней',
   payBank: 'Банковский перевод',
   bankName: 'Банк',
   bankBranch: 'Отделение',

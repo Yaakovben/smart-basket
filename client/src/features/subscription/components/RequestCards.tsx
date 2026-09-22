@@ -31,7 +31,12 @@ export const ReportedCard = ({ request, s, isDark, locale }: ReportedProps) => (
       width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
       bgcolor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(245,158,11,0.14)', color: '#D97706',
     }}>
-      <HourglassTopRoundedIcon sx={{ fontSize: 28 }} />
+      <HourglassTopRoundedIcon sx={{
+        fontSize: 28,
+        animation: 'sbHourglass 2.4s ease-in-out infinite',
+        '@keyframes sbHourglass': { '0%, 40%': { transform: 'rotate(0deg)' }, '60%, 100%': { transform: 'rotate(180deg)' } },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      }} />
     </Box>
     <Typography sx={{ fontSize: 17, fontWeight: 800 }}>{s.reportedTitle}</Typography>
     <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.6, maxWidth: 320 }}>{s.reportedBody}</Typography>

@@ -1,4 +1,5 @@
 import { Box, Typography, ButtonBase } from '@mui/material';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, sectionLabelSx, PRO_PURPLE } from '../subscription.styles';
@@ -46,7 +47,10 @@ export const PeriodPicker = ({ status, s, isDark, months, onChange }: Props) => 
                 border: '2px solid', textAlign: 'center',
                 borderColor: selected ? PRO_PURPLE : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(15,23,42,0.1)'),
                 bgcolor: selected ? (isDark ? 'rgba(124,58,237,0.16)' : 'rgba(124,58,237,0.07)') : 'transparent',
-                transition: 'border-color 0.15s, background-color 0.15s',
+                transition: 'border-color 0.2s, background-color 0.2s, transform 0.2s, box-shadow 0.2s',
+                transform: selected ? 'translateY(-2px)' : 'none',
+                boxShadow: selected ? '0 8px 20px rgba(124,58,237,0.22)' : 'none',
+                '&:active': { transform: 'scale(0.97)' },
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -58,6 +62,13 @@ export const PeriodPicker = ({ status, s, isDark, months, onChange }: Props) => 
                   {s.saveBadge} {savings}%
                 </Box>
               ) : null}
+              {selected && (
+                <CheckCircleRoundedIcon sx={{
+                  position: 'absolute', top: 6, insetInlineEnd: 6, fontSize: 17, color: PRO_PURPLE,
+                  animation: 'sbCheckPop 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                  '@keyframes sbCheckPop': { from: { transform: 'scale(0)' }, to: { transform: 'scale(1)' } },
+                }} />
+              )}
               <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.secondary' }}>{labels[m]}</Typography>
               <Typography sx={{ fontSize: 20, fontWeight: 800, lineHeight: 1.1, color: selected ? PRO_PURPLE : 'text.primary' }}>
                 ₪{fmt(total)}

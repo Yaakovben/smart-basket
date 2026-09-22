@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Button, CircularProgress } from '@mui/material';
+import type { ReactNode } from 'react';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/constants';
@@ -16,11 +17,14 @@ import { ReportedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } fro
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { StepIndicator } from '../components/StepIndicator';
 import { ActivatedDialog } from '../components/ActivatedDialog';
-import { primaryCtaSx } from '../subscription.styles';
+import { PerksGrid, TrustRow } from '../components/PerksAndTrust';
+import { primaryCtaSx, revealSx } from '../subscription.styles';
 
 interface Props {
   showToast: (msg: string, type?: ToastType) => void;
 }
+
+const Reveal = ({ i, children }: { i: number; children: ReactNode }) => <Box sx={revealSx(i)}>{children}</Box>;
 
 const LOCALES = { he: 'he-IL', en: 'en-GB', ru: 'ru-RU' } as const;
 
@@ -133,10 +137,10 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           </Box>
         ) : status ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <PlanHero status={status} s={s} isDark={isDark} locale={locale} />
+            <Reveal i={0}><PlanHero status={status} s={s} isDark={isDark} locale={locale} /></Reveal>
 
             {!isPermanent && (
-              <StepIndicator step={open?.status === 'pending' ? 2 : open?.status === 'reported' ? 3 : 1} s={s} isDark={isDark} />
+              <Reveal i={1}><StepIndicator step={open?.status === 'pending' ? 2 : open?.status === 'reported' ? 3 : 1} s={s} isDark={isDark} /></Reveal>
             )}
 
             {open?.status === 'pending' && (
@@ -156,17 +160,21 @@ export const SubscriptionPage = ({ showToast }: Props) => {
 
             {showCheckout && !showUnavailable && (
               <>
-                {!isPro && <UsageCard status={status} s={s} isDark={isDark} />}
-                {!isPro && <CompareCard status={status} s={s} isDark={isDark} />}
-                <PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} />
-                <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
-                  {busy
-                    ? <CircularProgress size={22} sx={{ color: '#fff' }} />
-                    : `${status.isTrial ? s.trialKeepCta : isPro ? s.renewCta : s.upgradeCta} · ₪${priceFor(status, months)}`}
-                </Button>
+                {!isPro && <Reveal i={2}><UsageCard status={status} s={s} isDark={isDark} /></Reveal>}
+                {!isPro && <Reveal i={3}><PerksGrid s={s} isDark={isDark} /></Reveal>}
+                {!isPro && <Reveal i={4}><CompareCard status={status} s={s} isDark={isDark} /></Reveal>}
+                <Reveal i={isPro ? 2 : 5}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
+                <Reveal i={isPro ? 3 : 6}>
+                  <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
+                    {busy
+                      ? <CircularProgress size={22} sx={{ color: '#fff' }} />
+                      : `${status.isTrial ? s.trialKeepCta : isPro ? s.renewCta : s.upgradeCta} · ₪${priceFor(status, months)}`}
+                  </Button>
+                </Reveal>
                 {isPro && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{status.isTrial ? s.trialKeepNote : s.renewNote}</Typography>
                 )}
+                <Reveal i={isPro ? 4 : 7}><TrustRow s={s} isDark={isDark} /></Reveal>
               </>
             )}
 

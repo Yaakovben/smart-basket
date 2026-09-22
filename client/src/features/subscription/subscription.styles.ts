@@ -28,9 +28,31 @@ export const primaryCtaSx: SxProps<Theme> = {
   '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%)' },
   '&:active': { transform: 'scale(0.985)' },
   '&.Mui-disabled': { color: 'rgba(255,255,255,0.7)', opacity: 0.65 },
+  // ברק עדין שעובר על הכפתור - מזמין ללחיצה בלי להציק
+  '&:not(.Mui-disabled)::after': {
+    content: '""', position: 'absolute', inset: 0, pointerEvents: 'none',
+    background: 'linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.32) 50%, transparent 68%)',
+    backgroundSize: '260% 100%',
+    animation: 'sbCtaShine 3.6s ease-in-out infinite',
+  },
+  '@keyframes sbCtaShine': {
+    '0%, 55%': { backgroundPosition: '160% 0' },
+    '100%': { backgroundPosition: '-160% 0' },
+  },
+  '@media (prefers-reduced-motion: reduce)': { '&::after': { animation: 'none' } },
 };
 
 export const ghostCtaSx: SxProps<Theme> = {
   borderRadius: '12px', textTransform: 'none', fontWeight: 600, fontSize: 13.5,
   color: 'text.secondary',
 };
+
+// כניסה מדורגת של כרטיסים: עלייה קלה + fade. delay מדורג לפי סדר הכרטיס.
+export const revealSx = (index: number): SxProps<Theme> => ({
+  animation: `sbReveal 0.5s ${Math.min(index, 8) * 70}ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  '@keyframes sbReveal': {
+    from: { opacity: 0, transform: 'translateY(14px) scale(0.985)' },
+    to: { opacity: 1, transform: 'translateY(0) scale(1)' },
+  },
+  '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+});
