@@ -209,7 +209,13 @@ export const getReorderEntrySx = (isDark: boolean) => ({
   bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
   border: '1.5px solid',
   borderColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(20,184,166,0.35)',
-  boxShadow: isDark ? 'none' : '0 2px 6px rgba(0,0,0,0.15)',
+  // צל עדין נוסף בצד שמאל (הכיוון שבו הכפתור "צף" מעל שאר הרצועה) - מחליף
+  // את דעיכת ה-mask-image שהייתה פעם על רצועת הצ'יפים עצמה וגרמה לטקסט
+  // של הצ'יפ האחרון להיראות קטוע; כאן זה צל אמיתי על הכפתור, לא טשטוש
+  // טקסט, אז מקבלים את אותה תחושת הפרדה עדינה בלי הבאג.
+  boxShadow: isDark
+    ? '-6px 0 12px -8px rgba(0,0,0,0.55)'
+    : '0 2px 6px rgba(0,0,0,0.15), -6px 0 10px -8px rgba(0,0,0,0.18)',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.12s, background-color 0.15s, border-color 0.15s',
   '& svg': { color: '#0D9488', fontSize: 19 },
