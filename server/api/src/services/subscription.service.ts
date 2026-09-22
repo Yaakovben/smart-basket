@@ -8,6 +8,10 @@ import { ConflictError, NotFoundError, ValidationError, AppError } from '../erro
 import { sendToUser, sendToUsers } from './push.service';
 import { sendAdminNotice } from './email.service';
 
+// אותו אייקון בפוש כמו כל שאר ההתראות באפליקציה (notification.service.ts) -
+// בלעדיו הפוש מציג אייקון דפדפן גנרי במקום לוגו Smart Basket.
+const PUSH_ICON = '/icon-192x192.png';
+
 // ===== מחירים ושיטות תשלום =====
 // כל הערכים מגיעים ממשתני סביבה. לא ממציאים מחיר שנתי/פרטי תשלום: אם משהו לא
 // הוגדר הוא פשוט לא מוצע ללקוח.
@@ -151,7 +155,9 @@ export async function reportPaid(userId: string, requestId: string): Promise<ISu
       ),
       sendToUsers(adminIds, {
         title: '💳 תשלום מנוי ממתין לאישור',
-        body: `${user?.name ?? 'משתמש'} · ₪${req.amount} · קוד ${req.reference}`,
+        body: `${user?.name ?? 'משתמש'} דיווח ₪${req.amount} · קוד ${req.reference}`,
+        icon: PUSH_ICON,
+        badge: PUSH_ICON,
         data: { url: '/admin', type: 'subscription_request' },
       }),
     ]);
@@ -216,15 +222,30 @@ export async function grantLegacyTrialToExistingUsers(): Promise<LegacyTrialResu
   const now = new Date();
   const targetExpiry = addMonths(now, env.TRIAL_MONTHS);
   const skipFilter = legacySkipFilter(targetExpiry);
+  const grantFilter = { legacyTrialGrantedAt: { $exists: false }, $nor: [skipFilter] };
+
+  // מזהי המקבלים *לפני* העדכון - כדי שאחריו אפשר יהיה להודיע להם בפוש
+  // (ה-updateMany עצמו לא מחזיר אילו מסמכים בדיוק הוא נגע בהם).
+  const grantedIds = (await User.find(grantFilter).select('_id').lean()).map((u) => String(u._id));
 
   const skipped = await User.updateMany(
     { legacyTrialGrantedAt: { $exists: false }, ...skipFilter },
     { $set: { legacyTrialGrantedAt: now } },
   );
   const granted = await User.updateMany(
-    { legacyTrialGrantedAt: { $exists: false }, $nor: [skipFilter] },
+    { _id: { $in: grantedIds } },
     { $set: { plan: 'pro', planExpiresAt: targetExpiry, planAutoRenew: false, planSource: 'trial', legacyTrialGrantedAt: now } },
   );
+
+  if (grantedIds.length > 0) {
+    void sendToUsers(grantedIds, {
+      title: `🎁 קיבלת ${env.TRIAL_MONTHS} חודשי Pro במתנה!`,
+      body: 'הכל פתוח עכשיו ללא הגבלה - רשימות, קבוצות, עוזר AI והשוואות מחיר.',
+      icon: PUSH_ICON,
+      badge: PUSH_ICON,
+      data: { url: '/subscription', type: 'subscription' },
+    }).catch((e) => logger.warn('legacy trial grant push failed: %s', (e as Error).message));
+  }
 
   return { granted: granted.modifiedCount, skipped: skipped.modifiedCount };
 }
@@ -263,8 +284,10 @@ export async function approveRequest(adminId: string, requestId: string, note?: 
   }
 
   void sendToUser(userId, {
-    title: 'המנוי שלך הופעל',
-    body: 'תודה! מנוי Pro פעיל עכשיו ואפשר ליהנות מהכל ללא הגבלה.',
+    title: '✦ המנוי שלך הופעל!',
+    body: 'תודה שהצטרפת ל-Pro. הכל פתוח עכשיו, ללא הגבלה.',
+    icon: PUSH_ICON,
+    badge: PUSH_ICON,
     data: { url: '/subscription', type: 'subscription' },
   }).catch(() => { /* push הוא בונוס */ });
 
@@ -282,6 +305,8 @@ export async function rejectRequest(adminId: string, requestId: string, note?: s
   void sendToUser(String(req.userId), {
     title: 'לא הצלחנו לאמת את התשלום',
     body: note || 'לא מצאנו את ההעברה. אפשר לפתוח את עמוד המנוי ולנסות שוב או ליצור קשר.',
+    icon: PUSH_ICON,
+    badge: PUSH_ICON,
     data: { url: '/subscription', type: 'subscription' },
   }).catch(() => { /* push הוא בונוס */ });
 
