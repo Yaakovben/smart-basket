@@ -736,7 +736,7 @@ cd server/api && npm test          # בדיקות השוואת המחירים (n
 | `VITE_API_URL` | לא | `http://localhost:5000/api` בפיתוח, `/api` בפרודקשן | עקיפת כתובת ה-API. בפרודקשן לא מגדירים: `/api` עובר ל-Render דרך rewrite ב-`client/vercel.json` |
 | `VITE_SOCKET_URL` | כן | `http://localhost:5001` | כתובת ה-Socket |
 
-> **התחברות ו-cookies:** האתר (Vercel) וה-API (Render) בדומיינים שונים, ולכן ה-refresh cookie לא היה נשלח. הפתרון: reverse proxy - `client/vercel.json` מעביר `/api/*` לשרת ה-API של הענף (`main` ← prod, `non-prod` ← np). הכתובת ב-`vercel.json` שונה בכל ענף - לא להעתיק את הקובץ בין הענפים כמו שהוא.
+> **התחברות ו-cookies:** האתר (Vercel) וה-API (Render) בדומיינים שונים, ולכן ה-refresh cookie לא היה נשלח. הפתרון: reverse proxy - `vercel.json` שבשורש הפרויקט (זה ש-Vercel משתמש בו בפועל, לא זה שב-`client/`) מעביר `/api/*` לשרת ה-API של הענף (`main` ← prod, `non-prod` ← np). הכתובת ב-`vercel.json` שונה בכל ענף - לא להעתיק את הקובץ בין הענפים כמו שהוא.
 | `VITE_GOOGLE_CLIENT_ID` | לא | - | Google OAuth Client ID |
 | `VITE_SENTRY_DSN` | לא | - | Sentry DSN |
 
