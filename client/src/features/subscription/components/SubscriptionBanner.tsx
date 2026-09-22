@@ -85,7 +85,7 @@ export const SubscriptionBanner = () => {
           <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: isDark ? '#EDE9FE' : '#4C1D95', lineHeight: 1.25 }}>{title}</Typography>
           <Typography sx={{ fontSize: 12, color: isDark ? 'rgba(237,233,254,0.75)' : '#6D28D9', lineHeight: 1.3 }}>{sub}</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', color: isDark ? '#C4B5FD' : '#6D28D9', fontSize: 12.5, fontWeight: 800 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, color: isDark ? '#C4B5FD' : '#6D28D9', fontSize: 12.5, fontWeight: 800 }}>
           {s.bannerCta}
           <ChevronLeftRoundedIcon sx={{ fontSize: 18 }} />
         </Box>

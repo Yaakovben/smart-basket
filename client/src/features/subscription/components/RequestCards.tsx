@@ -98,7 +98,7 @@ export const HistoryCard = ({ history, s, isDark, locale }: HistoryProps) => {
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled' }}>{fmtDate(h.createdAt, locale)} · <span dir="ltr">{h.reference}</span></Typography>
             </Box>
             <Box sx={{
-              display: 'flex', alignItems: 'center', gap: 0.4,
+              display: 'flex', alignItems: 'center', gap: 0.5,
               px: 1, py: '2px', borderRadius: '999px', fontSize: 11, fontWeight: 800,
               color: STATUS_COLOR[h.status], bgcolor: `${STATUS_COLOR[h.status]}1A`,
             }}>

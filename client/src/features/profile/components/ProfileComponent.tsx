@@ -101,7 +101,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <ButtonBase
               onClick={() => navigate('/subscription')}
               sx={{
-                display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 1.25,
+                display: 'inline-flex', alignItems: 'center', gap: 0.6, mt: 1.25,
                 px: 1.5, py: 0.6, borderRadius: '999px',
                 bgcolor: isProActive ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.25)',
