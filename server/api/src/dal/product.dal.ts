@@ -29,6 +29,13 @@ export const ProductDAL = {
       .lean();
   },
 
+  // findById (מ-createBaseDal) לא מסונן לפי listId - שימוש בו לפני עדכון/
+  // מחיקת תמונה עלול לקרוא (ובעקבותיו למחוק ב-Cloudinary) מוצר מרשימה
+  // אחרת אם productId לא שייך בפועל ל-listId שהמשתמש הרשאי אליה.
+  async findByIdInList(productId: string, listId: string): Promise<IProductDoc | null> {
+    return Product.findOne({ _id: productId, listId });
+  },
+
   // לצורך idempotency בהוספת מוצר (ראה product.service.ts:addProduct) -
   // מוצא מוצר שכבר נוצר עבור אותו clientId (temp id מהלקוח) ברשימה הזו.
   async findByClientId(listId: string, clientId: string): Promise<IProductDoc | null> {

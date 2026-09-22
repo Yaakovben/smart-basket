@@ -117,6 +117,10 @@ async function getAccessToken(): Promise<string> {
 // שליחה) מזהים כפתור CTA + List-Unsubscribe יחד כסימן קלאסי ל"מייל שיווקי" -
 // אין סיבה "לצעוק bulk" על מייל בודד שנשלח למשתמש אחד.
 function renderHtml(body: string, isBulk: boolean): string {
+  // כתובת האתר של הסביבה הזו (prod/np) - לא קשיחה, אחרת מייל שנשלח מ-np
+  // מפנה משתמשים לאתר ה-prod. CORS_ORIGIN כבר מוגדר per-deployment ומכיל
+  // את כתובת הלקוח הראשית של הענף הזה.
+  const clientUrl = env.CORS_ORIGIN.split(',')[0].trim();
   const safeBody = body
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -124,12 +128,12 @@ function renderHtml(body: string, isBulk: boolean): string {
     .replace(/\n/g, '<br/>');
   const link = isBulk
     ? `<div style="text-align:center;">
-    <a href="https://prod-smart-basket.vercel.app/" style="display:inline-block;background:linear-gradient(135deg,#0F766E,#14B8A6);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:12px;">
+    <a href="${clientUrl}" style="display:inline-block;background:linear-gradient(135deg,#0F766E,#14B8A6);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:12px;">
       פתח את Smart Basket
     </a>
   </div>`
     : `<div style="font-size:13.5px;">
-    <a href="https://prod-smart-basket.vercel.app/" style="color:#0F766E;">פתח את Smart Basket</a>
+    <a href="${clientUrl}" style="color:#0F766E;">פתח את Smart Basket</a>
   </div>`;
   return `
 <div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">

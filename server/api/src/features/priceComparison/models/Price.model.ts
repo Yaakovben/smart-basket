@@ -68,9 +68,12 @@ export interface IPriceDoc extends Document {
 
 const priceSchema = new Schema<IPriceDoc>(
   {
-    barcode: { type: String, required: true, index: true },
+    // אין index:true כאן: barcode כבר מכוסה ע"י הפריפיקס של האינדקס
+    // הייחודי {barcode,chainId} למטה, ו-itemNameNormalized ע"י אינדקס
+    // הטקסט - index:true נוסף היה כפול ומבזבז ממכסת Atlas (512MB חינמי)
+    barcode: { type: String, required: true },
     itemName: { type: String, required: true },
-    itemNameNormalized: { type: String, required: true, index: true },
+    itemNameNormalized: { type: String, required: true },
     chainId: { type: String, required: true, index: true },
     chainName: { type: String, required: true },
     storeId: { type: String },

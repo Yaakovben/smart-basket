@@ -202,3 +202,18 @@ export const notificationCreateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// הגבלת דיווח שגיאות מהלקוח - endpoint ציבורי (בלי auth, כדי לתפוס גם
+// שגיאות לפני login) ששולח מייל למנהל. בלי הגבלה, הצפה של קריאות (מכל IP,
+// עם ניסוח שונה כדי לעקוף את ה-throttle הפנימי לפי הודעה) יכולה למצות את
+// מכסת המייל של המנהל.
+export const errorReportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: 'Too many error reports, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

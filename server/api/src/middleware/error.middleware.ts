@@ -50,13 +50,22 @@ export const errorHandler = (
     message = `Invalid ${err.path}: ${err.value}`;
   }
 
-  // ניקוי שדות רגישים מגוף הבקשה לפני לוג
+  // ניקוי שדות רגישים מגוף הבקשה לפני לוג, וקיצור שדות ארוכים (תמונות
+  // כ-data URL יכולות להגיע עד 10MB) - בלעדי זה כל שגיאה על בקשה כזו
+  // שולחת את כל הבייטים ללוג ול-Sentry ושורפת מכסה
+  const MAX_FIELD_LEN = 300;
   const sanitizeBody = (body: Record<string, unknown> | undefined) => {
     if (!body || typeof body !== 'object') return body;
     const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'refreshToken', 'token'];
-    const cleaned = { ...body };
-    for (const field of sensitiveFields) {
-      if (field in cleaned) cleaned[field] = '[REDACTED]';
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (sensitiveFields.includes(key)) {
+        cleaned[key] = '[REDACTED]';
+      } else if (typeof value === 'string' && value.length > MAX_FIELD_LEN) {
+        cleaned[key] = `${value.slice(0, MAX_FIELD_LEN)}...[truncated, ${value.length} chars total]`;
+      } else {
+        cleaned[key] = value;
+      }
     }
     return cleaned;
   };
@@ -76,8 +85,10 @@ export const errorHandler = (
     ...(errors && { errors }),
   });
 
-  // דיווח כל השגיאות ל-Sentry עם הקשר מלא
-  if (env.SENTRY_DSN) {
+  // דיווח ל-Sentry: 5xx (תקלות שרת אמיתיות) תמיד. 4xx (ולידציה, הרשאות,
+  // "לא נמצא" וכו') הן חלק נורמלי מתעבורת API רגילה ולא תקלות - שליחתן
+  // הייתה שורפת את מכסת Sentry על כל בקשה שגויה של לקוח
+  if (env.SENTRY_DSN && statusCode >= 500) {
     Sentry.withScope((scope) => {
       scope.setTag('statusCode', statusCode.toString());
       scope.setTag('errorCode', code || 'UNKNOWN');
@@ -94,7 +105,7 @@ export const errorHandler = (
         scope.setContext('validationErrors', { errors });
       }
       // 500 כ-error, 4xx כ-warning
-      scope.setLevel(statusCode >= 500 ? 'error' : 'warning');
+      scope.setLevel('error');
       Sentry.captureException(err);
     });
   }

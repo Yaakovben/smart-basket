@@ -127,7 +127,7 @@ export async function updateProduct(
     // צריך את הערכים הישנים לפני העדכון כדי לבנות diff אמיתי (oldValue/
     // newValue) - round-trip נוסף, אבל רק בעריכת תוכן בפועל (לא בכל toggle
     // קנייה, שהוא הפעולה השכיחה בהרבה).
-    const current = await ProductDAL.findById(productId);
+    const current = await ProductDAL.findByIdInList(productId, listId);
     if (!current) {
       throw NotFoundError.product();
     }
