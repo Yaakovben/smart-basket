@@ -10,6 +10,7 @@ import { headerIconButtonSx } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 import { getAiHealth, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
+import { SubscriptionHeaderIcon } from './SubscriptionHeaderIcon';
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -22,6 +23,7 @@ interface AdminDashboardHeaderBarProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
+  onOpenSubscriptions: () => void;
   onRefresh: () => void;
 }
 
@@ -32,7 +34,7 @@ interface AdminDashboardHeaderBarProps {
 // אותו דפוס בדיוק כמו מסך הרשימה.
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
@@ -51,6 +53,7 @@ export const AdminDashboardHeaderBar = ({
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
+      <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />
       {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
           שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי

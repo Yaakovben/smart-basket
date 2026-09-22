@@ -14,6 +14,7 @@ import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
 import { AdminAiStatusCard } from './AdminAiStatusCard';
+import { SubscriptionAdminManager } from './SubscriptionAdminManager';
 import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
 
@@ -28,6 +29,7 @@ export const AdminDashboard = () => {
   const [dbHealthOpen, setDbHealthOpen] = useState(false);
   const [aiStatusOpen, setAiStatusOpen] = useState(false);
   const [pushOpen, setPushOpen] = useState(false);
+  const [subscriptionsOpen, setSubscriptionsOpen] = useState(false);
   const {
     activities,
     usersWithLoginInfo,
@@ -102,6 +104,7 @@ export const AdminDashboard = () => {
         onOpenAiStatus={() => setAiStatusOpen(true)}
         aiStatus={aiStatus.data}
         onOpenPush={() => setPushOpen(true)}
+        onOpenSubscriptions={() => setSubscriptionsOpen(true)}
         onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
@@ -145,6 +148,13 @@ export const AdminDashboard = () => {
         />
       )}
       {pushOpen && <PushBroadcastManager onClose={() => setPushOpen(false)} isDark={isDark} users={usersWithLoginInfo} />}
+      {subscriptionsOpen && (
+        <SubscriptionAdminManager
+          onClose={() => setSubscriptionsOpen(false)}
+          isDark={isDark}
+          onChanged={refreshData}
+        />
+      )}
     </Box>
   );
 };

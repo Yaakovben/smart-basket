@@ -7,8 +7,6 @@ import type { UserWithLastLogin } from '../types';
 import { UsersTable } from './UsersTable';
 import { RecentActivityFeed } from './RecentActivityFeed';
 import { AdminDashboardLoadingSkeleton } from './AdminDashboardLoadingSkeleton';
-import { SubscriptionRequestsPanel } from './SubscriptionRequestsPanel';
-import { LegacyTrialGrantCard } from './LegacyTrialGrantCard';
 
 interface AdminDashboardContentProps {
   error: string | null;
@@ -53,10 +51,6 @@ export const AdminDashboardContent = ({
         </Button>
       </Paper>
     )}
-
-    {/* בקשות מנוי שממתינות לאישור */}
-    {!loading && <SubscriptionRequestsPanel isDark={isDark} onChanged={onUserDeleted} />}
-    {!loading && <LegacyTrialGrantCard isDark={isDark} onChanged={onUserDeleted} />}
 
     {/* חיפוש */}
     {!loading && (
