@@ -158,6 +158,33 @@ export async function updateQueuedAddPendingPurchase(tempId: string, isPurchased
   return true;
 }
 
+type QueuedAdd = Extract<QueuedMutation, { type: 'add' }>;
+
+const findQueuedAdd = async (tempId: string): Promise<QueuedAdd | undefined> =>
+  (await getAllQueued()).find((m): m is QueuedAdd => m.type === 'add' && m.tempId === tempId);
+
+/** מבטל הוספה שממתינה בתור (מחיקת מוצר שעוד לא נשמר). false = לא בתור (למשל בקשה שעדיין בדרך). */
+export async function removeQueuedAdd(tempId: string): Promise<boolean> {
+  const match = await findQueuedAdd(tempId);
+  if (!match) return false;
+  await removeQueued(match.id);
+  return true;
+}
+
+/** מעדכן את נתוני ההוספה שממתינה בתור (עריכת מוצר שעוד לא נשמר). false = לא בתור. */
+export async function updateQueuedAddData(tempId: string, changes: Partial<QueuedAdd['productData']>): Promise<boolean> {
+  const match = await findQueuedAdd(tempId);
+  if (!match) return false;
+  const db = await openDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({ ...match, productData: { ...match.productData, ...changes } });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  return true;
+}
+
 // בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם.
 // 502/503/504 (עם response אמיתי) נחשבים כאן כמו שגיאת רשת ולא כישלון קבוע -
 // אלו שגיאות cold-start אופייניות (Render free tier), שקורות בדיוק כש-
