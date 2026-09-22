@@ -10,12 +10,14 @@
  */
 
 import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { Box, Typography, CircularProgress, keyframes } from '@mui/material';
+import { Box, Typography, CircularProgress, IconButton, keyframes } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
+import { PriceComparisonHelpModal } from './PriceComparisonHelpModal';
 import { NavigationPicker } from './NavigationPicker';
 import { ChainBranchPicker } from './ChainBranchPicker';
 import { ProductMatchPicker } from './ProductMatchPicker';
@@ -76,6 +78,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const [mapOpen, setMapOpen] = useState(false);
   // הרשת שעבורה פתוח בורר הסניפים (null = סגור)
   const [pickerChain, setPickerChain] = useState<{ chainId: string; chainName: string } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   // המוצר שההתאמה שלו מתוקנת כרגע (null = סגור)
   const [fixMatch, setFixMatch] = useState<PriceMatch | null>(null);
   const openBranchPicker = useCallback((c: PriceChainTotal) => {
@@ -115,6 +118,16 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25, px: 0.25 }}>
         <Typography sx={{ fontSize: 16, fontWeight: 800 }}>{t('priceComparisonTitle')}</Typography>
         <BetaBadge size="sm" />
+        {/* לחצן עזרה עדין - לא צועק, רק זמין למי שמתעניין איך לבחור סניף/לתקן התאמה */}
+        <IconButton
+          size="small"
+          onClick={() => setShowHelp(true)}
+          sx={{ p: 0.25, color: 'text.disabled', '&:hover': { color: '#0D9488' } }}
+          aria-label={t('priceHelpTitle')}
+          title={t('priceHelpTitle')}
+        >
+          <HelpOutlineIcon sx={{ fontSize: 15 }} />
+        </IconButton>
         <Box sx={{ flex: 1 }} />
         {data.lastUpdatedISO && (
           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 600 }}>
@@ -214,6 +227,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         onSelect={(chainId, storeId) => { onChooseBranch?.(chainId, storeId); setPickerChain(null); }}
         onClose={() => setPickerChain(null)}
       />
+
+      {/* הסבר עדין - איך לבחור סניף ולתקן התאמת מוצר שגויה */}
+      {showHelp && <PriceComparisonHelpModal onClose={() => setShowHelp(false)} isDark={isDark} />}
 
       {/* מפת סניפים במסך מלא - Leaflet + OpenStreetMap, חינמי לגמרי.
           מסך מלא ולא Modal-גיליון קטן, כדי שהמפה תקבל מספיק מקום אמיתי. */}
