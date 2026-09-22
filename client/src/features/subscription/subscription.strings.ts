@@ -57,7 +57,6 @@ const he = {
   trialEndedSub: 'חזרתם לתוכנית החינמית. אפשר להמשיך ל-Pro בכל רגע.',
   trialKeepCta: 'ממשיכים ליהנות מ-Pro',
   trialKeepNote: 'ההמשך מתווסף אחרי סוף תקופת המתנה, בלי לאבד אף יום.',
-  welcomeToast: 'ברוכים הבאים! קיבלתם {n} חודשי Pro במתנה',
   loadError: 'לא הצלחנו לטעון את פרטי המנוי',
   retry: 'נסו שוב',
 
@@ -78,17 +77,7 @@ const he = {
   usagePrice: 'השוואות מחיר',
   usageResets: 'המונים מתאפסים בכל יום',
   usageOf: 'מתוך',
-  limitLists: 'רשימות בבעלותך',
-  limitMembers: 'חברים בקבוצה',
 
-  compareTitle: 'מה מקבלים ב-Pro',
-  compareFree: 'חינמי',
-  comparePro: 'Pro',
-  cmpLists: 'רשימות',
-  cmpMembers: 'חברים בקבוצה',
-  cmpAi: 'שאלות AI ביום',
-  cmpPrice: 'השוואות מחיר ביום',
-  unlimited: 'ללא הגבלה',
 
   planTitle: 'בחרו תקופה',
   month1: 'חודש',
@@ -206,7 +195,6 @@ const en: SubscriptionStrings = {
   trialEndedSub: 'You are back on the free plan. You can continue with Pro at any time.',
   trialKeepCta: 'Keep enjoying Pro',
   trialKeepNote: 'Your extension starts after the gift period ends, no days lost.',
-  welcomeToast: 'Welcome! You got {n} months of Pro as a gift',
   loadError: 'Could not load your subscription',
   retry: 'Try again',
 
@@ -227,17 +215,7 @@ const en: SubscriptionStrings = {
   usagePrice: 'Price comparisons',
   usageResets: 'Counters reset every day',
   usageOf: 'of',
-  limitLists: 'Lists you own',
-  limitMembers: 'Members per group',
 
-  compareTitle: 'What you get with Pro',
-  compareFree: 'Free',
-  comparePro: 'Pro',
-  cmpLists: 'Lists',
-  cmpMembers: 'Group members',
-  cmpAi: 'AI questions per day',
-  cmpPrice: 'Price comparisons per day',
-  unlimited: 'Unlimited',
 
   planTitle: 'Choose a period',
   month1: '1 month',
@@ -353,7 +331,6 @@ const ru: SubscriptionStrings = {
   trialEndedSub: 'Вы вернулись на бесплатный план. Перейти на Pro можно в любой момент.',
   trialKeepCta: 'Продолжить с Pro',
   trialKeepNote: 'Продление начнётся после подарочного периода, ни один день не теряется.',
-  welcomeToast: 'Добро пожаловать! Вам подарено {n} мес. Pro',
   loadError: 'Не удалось загрузить данные подписки',
   retry: 'Повторить',
 
@@ -374,17 +351,7 @@ const ru: SubscriptionStrings = {
   usagePrice: 'Сравнения цен',
   usageResets: 'Счётчики сбрасываются каждый день',
   usageOf: 'из',
-  limitLists: 'Ваши списки',
-  limitMembers: 'Участников в группе',
 
-  compareTitle: 'Что даёт Pro',
-  compareFree: 'Бесплатно',
-  comparePro: 'Pro',
-  cmpLists: 'Списки',
-  cmpMembers: 'Участники группы',
-  cmpAi: 'Вопросов AI в день',
-  cmpPrice: 'Сравнений цен в день',
-  unlimited: 'Без ограничений',
 
   planTitle: 'Выберите срок',
   month1: '1 месяц',
