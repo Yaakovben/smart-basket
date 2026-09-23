@@ -244,7 +244,18 @@ export const AppRouter = () => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
         navigate(event.data.url);
       } else if (event.data?.type === 'SW_ACTIVATED') {
-        setUpdateAvailable(true);
+        // SW_ACTIVATED נורה גם בטעינה טרייה רגילה (ה-SW מתעדכן ברקע ומודיע
+        // ברגע שהוא מתפוס שליטה, בלי קשר לגיל ה-JS שכבר רץ בדף) - לא רק
+        // כשה-JS בטאב הזה באמת ישן. בלי ההשוואה הזו, מי שרק פתח את
+        // האפליקציה וכבר מריץ את הגרסה העדכנית ביותר היה רואה תוך שניות
+        // גם "עודכן בהצלחה" (App.tsx) וגם את הבאנר הזה בסתירה - "יש עדכון,
+        // צריך לרענן" על עמוד שכבר מעודכן. מציגים את הבאנר רק כשהגרסה
+        // שה-SW מדווח עליה שונה מהגרסה שכבר טעונה כאן בפועל.
+        const swVersion = event.data.buildVersion as string | undefined;
+        const currentVersion = typeof __BUILD_VERSION__ !== 'undefined' ? __BUILD_VERSION__ : undefined;
+        if (!swVersion || !currentVersion || swVersion !== currentVersion) {
+          setUpdateAvailable(true);
+        }
       }
     };
     navigator.serviceWorker?.addEventListener('message', handler);
