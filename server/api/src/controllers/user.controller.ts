@@ -89,3 +89,14 @@ export const deleteMyAccount = asyncHandler(async (req: AuthRequest, res: Respon
   await deleteAccount(req.user!.id);
   res.json({ success: true, message: 'Account deleted successfully' });
 });
+
+/**
+ * POST /api/users/me/ack-logout-apology
+ * מסמן שהמשתמש ראה וסגר את פופאפ ההתנצלות על ניתוק כפוי (MaintenanceApologyNotice).
+ * נשמר ב-DB (לא localStorage) כדי שניקוי מטמון עצמאי של המשתמש לא יגרום
+ * לפופאפ לחזור בטעות - ראו ההערה המפורטת ב-User.model.ts.
+ */
+export const ackLogoutApology = asyncHandler(async (req: AuthRequest, res: Response) => {
+  await UserDAL.ackLogoutApology(req.user!.id);
+  res.json({ success: true });
+});

@@ -16,7 +16,9 @@ import mongoose from 'mongoose';
 
 async function main() {
   await connectDatabase();
-  const result = await User.updateMany({}, { $inc: { tokenVersion: 1 } });
+  // forceLoggedOutAt מסומן לכולם באותו רגע - זה מה שמפעיל את פופאפ ההתנצלות
+  // (MaintenanceApologyNotice) בכניסה הבאה, ראו ההערה ב-User.model.ts.
+  const result = await User.updateMany({}, { $inc: { tokenVersion: 1 }, $set: { forceLoggedOutAt: new Date() } });
   console.log(`נותקו ${result.modifiedCount} משתמשים (tokenVersion עודכן).`);
   await mongoose.connection.close();
 }

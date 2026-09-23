@@ -107,4 +107,8 @@ export const authApi = {
     await apiClient.delete('/users/me');
     clearTokens();
   },
+
+  // מסמן ב-DB שהמשתמש ראה וסגר את פופאפ ההתנצלות על ניתוק כפוי
+  // (MaintenanceApologyNotice) - ראו router/index.tsx.
+  ackLogoutApology: () => apiClient.post('/users/me/ack-logout-apology').catch(() => {}),
 };

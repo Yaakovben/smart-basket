@@ -33,6 +33,10 @@ export interface User {
   plan?: 'free' | 'pro';
   planExpiresAt?: string | null;
   planSource?: 'trial' | 'paid';
+  // ראו ההערה המפורטת ב-server/api/src/models/User.model.ts - קובעים יחד
+  // אם להציג את MaintenanceApologyNotice (התנצלות על ניתוק כפוי).
+  forceLoggedOutAt?: string | null;
+  logoutApologySeenAt?: string | null;
 }
 
 // ===== מוצר =====

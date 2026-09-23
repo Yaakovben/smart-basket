@@ -14,6 +14,7 @@ import {
   updateListOrder,
   updateSavedLists,
   deleteMyAccount,
+  ackLogoutApology,
 } from '../controllers/user.controller';
 import { authenticate, validate, passwordChangeLimiter } from '../middleware';
 import { userValidator } from '../validators';
@@ -39,5 +40,6 @@ router.post(
 router.put('/me/list-order', validate(userValidator.updateListOrder), updateListOrder);
 router.put('/me/saved-lists', validate(userValidator.updateSavedLists), updateSavedLists);
 router.delete('/me', deleteMyAccount);
+router.post('/me/ack-logout-apology', ackLogoutApology);
 
 export default router;

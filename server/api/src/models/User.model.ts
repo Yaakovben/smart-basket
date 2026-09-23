@@ -55,6 +55,8 @@ export interface IUser extends Document {
   // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
   // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
   legacyTrialGrantedAt?: Date;
+  forceLoggedOutAt?: Date;
+  logoutApologySeenAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -155,6 +157,19 @@ const userSchema = new Schema<IUser>(
       enum: ['trial', 'paid'],
     },
     legacyTrialGrantedAt: {
+      type: Date,
+    },
+    // שני השדות הבאים יחד קובעים אם להציג את פופאפ ההתנצלות על ניתוק כפוי
+    // (MaintenanceApologyNotice) - forceLoggedOutAt מוגדר לכולם באותו הרגע
+    // ע"י force-logout-all (ראו admin.controller.ts), logoutApologySeenAt
+    // מוגדר per-user ברגע שהוא סוגר את הפופאפ (ackLogoutApology). מוצג רק
+    // כש-forceLoggedOutAt קיים ומאוחר מ-logoutApologySeenAt (או שהאחרון
+    // לא קיים). ב-DB, לא ב-localStorage - כך שניקוי מטמון עצמאי של
+    // המשתמש (לא קשור לניתוק הכפוי בפועל) לא מחזיר את הפופאפ בטעות.
+    forceLoggedOutAt: {
+      type: Date,
+    },
+    logoutApologySeenAt: {
       type: Date,
     },
   },

@@ -75,6 +75,22 @@ export const UserDAL = {
     return { users, total };
   },
 
+  async countAll(): Promise<number> {
+    return User.countDocuments();
+  },
+
+  // מגדיל tokenVersion לכל המשתמשים (מבטל את כל ה-tokens הקיימים בבת אחת)
+  // ומסמן forceLoggedOutAt לכולם באותו רגע בדיוק - זה מה שמפעיל את פופאפ
+  // ההתנצלות אצל כל משתמש בכניסה הבאה שלו (ראו ההערה ב-User.model.ts).
+  async forceLogoutAll(): Promise<number> {
+    const result = await User.updateMany({}, { $inc: { tokenVersion: 1 }, $set: { forceLoggedOutAt: new Date() } });
+    return result.modifiedCount;
+  },
+
+  async ackLogoutApology(userId: string): Promise<IUser | null> {
+    return User.findByIdAndUpdate(userId, { logoutApologySeenAt: new Date() }, { new: true });
+  },
+
   async updateListOrder(userId: string, listOrder: string[]): Promise<IUser | null> {
     return User.findByIdAndUpdate(userId, { listOrder }, { new: true });
   },

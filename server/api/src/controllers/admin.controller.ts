@@ -441,3 +441,28 @@ export const getLegacyTrialGrant = asyncHandler(async (req: AuthRequest, res: Re
   const { granted, skipped } = await grantLegacyTrialToExistingUsers();
   res.json({ success: true, data: { dryRun: false, granted, skipped } });
 });
+
+/**
+ * GET/POST /api/admin/force-logout-all
+ * מגדיל tokenVersion לכל המשתמשים ב-DB - מבטל בבת אחת את כל ה-access/refresh
+ * tokens הקיימים בעולם (הם stateless JWT, נבדקים מול tokenVersion ב-DB בכל
+ * בקשה מאומתת - ראו auth.middleware.ts). כל משתמש מחובר, כולל האדמין
+ * המבצע את הפעולה עצמו, יקבל 401 בבקשה הבאה שלו ויידרש להתחבר מחדש.
+ * שימוש חד-פעמי בלבד, אחרי תקלת תשתית שדורשת שכולם יתחברו מחדש - לכן
+ * אותו דפוס dry-run/confirm כמו legacy-trial: GET (או POST בלי confirm)
+ * רק סופר כמה משתמשים יושפעו, POST עם confirm=true מבצע בפועל וגם מסמן
+ * forceLoggedOutAt לכולם (מפעיל את פופאפ ההתנצלות בכניסה הבאה, ראו
+ * User.model.ts).
+ */
+export const getForceLogoutAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const confirm = req.query.confirm === 'true' || (req.body as { confirm?: boolean } | undefined)?.confirm === true;
+
+  if (!confirm) {
+    const totalUsers = await UserDAL.countAll();
+    res.json({ success: true, data: { dryRun: true, totalUsers } });
+    return;
+  }
+
+  const modifiedCount = await UserDAL.forceLogoutAll();
+  res.json({ success: true, data: { dryRun: false, modifiedCount } });
+});

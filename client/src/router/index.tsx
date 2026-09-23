@@ -210,17 +210,21 @@ export const AppRouter = () => {
     return () => clearTimeout(timer);
   }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
 
-  // הודעת התנצלות חד-פעמית - מוצגת לכל משתמש בכניסה הראשונה אחרי הניתוק
-  // הכפוי החד-פעמי של כולם (force-logout-all.ts, עקב עבודות תשתית).
-  // לצמיתות ב-localStorage, פעם אחת בלבד per user, לא תלויה ב-createdAt.
+  // הודעת התנצלות חד-פעמית - מוצגת רק כשבאמת קרה ניתוק כפוי של כולם
+  // (force-logout-all, עקב עבודות תשתית). התנאי מבוסס על שני שדות מהשרת
+  // (forceLoggedOutAt/logoutApologySeenAt ב-DB, ראו User.model.ts) ולא רק
+  // על localStorage - אחרת ניקוי מטמון עצמאי של המשתמש (לא קשור לניתוק
+  // הכפוי בפועל) היה מציג את הפופאפ שוב בטעות בכל כניסה. ה-localStorage
+  // כאן משמש רק כהגנה משנית מפני הצגה כפולה באותו סשן, לא כמקור האמת.
   const MAINTENANCE_APOLOGY_DELAY_MS = 3_000;
   const [showMaintenanceApology, setShowMaintenanceApology] = useState(false);
   useEffect(() => {
-    if (authLoading || !user?.id) return;
-    const key = `sb_maintenance_apology_shown_v1_${user.id}`;
+    if (authLoading || !user?.id || !user.forceLoggedOutAt) return;
+    if (user.logoutApologySeenAt && new Date(user.logoutApologySeenAt) >= new Date(user.forceLoggedOutAt)) return;
+    const key = `sb_maintenance_apology_shown_v1_${user.id}_${user.forceLoggedOutAt}`;
     try {
       if (localStorage.getItem(key)) return;
-    } catch { return; /* localStorage חסום - מוותרים על ההודעה */ }
+    } catch { return; /* localStorage חסום - מוותרים על ההגנה המשנית, לא קריטי */ }
 
     const timer = setTimeout(() => {
       if (!canShowSecondaryPopup()) return; // פופאפ אחר כבר תפס את הסשן - יראה בכניסה הבאה
@@ -232,7 +236,7 @@ export const AppRouter = () => {
       setShowMaintenanceApology(true);
     }, MAINTENANCE_APOLOGY_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [authLoading, user?.id]);
+  }, [authLoading, user?.id, user?.forceLoggedOutAt, user?.logoutApologySeenAt]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
@@ -617,7 +621,10 @@ export const AppRouter = () => {
         onReload={() => window.location.reload()}
         onDismiss={() => setUpdateAvailable(false)}
       />
-      <MaintenanceApologyNotice open={showMaintenanceApology} onClose={() => setShowMaintenanceApology(false)} />
+      <MaintenanceApologyNotice
+        open={showMaintenanceApology}
+        onClose={() => { setShowMaintenanceApology(false); void authApi.ackLogoutApology(); }}
+      />
       <WelcomeProDialog
         open={welcomePlan?.variant ?? null}
         months={welcomePlan?.months}
