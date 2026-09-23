@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
 import type { LocationStatus } from '../../../priceComparison/hooks/useUserLocation';
 import { PriceComparisonCard, type PriceComparisonData } from '../../../priceComparison';
 import { ShimmerList, TopProgressBar } from '../../../../global/components';
@@ -153,17 +152,18 @@ export const PriceTab = memo(({
             </Box>
           )}
 
-          {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
+          {/* בורר רשימה - מוצג רק אם יש 2+ רשימות. פס דק מעל הכותרת ומתחת
+              לצ'יפים "מסגרר" את כל האזור כשורה נבחרת אחת - רמז עדין
+              שזה בורר, בלי אייקון בולט. */}
           {allUserLists.length > 1 && (
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 0.75, px: 0.5 }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary' }}>
-                  {t('whichListToCompare')}
-                </Typography>
-                {/* רמז עדין (לא לחיץ בפני עצמו) שהשורה מתחת היא בורר - לא רק
-                    תצוגה. אותו רעיון כמו חץ "בחר" בתפריטים, בלי לצייר select box מלא. */}
-                <UnfoldMoreRoundedIcon sx={{ fontSize: 13, color: '#14B8A6', opacity: 0.75 }} />
-              </Box>
+            <Box sx={{
+              borderTop: '1px solid', borderBottom: '1px solid',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+              pt: 1, pb: 1.1,
+            }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
+                {t('whichListToCompare')}
+              </Typography>
               <Box sx={{ position: 'relative' }}>
                 <Box ref={chipScrollerRef} sx={{
                   display: 'flex', flexWrap: 'nowrap', gap: 0.75,
