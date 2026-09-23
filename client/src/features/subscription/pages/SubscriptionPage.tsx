@@ -15,10 +15,17 @@ import { PaymentPanel } from '../components/PaymentPanel';
 import { ReportedCard, ApprovedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { StepIndicator } from '../components/StepIndicator';
-import { WelcomeProDialog } from '../components/WelcomeProDialog';
-import { PerksGrid, TrustRow } from '../components/PerksAndTrust';
+import { TrustRow } from '../components/PerksAndTrust';
 import { PlanComparisonTable } from '../components/PlanComparisonTable';
 import { primaryCtaSx, revealSx } from '../subscription.styles';
+
+// כותרת ייעודית בסגול המותג של המינוי - לא הגרדיאנט התכלת הכללי של האפליקציה
+// (COMMON_STYLES.gradients.header), שלא קשור לכלום כאן ויוצר חוסר עקביות
+// מול שאר העמוד שכולו בגוני סגול.
+const SUBSCRIPTION_HEADER_GRADIENT = {
+  light: 'linear-gradient(135deg, #5B21B6, #7C3AED)',
+  dark: 'linear-gradient(135deg, #3B1670, #4C1D95)',
+};
 
 interface Props {
   showToast: (msg: string, type?: ToastType) => void;
@@ -115,7 +122,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
       bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden',
     }}>
       <Box sx={{
-        background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
+        background: isDark ? SUBSCRIPTION_HEADER_GRADIENT.dark : SUBSCRIPTION_HEADER_GRADIENT.light,
         p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' },
         flexShrink: 0,
       }}>
@@ -153,9 +160,9 @@ export const SubscriptionPage = ({ showToast }: Props) => {
               <Reveal i={1}><StepIndicator step={activated ? 4 : open?.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
             )}
 
-            {/* אושר בזמן שהמשתמש עדיין כאן - מסך מנוחה "זהו, נגמר", לא רק
-                חלון קופץ שנעלם. נשאר עד שלוחצים "מתחילים" (אותו onClose
-                כמו בחלון). */}
+            {/* אושר בזמן שהמשתמש עדיין כאן - מסך מנוחה "זהו, נגמר" בתוך העמוד
+                עצמו, בלי חלון קופץ נוסף מעליו (שהיה חוזר על אותה הודעה
+                פעמיים). נשאר עד שלוחצים "מתחילים". */}
             {activated ? (
               <Reveal i={2}><ApprovedCard expiryDate={activatedExpiry} s={s} isDark={isDark} onDismiss={() => setActivated(false)} /></Reveal>
             ) : open?.status === 'pending' ? (
@@ -173,9 +180,11 @@ export const SubscriptionPage = ({ showToast }: Props) => {
 
             {showCheckout && !showUnavailable && (
               <>
-                {!isPro && <Reveal i={2}><PerksGrid s={s} isDark={isDark} /></Reveal>}
-                <Reveal i={isPro ? 2 : 3}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
-                <Reveal i={isPro ? 3 : 4}>
+                {/* מה כלול כבר מוצג למעלה ב-PlanComparisonTable (עם מספרים אמיתיים) -
+                    אריח "מה מקבלים" נוסף כאן היה חוזר על אותם 4 פריטים בדיוק, בלי
+                    ערך מידע נוסף. */}
+                <Reveal i={2}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
+                <Reveal i={3}>
                   <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
                     {busy
                       ? <CircularProgress size={22} sx={{ color: '#fff' }} />
@@ -185,7 +194,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
                 {isPro && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{status.isTrial ? s.trialKeepNote : s.renewNote}</Typography>
                 )}
-                <Reveal i={isPro ? 4 : 5}><TrustRow s={s} isDark={isDark} /></Reveal>
+                <Reveal i={4}><TrustRow s={s} isDark={isDark} /></Reveal>
               </>
             )}
 
@@ -197,12 +206,6 @@ export const SubscriptionPage = ({ showToast }: Props) => {
           </Box>
         ) : null}
       </Box>
-      <WelcomeProDialog
-        open={activated ? 'paid' : null}
-        expiryDate={activatedExpiry}
-        onClose={() => setActivated(false)}
-        onDetails={() => setActivated(false)}
-      />
     </Box>
   );
 };

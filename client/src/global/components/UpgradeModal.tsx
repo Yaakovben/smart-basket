@@ -28,9 +28,8 @@ const Transition = forwardRef(function Transition(
   return <Zoom ref={ref} {...props} />;
 });
 
-// אותם 4 יתרונות, באותה שפה עיצובית בדיוק כמו PerksGrid בעמוד המנוי (אריח
-// צבעוני + אייקון) - כדי שמי שנתקל בחלון הזה (הכי נפוץ בפועל, קופץ כשמגיעים
-// למגבלה) יזהה מיד את אותו "שפה" כשהוא מגיע אחר כך לעמוד המנוי עצמו.
+// אותם 4 יתרונות כאריח צבעוני + אייקון - כדי שמי שנתקל בחלון הזה (הכי נפוץ
+// בפועל, קופץ כשמגיעים למגבלה) יזהה מיד את אותה שפה עיצובית גם בעמוד המנוי.
 const FEATURES: Array<{ feature: PlanLimitFeature; icon: ComponentType<{ sx?: object }>; grad: string; key: 'perkLists' | 'perkGroups' | 'perkAi' | 'perkPrice' }> = [
   { feature: 'lists', icon: PlaylistAddCheckRoundedIcon, grad: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', key: 'perkLists' },
   { feature: 'members', icon: GroupsRoundedIcon, grad: 'linear-gradient(135deg,#A78BFA,#7C3AED)', key: 'perkGroups' },

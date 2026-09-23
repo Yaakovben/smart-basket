@@ -4,6 +4,7 @@ import type { Language } from '../types';
 import { ErrorBoundaryReloadingScreen } from './ErrorBoundaryReloadingScreen';
 import { ErrorBoundaryFallback } from './ErrorBoundaryFallback';
 import { reportError } from '../helpers/errorReport';
+import { clearCacheAndReload } from '../helpers/clearCacheAndReload';
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
 // מזהה רק שגיאות טעינת chunk אמיתיות. הבדיקה הגנרית של
@@ -94,25 +95,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     window.location.reload();
   };
 
-  handleClearCacheAndReload = async (): Promise<void> => {
-    try {
-      // ביטול רישום Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(reg => reg.unregister()));
-      }
-      // ניקוי cache
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-      // ניקוי session storage
-      sessionStorage.clear();
-    } catch {
-      // המשך ריענון גם אם הניקוי נכשל
-    }
-    window.location.href = '/?t=' + Date.now();
-  };
+  handleClearCacheAndReload = (): Promise<void> => clearCacheAndReload();
 
   toggleDetails = (): void => {
     this.setState(prev => ({ showDetails: !prev.showDetails }));

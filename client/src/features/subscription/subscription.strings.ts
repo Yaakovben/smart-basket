@@ -34,7 +34,7 @@ const he = {
   perkAi: 'עוזר AI בלי הגבלה',
   perkPrice: 'השוואות מחיר בלי הגבלה',
   trustNoAuto: 'בלי חיוב אוטומטי',
-  trustManual: 'בהרצה - אישור מהיר',
+  trustManual: 'אימות ידני - אישור מהיר',
   trustExtend: 'הארכה בלי לאבד ימים',
   payBank: 'העברה בנקאית',
   bankName: 'בנק',
@@ -76,11 +76,7 @@ const he = {
   expiresToday: 'מסתיים היום',
   expiringSoon: 'המנוי עומד להסתיים - כדאי להאריך',
 
-  usageTitle: 'השימוש שלך היום',
-  usageAi: 'שאלות לעוזר AI',
-  usagePrice: 'השוואות מחיר',
   usageResets: 'המונים מתאפסים בכל יום',
-  usageOf: 'מתוך',
 
 
   planTitle: 'בחרו תקופה',
@@ -88,7 +84,6 @@ const he = {
   month3: '3 חודשים',
   month12: 'שנה',
   perMonth: 'לחודש',
-  total: 'סה״כ',
   saveBadge: 'חיסכון של',
   noAutoRenew: 'תשלום חד-פעמי. אין חיוב אוטומטי ואין חידוש שקט, המנוי פשוט מסתיים בתום התקופה.',
   upgradeCta: 'המשך לתשלום',
@@ -102,7 +97,6 @@ const he = {
   payStep3: 'סיימתם להעביר?',
   payAmount: 'סכום לתשלום',
   payFor: 'עבור',
-  payMethod: 'אמצעי תשלום',
   payBit: 'ביט',
   payPaybox: 'PayBox',
   payScan: 'סרקו את הקוד עם אפליקציית הבנק או ביט',
@@ -120,7 +114,6 @@ const he = {
   payUnavailableTitle: 'התשלום עדיין לא מוגדר',
   payUnavailableBody: 'כרגע אפשר לשדרג רק בפנייה אלינו במייל. נחזור אליכם עם פרטי התשלום.',
   contactUs: 'שליחת מייל',
-  paymentDetailsNote: 'פרטי התשלום מגיעים ישירות מהשרת. אל תשלמו לפרטים אחרים.',
 
   reportedTitle: 'התשלום בבדיקה',
   reportedBody: 'קיבלנו את הדיווח. ברגע שנראה את ההעברה המנוי יופעל ותקבלו התראה.',
@@ -186,7 +179,7 @@ const en: SubscriptionStrings = {
   perkAi: 'Unlimited AI assistant',
   perkPrice: 'Unlimited price comparisons',
   trustNoAuto: 'No automatic billing',
-  trustManual: 'In rollout - fast approval',
+  trustManual: 'Manual verification - fast approval',
   trustExtend: 'Extend without losing days',
   payBank: 'Bank transfer',
   bankName: 'Bank',
@@ -228,11 +221,7 @@ const en: SubscriptionStrings = {
   expiresToday: 'Ends today',
   expiringSoon: 'Your subscription is ending soon - consider extending',
 
-  usageTitle: 'Your usage today',
-  usageAi: 'AI assistant questions',
-  usagePrice: 'Price comparisons',
   usageResets: 'Counters reset every day',
-  usageOf: 'of',
 
 
   planTitle: 'Choose a period',
@@ -240,7 +229,6 @@ const en: SubscriptionStrings = {
   month3: '3 months',
   month12: '1 year',
   perMonth: '/ month',
-  total: 'Total',
   saveBadge: 'Save',
   noAutoRenew: 'One-time payment. No automatic billing and no silent renewal, the subscription simply ends after the period.',
   upgradeCta: 'Continue to payment',
@@ -254,7 +242,6 @@ const en: SubscriptionStrings = {
   payStep3: 'Done transferring?',
   payAmount: 'Amount to pay',
   payFor: 'for',
-  payMethod: 'Payment method',
   payBit: 'Bit',
   payPaybox: 'PayBox',
   payScan: 'Scan the code with your bank app or Bit',
@@ -272,7 +259,6 @@ const en: SubscriptionStrings = {
   payUnavailableTitle: 'Payment is not set up yet',
   payUnavailableBody: 'For now you can upgrade only by emailing us. We will reply with payment details.',
   contactUs: 'Send email',
-  paymentDetailsNote: 'Payment details come directly from our server. Do not pay any other details.',
 
   reportedTitle: 'Payment under review',
   reportedBody: 'We received your report. Once we see the transfer your plan is activated and you get a notification.',
@@ -336,7 +322,7 @@ const ru: SubscriptionStrings = {
   perkAi: 'AI-помощник без лимита',
   perkPrice: 'Сравнение цен без лимита',
   trustNoAuto: 'Без автосписаний',
-  trustManual: 'В процессе запуска - быстрое подтверждение',
+  trustManual: 'Ручная проверка - быстрое подтверждение',
   trustExtend: 'Продление без потери дней',
   payBank: 'Банковский перевод',
   bankName: 'Банк',
@@ -378,11 +364,7 @@ const ru: SubscriptionStrings = {
   expiresToday: 'Заканчивается сегодня',
   expiringSoon: 'Подписка скоро закончится, рекомендуем продлить',
 
-  usageTitle: 'Ваше использование сегодня',
-  usageAi: 'Вопросы AI-помощнику',
-  usagePrice: 'Сравнения цен',
   usageResets: 'Счётчики сбрасываются каждый день',
-  usageOf: 'из',
 
 
   planTitle: 'Выберите срок',
@@ -390,7 +372,6 @@ const ru: SubscriptionStrings = {
   month3: '3 месяца',
   month12: '1 год',
   perMonth: '/ мес.',
-  total: 'Итого',
   saveBadge: 'Экономия',
   noAutoRenew: 'Разовый платёж. Без автосписаний и скрытого продления, подписка просто заканчивается по истечении срока.',
   upgradeCta: 'Перейти к оплате',
@@ -404,7 +385,6 @@ const ru: SubscriptionStrings = {
   payStep3: 'Перевод выполнен?',
   payAmount: 'Сумма к оплате',
   payFor: 'за',
-  payMethod: 'Способ оплаты',
   payBit: 'Bit',
   payPaybox: 'PayBox',
   payScan: 'Отсканируйте код в приложении банка или Bit',
@@ -422,7 +402,6 @@ const ru: SubscriptionStrings = {
   payUnavailableTitle: 'Оплата ещё не настроена',
   payUnavailableBody: 'Пока улучшить план можно только написав нам на почту. Мы пришлём реквизиты.',
   contactUs: 'Написать письмо',
-  paymentDetailsNote: 'Реквизиты приходят напрямую с нашего сервера. Не платите по другим реквизитам.',
 
   reportedTitle: 'Оплата на проверке',
   reportedBody: 'Мы получили ваше сообщение. Как только увидим перевод, подписка будет активирована, и вы получите уведомление.',
