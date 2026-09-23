@@ -132,7 +132,7 @@ export interface UseListReturn {
   handleDuplicateIncreaseQuantity: () => void;
   handleDuplicateAddNew: () => void;
   handleDuplicateCancel: () => void;
-  refreshList: () => void;
+  refreshList: () => Promise<boolean>;
   showClearList: boolean;
   setShowClearList: (show: boolean) => void;
   handleClearList: (filter: 'all' | 'purchased' | 'pending') => void;

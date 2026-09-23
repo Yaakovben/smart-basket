@@ -128,18 +128,22 @@ export const useListActions = ({
     });
   }, [list.id, onLeaveList, showToast, t, setConfirm]);
 
-  const refreshList = useCallback(async () => {
+  // מחזיר Promise<boolean> (הצלחה אמיתית) - כדי שהקורא (רענון בגרירה ב-
+  // ListComponent) יציג את חיווי הכישלון האדום על הכרטיס הצף במקום טוסט
+  // נפרד. שני חיוויים בו-זמנית על אותה פעולה מיותר ומבלבל.
+  const refreshList = useCallback(async (): Promise<boolean> => {
     setRefreshing(true);
     try {
       const apiList = await listsApi.getList(list.id);
       onUpdateList(convertApiList(apiList));
       setLastFetchAt(new Date());
+      return true;
     } catch {
-      showToast(t('errorOccurred'), 'error');
+      return false;
     } finally {
       setRefreshing(false);
     }
-  }, [list.id, onUpdateList, showToast, t]);
+  }, [list.id, onUpdateList]);
 
   return {
     showEditList, setShowEditList,

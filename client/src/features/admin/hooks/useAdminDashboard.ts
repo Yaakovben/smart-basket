@@ -27,20 +27,24 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const [error, setError] = useState<string | null>(null);
   const lastFetchAtRef = useRef<number>(0);
 
-  const fetchData = useCallback(async (force = false) => {
+  // מחזיר Promise<boolean> (הצלחה של המשתמשים - הנתון הקריטי) כדי שקוראים
+  // כמו רענון בגרירה ידעו אם באמת להציג "עודכן" ומתי להראות חיווי כישלון,
+  // במקום טיימר קבוע בלי קשר לתוצאה בפועל (אותו באג שתוקן ב-Insights).
+  const fetchData = useCallback(async (force = false): Promise<boolean> => {
     // דילוג אם הנתונים טריים (פחות מ-30 שניות) ולא נדרש רענון מפורש
-    if (!force && Date.now() - lastFetchAtRef.current < REFETCH_SKIP_MS) return;
+    if (!force && Date.now() - lastFetchAtRef.current < REFETCH_SKIP_MS) return true;
     setLoading(true);
     setError(null);
 
     // משתמשים = הקריטיים. ברגע שהם חוזרים, loading=false והדף מוצג.
     // סטטיסטיקות ופעילות נטענות במקביל אבל לא מעכבות הצגה ראשונית.
-    adminApi.getUsers()
+    const usersPromise = adminApi.getUsers()
       .then(users => {
         setAllUsers(users);
         lastFetchAtRef.current = Date.now();
+        return true;
       })
-      .catch(err => { if (import.meta.env.DEV) console.error('admin users:', err); setError(t('adminLoadError')); })
+      .catch(err => { if (import.meta.env.DEV) console.error('admin users:', err); setError(t('adminLoadError')); return false; })
       .finally(() => setLoading(false));
 
     adminApi.getStats()
@@ -56,6 +60,8 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       ))
       .catch(err => { if (import.meta.env.DEV) console.error('admin activity:', err); /* not fatal */ });
+
+    return usersPromise;
   }, [t]);
 
   // טעינה ראשונית בלבד. הסרנו רענון אוטומטי על visibilitychange כי זה
@@ -96,9 +102,10 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     uniqueUsersThisMonth: serverStats?.uniqueUsersThisMonth || 0,
   }), [serverStats, allUsers]);
 
-  // רענון ידני תמיד מתבצע, גם אם הנתונים טריים
-  const refreshData = useCallback(() => {
-    fetchData(true);
+  // רענון ידני תמיד מתבצע, גם אם הנתונים טריים. מחזיר Promise<boolean>
+  // (ראו fetchData) לקוראים כמו רענון בגרירה.
+  const refreshData = useCallback((): Promise<boolean> => {
+    return fetchData(true);
   }, [fetchData]);
 
   // עדכון מקומי (בלי refetch מלא) של plan אחרי שאדמין שינה אותו בפועל -

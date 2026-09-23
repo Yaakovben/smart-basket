@@ -8,7 +8,7 @@ interface UseAiStatusReturn {
   lastFetchAt: Date | null;
   refreshError: string | null;
   load: () => Promise<void>;
-  forceRefresh: () => Promise<void>;
+  forceRefresh: () => Promise<boolean>;
 }
 
 // autoLoad=false: לא יורה בקשה ב-mount - הקורא אחראי לקרוא ל-load() כשמתאים
@@ -39,16 +39,18 @@ export const useAiStatus = (autoLoad = true): UseAiStatusReturn => {
 
   // מאלץ בדיקה מחדש של המודל ב-Groq עכשיו (endpoint נפרד מ-load הרגיל) -
   // זו האופציה ל"עדכון עכשווי" שהמנהל יכול להפעיל ידנית.
-  const forceRefresh = useCallback(async () => {
+  const forceRefresh = useCallback(async (): Promise<boolean> => {
     setRefreshing(true);
     setRefreshError(null);
     try {
       const r = await adminApi.refreshAiStatus();
       setData(r);
       setLastFetchAt(new Date());
+      return true;
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       setRefreshError(status ? `הרענון נכשל (שגיאה ${status})` : 'הרענון נכשל - בדוק חיבור לשרת');
+      return false;
     } finally {
       setRefreshing(false);
     }

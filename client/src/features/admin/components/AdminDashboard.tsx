@@ -71,10 +71,17 @@ export const AdminDashboard = () => {
   const { userSearch, setUserSearch, userFilter, setUserFilter, handleFilterClick, filteredUsers } =
     useAdminUserFilter(usersWithLoginInfo, onlineUserIds);
 
+  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
+  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
+  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
+  // "עודכן"/"נכשל" מוצגים רק לפי התוצאה האמיתית של refreshData - לא לפי
+  // טיימר קבוע בלי קשר לתוצאה (אותו באג שתוקן קודם בעמוד התובנות).
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    refreshData();
-    setTimeout(() => setIsRefreshing(false), 1000);
+    refreshData().then(ok => {
+      setIsRefreshing(false);
+      if (!ok) setRefreshFailedToken(Date.now());
+    });
   }, [refreshData]);
 
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handleRefresh);
@@ -91,6 +98,7 @@ export const AdminDashboard = () => {
         refreshing={isRefreshing}
         pullActive={pullActiveRef.current}
         lastRefreshedAt={lastRefreshedAt}
+        refreshFailedToken={refreshFailedToken}
       />
       <AdminDashboardHeader
         isDark={isDark}

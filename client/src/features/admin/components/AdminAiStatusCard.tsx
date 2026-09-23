@@ -72,7 +72,7 @@ interface Props {
   refreshing: boolean;
   lastFetchAt: Date | null;
   refreshError: string | null;
-  onRefresh: () => void;
+  onRefresh: () => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -86,9 +86,12 @@ interface Props {
 export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, refreshError, onRefresh, onClose }: Props) => {
   // pullRefreshing: מוצג רק כשמשכו בפועל, לא בטעינה ראשונית (אותו דפוס כמו DbHealthCard).
   const [pullRefreshing, setPullRefreshing] = useState(false);
+  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
+  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
+  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(() => {
     setPullRefreshing(true);
-    onRefresh();
+    onRefresh().then(ok => { if (!ok) setRefreshFailedToken(Date.now()); });
   });
   useEffect(() => { if (!refreshing) setPullRefreshing(false); }, [refreshing]);
 
@@ -102,7 +105,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
       <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} refreshFailedToken={refreshFailedToken} />
         <Box
           sx={{
             height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',

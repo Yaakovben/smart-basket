@@ -5,7 +5,7 @@ interface UseDbHealthReturn {
   data: DbHealth | null;
   loading: boolean;
   lastFetchAt: Date | null;
-  load: () => Promise<void>;
+  load: () => Promise<boolean>;
 }
 
 export const useDbHealth = (): UseDbHealthReturn => {
@@ -13,14 +13,18 @@ export const useDbHealth = (): UseDbHealthReturn => {
   const [loading, setLoading] = useState(true);
   const [lastFetchAt, setLastFetchAt] = useState<Date | null>(null);
 
-  const load = async () => {
+  // מחזיר Promise<boolean> (הצלחה אמיתית) כדי שרענון בגרירה ידע להציג חיווי
+  // כישלון - לא רק להיעלם בשקט כשהבקשה נכשלת.
+  const load = async (): Promise<boolean> => {
     setLoading(true);
     try {
       const r = await adminApi.getDbHealth();
       setData(r);
       setLastFetchAt(new Date());
+      return true;
     } catch {
       setData(null);
+      return false;
     } finally {
       setLoading(false);
     }
