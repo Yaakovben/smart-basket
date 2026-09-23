@@ -3,11 +3,13 @@
  *
  * עדיפויות (מהגבוה לנמוך):
  *  1. daily-faith  (התחזקות יומית) - תמיד ראשון אם זמין
- *  2. welcome-pro  (קיבלת/הופעל לך Pro) - מידע חשוב על המנוי, אבל מוצג רק
+ *  2. cache-notice (הודעה חד-פעמית על איפוס cache למשתמשים ותיקים) - 4
+ *                  שניות השהיה, לפני welcome-pro (ראו router/index.tsx)
+ *  3. welcome-pro  (קיבלת/הופעל לך Pro) - מידע חשוב על המנוי, אבל מוצג רק
  *                  אחרי השהיה (ראו router/index.tsx) כדי לא להקפיץ מיד בכניסה
- *  3. pwa-install  (הזמנה להתקנה) - רק בדפדפן
- *  4. push-notify  (בקשת הרשאה להתראות) - רק ב-PWA מותקן
- *  5. feedback     (מה דעתך על האפליקציה) - רק למשתמשים ותיקים (20+ פתיחות),
+ *  4. pwa-install  (הזמנה להתקנה) - רק בדפדפן
+ *  5. push-notify  (בקשת הרשאה להתראות) - רק ב-PWA מותקן
+ *  6. feedback     (מה דעתך על האפליקציה, דירוג + טקסט) - אחרי 5+ פתיחות,
  *                  פעם אחת לכל משתמש (לצמיתות, לא רק לסשן)
  *
  * חוקים:
@@ -16,7 +18,7 @@
  *  - כל popup שומר דחייה משלו ב-localStorage (לצמיתות)
  */
 
-type PopupKind = 'daily-faith' | 'welcome-pro' | 'pwa-install' | 'push-notify' | 'feature-tip' | 'feedback';
+type PopupKind = 'daily-faith' | 'cache-notice' | 'welcome-pro' | 'pwa-install' | 'push-notify' | 'feature-tip' | 'feedback';
 
 const SESSION_KEY = 'sb_popup_shown_session';
 

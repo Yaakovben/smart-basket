@@ -18,6 +18,7 @@ export { SlowLoadIndicator } from './SlowLoadIndicator';
 export { TapToRevealText } from './TapToRevealText';
 export { ConnectionStatusIcon } from './ConnectionStatusIcon';
 export { UpdateAvailableBanner } from './UpdateAvailableBanner';
+export { CacheResetNotice } from './CacheResetNotice';
 export { Toast } from './Toast';
 // QRScanner לא מיוצא מהברל בכוונה: הוא גורר את @zxing (spergot ~250KB+)
 // שאין לו sideEffects:false, כך שאם ייוצא מכאן, כל מי שמייבא כל דבר אחר

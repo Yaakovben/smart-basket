@@ -21,6 +21,7 @@ import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { listAdminRequests, approveRequest, rejectRequest, countLegacyTrialEligible, grantLegacyTrialToExistingUsers } from '../services/subscription.service';
+import { listFeedback } from '../services/feedback.service';
 import type { SubscriptionRequestStatus } from '../models';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
@@ -401,6 +402,24 @@ export const approveSubscriptionRequest = asyncHandler(async (req: AuthRequest, 
 export const rejectSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
   const request = await rejectRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
   res.json({ success: true, data: { id: String(request._id), status: request.status } });
+});
+
+/** GET /api/admin/feedback - משובי משתמשים, החדשים ביותר קודם. */
+export const getFeedback = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const items = await listFeedback();
+  res.json({
+    success: true,
+    data: items.map((f) => {
+      const u = f.userId as unknown as { _id: unknown; name?: string; email?: string } | null;
+      return {
+        id: String(f._id),
+        user: u ? { id: String(u._id), name: u.name ?? '', email: u.email ?? '' } : null,
+        rating: f.rating,
+        message: f.message ?? null,
+        createdAt: f.createdAt,
+      };
+    }),
+  });
 });
 
 /**

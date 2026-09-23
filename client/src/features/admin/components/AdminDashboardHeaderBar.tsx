@@ -6,6 +6,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import { headerIconButtonSx } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
@@ -25,6 +26,7 @@ interface AdminDashboardHeaderBarProps {
   onOpenPush: () => void;
   // undefined כשה-Freemium כבוי בסביבה הזו - האייקון מוסתר לגמרי
   onOpenSubscriptions?: () => void;
+  onOpenFeedback: () => void;
   onRefresh: () => void;
 }
 
@@ -35,7 +37,7 @@ interface AdminDashboardHeaderBarProps {
 // כפתור רענון ידני לדסקטופ (ראו RefreshIcon למטה).
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onOpenFeedback, onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
@@ -55,6 +57,9 @@ export const AdminDashboardHeaderBar = ({
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
       {onOpenSubscriptions && <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />}
+      <Box onClick={onOpenFeedback} role="button" tabIndex={0} aria-label="משובי משתמשים" sx={headerIconButtonSx(44)}>
+        <RateReviewRoundedIcon sx={{ fontSize: 26 }} />
+      </Box>
       {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
           שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי

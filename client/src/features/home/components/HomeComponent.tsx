@@ -319,7 +319,7 @@ export const HomeComponent = memo(({
       )}
 
       {/* Feedback Popup - פעם אחת למשתמש ותיק (20+ פתיחות) */}
-      {showFeedbackPopup && <FeedbackPopup onClose={handleCloseFeedbackPopup} />}
+      {showFeedbackPopup && <FeedbackPopup onClose={handleCloseFeedbackPopup} showToast={showToast} />}
 
       {/* Push Notification Prompt */}
       {showPushPrompt && (

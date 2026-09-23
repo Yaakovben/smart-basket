@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { canShowSecondaryPopup, markPopupShown, safeStorage, getAppOpenCount } from '../../../global/helpers';
 
 const SHOWN_KEY = 'sb_feedback_shown';
-// מעל 20 פתיחות - מספיק היכרות עם האפליקציה כדי שתהיה למשתמש דעה
-// אמיתית, לא פופאפ שקופץ על משתמש חדש שבקושי הספיק לנסות אותה.
-const OPEN_COUNT_THRESHOLD = 20;
+// מעל 5 פתיחות - מספיק היכרות ראשונית עם האפליקציה כדי שתהיה למשתמש דעה,
+// בלי לחכות שבועות כמו הסף הישן (20).
+const OPEN_COUNT_THRESHOLD = 5;
 
 // פופאפ "ספרו לנו מה דעתכם" - פעם אחת בלבד לכל משתמש (לצמיתות, לא רק
 // לסשן - ראו SHOWN_KEY), ורק אחרי OPEN_COUNT_THRESHOLD פתיחות אפליקציה.

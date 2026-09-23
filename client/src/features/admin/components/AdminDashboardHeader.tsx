@@ -18,6 +18,7 @@ interface AdminDashboardHeaderProps {
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
   onOpenSubscriptions?: () => void;
+  onOpenFeedback: () => void;
   onRefresh: () => void;
   userFilter: UserFilter;
   onlineCount: number;
@@ -32,7 +33,7 @@ interface AdminDashboardHeaderProps {
 // כותרת הדשבורד: רקע גרדיאנט, שורת ניווט עליונה וכרטיסי סטטיסטיקה לחיצים
 export const AdminDashboardHeader = ({
   isDark, isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onOpenFeedback, onRefresh,
   userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t,
 }: AdminDashboardHeaderProps) => (
   <Box
@@ -59,6 +60,7 @@ export const AdminDashboardHeader = ({
       aiStatus={aiStatus}
       onOpenPush={onOpenPush}
       onOpenSubscriptions={onOpenSubscriptions}
+      onOpenFeedback={onOpenFeedback}
       onRefresh={onRefresh}
     />
     <AdminDashboardStatCards

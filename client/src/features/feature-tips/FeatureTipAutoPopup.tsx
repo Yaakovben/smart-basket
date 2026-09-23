@@ -10,5 +10,6 @@ interface Props {
 export const FeatureTipAutoPopup = ({ enabled }: Props) => {
   const { show, dismiss } = useFeatureTips(enabled);
   if (!show) return null;
+  // FeatureTipsPopup קורא ל-onClose(optOut) - dismiss מקבל את זה ישירות.
   return <FeatureTipsPopup onClose={dismiss} />;
 };
