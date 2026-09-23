@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Box, Typography, Paper, Button, CircularProgress } from '@mui/material';
 import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
 import { adminApi } from '../../../services/api/admin.api';
+import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
 
 interface Props {
   isDark: boolean;
@@ -49,12 +50,12 @@ export const LegacyTrialGrantCard = ({ isDark, onChanged }: Props) => {
   return (
     <Paper sx={{
       p: 2, mb: 2, borderRadius: '18px', display: 'flex', alignItems: 'center', gap: 1.25,
-      border: '1.5px solid', borderColor: eligible ? '#7C3AED' : 'divider',
+      border: '1.5px solid', borderColor: eligible ? PRO_PURPLE : 'divider',
       bgcolor: isDark ? 'rgba(124,58,237,0.08)' : 'rgba(124,58,237,0.04)',
     }}>
       <Box sx={{
         width: 38, height: 38, borderRadius: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(135deg, #8B5CF6, #5B21B6)',
+        background: `linear-gradient(135deg, #8B5CF6, ${PRO_PURPLE_DARK})`,
       }}>
         <CardGiftcardRoundedIcon sx={{ fontSize: 20, color: '#fff' }} />
       </Box>
@@ -69,7 +70,7 @@ export const LegacyTrialGrantCard = ({ isDark, onChanged }: Props) => {
       {!result && (
         <Button
           variant="contained" disabled={busy} onClick={run}
-          sx={{ borderRadius: '10px', fontWeight: 800, whiteSpace: 'nowrap', bgcolor: '#7C3AED', boxShadow: 'none', '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' } }}
+          sx={{ borderRadius: '10px', fontWeight: 800, whiteSpace: 'nowrap', bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' } }}
         >
           {busy ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'הענק לכולם'}
         </Button>

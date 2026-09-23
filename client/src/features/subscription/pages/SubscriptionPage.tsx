@@ -10,7 +10,6 @@ import type { SubscriptionPayMethod } from '../../../services/api/subscription.a
 import { getSubscriptionStrings } from '../subscription.strings';
 import { useSubscription } from '../hooks/useSubscription';
 import { PlanHero } from '../components/PlanHero';
-import { UsageCard } from '../components/UsageAndCompare';
 import { PeriodPicker, priceFor } from '../components/PeriodPicker';
 import { PaymentPanel } from '../components/PaymentPanel';
 import { ReportedCard, ApprovedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
@@ -174,10 +173,9 @@ export const SubscriptionPage = ({ showToast }: Props) => {
 
             {showCheckout && !showUnavailable && (
               <>
-                {!isPro && <Reveal i={2}><UsageCard status={status} s={s} isDark={isDark} /></Reveal>}
-                {!isPro && <Reveal i={3}><PerksGrid s={s} isDark={isDark} /></Reveal>}
-                <Reveal i={isPro ? 2 : 4}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
-                <Reveal i={isPro ? 3 : 5}>
+                {!isPro && <Reveal i={2}><PerksGrid s={s} isDark={isDark} /></Reveal>}
+                <Reveal i={isPro ? 2 : 3}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
+                <Reveal i={isPro ? 3 : 4}>
                   <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
                     {busy
                       ? <CircularProgress size={22} sx={{ color: '#fff' }} />
@@ -187,7 +185,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
                 {isPro && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{status.isTrial ? s.trialKeepNote : s.renewNote}</Typography>
                 )}
-                <Reveal i={isPro ? 4 : 6}><TrustRow s={s} isDark={isDark} /></Reveal>
+                <Reveal i={isPro ? 4 : 5}><TrustRow s={s} isDark={isDark} /></Reveal>
               </>
             )}
 

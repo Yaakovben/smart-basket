@@ -1,10 +1,12 @@
-import { Box, Typography, Button } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Button, ButtonBase } from '@mui/material';
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { SubscriptionRequestDto, SubscriptionRequestStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, sectionLabelSx, ghostCtaSx, PRO_PURPLE } from '../subscription.styles';
@@ -100,13 +102,26 @@ export const RejectedNotice = ({ request, s, isDark }: RejectedProps) => (
 
 interface HistoryProps { history: SubscriptionRequestDto[]; s: SubscriptionStrings; isDark: boolean; locale: string }
 
+// מקופל כברירת מחדל - היסטוריה היא מידע משני, לא צריך שיתפוס מקום קבוע
+// בתחתית העמוד לכל מי שיש לו רשומה אחת ישנה. אותו דפוס פתיחה/סגירה כמו
+// ה-FAQ בפאנל התשלום - עקביות חזותית בין שני מקומות עם תוכן שמתקפל.
 export const HistoryCard = ({ history, s, isDark, locale }: HistoryProps) => {
+  const [open, setOpen] = useState(false);
   const items = history.filter((h) => h.status !== 'pending');
   if (items.length === 0) return null;
   return (
     <Box sx={cardSx(isDark)}>
-      <Typography sx={sectionLabelSx}>{s.historyTitle}</Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <ButtonBase
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        sx={{ width: '100%', justifyContent: 'space-between', textAlign: 'start', gap: 1 }}
+      >
+        <Typography sx={{ ...sectionLabelSx, mb: 0 }}>{s.historyTitle} ({items.length})</Typography>
+        <ExpandMoreRoundedIcon sx={{ fontSize: 20, color: 'text.secondary', transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </ButtonBase>
+      <Box sx={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <Box sx={{ overflow: 'hidden' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', mt: 1 }}>
         {items.map((h, i) => (
           <Box key={h.id} sx={{
             display: 'flex', alignItems: 'center', gap: 1, py: 1.1,
@@ -128,6 +143,8 @@ export const HistoryCard = ({ history, s, isDark, locale }: HistoryProps) => {
             </Box>
           </Box>
         ))}
+      </Box>
+        </Box>
       </Box>
     </Box>
   );

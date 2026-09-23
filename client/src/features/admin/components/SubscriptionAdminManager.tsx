@@ -4,6 +4,7 @@ import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRou
 import { adminApi, type AdminSubscriptionRequest } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
 import { LegacyTrialGrantCard } from './LegacyTrialGrantCard';
+import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
 
 interface Props {
   isDark: boolean;
@@ -19,7 +20,7 @@ const POLL_MS = 25_000;
 
 const STATUS_STYLE: Record<AdminSubscriptionRequest['status'], { label: string; color: string }> = {
   pending: { label: 'ממתין לתשלום', color: '#6B7280' },
-  reported: { label: 'דווח - ממתין לאישור', color: '#7C3AED' },
+  reported: { label: 'דווח - ממתין לאישור', color: PRO_PURPLE },
   approved: { label: 'אושר', color: '#059669' },
   rejected: { label: 'נדחה', color: '#DC2626' },
   cancelled: { label: 'בוטל', color: '#6B7280' },
@@ -101,10 +102,10 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
     }}>
       <DbHealthHeader
         onClose={onClose}
-        icon={<WorkspacePremiumRoundedIcon sx={{ color: '#7C3AED' }} />}
+        icon={<WorkspacePremiumRoundedIcon sx={{ color: PRO_PURPLE }} />}
         title="ניהול מנוי"
         meta={reported.length > 0
-          ? <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#7C3AED' }}>{reported.length} ממתינות לאישור</Typography>
+          ? <Typography sx={{ fontSize: 11, fontWeight: 800, color: PRO_PURPLE }}>{reported.length} ממתינות לאישור</Typography>
           : undefined}
       />
 
@@ -122,7 +123,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
             sx={{
               flex: 1, textAlign: 'center', py: 0.85, borderRadius: '10px', cursor: 'pointer',
               fontSize: 13, fontWeight: 800,
-              bgcolor: tab === key ? '#7C3AED' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(124,58,237,0.06)'),
+              bgcolor: tab === key ? PRO_PURPLE : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(124,58,237,0.06)'),
               color: tab === key ? '#fff' : 'text.secondary',
               transition: 'background-color 0.15s',
               '&:active': { transform: 'scale(0.98)' },
@@ -154,12 +155,12 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
                   <Box key={r.id} sx={{
                     display: 'flex', flexDirection: 'column', gap: 0.75, p: 1.5, mb: 1.25, borderRadius: '14px',
                     bgcolor: isDark ? 'rgba(124,58,237,0.10)' : '#fff',
-                    border: '1.5px solid', borderColor: '#7C3AED',
+                    border: '1.5px solid', borderColor: PRO_PURPLE,
                     boxShadow: isDark ? 'none' : '0 4px 14px rgba(124,58,237,0.14)',
                   }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'baseline' }}>
                       <Typography sx={{ fontWeight: 800, fontSize: 15 }}>{r.user?.name ?? '?'}</Typography>
-                      <Typography sx={{ fontWeight: 900, fontSize: 17, color: '#7C3AED' }}>₪{r.amount}</Typography>
+                      <Typography sx={{ fontWeight: 900, fontSize: 17, color: PRO_PURPLE }}>₪{r.amount}</Typography>
                     </Box>
                     <Typography sx={{ fontSize: 12, color: 'text.secondary' }} dir="ltr">{r.user?.email}</Typography>
                     <Typography sx={{ fontSize: 12.5, color: 'text.secondary' }}>
@@ -168,7 +169,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                       <Button size="small" variant="contained" disabled={busyId === r.id} onClick={() => act(r.id, 'approve')}
-                        sx={{ flex: 1, borderRadius: '10px', fontWeight: 800, bgcolor: '#7C3AED', boxShadow: 'none', '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' } }}>
+                        sx={{ flex: 1, borderRadius: '10px', fontWeight: 800, bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' } }}>
                         {busyId === r.id ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'אשר והפעל'}
                       </Button>
                       <Button size="small" variant="outlined" color="error" disabled={busyId === r.id} onClick={() => act(r.id, 'reject')}
