@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
@@ -225,21 +225,26 @@ export const AppRouter = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user?.id]);
 
-  // הודעות מ-Service Worker: ניווט מהתראות בלבד.
+  // הודעות מ-Service Worker: ניווט מהתראות, וחיווי "גרסה חדשה זמינה".
   //
   // בעבר היה כאן גם רענון כפוי (window.location.reload) כשגרסה חדשה של
   // ה-SW השתלטה, כדי לסנכרן JS ישן מול SW חדש. הוסר לגמרי: כל ניסיון
   // לתזמן את הרענון "בזמן בטוח" (רק ברקע) עדיין השאיר סיכון שהוא יקטע
   // בקשת רשת שרצה באותו רגע בדיוק - כולל רענון טוקן - וזו הייתה הסיבה
-  // בפועל ל"נזרק ללוגין" בלי שום פעולה מצד המשתמש. אין דרך בטוחה ב-100%
-  // לדעת שאף בקשה לא באוויר, אז עדיף לוותר על הסנכרון האוטומטי לגמרי:
-  // ה-SW החדש כבר משתלט על כל ניווט/טעינה טבעית הבאה (headers של
-  // Cache-Control: no-cache על index.html/sw.js בvercel.json דואגים
-  // לכך), בלי שום reload יזום שעלול לקטוע session פעיל.
+  // בפועל ל"נזרק ללוגין" בלי שום פעולה מצד המשתמש. אבל בלי שום reload
+  // *ובלי שום חיווי* - משתמש PWA שמשאיר את האפליקציה פתוחה/ברקע (הכי נפוץ
+  // בהתקנה למסך הבית) נשאר תקוע על ה-JS הישן שכבר נטען *בלי לדעת*, כי SW
+  // חדש שמשתלט לא מרענן אף עמוד אוטומטית - הוא רק משנה את מה שיוגש
+  // *בטעינה הבאה*. JS ישן שקורא ל-endpoints/חוזים שכבר השתנו נראה כלפי
+  // חוץ בדיוק כמו "כל פעולה נכשלת", בלי שום הסבר. הבאנר (UpdateAvailableBanner)
+  // נותן למשתמש שליטה מתי לרענן, בלי לרענן בכוח ולסכן session פעיל.
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
         navigate(event.data.url);
+      } else if (event.data?.type === 'SW_ACTIVATED') {
+        setUpdateAvailable(true);
       }
     };
     navigator.serviceWorker?.addEventListener('message', handler);
@@ -563,6 +568,11 @@ export const AppRouter = () => {
           דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
           useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
       <ConnectionStatusIcon />
+      <UpdateAvailableBanner
+        open={updateAvailable}
+        onReload={() => window.location.reload()}
+        onDismiss={() => setUpdateAvailable(false)}
+      />
       <WelcomeProDialog
         open={welcomePlan?.variant ?? null}
         months={welcomePlan?.months}

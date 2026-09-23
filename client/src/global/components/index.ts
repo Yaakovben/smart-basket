@@ -17,6 +17,7 @@ export { ShimmerBlock, ShimmerList } from './Shimmer';
 export { SlowLoadIndicator } from './SlowLoadIndicator';
 export { TapToRevealText } from './TapToRevealText';
 export { ConnectionStatusIcon } from './ConnectionStatusIcon';
+export { UpdateAvailableBanner } from './UpdateAvailableBanner';
 export { Toast } from './Toast';
 // QRScanner לא מיוצא מהברל בכוונה: הוא גורר את @zxing (spergot ~250KB+)
 // שאין לו sideEffects:false, כך שאם ייוצא מכאן, כל מי שמייבא כל דבר אחר
