@@ -9,8 +9,12 @@ import { consumeLegacyRefreshToken } from './token-storage';
 // בפרודקשן ה-API נגיש תחת אותו דומיין של האתר: '/api' מועבר ל-Render ע"י
 // rewrite ב-client/vercel.json (reverse proxy). כך ה-refresh cookie הוא
 // first-party ונשלח תמיד (גם ב-Safari), והוא נשאר httpOnly + SameSite=Strict.
-// VITE_API_URL נדרש רק כדי לעקוף (פיתוח מקומי / בדיקות).
-export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+// VITE_API_URL נדרש רק בפיתוח מקומי - ב-build של production הוא מתעלם
+// בכוונה (גם אם הוגדר בטעות במשתני הסביבה של Vercel), כי פנייה ישירה
+// לדומיין ה-Render הופכת את הבקשה ל-cross-site אמיתי, מה שגורם לדפדפנים
+// (Safari ITP, Chrome tracking prevention) למחוק את ה-refresh cookie הרבה
+// לפני תום 40 הימים המוגדרים בשרת - זה גרם למשתמשים להתנתק אחרי כיום.
+export const API_URL = import.meta.env.DEV ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') : '/api';
 
 // no-op: היה דגל למניעת redirect אוטומטי בזמן תהליך אימות פעיל, אבל אותו
 // redirect הוסר לגמרי (ראו redirectToSessionExpiredLogin למטה) - אין יותר
