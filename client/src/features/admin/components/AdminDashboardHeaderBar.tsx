@@ -41,8 +41,8 @@ export const AdminDashboardHeaderBar = ({
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1, gap: 0.5 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
       <Box onClick={onBack} role="button" tabIndex={0} sx={headerIconButtonSx(36)}>
         {isRtl ? <ArrowForwardIcon /> : <ArrowBackIcon />}
       </Box>
@@ -50,7 +50,14 @@ export const AdminDashboardHeaderBar = ({
         {title}
       </Typography>
     </Box>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+    {/* גלילה אופקית - במקום להיחתך/להידחס במסכים צרים כשמספר האייקונים
+        גדל (למשל אחרי הוספת אייקון משוב). כל אייקון flexShrink:0 קבוע
+        (headerIconButtonSx) כדי שלא יתעוות, ובלית ברירה גוללים אליו. */}
+    <Box sx={{
+      display: 'flex', alignItems: 'center', gap: 0.25,
+      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+      '&::-webkit-scrollbar': { display: 'none' },
+    }}>
       {/* ראשון ב-DOM = ימני קיצוני ב-RTL: שליחת הודעות תמיד הכי ימני,
           ומיד אחריו (משמאלו) אייקון פרטי ה-AI */}
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
