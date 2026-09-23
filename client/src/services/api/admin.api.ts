@@ -20,6 +20,14 @@ export interface AdminSubscriptionRequest {
   adminNote: string | null;
 }
 
+export interface AdminFeedback {
+  id: string;
+  user: { id: string; name: string; email: string } | null;
+  rating: number;
+  message: string | null;
+  createdAt: string;
+}
+
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
     const response = await apiClient.get<{ data: AdminUser[] }>('/admin/users');
@@ -136,5 +144,11 @@ export const adminApi = {
   async executeLegacyTrialGrant(): Promise<{ granted: number; skipped: number }> {
     const res = await apiClient.post<{ data: { granted: number; skipped: number } }>('/admin/subscription/legacy-trial', { confirm: true });
     return res.data.data;
+  },
+
+  /** משובי משתמשים (דירוג + הודעה חופשית), החדשים ביותר קודם. */
+  async getFeedback(): Promise<AdminFeedback[]> {
+    const response = await apiClient.get<{ data: AdminFeedback[] }>('/admin/feedback');
+    return response.data.data;
   },
 };

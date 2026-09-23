@@ -4,6 +4,10 @@ import { markPopupShown, canShowSecondaryPopup } from '../../global/helpers';
 const SESSION_COUNT_KEY = 'sb_session_count';       // מונה סשנים משותף (זהה ל-useDailyFaith)
 const SESSION_MARKER_KEY = 'sb_session_marker';
 const SESSION_SHOWN_KEY = 'sb_feature_tip_session_shown'; // הוצג בסשן הזה (הגנה מ-reload)
+// דחייה לצמיתות - המשתמש סימן "אל תציג שוב" (צ'קבוקס בפופאפ עצמו,
+// ראו FeatureTipsPopup) - localStorage כי זה החלטה שאמורה לשרוד גם סשנים
+// הבאים, לא רק את הביקור הנוכחי (בניגוד ל-SESSION_SHOWN_KEY).
+export const TIPS_OPTED_OUT_KEY = 'sb_feature_tips_opted_out';
 
 const MIN_SESSION = 3;        // לא מציקים למשתמש חדש - רק מהסשן השלישי
 const SHOW_EVERY = 8;         // פעם בכל 8 פתיחות
@@ -29,7 +33,8 @@ const getSessionNumber = (): number => {
 // קרוסלת טיפים "ידעת ש...?" שקופצת פעם בכמה פתיחות, אחרי 12 שניות, ורק אם
 // שום פופאפ אחר לא הוצג בסשן הזה (popupCoordinator). enabled = משתמש מחובר.
 // בניגוד לגרסה הקודמת - כל הופעה מציגה את *כל* הטיפים כקרוסלה לדפדוף
-// (ראו FeatureTipsPopup), לא טיפ בודד אקראי; אין יותר מעקב "מי כבר נראה".
+// (ראו FeatureTipsPopup), לא טיפ בודד אקראי - אבל מי שמסמן "אל תציג שוב"
+// בפופאפ עצמו (צ'קבוקס) נחסם לצמיתות דרך TIPS_OPTED_OUT_KEY.
 export function useFeatureTips(enabled: boolean) {
   const [show, setShow] = useState(false);
 
@@ -38,6 +43,7 @@ export function useFeatureTips(enabled: boolean) {
 
     try {
       if (sessionStorage.getItem(SESSION_SHOWN_KEY) === '1') return;
+      if (localStorage.getItem(TIPS_OPTED_OUT_KEY) === '1') return;
     } catch { /* */ }
 
     const session = getSessionNumber();
@@ -61,7 +67,14 @@ export function useFeatureTips(enabled: boolean) {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [enabled]);
 
-  const dismiss = () => setShow(false);
+  // optOut=true (הצ'קבוקס "אל תציג שוב" סומן בסגירה) - נכתב לצמיתות, לא
+  // רק לסשן, כדי שהקרוסלה לא תקפוץ יותר בכלל לאותו משתמש/מכשיר.
+  const dismiss = (optOut = false) => {
+    if (optOut) {
+      try { localStorage.setItem(TIPS_OPTED_OUT_KEY, '1'); } catch { /* quota */ }
+    }
+    setShow(false);
+  };
 
   return { show, dismiss };
 }

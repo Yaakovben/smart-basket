@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { modalOverlaySx, modalContainerSx } from '../list/helpers/listModalStyles';
 import { FEATURE_TIPS } from './tips';
 
 interface FeatureTipsPopupProps {
-  onClose: () => void;
+  // optOut=true כשהמשתמש סימן "אל תציג שוב" לפני הסגירה.
+  onClose: (optOut?: boolean) => void;
 }
 
 // קרוסלת "ידעת ש...?" - כרטיס מלבני יחיד (לא מסך מלא), במרכז המסך - אותו
@@ -30,6 +32,7 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
   // כדי שהיא לא תדרוס עם ריבאונס-ביניים באמצע הגלילה החלקה. ראו goTo/
   // ה-observer למטה - זה מה שתיקן את "הכפתור עובד רק פעם אחת".
   const pendingIndexRef = useRef<number | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // גלילה לעמוד ההתחלה האקראי — אחרי שה-DOM מוכן
   useEffect(() => {
@@ -83,7 +86,8 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
     slideRefs.current[index]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
   };
 
-  const handleClose = () => { haptic('light'); onClose(); };
+  const handleClose = () => { haptic('light'); onClose(dontShowAgain); };
+  const toggleDontShowAgain = () => { haptic('light'); setDontShowAgain((v) => !v); };
   const isLast = activeIndex === FEATURE_TIPS.length - 1;
   const active = FEATURE_TIPS[activeIndex];
   const ink = isDark ? active.ink.dark : active.ink.light;
@@ -240,6 +244,37 @@ export const FeatureTipsPopup = ({ onClose }: FeatureTipsPopupProps) => {
               }}
             />
           ))}
+        </Box>
+
+        {/* "אל תציג שוב" - צ'קבוקס מותאם (לא native, כדי לשלוט על העיצוב),
+            עם מרווח נדיב בין הריבוע לטקסט (gap, לא צמודים) כדי שיהיה קריא
+            וברור מה שייך למה. נשמר לצמיתות רק בסגירה בפועל (handleClose),
+            לא ברגע הסימון - כדי שאפשר יהיה לבטל את הסימון לפני שסוגרים. */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pb: 1.5 }}>
+          <Box
+            role="checkbox"
+            aria-checked={dontShowAgain}
+            tabIndex={0}
+            onClick={toggleDontShowAgain}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDontShowAgain(); } }}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 1.1, px: 1, py: 0.5,
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent', borderRadius: '10px',
+            }}
+          >
+            <Box sx={{
+              width: 20, height: 20, borderRadius: '6px', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1.5px solid', borderColor: dontShowAgain ? ink : (isDark ? 'rgba(255,255,255,0.28)' : 'rgba(15,23,42,0.24)'),
+              bgcolor: dontShowAgain ? ink : 'transparent',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+            }}>
+              {dontShowAgain && <CheckRoundedIcon sx={{ fontSize: 15, color: isDark ? '#0F172A' : '#fff' }} />}
+            </Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+              {t('tipDontShowAgain')}
+            </Typography>
+          </Box>
         </Box>
 
         {/* כפתור תחתון - "הבא" מקדם שקופית; בשקופית האחרונה הופך ל"הבנתי" וסוגר */}
