@@ -276,7 +276,7 @@ export function useAuth() {
     }
     socketService.disconnect();
     localStorage.removeItem('cached_user');
-    localStorage.removeItem('pushPromptDismissed');
+    localStorage.removeItem('pushPromptLastShownAt');
     clearPerUserCache();
     setInitialData({ lists: null, notifications: null });
     setUser(null);
