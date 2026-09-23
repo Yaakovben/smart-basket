@@ -15,6 +15,7 @@ import { useHomePushPrompt } from '../hooks/useHomePushPrompt';
 import { useFeedbackPopup } from '../hooks/useFeedbackPopup';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
+import { SubscriptionBanner } from '../../subscription/components/SubscriptionBanner';
 import { HomeMenuSheet } from './HomeMenuSheet';
 import { HomeListContent } from './HomeListContent';
 import { PwaInstallPrompt } from './PwaInstallPrompt';
@@ -57,7 +58,7 @@ export const HomeComponent = memo(({
   const [menuClosing, setMenuClosing] = useState(false);
 
   const {
-    tab, search, showMenu, showCreate, showCreateGroup, showJoin, joinedFromLink,
+    tab, search, showMenu, showCreate, showCreateGroup, listLimitMax, ownedListsCount, showJoin, joinedFromLink,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
@@ -149,6 +150,8 @@ export const HomeComponent = memo(({
         t={t}
       />
 
+      <SubscriptionBanner />
+
       <HomeListContent
         contentRef={contentRef}
         listsFetchError={listsFetchError}
@@ -194,6 +197,8 @@ export const HomeComponent = memo(({
           newL={newL}
           createError={createError}
           creatingList={creatingList}
+          limitMax={listLimitMax}
+          limitUsed={ownedListsCount}
           onClose={closeCreateModal}
           onUpdateField={updateNewListField}
           onSubmit={() => handleCreate(false)}
@@ -208,6 +213,8 @@ export const HomeComponent = memo(({
           newL={newL}
           createError={createError}
           creatingList={creatingList}
+          limitMax={listLimitMax}
+          limitUsed={ownedListsCount}
           onClose={closeCreateGroupModal}
           onUpdateField={updateNewListField}
           onSubmit={() => handleCreate(true)}

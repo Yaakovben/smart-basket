@@ -14,6 +14,7 @@ import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
 import { AdminAiStatusCard } from './AdminAiStatusCard';
+import { SubscriptionAdminManager } from './SubscriptionAdminManager';
 import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
 
@@ -28,11 +29,13 @@ export const AdminDashboard = () => {
   const [dbHealthOpen, setDbHealthOpen] = useState(false);
   const [aiStatusOpen, setAiStatusOpen] = useState(false);
   const [pushOpen, setPushOpen] = useState(false);
+  const [subscriptionsOpen, setSubscriptionsOpen] = useState(false);
   const {
     activities,
     usersWithLoginInfo,
     stats,
     refreshData,
+    updateUserPlanLocal,
     loading,
     error,
     lastFetchAt,
@@ -57,6 +60,12 @@ export const AdminDashboard = () => {
   const onlineUserIds = useMemo(
     () => mergeOnlineWithSelf(socketOnlineUserIds, user?.id),
     [socketOnlineUserIds, user?.id]
+  );
+
+  // ספירת משתמשי Pro מתוך רשימת כל המשתמשים
+  const proCount = useMemo(
+    () => usersWithLoginInfo.filter(u => u.plan === 'pro').length,
+    [usersWithLoginInfo]
   );
 
   const { userSearch, setUserSearch, userFilter, setUserFilter, handleFilterClick, filteredUsers } =
@@ -103,9 +112,12 @@ export const AdminDashboard = () => {
         onOpenAiStatus={() => setAiStatusOpen(true)}
         aiStatus={aiStatus.data}
         onOpenPush={() => setPushOpen(true)}
+        onOpenSubscriptions={() => setSubscriptionsOpen(true)}
+        onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
         stats={stats}
+        proCount={proCount}
         loading={loading}
         onFilterClick={handleFilterClick}
         onSelectAll={() => setUserFilter('all')}
@@ -125,6 +137,7 @@ export const AdminDashboard = () => {
         language={settings.language}
         onlineUserIds={onlineUserIds}
         onUserDeleted={refreshData}
+        onUserPlanChanged={updateUserPlanLocal}
       />
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
@@ -143,6 +156,13 @@ export const AdminDashboard = () => {
         />
       )}
       {pushOpen && <PushBroadcastManager onClose={() => setPushOpen(false)} isDark={isDark} users={usersWithLoginInfo} />}
+      {subscriptionsOpen && (
+        <SubscriptionAdminManager
+          onClose={() => setSubscriptionsOpen(false)}
+          isDark={isDark}
+          onChanged={refreshData}
+        />
+      )}
     </Box>
   );
 };

@@ -94,4 +94,10 @@ export const UserDAL = {
   async findAllSorted(): Promise<IUser[]> {
     return User.find().sort({ createdAt: -1 }).limit(5000).lean() as unknown as IUser[];
   },
+
+  /** מזהי כל האדמינים - לשליחת push על אירועים שדורשים תשומת לב (למשל דיווח תשלום). */
+  async findAdminIds(): Promise<string[]> {
+    const admins = await User.find({ isAdmin: true }).select('_id').lean();
+    return admins.map((a) => String(a._id));
+  },
 };

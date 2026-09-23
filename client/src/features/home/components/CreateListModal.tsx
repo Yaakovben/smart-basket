@@ -11,6 +11,9 @@ interface CreateListModalProps {
   newL: NewListForm;
   createError: string;
   creatingList: boolean;
+  // מגבלת רשימות (Freemium) - null = Pro/עדיין לא נטען, אז לא מציגים כלום.
+  limitMax?: number | null;
+  limitUsed?: number;
   onClose: () => void;
   onUpdateField: <K extends keyof NewListForm>(field: K, value: NewListForm[K]) => void;
   onSubmit: () => void;
@@ -18,12 +21,23 @@ interface CreateListModalProps {
 }
 
 // מודאל יצירת רשימה פרטית/קבוצה - אותה טופס בדיוק, רק אייקונים/תוויות שונים.
-export const CreateListModal = ({ isGroup, newL, createError, creatingList, onClose, onUpdateField, onSubmit, t }: CreateListModalProps) => {
+export const CreateListModal = ({ isGroup, newL, createError, creatingList, limitMax, limitUsed = 0, onClose, onUpdateField, onSubmit, t }: CreateListModalProps) => {
   const icons = isGroup ? GROUP_ICONS : LIST_ICONS;
+  // "עוד מעט ומגיעים למגבלה" - מוצג רק למשתמש חינמי (limitMax!=null),
+  // ורק כשבאמת קרוב/הגיע למגבלה - לא טורדים משתמש רחוק ממנה.
+  const approachingLimit = limitMax != null && limitUsed >= limitMax - 1;
+  const atLimit = limitMax != null && limitUsed >= limitMax;
 
   return (
     <Modal title={isGroup ? t('newGroup') : t('privateList')} onClose={() => !creatingList && onClose()}>
       {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
+      {!createError && approachingLimit && (
+        <Alert severity={atLimit ? 'warning' : 'info'} sx={{ mb: 2, borderRadius: SIZES.radius.md, fontSize: 13 }}>
+          {atLimit
+            ? t('listLimitReachedHint').replace('{max}', String(limitMax))
+            : t('listLimitApproachingHint').replace('{used}', String(limitUsed)).replace('{max}', String(limitMax))}
+        </Alert>
+      )}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
         <IconTile emoji={newL.icon} color={newL.color} seedId={`${newL.icon}${newL.color}`} size={60} fontSize={28} />
       </Box>

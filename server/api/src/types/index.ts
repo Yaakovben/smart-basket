@@ -46,6 +46,8 @@ export interface IUserResponse {
   isAdmin: boolean;
   createdAt: Date;
   savedLists?: ISavedListResponse[];
+  plan: 'free' | 'pro';
+  planExpiresAt?: Date;
 }
 
 // ===== טיפוסי מוצר =====

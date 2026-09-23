@@ -125,6 +125,22 @@ const envSchema = Joi.object({
   // האמיתית של הספק (ראו remainingTokens/remainingRequests בפאנל האדמין),
   // עם מרווח ביטחון. 0 = בלי תקרה.
   AI_DAILY_REQUEST_BUDGET: Joi.number().integer().min(0).default(2000),
+
+  // ===== מנוי Pro - תשלום ידני (בלי סליקת אשראי) =====
+  // מחיר לחודש בש"ח. מחיר שנתי אופציונלי - אם לא הוגדר, אין הצעה שנתית בכלל
+  // (לא ממציאים הנחה). כל פרטי התשלום *אמיתיים בלבד* ממשתני סביבה; אם אף אחד
+  // מהם לא הוגדר, מסך התשלום בלקוח מציג "פנו אלינו" ולא פרטי תשלום מומצאים.
+  PRO_PRICE_MONTHLY: Joi.number().positive().default(9.9),
+  PRO_PRICE_YEARLY: Joi.number().positive().optional(),
+  // קישור תשלום ביט/PayBox (למשל bit.ly / payboxapp.page.link / bitpay). ה-QR נוצר ממנו.
+  BIT_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
+  PAYBOX_PAYMENT_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
+  // העברה בנקאית (אופציונלי) - שלושתם נדרשים יחד, אחרת האפשרות לא מוצגת.
+  BANK_NAME: Joi.string().max(40).optional(),
+  BANK_BRANCH: Joi.string().pattern(/^\d{2,4}$/).optional(),
+  BANK_ACCOUNT: Joi.string().pattern(/^\d{4,12}$/).optional(),
+  // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
+  TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -173,6 +189,14 @@ export interface Environment {
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
   GMAIL_REFRESH_TOKEN?: string;
+  PRO_PRICE_MONTHLY: number;
+  PRO_PRICE_YEARLY?: number;
+  BIT_PAYMENT_URL?: string;
+  PAYBOX_PAYMENT_URL?: string;
+  BANK_NAME?: string;
+  BANK_BRANCH?: string;
+  BANK_ACCOUNT?: string;
+  TRIAL_MONTHS: number;
 }
 
 export const env = parseEnv();

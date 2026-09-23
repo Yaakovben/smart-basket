@@ -20,6 +20,8 @@ export interface ISavedList {
   items: ISavedListItem[];
 }
 
+export type UserPlan = 'free' | 'pro';
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -41,6 +43,18 @@ export interface IUser extends Document {
   // ישירות בכל login; רק "מתעדכן כלפי מעלה" כשה-live count (המחושב מתוך
   // LoginActivity, שמתנקה אוטומטית אחרי 90 יום) עולה מעליו.
   totalLogins: number;
+  // מנוי: 'free' (ברירת מחדל) או 'pro' (9.90 שקל/חודש).
+  plan: UserPlan;
+  planExpiresAt?: Date;
+  // false אחרי שהמשתמש ביטל - נשאר Pro עד planExpiresAt (isPro() כבר
+  // מכבד את התאריך), רק לא "מחודש" אחריו. ברירת מחדל true (גם למשתמשי
+  // free - לא רלוונטי להם, אבל עקבי).
+  planAutoRenew: boolean;
+  // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין.
+  planSource?: 'trial' | 'paid';
+  // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
+  // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
+  legacyTrialGrantedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -123,6 +137,25 @@ const userSchema = new Schema<IUser>(
     totalLogins: {
       type: Number,
       default: 0,
+    },
+    plan: {
+      type: String,
+      enum: ['free', 'pro'],
+      default: 'free',
+    },
+    planExpiresAt: {
+      type: Date,
+    },
+    planAutoRenew: {
+      type: Boolean,
+      default: true,
+    },
+    planSource: {
+      type: String,
+      enum: ['trial', 'paid'],
+    },
+    legacyTrialGrantedAt: {
+      type: Date,
     },
   },
   {

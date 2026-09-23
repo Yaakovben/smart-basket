@@ -1,6 +1,6 @@
 import type { LoginActivity, User } from '../../../global/types';
 
-export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth';
+export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth' | 'pro';
 
 export interface UserWithLastLogin extends User {
   lastLoginAt?: string;
@@ -10,6 +10,8 @@ export interface UserWithLastLogin extends User {
   createdAt: string;
   totalLogins: number;
   hasPushSubscription: boolean;
+  plan: 'free' | 'pro';
+  planExpiresAt?: string | null;
 }
 
 export interface DashboardStats {
@@ -25,5 +27,6 @@ export interface UseAdminDashboardReturn {
   usersWithLoginInfo: UserWithLastLogin[];
   stats: DashboardStats;
   refreshData: () => Promise<boolean>;
+  updateUserPlanLocal: (userId: string, plan: 'free' | 'pro') => void;
   lastFetchAt?: number;
 }

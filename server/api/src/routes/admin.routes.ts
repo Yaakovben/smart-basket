@@ -13,6 +13,7 @@ import {
   getStats,
   getUserDetails,
   deleteUser,
+  updateUserPlan,
   getDbHealth,
   getCloudinaryHealth,
   getCloudinaryOrphans,
@@ -20,6 +21,10 @@ import {
   getLocalImages,
   getAiStatusHandler,
   refreshAiStatusHandler,
+  getSubscriptionRequests,
+  approveSubscriptionRequest,
+  rejectSubscriptionRequest,
+  getLegacyTrialGrant,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -31,6 +36,21 @@ router.use(authenticate);
 router.use(isAdmin);
 
 const userIdParams = Joi.object({ userId: commonSchemas.objectId.required() });
+
+const updatePlanBody = Joi.object({
+  plan: Joi.string().valid('free', 'pro').required(),
+  planExpiresAt: Joi.date().iso().allow(null).optional(),
+});
+
+const requestIdParams = Joi.object({ id: commonSchemas.objectId.required() });
+const requestNoteBody = Joi.object({ note: Joi.string().trim().max(300).allow('').optional() });
+
+router.get('/subscription-requests', getSubscriptionRequests);
+router.post('/subscription-requests/:id/approve', validate({ params: requestIdParams, body: requestNoteBody }), approveSubscriptionRequest);
+router.post('/subscription-requests/:id/reject', validate({ params: requestIdParams, body: requestNoteBody }), rejectSubscriptionRequest);
+// מענק Pro חד-פעמי למשתמשים ותיקים - dry-run כברירת מחדל, ביצוע רק עם confirm=true.
+router.get('/subscription/legacy-trial', getLegacyTrialGrant);
+router.post('/subscription/legacy-trial', getLegacyTrialGrant);
 
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
@@ -49,6 +69,7 @@ router.post('/local-images', getLocalImages);
 router.get('/ai-status', getAiStatusHandler);
 router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
+router.patch('/users/:userId/plan', validate({ params: userIdParams, body: updatePlanBody }), updateUserPlan);
 router.delete('/users/:userId', validate({ params: userIdParams }), deleteUser);
 
 export default router;

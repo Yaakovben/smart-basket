@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button, Chip } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -9,6 +9,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import GroupIcon from '@mui/icons-material/Group';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime } from '../../../global/helpers';
 import { adminApi, type AdminUserList } from '../../../services/api';
@@ -36,12 +37,13 @@ interface UserRowExpandedContentProps {
   listsSummary: { total: number; totalProducts: number; groups: number } | null;
   onShowDetails: () => void;
   onUserDeleted: () => void;
+  onUserPlanChanged?: (userId: string, plan: 'free' | 'pro') => void;
 }
 
 // תוכן האזור המורחב בשורת משתמש: אירועי רישום/כניסה אחרונה, רשימות המשתמש וציר זמן פעילות
 export const UserRowExpandedContent = ({
   user, language, isDark, isRtl, isGoogle, userActivities,
-  showDetails, userLists, detailsLoading, listsSummary, onShowDetails, onUserDeleted,
+  showDetails, userLists, detailsLoading, listsSummary, onShowDetails, onUserDeleted, onUserPlanChanged,
 }: UserRowExpandedContentProps) => {
   const { t } = useSettings();
   // מחיקת משתמש - בכוונה לא-נגיש: קישור מוצנע בתחתית האזור המורחב (לא כפתור
@@ -53,6 +55,11 @@ export const UserRowExpandedContent = ({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
 
+  // ניהול מנוי
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState(false);
+  const currentPlan: 'free' | 'pro' = (user as UserWithLastLogin & { plan?: 'free' | 'pro' }).plan ?? 'free';
+
   const handleDelete = async () => {
     setDeleting(true);
     setDeleteError(false);
@@ -62,6 +69,20 @@ export const UserRowExpandedContent = ({
     } catch {
       setDeleteError(true);
       setDeleting(false);
+    }
+  };
+
+  const handleTogglePlan = async () => {
+    const newPlan = currentPlan === 'pro' ? 'free' : 'pro';
+    setPlanLoading(true);
+    setPlanError(false);
+    try {
+      await adminApi.setUserPlan(user.id, newPlan);
+      onUserPlanChanged?.(user.id, newPlan);
+    } catch {
+      setPlanError(true);
+    } finally {
+      setPlanLoading(false);
     }
   };
 
@@ -222,8 +243,67 @@ export const UserRowExpandedContent = ({
         </Box>
       )}
 
+      {/* ניהול מנוי */}
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          mt: 2, pt: 1.5,
+          borderTop: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WorkspacePremiumIcon sx={{ fontSize: 16, color: currentPlan === 'pro' ? '#F59E0B' : '#9CA3AF' }} />
+          <Typography sx={{ fontSize: 12, color: isDark ? '#D1D5DB' : '#374151', fontWeight: 600 }}>
+            מנוי
+          </Typography>
+          <Chip
+            label={currentPlan === 'pro' ? 'PRO' : 'Free'}
+            size="small"
+            sx={{
+              height: 18, fontSize: 10, fontWeight: 700,
+              bgcolor: currentPlan === 'pro' ? '#F59E0B' : (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6'),
+              color: currentPlan === 'pro' ? '#fff' : (isDark ? '#9CA3AF' : '#6B7280'),
+              borderRadius: '6px',
+            }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {planError && (
+            <Typography sx={{ fontSize: 10.5, color: '#EF4444' }}>שגיאה, נסה שוב</Typography>
+          )}
+          <Button
+            size="small"
+            variant={currentPlan === 'pro' ? 'outlined' : 'contained'}
+            disabled={planLoading}
+            onClick={handleTogglePlan}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontSize: 11,
+              fontWeight: 700,
+              minWidth: 80,
+              ...(currentPlan !== 'pro' && {
+                bgcolor: '#F59E0B',
+                '&:hover': { bgcolor: '#D97706' },
+              }),
+              ...(currentPlan === 'pro' && {
+                borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#D1D5DB',
+                color: isDark ? '#9CA3AF' : '#6B7280',
+              }),
+            }}
+          >
+            {planLoading
+              ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
+              : currentPlan === 'pro' ? 'הורד ל-Free' : 'שדרג ל-Pro'
+            }
+          </Button>
+        </Box>
+      </Box>
+
       {/* מחיקת משתמש - קישור מוצנע, לא כפתור בולט. פעולה נדירה ומכוונת בלבד. */}
-      <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+      <Box sx={{ mt: 1.5, pt: 1, borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
         {!confirmingDelete ? (
           <Typography
             onClick={(e) => { e.stopPropagation(); setConfirmingDelete(true); }}

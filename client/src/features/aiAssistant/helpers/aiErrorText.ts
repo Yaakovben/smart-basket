@@ -1,5 +1,6 @@
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { AiAssistantStreamError } from '../../../services/api';
+import { emitPlanLimit } from '../../../global/helpers/planLimitEvent';
 
 // כמה זמן עד ש-resetAt (ISO מהשרת) - גם בדקות וגם בשעות עגולות, לפחות 1
 // כדי לא להציג "בעוד 0".
@@ -27,6 +28,10 @@ export function aiErrorText(err: unknown, t: (key: TranslationKeys) => string): 
         : t('aiTryAgainInMinutes').replace('{minutes}', String(wait.minutes)))
     : '';
 
+  if (e?.status === 402 || e?.code === 'PLAN_LIMIT_REACHED') {
+    emitPlanLimit('ai');
+    return t('planLimitReached');
+  }
   if (e?.code === 'AI_DAILY_LIMIT') return t('aiDailyLimitReached') + waitSuffix;
   if (e?.status === 503) return t('aiNotConfigured');
   if (e?.status === 429) return t('aiTooManyMessages') + waitSuffix;

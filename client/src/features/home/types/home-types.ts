@@ -18,6 +18,9 @@ export interface UseHomeReturn {
   showMenu: boolean;
   showCreate: boolean;
   showCreateGroup: boolean;
+  // מגבלת רשימות (Freemium) - null = Pro (אין מגבלה) או שעדיין לא נטען.
+  listLimitMax: number | null;
+  ownedListsCount: number;
   showJoin: boolean;
   joinedFromLink: boolean;
   showNotifications: boolean;

@@ -5,10 +5,12 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { headerIconButtonSx } from '../styles/AdminDashboard.styles';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 import { getAiHealth, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
+import { SubscriptionHeaderIcon } from './SubscriptionHeaderIcon';
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -21,16 +23,18 @@ interface AdminDashboardHeaderBarProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
+  onOpenSubscriptions: () => void;
+  onRefresh: () => void;
 }
 
 // שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים. סדר ה-DOM כאן = סדר
 // ויזואלי מימין לשמאל (ראו הערה למטה) - שליחת הודעות תמיד הכי ימני,
-// ואייקון ה-AI תמיד מיד לפניו (משמאלו). אין כפתור ריענון ידני - הרענון
-// נעשה בגרירה (pull-to-refresh, ראו AdminDashboard/PullToRefreshIndicator),
-// אותו דפוס בדיוק כמו מסך הרשימה.
+// ואייקון ה-AI תמיד מיד לפניו (משמאלו). הרענון העיקרי הוא בגרירה
+// (pull-to-refresh, ראו AdminDashboard/PullToRefreshIndicator), ויש גם
+// כפתור רענון ידני לדסקטופ (ראו RefreshIcon למטה).
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
@@ -49,6 +53,7 @@ export const AdminDashboardHeaderBar = ({
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
+      <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />
       {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
           שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי
@@ -68,6 +73,10 @@ export const AdminDashboardHeaderBar = ({
       </Box>
       <Box onClick={onOpenPriceSync} role="button" tabIndex={0} aria-label="ניהול מאגר מחירים" sx={headerIconButtonSx(44)}>
         <StorefrontIcon sx={{ fontSize: 26 }} />
+      </Box>
+      {/* כפתור רענון ידני — מיועד לשימוש מדסקטופ שאין לו touch events */}
+      <Box onClick={onRefresh} role="button" tabIndex={0} aria-label="רענן נתונים" sx={{ ...headerIconButtonSx(44), display: { xs: 'none', md: 'flex' } }}>
+        <RefreshIcon sx={{ fontSize: 26 }} />
       </Box>
     </Box>
   </Box>

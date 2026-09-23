@@ -7,6 +7,7 @@
  * - Dashboard stats (היום, החודש)
  * - פירוט משתמש (רשימות שלו + ספירת מוצרים)
  * - מחיקת משתמש
+ * - עדכון תוכנית מנוי (free/pro)
  *
  * כל הנתיבים כאן דורשים authenticate + isAdmin.
  * מותקן ב-/api/admin.
@@ -19,6 +20,8 @@ import { asyncHandler } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
+import { listAdminRequests, approveRequest, rejectRequest, countLegacyTrialEligible, grantLegacyTrialToExistingUsers } from '../services/subscription.service';
+import type { SubscriptionRequestStatus } from '../models';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
 
@@ -169,6 +172,31 @@ export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response) =
   await LoginActivityDAL.deleteByUser(userId);
 
   res.json({ success: true, message: 'User deleted successfully' });
+});
+
+/**
+ * PATCH /api/admin/users/:userId/plan
+ * עדכון תוכנית מנוי של משתמש (free/pro).
+ * אדמין יכול לשדרג/לשנמך ידנית, עם תאריך תפוגה אופציונלי.
+ */
+export const updateUserPlan = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { userId } = req.params;
+  const { plan, planExpiresAt } = req.body as { plan: 'free' | 'pro'; planExpiresAt?: string | null };
+
+  const user = await UserDAL.findById(userId);
+  if (!user) throw NotFoundError.user();
+
+  const update: { plan: 'free' | 'pro'; planExpiresAt?: Date | null } = { plan };
+  if (plan === 'pro') {
+    update.planExpiresAt = planExpiresAt ? new Date(planExpiresAt) : null;
+  } else {
+    // חזרה ל-free מנקה את תאריך התפוגה
+    update.planExpiresAt = null;
+  }
+
+  await UserDAL.updateById(userId, update as Partial<typeof user>);
+
+  res.json({ success: true, data: { plan, planExpiresAt: update.planExpiresAt } });
 });
 
 /**
@@ -329,4 +357,68 @@ export const getAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Re
 export const refreshAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const data = await refreshAiStatus();
   res.json({ success: true, data });
+});
+
+/**
+ * GET /api/admin/subscription-requests?status=open|all
+ * בקשות מנוי בתשלום ידני. ברירת מחדל: רק פתוחות (ממתינות לתשלום/לאישור).
+ */
+export const getSubscriptionRequests = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const all = req.query.status === 'all';
+  const statuses: SubscriptionRequestStatus[] = all
+    ? ['pending', 'reported', 'approved', 'rejected', 'cancelled']
+    : ['pending', 'reported'];
+  const requests = await listAdminRequests(statuses);
+  res.json({
+    success: true,
+    data: requests.map((r) => {
+      const u = r.userId as unknown as { _id: unknown; name?: string; email?: string; plan?: string; planExpiresAt?: Date } | null;
+      return {
+        id: String(r._id),
+        user: u ? { id: String(u._id), name: u.name ?? '', email: u.email ?? '', plan: u.plan ?? 'free', planExpiresAt: u.planExpiresAt ?? null } : null,
+        months: r.months,
+        amount: r.amount,
+        currency: r.currency,
+        method: r.method,
+        reference: r.reference,
+        status: r.status,
+        createdAt: r.createdAt,
+        reportedAt: r.reportedAt ?? null,
+        resolvedAt: r.resolvedAt ?? null,
+        adminNote: r.adminNote ?? null,
+      };
+    }),
+  });
+});
+
+/** POST /api/admin/subscription-requests/:id/approve - מאשר ומאריך את המנוי. */
+export const approveSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const request = await approveRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
+  res.json({ success: true, data: { id: String(request._id), status: request.status } });
+});
+
+/** POST /api/admin/subscription-requests/:id/reject */
+export const rejectSubscriptionRequest = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const request = await rejectRequest(req.user!.id, req.params.id as string, (req.body as { note?: string }).note);
+  res.json({ success: true, data: { id: String(request._id), status: request.status } });
+});
+
+/**
+ * GET/POST /api/admin/subscription/legacy-trial
+ * מענק Pro חד-פעמי (TRIAL_MONTHS, מהיום) לכל המשתמשים הוותיקים שעוד לא
+ * קיבלו אותו. אותו דפוס dry-run/confirm כמו cloudinary-orphans: GET (או
+ * POST בלי confirm) רק סופר כמה משתמשים יושפעו, POST עם confirm=true
+ * מבצע בפועל. אין השפעה על מי שכבר Pro בתשלום שווה-או-טוב-יותר.
+ */
+export const getLegacyTrialGrant = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const confirm = req.query.confirm === 'true' || (req.body as { confirm?: boolean } | undefined)?.confirm === true;
+
+  if (!confirm) {
+    const eligible = await countLegacyTrialEligible();
+    res.json({ success: true, data: { dryRun: true, eligible } });
+    return;
+  }
+
+  const { granted, skipped } = await grantLegacyTrialToExistingUsers();
+  res.json({ success: true, data: { dryRun: false, granted, skipped } });
 });

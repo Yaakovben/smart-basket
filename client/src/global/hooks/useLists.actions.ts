@@ -5,25 +5,40 @@ import { listsApi } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { trackEvent } from "../services/analytics";
 import { convertApiList } from "./converters";
+import { emitPlanLimit } from "../helpers/planLimitEvent";
+
+// שגיאה פנימית המסמנת ש-plan limit טופל (modal נפתח) — הקורא לא מציג הצלחה ולא שגיאה
+export class PlanLimitHandledError extends Error {
+  constructor() { super('plan-limit-handled'); }
+}
 
 export function useListActions(user: User | null, lists: List[], setLists: Dispatch<SetStateAction<List[]>>) {
   const createList = useCallback(
     async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
-      // שליחה לשרת קודם, הוספה ל-UI רק אחרי אישור
-      const newList = await listsApi.createList({
-        name: list.name,
-        icon: list.icon,
-        color: list.color,
-        isGroup: list.isGroup,
-        password: list.password || undefined,
-      });
+      try {
+        const newList = await listsApi.createList({
+          name: list.name,
+          icon: list.icon,
+          color: list.color,
+          isGroup: list.isGroup,
+          password: list.password || undefined,
+        });
 
-      const converted = convertApiList(newList);
-      setLists((prev) => [...prev, converted]);
-      socketService.joinList(newList.id);
-      trackEvent('list_created', { isGroup: list.isGroup });
+        const converted = convertApiList(newList);
+        setLists((prev) => [...prev, converted]);
+        socketService.joinList(newList.id);
+        trackEvent('list_created', { isGroup: list.isGroup });
 
-      return converted;
+        return converted;
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 402) {
+          emitPlanLimit('lists');
+          // זורק שגיאה ייעודית: הקורא (handleCreate) יסגור את המודאל בלי טוסט הצלחה ובלי הודעת שגיאה
+          throw new PlanLimitHandledError();
+        }
+        throw err;
+      }
     },
     [setLists],
   );
@@ -126,7 +141,7 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
       } catch (error: unknown) {
         const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string; code?: string } }; code?: string };
         const status = apiError.response?.status;
-        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
+        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error || '';
         const errorCode = apiError.response?.data?.code;
 
         // שגיאת רשת או timeout
@@ -134,20 +149,28 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
           return { success: false, error: 'networkError' };
         }
 
-        // מיפוי שגיאות ספציפיות למפתחות תרגום
-        if (errorMessage?.toLowerCase().includes('owner')) {
-          return { success: false, error: 'youAreOwner' };
-        }
-        if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
-          return { success: false, error: 'invalidGroupCode' };
-        }
-        if (status === 400 || errorMessage?.toLowerCase().includes('invalid password')) {
-          return { success: false, error: 'invalidGroupPassword' };
-        }
+        // קבוצה מלאה — בעלים חינמי הגיע למגבלת חברים. זה לא בעיה של המצטרף.
         if (errorCode === 'GROUP_FULL') {
           return { success: false, error: 'groupFull' };
         }
-        if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {
+
+        // מגבלת מנוי של המצטרף עצמו (תרחיש עתידי, כרגע לא קורה)
+        if (status === 402) {
+          emitPlanLimit('members');
+          return { success: false, error: 'planLimitReached' };
+        }
+
+        // מיפוי שגיאות ספציפיות למפתחות תרגום
+        if (errorMessage.toLowerCase().includes('owner')) {
+          return { success: false, error: 'youAreOwner' };
+        }
+        if (status === 404 || errorMessage.toLowerCase().includes('invalid invite code')) {
+          return { success: false, error: 'invalidGroupCode' };
+        }
+        if (status === 400 || errorMessage.toLowerCase().includes('invalid password')) {
+          return { success: false, error: 'invalidGroupPassword' };
+        }
+        if (status === 409 || errorMessage.toLowerCase().includes('already a member')) {
           return { success: false, error: 'alreadyMember' };
         }
         if (status === 429) {

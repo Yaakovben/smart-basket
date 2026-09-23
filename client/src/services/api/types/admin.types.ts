@@ -8,6 +8,9 @@ export interface AdminUser {
   isAdmin: boolean;
   createdAt: string;
   updatedAt: string;
+  // מנוי
+  plan: 'free' | 'pro';
+  planExpiresAt?: string | null;
   // סטטיסטיקות התחברות מהשרת (aggregation)
   totalLogins: number;
   lastLoginAt: string | null;

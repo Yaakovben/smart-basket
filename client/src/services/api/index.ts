@@ -23,5 +23,6 @@ export { pushApi, type UserDeliveryStatus, type BroadcastPushResult, type SendPu
 export { insightsApi } from './insights.api';
 export { aiAssistantApi, AiAssistantStreamError, type AiChatMessage } from './aiAssistant.api';
 export { emailApi, type BroadcastEmailResult, type EmailUserStatus, type SendEmailResult, type EmailConfigStatus } from './email.api';
+export { subscriptionApi, type SubscriptionStatus, type SubscriptionRequestDto } from './subscription.api';
 export type { InsightsData } from './types/insights.types';
 // PriceComparisonData ו-PriceMatch זמינים מ-features/priceComparison

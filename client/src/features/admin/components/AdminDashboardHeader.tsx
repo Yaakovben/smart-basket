@@ -17,9 +17,12 @@ interface AdminDashboardHeaderProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
+  onOpenSubscriptions: () => void;
+  onRefresh: () => void;
   userFilter: UserFilter;
   onlineCount: number;
   stats: DashboardStats;
+  proCount: number;
   loading?: boolean;
   onFilterClick: (filter: UserFilter) => void;
   onSelectAll: () => void;
@@ -29,8 +32,8 @@ interface AdminDashboardHeaderProps {
 // כותרת הדשבורד: רקע גרדיאנט, שורת ניווט עליונה וכרטיסי סטטיסטיקה לחיצים
 export const AdminDashboardHeader = ({
   isDark, isRtl, title, faithTitle,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush,
-  userFilter, onlineCount, stats, loading, onFilterClick, onSelectAll, t,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onRefresh,
+  userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t,
 }: AdminDashboardHeaderProps) => (
   <Box
     sx={{
@@ -55,11 +58,14 @@ export const AdminDashboardHeader = ({
       onOpenAiStatus={onOpenAiStatus}
       aiStatus={aiStatus}
       onOpenPush={onOpenPush}
+      onOpenSubscriptions={onOpenSubscriptions}
+      onRefresh={onRefresh}
     />
     <AdminDashboardStatCards
       userFilter={userFilter}
       onlineCount={onlineCount}
       stats={stats}
+      proCount={proCount}
       loading={loading}
       onFilterClick={onFilterClick}
       onSelectAll={onSelectAll}

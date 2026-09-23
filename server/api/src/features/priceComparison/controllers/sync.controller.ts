@@ -5,9 +5,13 @@ import { geocodeAddress } from '../services/geocoder.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { Branch } from '../models/Branch.model';
 import { BranchDAL } from '../dal/branch.dal';
+import { UserDAL } from '../../../dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
+import { PlanLimitError } from '../../../errors';
+import { PLAN_LIMITS, isPro } from '../../../constants';
+import { planUsage } from '../../../services/plan-usage.service';
 
 // מצב סנכרון מחירים - בדיקה מקומית מהירה, בנוסף למנעול המשותף האמיתי
 // ב-syncAllChains (getSyncProgress().active), שמכסה גם ריצות cron.
@@ -39,16 +43,30 @@ function parseChosenBranches(raw: unknown): Record<string, string> | undefined {
 // lat/lng אופציונליים - אם מועברים, כל רשת תכלול את הסניף הקרוב ביותר עם מרחק.
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
+
+  // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 השוואות מחיר ביום.
+  // increment מתבצע רק אחרי הצלחה — לא שורף מכסה על קריאות שנכשלות.
+  const priceUser = await UserDAL.findById(userId).catch(() => null);
+  const userIsFree = priceUser && !isPro(priceUser);
+  if (userIsFree) {
+    const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
+    const todayCount = planUsage.getPriceCount(userId);
+    if (todayCount >= limit) throw PlanLimitError.priceComparison(limit);
+  }
+
   const rawListId = req.query.listId;
   const listId = typeof rawListId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawListId)
     ? rawListId
     : undefined;
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const chosenBranches = parseChosenBranches(req.query.branches);
-  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" בלקוח), כדי שלא יישאר תקוע על
-  // תוצאה ישנה עד 15 דקות (למשל מיד אחרי סנכרון מחירים).
+  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" בלקוח). לא נספר כבקשה חדשה נגד
+  // מגבלת ה-Freemium שלא הייתה קיימת ממילא - הבקשה המקורית כבר נספרה.
   const bypassCache = req.query.force === '1';
   const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches, bypassCache);
+
+  // increment אחרי הצלחה בלבד
+  if (userIsFree) planUsage.incrementPrice(userId);
 
   res.json({ success: true, data });
   // הוסר: lazy auto-sync שגרם לסנכרון מלא ברקע בזמן בקשות של לקוחות.

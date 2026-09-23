@@ -3,6 +3,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PeopleIcon from '@mui/icons-material/People';
 import LoginIcon from '@mui/icons-material/Login';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
 import { cardSx, infoCardSx, pulse } from '../styles/AdminDashboard.styles';
@@ -11,6 +12,7 @@ interface AdminDashboardStatCardsProps {
   userFilter: UserFilter;
   onlineCount: number;
   stats: DashboardStats;
+  proCount: number;
   loading?: boolean;
   onFilterClick: (filter: UserFilter) => void;
   onSelectAll: () => void;
@@ -28,7 +30,7 @@ const StatSkeleton = ({ large }: { large?: boolean }) => (
 );
 
 // כרטיסי סטטיסטיקה לחיצים בכותרת - משמשים גם כפילטר לטבלת המשתמשים
-export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, loading, onFilterClick, onSelectAll, t }: AdminDashboardStatCardsProps) => (
+export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t }: AdminDashboardStatCardsProps) => (
   <>
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, position: 'relative', zIndex: 1, mb: 1.25 }}>
       {/* מחוברים עכשיו */}
@@ -82,7 +84,7 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, loadin
     </Box>
 
     {/* שורה שנייה - מידע נוסף */}
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, position: 'relative', zIndex: 1 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, position: 'relative', zIndex: 1 }}>
       <Box sx={infoCardSx(userFilter === 'loginsToday')} onClick={() => onFilterClick('loginsToday')}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
           <LoginIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }} />
@@ -106,6 +108,29 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, loadin
         </Box>
         <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', fontWeight: 500, mt: 0.25 }}>
           {t('uniqueUsersThisMonth')}
+        </Typography>
+      </Box>
+
+      {/* כרטיס Pro - לחיץ, מסנן לרשימת משתמשי Pro */}
+      <Box
+        sx={{
+          ...infoCardSx(userFilter === 'pro'),
+          background: userFilter === 'pro'
+            ? 'rgba(245, 158, 11, 0.45)'
+            : 'rgba(245, 158, 11, 0.25)',
+          borderColor: userFilter === 'pro' ? 'rgba(245,158,11,0.8)' : 'rgba(245,158,11,0.4)',
+        }}
+        onClick={() => onFilterClick('pro')}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+          <WorkspacePremiumIcon sx={{ fontSize: 14, color: '#FCD34D' }} />
+          {loading
+            ? <StatSkeleton />
+            : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#FCD34D', lineHeight: 1 }}>{proCount}</Typography>
+          }
+        </Box>
+        <Typography sx={{ fontSize: 9, color: 'rgba(252,211,77,0.85)', fontWeight: 600, mt: 0.25 }}>
+          Pro
         </Typography>
       </Box>
     </Box>

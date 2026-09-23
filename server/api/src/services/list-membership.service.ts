@@ -11,6 +11,7 @@
 import mongoose from 'mongoose';
 import { ListDAL, UserDAL } from '../dal';
 import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
+import { PLAN_LIMITS, isPro } from '../constants';
 import { logger } from '../config';
 import {
   createNotification,
@@ -46,11 +47,25 @@ export async function joinGroup(
   const user = await UserDAL.findById(userId);
   if (!user) throw NotFoundError.user();
 
-  // הוספה אטומית ($ne מונעת כפילות מבקשות מקבילות)
+  // בדיקת מגבלת Freemium: בעלים חינמי מוגבל ל-3 חברים כולל עצמו.
+  // שגיאה: GROUP_FULL (409) ולא PLAN_LIMIT (402) — כי מי שמצטרף לא יכול
+  // לפתור את הבעיה בעצמו; הפתרון הוא שהבעלים ישדרג.
+  const owner = await UserDAL.findById(list.owner.toString());
+  if (owner && !isPro(owner)) {
+    const limit = PLAN_LIMITS.free.maxGroupMembers;
+    const totalParticipants = 1 + list.members.length;
+    if (totalParticipants >= limit) throw ConflictError.groupFull();
+  }
+
+  // הוספה אטומית: $ne מונע כפילות, $size מגביל מספר חברים לפי תוכנית הבעלים.
+  // שני תנאים יחד מכסים race condition שבו שני משתמשים מצטרפים בו-זמנית
+  // לקבוצה שנשאר בה מקום לאחד — ה-update יצליח רק לראשון.
+  const maxMembers = owner && !isPro(owner) ? PLAN_LIMITS.free.maxGroupMembers - 1 : 9999;
   const updated = await ListDAL.updateOne(
     {
       _id: list._id,
       'members.user': { $ne: new mongoose.Types.ObjectId(userId) },
+      $expr: { $lt: [{ $size: '$members' }, maxMembers] },
     },
     {
       $push: {

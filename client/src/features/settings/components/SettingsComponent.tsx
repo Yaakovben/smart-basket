@@ -5,6 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
+import { SubscriptionRowBadge } from '../../subscription/components/SubscriptionRowBadge';
 import { useReliableTap } from '../../../global/hooks/useReliableTap';
 import type { User, ToastType } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
@@ -53,7 +54,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
     handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, togglePushExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData, showToast, t });
 
-  // state לאישור ניקוי מטמון - popup שמסביר השלכות לפני פעולה הרסנית
   const [confirmClearCache, setConfirmClearCache] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -141,6 +141,16 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
+        {/* ניהול מנוי */}
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
+            <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
+            <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
+            <SubscriptionRowBadge />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+          </Box>
+        </Paper>
+
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowHelp(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHelp(true); } }}>
@@ -213,7 +223,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
 
         <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} {APP_VERSION}</Typography>
       </Box>
-
       {showLanguage && <LanguageModal onClose={() => setShowLanguage(false)} onSelect={handleLanguageSelect} />}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}

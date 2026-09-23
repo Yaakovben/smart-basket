@@ -286,3 +286,14 @@ export async function sendAdminErrorReport(payload: ErrorReportPayload): Promise
     logger.warn('sendAdminErrorReport failed: %s', (err as Error).message);
   }
 }
+
+// הודעה כללית למנהל המערכת (GMAIL_USER) - למשל דיווח תשלום מנוי שממתין לאישור.
+// no-op שקט אם המייל לא מוגדר; לעולם לא זורק.
+export async function sendAdminNotice(subject: string, body: string): Promise<void> {
+  if (!isEmailEnabled() || !env.GMAIL_USER) return;
+  try {
+    await sendSingle(env.GMAIL_USER, `[Smart Basket] ${subject}`, body, false);
+  } catch (err) {
+    logger.warn('sendAdminNotice failed: %s', (err as Error).message);
+  }
+}
