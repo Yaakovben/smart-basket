@@ -66,6 +66,10 @@ export const InsightsPage = memo(() => {
   // הודעות סותרות בו-זמנית.
   const [pageRefreshing, setPageRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(() => new Date());
+  // token (לא boolean) - כל כישלון מקבל ערך ייחודי (Date.now()) כדי
+  // ש-PullToRefreshIndicator יזהה אותו כאירוע חדש גם כשכשלונות חוזרים
+  // ברצף, ויציג בכל פעם מחדש את חיווי "הרענון נכשל" האדום.
+  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
   const handlePageRefresh = useCallback(() => {
     setPageRefreshing(true);
     const insightsOk = fetchInsights();
@@ -73,6 +77,7 @@ export const InsightsPage = memo(() => {
     Promise.all([insightsOk, priceOk]).then(([ok1, ok2]) => {
       setPageRefreshing(false);
       if (ok1 && ok2) setLastRefreshedAt(new Date());
+      else setRefreshFailedToken(Date.now());
     });
   }, [fetchInsights, retryPriceFetch, tab]);
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePageRefresh);
@@ -124,7 +129,7 @@ export const InsightsPage = memo(() => {
         {/* גרירה-למטה לרענון - אחיד עם רשימה/מנהל. הכרטיס יושב מחוץ למכל הגלילה
             כדי שיישאר צמוד לראש התוכן (מתחת לכותרת) במקום לגלול איתו. */}
         {/* eslint-disable-next-line react-hooks/refs */}
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} />
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} refreshFailedToken={refreshFailedToken} />
 
         <Box
           data-insights-scroll-root
