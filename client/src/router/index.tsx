@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner, CacheResetNotice } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner, MaintenanceApologyNotice } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
@@ -201,20 +201,14 @@ export const AppRouter = () => {
     return () => clearTimeout(timer);
   }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
 
-  // הודעה חד-פעמית ("עדכנו את האפליקציה") למשתמשים ותיקים בלבד - נרשמו
-  // *לפני* שדרוג תשתית ה-Service Worker/חיבור האחרון, שהם בדיוק אלה
-  // שעלולים להיתקע על "מתחבר לשרת"/פעולות נכשלות בגלל cache/SW ישן. משתמש
-  // חדש שנרשם אחרי החתך הזה תמיד יקבל קוד עדכני מההתחלה - לא רלוונטי אליו.
-  // CACHE_NOTICE_CUTOFF = תאריך הפריסה של תיקון ההתאוששות האוטומטית
-  // (2b66a9da/341f4ca3/b0096ccc). לצמיתות (localStorage, לא sessionStorage) -
-  // מוצג פעם אחת בלבד per user לכל החיים, לא per session.
-  const CACHE_NOTICE_CUTOFF = new Date('2026-09-23T00:00:00Z').getTime();
-  const CACHE_NOTICE_DELAY_MS = 4_000;
-  const [showCacheNotice, setShowCacheNotice] = useState(false);
+  // הודעת התנצלות חד-פעמית - מוצגת לכל משתמש בכניסה הראשונה אחרי הניתוק
+  // הכפוי החד-פעמי של כולם (force-logout-all.ts, עקב עבודות תשתית).
+  // לצמיתות ב-localStorage, פעם אחת בלבד per user, לא תלויה ב-createdAt.
+  const MAINTENANCE_APOLOGY_DELAY_MS = 3_000;
+  const [showMaintenanceApology, setShowMaintenanceApology] = useState(false);
   useEffect(() => {
-    if (authLoading || !user?.id || !user.createdAt) return;
-    if (new Date(user.createdAt).getTime() >= CACHE_NOTICE_CUTOFF) return;
-    const key = `sb_cache_notice_shown_v1_${user.id}`;
+    if (authLoading || !user?.id) return;
+    const key = `sb_maintenance_apology_shown_v1_${user.id}`;
     try {
       if (localStorage.getItem(key)) return;
     } catch { return; /* localStorage חסום - מוותרים על ההודעה */ }
@@ -225,11 +219,11 @@ export const AppRouter = () => {
         if (localStorage.getItem(key)) return;
         localStorage.setItem(key, '1');
       } catch { return; }
-      markPopupShown('cache-notice');
-      setShowCacheNotice(true);
-    }, CACHE_NOTICE_DELAY_MS);
+      markPopupShown('maintenance-apology');
+      setShowMaintenanceApology(true);
+    }, MAINTENANCE_APOLOGY_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [authLoading, user?.id, user?.createdAt]);
+  }, [authLoading, user?.id]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
@@ -614,7 +608,7 @@ export const AppRouter = () => {
         onReload={() => window.location.reload()}
         onDismiss={() => setUpdateAvailable(false)}
       />
-      <CacheResetNotice open={showCacheNotice} onClose={() => setShowCacheNotice(false)} />
+      <MaintenanceApologyNotice open={showMaintenanceApology} onClose={() => setShowMaintenanceApology(false)} />
       <WelcomeProDialog
         open={welcomePlan?.variant ?? null}
         months={welcomePlan?.months}
