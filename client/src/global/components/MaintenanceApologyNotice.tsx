@@ -1,5 +1,5 @@
 import { Dialog, Box, Typography, Button, IconButton } from '@mui/material';
-import BuildCircleRoundedIcon from '@mui/icons-material/BuildCircleRounded';
+import SentimentSatisfiedRoundedIcon from '@mui/icons-material/SentimentSatisfiedRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { useSettings } from '../context/SettingsContext';
 
@@ -8,15 +8,12 @@ interface Props {
   onClose: () => void;
 }
 
-// פופאפ חד-פעמי (לצמיתות, ראו המפתח sb_cache_notice_shown_v1 ב-router/index.tsx)
-// למשתמשים ותיקים בלבד - מסביר בקצרה שאחרי שדרוגי תוכנה אחרונים ייתכן
-// שהאפליקציה תיתקע על "מתחבר לשרת"/פעולות ייכשלו, ומפנה ל-/clear.html
-// (ניקוי SW+caches חד-פעמי, שומר טוקנים - לא מנתק) לפני שזה בכלל קורה.
-// לא פותר משתמשים שכבר תקועים לגמרי על JS ישן (אין דרך "להגיע" אליהם -
-// ה-JS שלהם קפוא ולא מריץ את הקוד הזה כלל), אבל מקדים תרופה למכה למי
-// שעדיין מצליח לטעון את האפליקציה כרגיל.
-export const CacheResetNotice = ({ open, onClose }: Props) => {
-  const { settings, t } = useSettings();
+// פופאפ חד-פעמי (לצמיתות, ראו המפתח sb_maintenance_apology_shown_v1
+// ב-router/index.tsx) שמוצג לכל משתמש בכניסה הראשונה אחרי ניתוק כפוי
+// חד-פעמי של כל המשתמשים (server/api/src/scripts/force-logout-all.ts) -
+// מתנצל ומסביר בקצרה שהניתוק היה עקב עבודות תשתית, לא באג בחשבון שלהם.
+export const MaintenanceApologyNotice = ({ open, onClose }: Props) => {
+  const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
 
   return (
@@ -45,22 +42,20 @@ export const CacheResetNotice = ({ open, onClose }: Props) => {
           width: 64, height: 64, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
           bgcolor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.1)', color: 'primary.main',
         }}>
-          <BuildCircleRoundedIcon sx={{ fontSize: 34 }} />
+          <SentimentSatisfiedRoundedIcon sx={{ fontSize: 34 }} />
         </Box>
 
-        <Typography sx={{ fontSize: 18, fontWeight: 900, mt: 0.5 }}>{t('cacheNoticeTitle')}</Typography>
+        <Typography sx={{ fontSize: 18, fontWeight: 900, mt: 0.5 }}>מצטערים על אי הנוחות</Typography>
         <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.65 }}>
-          {t('cacheNoticeBody')}
+          בעקבות עבודות תשתית נדרשנו לנתק את כל המשתמשים ולבקש התחברות מחדש חד-פעמית.
+          הנתונים שלכם בטוחים ולא נפגעו - וזה לא אמור לקרות שוב.
         </Typography>
 
         <Button
-          variant="contained" fullWidth href="/clear.html"
+          variant="contained" fullWidth onClick={onClose}
           sx={{ borderRadius: '14px', py: 1.2, textTransform: 'none', fontWeight: 800, fontSize: 15, mt: 1, boxShadow: 'none' }}
         >
-          {t('cacheNoticeCta')}
-        </Button>
-        <Button fullWidth onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700, fontSize: 13, color: 'text.secondary' }}>
-          {t('cacheNoticeDismiss')}
+          הבנתי, תודה
         </Button>
       </Box>
     </Dialog>
