@@ -29,19 +29,20 @@ interface AdminDashboardHeaderBarProps {
   onRefresh: () => void;
 }
 
-// שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים. סדר ה-DOM כאן = סדר
-// ויזואלי מימין לשמאל (ראו הערה למטה) - שליחת הודעות תמיד הכי ימני,
-// ואייקון ה-AI תמיד מיד לפניו (משמאלו). אין כפתור ריענון ידני - הרענון
-// נעשה בגרירה (pull-to-refresh, ראו AdminDashboard/PullToRefreshIndicator),
-// אותו דפוס בדיוק כמו מסך הרשימה.
+// כותרת עליונה: שורת חזרה+כותרת, ומתחתיה שורת כפתורי כלים נפרדת (מקום
+// מלא לכל האייקונים). סדר ה-DOM בשורת האייקונים = סדר ויזואלי מימין
+// לשמאל (ראו הערה למטה) - שליחת הודעות תמיד הכי ימני, ואייקון ה-AI
+// תמיד מיד לפניו (משמאלו). הרענון העיקרי הוא בגרירה (pull-to-refresh,
+// ראו AdminDashboard/PullToRefreshIndicator), ויש גם כפתור רענון ידני
+// לדסקטופ (ראו RefreshIcon למטה).
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle,
   onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onOpenFeedback, onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
   return (
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1, gap: 0.5 }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 3, position: 'relative', zIndex: 1 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <Box onClick={onBack} role="button" tabIndex={0} sx={headerIconButtonSx(36)}>
         {isRtl ? <ArrowForwardIcon /> : <ArrowBackIcon />}
       </Box>
@@ -49,13 +50,12 @@ export const AdminDashboardHeaderBar = ({
         {title}
       </Typography>
     </Box>
-    {/* גלילה אופקית - במקום להיחתך/להידחס במסכים צרים כשמספר האייקונים
-        גדל (למשל אחרי הוספת אייקון משוב). כל אייקון flexShrink:0 קבוע
-        (headerIconButtonSx) כדי שלא יתעוות, ובלית ברירה גוללים אליו. */}
+    {/* שורה נפרדת מתחת לכותרת - במקום לחלוק איתה שורה אחת, כדי שיהיה
+        מקום מלא לכל האייקונים (במיוחד אחרי הוספת אייקון המשוב) בלי
+        להיחתך/להידחס במסך צר. flexWrap כרשת ביטחון אם עדיין אין מספיק
+        רוחב (למשל טאבלט צר עם פונט גדול). */}
     <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 0.25,
-      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-      '&::-webkit-scrollbar': { display: 'none' },
+      display: 'flex', alignItems: 'center', gap: 0.25, flexWrap: 'wrap',
     }}>
       {/* ראשון ב-DOM = ימני קיצוני ב-RTL: שליחת הודעות תמיד הכי ימני,
           ומיד אחריו (משמאלו) אייקון פרטי ה-AI */}
