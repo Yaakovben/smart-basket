@@ -46,6 +46,7 @@ export const headerIconButtonSx = (size: number): SxProps<Theme> => ({
   color: 'white',
   width: size,
   height: size,
+  flexShrink: 0,
   cursor: 'pointer',
   WebkitTapHighlightColor: 'transparent',
   '&:active': { transform: 'scale(0.92)' },
