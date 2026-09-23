@@ -57,18 +57,23 @@ export const InsightsPage = memo(() => {
   // המשותפים). מרענן תמיד את נתוני הפעילות/הוצאות, ובטאב 'מחירים' גם את השוואת
   // המחירים. lastRefreshedAt מאותחל ל"עכשיו" (לא null) כדי ש"מעודכן ל-HH:MM"
   // יופיע כבר במשיכה הראשונה, לא רק בשנייה.
+  //
+  // "עודכן" מוצג *רק* כשהרענון באמת הצליח - fetchInsights/retryPriceFetch
+  // מחזירים עכשיו Promise<boolean> עם התוצאה האמיתית (כולל ה-retry הפנימי
+  // אחרי 3ש'). בעבר זה היה טיימר קבוע של 900ms שקבע "עודכן ל-HH:MM" בלי שום
+  // קשר לתוצאה בפועל - כך שגם באין-קליטה מוחלטת המסך היה מראה "עודכן עכשיו"
+  // *יחד עם* חיווי השגיאה (מסך שגיאה מלא / באנר "הנתונים לא טריים") - שתי
+  // הודעות סותרות בו-זמנית.
   const [pageRefreshing, setPageRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(() => new Date());
   const handlePageRefresh = useCallback(() => {
     setPageRefreshing(true);
-    fetchInsights();
-    if (tab === 'price') retryPriceFetch();
-    // fetchInsights/retryPriceFetch לא חושפים Promise (עדכון אופטימיסטי מיידי
-    // כבר קיים דרך ה-state שלהם) - חיווי "מרענן" קצר וקבוע, כמו ב-AdminDashboard.
-    setTimeout(() => {
+    const insightsOk = fetchInsights();
+    const priceOk = tab === 'price' ? retryPriceFetch() : Promise.resolve(true);
+    Promise.all([insightsOk, priceOk]).then(([ok1, ok2]) => {
       setPageRefreshing(false);
-      setLastRefreshedAt(new Date());
-    }, 900);
+      if (ok1 && ok2) setLastRefreshedAt(new Date());
+    });
   }, [fetchInsights, retryPriceFetch, tab]);
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePageRefresh);
 

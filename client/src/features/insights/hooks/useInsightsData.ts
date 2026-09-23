@@ -100,28 +100,41 @@ export function useInsightsData(tab: InsightTab) {
   // data חדש (רפרנס שונה) גם כשהתוכן זהה לחלוטין, ומפילה re-render מלא על כל
   // עץ הקומפוננטות הכבד של טאב הפעילות (גרפים כולל) - בדיוק תחושת "הכל מגיב
   // לאט" שדווחה, בלי שום שינוי אמיתי בנתונים שמצדיק אותה.
-  const fetchInsights = useCallback(() => {
-    insightsApi.getInsights()
+  // מחזיר Promise<boolean> (הצלחה אמיתית, כולל ה-retry) - כדי שקוראים כמו
+  // "רענון בגרירה" (InsightsPage) ידעו אם באמת להציג "עודכן ל-HH:MM" ומתי לא,
+  // במקום לקבוע זמן עדכון על בסיס טיימר קבוע בלי קשר לתוצאה בפועל (זה היה
+  // גורם ל"עודכן עכשיו" מוצג יחד עם חיווי שגיאה, בלי קשר לאמת - לא עקבי).
+  const fetchInsights = useCallback((): Promise<boolean> => {
+    return insightsApi.getInsights()
       .then(res => {
         setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
         writeCache(INSIGHTS_CACHE_KEY, res);
         setError(false);
         setDataFresh(true);
+        setLoading(false);
+        return true;
       })
       .catch(() => {
         // retry אחד אחרי 3 שניות - מכסה CursorKilled (MongoDB 134) ו-cold start
-        setTimeout(() => {
-          insightsApi.getInsights()
-            .then(res => {
-              setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
-              writeCache(INSIGHTS_CACHE_KEY, res);
-              setError(false);
-              setDataFresh(true);
-            })
-            .catch(() => setError(true));
-        }, 3000);
-      })
-      .finally(() => setLoading(false));
+        return new Promise<boolean>((resolve) => {
+          setTimeout(() => {
+            insightsApi.getInsights()
+              .then(res => {
+                setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
+                writeCache(INSIGHTS_CACHE_KEY, res);
+                setError(false);
+                setDataFresh(true);
+                setLoading(false);
+                resolve(true);
+              })
+              .catch(() => {
+                setError(true);
+                setLoading(false);
+                resolve(false);
+              });
+          }, 3000);
+        });
+      });
   }, []);
 
   useEffect(() => {
@@ -241,17 +254,19 @@ export function useInsightsData(tab: InsightTab) {
   // ניסיון ידני יחיד - משמש את כפתור "נסה שוב" במסך שגיאת מחירים, וגם אחרי תיקון
   // התאמה. force=true עוקף את מטמון ה-15 דקות בשרת, כדי שבקשה יזומה של המשתמש
   // לא תיתקע על תוצאה ישנה.
-  const retryPriceFetch = () => {
+  // מחזיר Promise<boolean> הצלחה אמיתית - ראו ההערה המקבילה ב-fetchInsights.
+  const retryPriceFetch = (): Promise<boolean> => {
     setPriceError(false);
     setPriceLoading(true);
-    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches, true)
-      .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
+    return priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined, chosenBranches, true)
+      .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); return true; })
       .catch(err => {
         if ((err as { response?: { status?: number } })?.response?.status === 402) {
           emitPlanLimit('priceComparison');
         } else {
           setPriceError(true);
         }
+        return false;
       })
       .finally(() => setPriceLoading(false));
   };
