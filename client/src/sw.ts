@@ -1,6 +1,12 @@
 /// <reference lib="webworker" />
 import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
+// אותו __BUILD_VERSION__ שמוזרק גם לקוד האפליקציה (ראו App.tsx) - מוזרק
+// כאן בנפרד כי sw.ts נבנה כ-build נפרד. typeof-guard כי אם ההזרקה לא
+// מגיעה לאיזשהי סיבה ל-build הזה, לא רוצים ReferenceError שמפיל את ה-SW.
+declare const __BUILD_VERSION__: string;
+const SW_BUILD_VERSION = typeof __BUILD_VERSION__ !== 'undefined' ? __BUILD_VERSION__ : null;
+
 // __WB_MANIFEST: הטיפוס הגיע בעבר דרך ה-import מ-workbox-precaching (הוסר
 // יחד עם ה-precaching עצמו). injectManifest עדיין דורש שהמזהה הזה יופיע
 // בקוד כדי להזריק לתוכו את הרשימה (ריקה, ראו globPatterns: [] ב-vite.config.ts) -
@@ -159,7 +165,7 @@ self.addEventListener('activate', (event) => {
       const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       console.log(`[sw] claimed, notifying ${clientList.length} client(s), isUpdate=${isUpdate}`);
       clientList.forEach((client) => {
-        client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
+        client.postMessage({ type: 'SW_ACTIVATED', action: 'reload', buildVersion: SW_BUILD_VERSION });
       });
 
       if (isUpdate && clientList.length > 0) {
