@@ -56,9 +56,8 @@ export const MaintenanceApologyNotice = ({ open, onClose }: Props) => {
 
         <Typography sx={{ fontSize: 19, fontWeight: 900, mt: 0.5 }}>רק ליידע אתכם</Typography>
         <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.7, maxWidth: 280 }}>
-          בעקבות עבודות תשתית ייתכן שנותקתם והתבקשתם להתחבר מחדש - גם אם לא
-          היה בכך צורך אמיתי אצלכם. סתם ליתר ביטחון. הנתונים שלכם בטוחים
-          ולא נפגעו, וזה לא אמור לחזור על עצמו.
+          בעקבות עבודות תשתית ייתכן שנותקתם והתבקשתם להתחבר מחדש. הנתונים
+          שלכם בטוחים ולא נפגעו, וזה לא אמור לחזור על עצמו.
         </Typography>
 
         <Button
