@@ -12,12 +12,11 @@ interface Props {
 
 const meterColor = (ratio: number) => (ratio >= 1 ? '#EF4444' : ratio >= 0.8 ? '#F59E0B' : PRO_PURPLE);
 
-// שורה אחת: תווית + ערך חינמי + וי ב-Pro. וי לבד = "כלול", בלי סימן שצריך
-// לפענח (לא ∞, לא צירוף של שני סמלים לאותו רעיון) - הכי קריא וקליל.
-// used מוצג רק לשורות עם שימוש יומי אמיתי (AI/השוואות מחיר) ורק למשתמש
-// חינמי - פס התקדמות דק מתחת לשורה במקום כרטיס "שימוש" נפרד שחוזר על
-// אותם שני מספרים.
-const Row = ({ label, freeValue, used, isDark }: { label: string; freeValue: number; used?: number; isDark: boolean }) => {
+// שורה אחת: תווית + ערך חינמי + "ללא הגבלה" ב-Pro (בעבר היה כאן רק סימן וי
+// בלי שום טקסט - ברור למי שמנחש, לא ברור למי שרק מסתכל). used מוצג רק
+// לשורות עם שימוש יומי אמיתי (AI/השוואות מחיר) ורק למשתמש חינמי - פס
+// התקדמות דק מתחת לשורה במקום כרטיס "שימוש" נפרד שחוזר על אותם שני מספרים.
+const Row = ({ label, freeValue, used, isDark, unlimitedLabel }: { label: string; freeValue: number; used?: number; isDark: boolean; unlimitedLabel: string }) => {
   const ratio = used !== undefined && freeValue > 0 ? Math.min(1, used / freeValue) : null;
   return (
     <Box sx={{
@@ -31,10 +30,11 @@ const Row = ({ label, freeValue, used, isDark }: { label: string; freeValue: num
           {ratio !== null ? `${used}/${freeValue}` : freeValue}
         </Typography>
         <Box sx={{
-          width: 44, height: 22, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 80, py: '3px', mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.3,
           borderRadius: '999px', bgcolor: isDark ? 'rgba(124,58,237,0.20)' : PRO_SOFT,
         }}>
-          <CheckRoundedIcon sx={{ fontSize: 16, color: PRO_PURPLE }} />
+          <CheckRoundedIcon sx={{ fontSize: 13, color: PRO_PURPLE, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: PRO_PURPLE, whiteSpace: 'nowrap' }}>{unlimitedLabel}</Typography>
         </Box>
       </Box>
       {ratio !== null && (
@@ -72,11 +72,11 @@ export const PlanComparisonTable = ({ status, s, isDark }: Props) => {
         <Typography sx={{ width: 44, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: 'text.disabled' }}>
           {s.compareFree}
         </Typography>
-        <Typography sx={{ width: 44, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: PRO_PURPLE }}>
+        <Typography sx={{ width: 80, textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: PRO_PURPLE }}>
           {s.comparePro}
         </Typography>
       </Box>
-      {rows.map(r => <Row key={r.label} label={r.label} freeValue={r.value} used={r.used} isDark={isDark} />)}
+      {rows.map(r => <Row key={r.label} label={r.label} freeValue={r.value} used={r.used} isDark={isDark} unlimitedLabel={s.compareUnlimited} />)}
       {usage && <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 1.25 }}>{s.usageResets}</Typography>}
     </Box>
   );

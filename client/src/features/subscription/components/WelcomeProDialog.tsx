@@ -11,8 +11,7 @@ import { getSubscriptionStrings } from '../subscription.strings';
 import { PRO_LILAC, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
 
 // שלושה יתרונות מרכזיים בתמצית - עונה מיד על "אז מה זה נותן לי בפועל",
-// לא רק "קיבלת מתנה" בלי הקשר. אותם אייקונים כמו PerksGrid בעמוד המנוי,
-// כדי שיהיה מוכר כשמגיעים לשם.
+// לא רק "קיבלת מתנה" בלי הקשר.
 const QUICK_PERKS = [
   { icon: PlaylistAddCheckRoundedIcon, key: 'perkLists' as const },
   { icon: AutoAwesomeRoundedIcon, key: 'perkAi' as const },

@@ -10,6 +10,7 @@ import { useServiceWorker } from './global/hooks';
 import { diagLog } from './global/helpers/crashLog';
 import { reportError } from './global/helpers/errorReport';
 import { INSIGHTS_CACHE_KEY } from './features/insights/helpers/insightsCache';
+import { markVersionUpgrade } from './global/services/versionUpgrade';
 
 // עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
 //
@@ -40,6 +41,11 @@ const handleNewVersion = () => {
   if (!storedVersion || storedVersion === buildVersion) return;
 
   diagLog('version', 'new version detected, clearing user cache + browser caches');
+  // מסמנים "יש שדרוג גרסה אמיתי לביקור הזה" - useConnectionStatus.ts משתמש
+  // בזה כדי להבחין בין חיבור תקוע בגלל JS ישן שקורא לחוזה שהשתנה (כן לרענן
+  // אוטומטית) לבין שרת קר/תקלת רשת רגילה אצל מי שכבר על הגרסה העדכנית
+  // (לא לרענן - זה לא יעזור ורק יפריע).
+  markVersionUpgrade();
   // cached_user ו-cached_lists נשמרים בכוונה: מחיקתם בכל עדכון השאירה את
   // המשתמש בלי משתמש שמור בעליית האפליקציה, ואם טעינת הפרופיל הייתה איטית או
   // נכשלה (שרת קר) הוא נזרק למסך התחברות. checkAuth כותב אותם מחדש בכל פתיחה

@@ -277,38 +277,42 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
         {s.changePlan}
       </Button>
 
-      {/* פס תחתון דביק: "שילמתי" תמיד בהישג יד בלי לגלול */}
-      <Box sx={{
-        position: 'sticky', bottom: 'calc(-28px - env(safe-area-inset-bottom))', zIndex: 2, mx: -2, px: 2, pt: 1.5,
-        pb: 'calc(12px + env(safe-area-inset-bottom))',
-        background: isDark
-          ? 'linear-gradient(to top, #0B1220 70%, rgba(11,18,32,0))'
-          : 'linear-gradient(to top, #F8FAFC 70%, rgba(248,250,252,0))',
-      }}>
-        <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary', textAlign: 'center', mb: 0.75 }}>
-          {s.payStep3}
-        </Typography>
-        <Button
-          variant="contained" fullWidth disabled={busy} onClick={() => { haptic('medium'); setConfirmOpen(true); }}
-          sx={{
-            ...primaryCtaSx,
-            ...(backFromPayment && {
-              animation: 'sbPaidPulse 1.6s ease-in-out infinite',
-              '@keyframes sbPaidPulse': {
-                '0%, 100%': { boxShadow: '0 8px 22px rgba(124,58,237,0.38)' },
-                '50%': { boxShadow: '0 8px 30px rgba(124,58,237,0.7)' },
-              },
-              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-            }),
-          }}
-        >
-          {busy ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : s.paidCta}
-        </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, mt: 0.9, color: 'text.disabled' }}>
-          <LockRoundedIcon sx={{ fontSize: 13 }} />
-          <Typography sx={{ fontSize: 11.5 }}>{s.paidHint}</Typography>
+      {/* פס תחתון דביק: "שילמתי" מופיע רק אחרי שנלחץ קישור התשלום (ביט/PayBox) -
+          לפני זה עדיין אין מה לאשר. בהעברה בנקאית אין קישור ללחוץ עליו, אז
+          הכפתור זמין מיד. */}
+      {(!url || leftForPayment) && (
+        <Box sx={{
+          position: 'sticky', bottom: 'calc(-28px - env(safe-area-inset-bottom))', zIndex: 2, mx: -2, px: 2, pt: 1.5,
+          pb: 'calc(12px + env(safe-area-inset-bottom))',
+          background: isDark
+            ? 'linear-gradient(to top, #0B1220 70%, rgba(11,18,32,0))'
+            : 'linear-gradient(to top, #F8FAFC 70%, rgba(248,250,252,0))',
+        }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary', textAlign: 'center', mb: 0.75 }}>
+            {s.payStep3}
+          </Typography>
+          <Button
+            variant="contained" fullWidth disabled={busy} onClick={() => { haptic('medium'); setConfirmOpen(true); }}
+            sx={{
+              ...primaryCtaSx,
+              ...(backFromPayment && {
+                animation: 'sbPaidPulse 1.6s ease-in-out infinite',
+                '@keyframes sbPaidPulse': {
+                  '0%, 100%': { boxShadow: '0 8px 22px rgba(124,58,237,0.38)' },
+                  '50%': { boxShadow: '0 8px 30px rgba(124,58,237,0.7)' },
+                },
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }),
+            }}
+          >
+            {busy ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : s.paidCta}
+          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, mt: 0.9, color: 'text.disabled' }}>
+            <LockRoundedIcon sx={{ fontSize: 13 }} />
+            <Typography sx={{ fontSize: 11.5 }}>{s.paidHint}</Typography>
+          </Box>
         </Box>
-      </Box>
+      )}
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}

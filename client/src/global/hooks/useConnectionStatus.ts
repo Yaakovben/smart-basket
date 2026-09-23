@@ -12,6 +12,8 @@ import { useSyncExternalStore } from 'react';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';
 import { subscribeFetchIssue } from '../services/connectionIssue';
+import { wasVersionUpgrade } from '../services/versionUpgrade';
+import { clearCacheAndReload } from '../helpers/clearCacheAndReload';
 
 export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting' | 'server-starting';
 
@@ -27,8 +29,49 @@ let state: ConnectionState = { phase: navigator.onLine ? 'online' : 'offline', p
 const listeners = new Set<() => void>();
 
 function setState(patch: Partial<ConnectionState>) {
+  const prevPhase = state.phase;
   state = { ...state, ...patch };
+  if (state.phase !== prevPhase) {
+    if (state.phase === 'server-starting' || state.phase === 'reconnecting') {
+      maybeScheduleStuckReload();
+    } else {
+      clearStuckTimer();
+    }
+  }
   listeners.forEach(l => l());
+}
+
+// חיבור תקוע (server-starting/reconnecting) שנמשך זמן ממושך *אחרי* שדיפלוי
+// חדש התגלה בביקור הזה (wasVersionUpgrade - ראו App.tsx/versionUpgrade.ts)
+// הוא כמעט תמיד JS ישן שקורא לחוזה API/socket שכבר השתנה - לא באמת בעיית
+// רשת. מרעננים אוטומטית *רק* במצב הזה, כי: (1) החיבור כבר שבור בפועל -
+// אין session פעיל לקטוע, (2) תור הפעולות האופליין ב-IndexedDB שורד רענון
+// בלי אובדן, (3) בלי wasVersionUpgrade זה יכול להיות סתם שרת קר או תקלת
+// רשת רגילה אצל מי שכבר על הגרסה העדכנית - שם רענון לא עוזר ורק מפריע.
+// תקופת חסד לפני הריענון (מתבטלת אם ההתחברות מצליחה בינתיים) + קירור בין
+// ריענונים מונעים לולאה אם הריענון עצמו לא פתר את זה.
+const STUCK_RELOAD_KEY = 'sb_stuck_connection_reload';
+const STUCK_GRACE_MS = 15_000;
+const STUCK_COOLDOWN_MS = 60_000;
+let stuckTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearStuckTimer() {
+  if (stuckTimer) { clearTimeout(stuckTimer); stuckTimer = null; }
+}
+
+function maybeScheduleStuckReload() {
+  if (stuckTimer) return;
+  if (!wasVersionUpgrade()) return;
+  stuckTimer = setTimeout(() => {
+    stuckTimer = null;
+    if (!navigator.onLine) return;
+    if (state.phase !== 'server-starting' && state.phase !== 'reconnecting') return;
+    let last = 0;
+    try { last = Number(localStorage.getItem(STUCK_RELOAD_KEY) || 0); } catch { /* ignore */ }
+    if (last && Date.now() - last < STUCK_COOLDOWN_MS) return;
+    try { localStorage.setItem(STUCK_RELOAD_KEY, String(Date.now())); } catch { /* ignore */ }
+    void clearCacheAndReload();
+  }, STUCK_GRACE_MS);
 }
 
 function getSnapshot(): ConnectionState {
