@@ -122,15 +122,29 @@ self.addEventListener('message', (event) => {
   );
 });
 
-// התקנה, דילוג על המתנה להפעלה מיידית
+// התקנה, דילוג על המתנה להפעלה מיידית. self.registration.active קיים כאן
+// אם ורק אם SW קודם כבר שלט בסקופ הזה - כלומר זו גרסה חדשה שמחליפה גרסה
+// קיימת, לא התקנה ראשונה של מבקר חדש. משתמשים בזה ב-activate כדי להחליט
+// אם לרענן טאבים פתוחים בכוח (ראו שם).
+let isUpdate = false;
 self.addEventListener('install', () => {
-  console.log('[sw] install event, calling skipWaiting()');
+  isUpdate = !!self.registration.active;
+  console.log(`[sw] install event, isUpdate=${isUpdate}, calling skipWaiting()`);
   self.skipWaiting();
 });
 
 // הפעלה - מנקה caches שנשארו מגרסה קודמת (זו שכן עשתה precaching - המקור
-// לבאג), תופס שליטה על הטאבים הפתוחים, ומודיע ללקוחות (לא מרענן יותר -
-// ה-listener ב-router/index.tsx רק מתעד, ראה הערה שם).
+// לבאג), תופס שליטה על הטאבים הפתוחים, ומודיע ללקוחות.
+//
+// רשת ביטחון: טאב שכבר פתוח וטעון עם JS ישן לא "יודע" שיש גרסה חדשה -
+// הבאנר (SW_ACTIVATED, router/index.tsx) דורש שהמשתמש ילחץ בעצמו, ומי
+// שלא שם לב נשאר תקוע על JS שקורא לחוזה API/socket שכבר השתנה (נראה
+// כלפי חוץ כמו "כל פעולה נכשלת", בלי אפשרות לתקן את זה בלי לגעת בקובץ
+// הזה - שום עדכון לקוד האפליקציה עצמו לא יכול להגיע לטאב שכבר טעון).
+// isUpdate=false (מבקר ראשון) לעולם לא מרענן - אין טאב "ישן" לתקן.
+// כש-isUpdate=true, מחכים חסד ארוך (לא רגעים בודדים כמו בעבר - זו הייתה
+// בדיוק הסיבה שוויתרו על רענון כפוי אז, ראו App.tsx/router/index.tsx)
+// לפני שמרעננים בכוח, כדי לתת סיכוי סביר לכל בקשה אמיתית שרצה להשלים.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
@@ -142,11 +156,22 @@ self.addEventListener('activate', (event) => {
         console.warn('[sw] activate: cache cleanup failed (non-fatal):', err);
       }
       await self.clients.claim();
-      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      console.log(`[sw] claimed, notifying ${clients.length} client(s)`);
-      clients.forEach((client) => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      console.log(`[sw] claimed, notifying ${clientList.length} client(s), isUpdate=${isUpdate}`);
+      clientList.forEach((client) => {
         client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
       });
+
+      if (isUpdate && clientList.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 60_000));
+        const stillOpen = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        console.log(`[sw] force-reloading ${stillOpen.length} client(s) still open after grace period`);
+        stillOpen.forEach((client) => {
+          if ('navigate' in client) {
+            client.navigate(client.url).catch((err) => console.warn('[sw] navigate failed (non-fatal):', err));
+          }
+        });
+      }
     })()
   );
 });

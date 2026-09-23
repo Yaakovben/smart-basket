@@ -44,14 +44,23 @@ function setState(patch: Partial<ConnectionState>) {
 // חיבור תקוע (server-starting/reconnecting) שנמשך זמן ממושך *אחרי* שדיפלוי
 // חדש התגלה בביקור הזה (wasVersionUpgrade - ראו App.tsx/versionUpgrade.ts)
 // הוא כמעט תמיד JS ישן שקורא לחוזה API/socket שכבר השתנה - לא באמת בעיית
-// רשת. מרעננים אוטומטית *רק* במצב הזה, כי: (1) החיבור כבר שבור בפועל -
-// אין session פעיל לקטוע, (2) תור הפעולות האופליין ב-IndexedDB שורד רענון
-// בלי אובדן, (3) בלי wasVersionUpgrade זה יכול להיות סתם שרת קר או תקלת
-// רשת רגילה אצל מי שכבר על הגרסה העדכנית - שם רענון לא עוזר ורק מפריע.
-// תקופת חסד לפני הריענון (מתבטלת אם ההתחברות מצליחה בינתיים) + קירור בין
-// ריענונים מונעים לולאה אם הריענון עצמו לא פתר את זה.
+// רשת. מרעננים אוטומטית במצב הזה, כי: (1) החיבור כבר שבור בפועל - אין
+// session פעיל לקטוע, (2) תור הפעולות האופליין ב-IndexedDB שורד רענון
+// בלי אובדן. תקופת חסד לפני הריענון (מתבטלת אם ההתחברות מצליחה בינתיים) +
+// קירור בין ריענונים מונעים לולאה אם הריענון עצמו לא פתר את זה.
+//
+// מקרה נוסף, בלי תלות ב-wasVersionUpgrade: כניסה ראשונה לאפליקציה
+// (hasEverConnected=false) שנשארת תקועה על "מתחבר לשרת" ממושך. זה בדיוק
+// המשתמש שה-JS *שלו עצמו* הוא הישן (SW ישן עדיין משרת HTML/JS ישנים
+// מלפני שהתיקון הזה בכלל היה קיים) - אין לו שום דרך לדעת שהגרסה השתנתה
+// כי הוא לעולם לא הריץ את קוד ההשוואה העדכני. השרת רץ על tier בתשלום
+// תמיד-ער (אין sleep/cold-start, ראו index.html) - אז "תקוע בכניסה
+// ראשונה" הרבה זמן הוא כבר סימן חזק לבעיה אמיתית, לא שרת קר לגיטימי.
+// חסד ארוך יותר (לא 15 שניות של בעיה חולפת) כדי לא להטריד מי שבאמת רק
+// ברשת איטית.
 const STUCK_RELOAD_KEY = 'sb_stuck_connection_reload';
 const STUCK_GRACE_MS = 15_000;
+const FIRST_LOAD_STUCK_GRACE_MS = 30_000;
 const STUCK_COOLDOWN_MS = 60_000;
 let stuckTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -61,7 +70,9 @@ function clearStuckTimer() {
 
 function maybeScheduleStuckReload() {
   if (stuckTimer) return;
-  if (!wasVersionUpgrade()) return;
+  const firstLoadStuck = !hasEverConnected && state.phase === 'server-starting';
+  if (!wasVersionUpgrade() && !firstLoadStuck) return;
+  const grace = wasVersionUpgrade() ? STUCK_GRACE_MS : FIRST_LOAD_STUCK_GRACE_MS;
   stuckTimer = setTimeout(() => {
     stuckTimer = null;
     if (!navigator.onLine) return;
@@ -71,7 +82,7 @@ function maybeScheduleStuckReload() {
     if (last && Date.now() - last < STUCK_COOLDOWN_MS) return;
     try { localStorage.setItem(STUCK_RELOAD_KEY, String(Date.now())); } catch { /* ignore */ }
     void clearCacheAndReload();
-  }, STUCK_GRACE_MS);
+  }, grace);
 }
 
 function getSnapshot(): ConnectionState {
