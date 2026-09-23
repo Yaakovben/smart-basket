@@ -60,7 +60,7 @@ export const PriceTab = memo(({
   // מצוירים ישירות ב-DOM דרך ref, לא state, כדי שזה יהיה חלק וללא ריצוד.
   const stickyRef = useRef<HTMLDivElement>(null);
   const stickyRafRef = useRef<number | null>(null);
-  const STICKY_COLLAPSE_DISTANCE = 70;
+  const STICKY_COLLAPSE_DISTANCE = 160;
   useEffect(() => {
     const el = stickyRef.current;
     if (!el) return;
@@ -129,7 +129,7 @@ export const PriceTab = memo(({
           sx={{
             position: 'sticky', top: 0, zIndex: 3, overflow: 'hidden',
             bgcolor: 'background.default',
-            px: 2, mx: -2, pt: 1, pb: 1,
+            px: 2, mx: -2, pt: 1, pb: 1, mb: 1.5,
             borderBottom: '1px solid',
             borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
           }}
