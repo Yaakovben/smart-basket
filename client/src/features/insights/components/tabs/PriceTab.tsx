@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
+import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
 import type { LocationStatus } from '../../../priceComparison/hooks/useUserLocation';
 import { PriceComparisonCard, type PriceComparisonData } from '../../../priceComparison';
 import { ShimmerList, TopProgressBar } from '../../../../global/components';
@@ -52,25 +53,22 @@ export const PriceTab = memo(({
     if (Math.abs(delta) > 4) scroller.scrollBy({ left: delta, behavior: 'smooth' });
   }, [selectedListId, allUserLists.length, priceData]);
 
-  // הקשר הרשימה נדבק (sticky) רק בתחילת הגלילה האנכית של העמוד - ברגע
-  // שגוללים למטה הוא מתכווץ ונעלם לגמרי (לא נשאר צף קבוע שתופס מקום/מכסה
-  // תוכן). progress מחושב לפי scrollTop של מכל הגלילה של כל עמוד התובנות
-  // (לא רק הטאב הזה - data-insights-scroll-root ב-InsightsPage), בדיוק
-  // אותה טכניקה כמו trailing ב-CategoryFilterChips: opacity+maxHeight
-  // מצוירים ישירות ב-DOM דרך ref, לא state, כדי שזה יהיה חלק וללא ריצוד.
+  // הקשר הרשימה נדבק (sticky) לצמיתות בראש הטאב, מעל כל שאר התוכן שגולל
+  // מתחתיו - כולל בורר הרשימות עצמו. בעבר הוא התכווץ ונעלם אחרי גלילה
+  // קלה (70-160px), אבל זה גרם למשתמש לאבד את ההקשר "על איזו רשימה
+  // ההשוואה מתבצעת" ברגע שהוא התחיל לקרוא את התוצאות. עכשיו הוא פשוט
+  // נשאר צמוד למעלה תמיד (position: sticky), עם צל עדין שמדגיש שהוא
+  // צף מעל התוכן ולא חלק ממנו.
   const stickyRef = useRef<HTMLDivElement>(null);
+  // צל מופיע רק אחרי שגוללים בפועל - כשהתוכן עדיין בראש אין מה להפריד ממנו.
   const stickyRafRef = useRef<number | null>(null);
-  const STICKY_COLLAPSE_DISTANCE = 160;
   useEffect(() => {
     const el = stickyRef.current;
     if (!el) return;
     const root = el.closest<HTMLElement>('[data-insights-scroll-root]');
     if (!root) return;
     const paint = (scrollTop: number) => {
-      const progress = Math.min(1, Math.max(0, scrollTop) / STICKY_COLLAPSE_DISTANCE);
-      el.style.opacity = String(1 - progress);
-      el.style.maxHeight = `${(1 - progress) * el.scrollHeight}px`;
-      el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
+      el.style.boxShadow = scrollTop > 4 ? '0 6px 14px -8px rgba(0,0,0,0.35)' : 'none';
     };
     const onScroll = () => {
       if (stickyRafRef.current != null) return;
@@ -79,7 +77,6 @@ export const PriceTab = memo(({
         paint(root.scrollTop);
       });
     };
-    el.style.maxHeight = 'none'; // מדידת scrollHeight האמיתי לפני הציור הראשון
     paint(root.scrollTop);
     root.addEventListener('scroll', onScroll, { passive: true });
     return () => {
@@ -119,19 +116,17 @@ export const PriceTab = memo(({
 
   return (
     <>
-      {/* הקשר הרשימה שעליה מתבצע הניתוח - נדבק (sticky) רק בתחילת הגלילה,
-          ואז מתכווץ ונעלם ככל שגוללים למטה (ראו האפקט למעלה - stickyRef).
-          כך ברור מיד עם הכניסה לטאב על איזו רשימה הניתוח מתבצע, בלי
-          שהוא נשאר צף לצמיתות ותופס מקום/מסתיר תוכן בזמן קריאת התוצאות. */}
+      {/* הקשר הרשימה שעליה מתבצע הניתוח - נדבק (sticky) לצמיתות בראש הטאב,
+          מעל כל שאר התוכן (כולל תוכן שגולל מתחתיו), כדי שברור תמיד על
+          איזו רשימה מתבצע הניתוח גם תוך כדי קריאת התוצאות. */}
       {allUserLists.length > 0 && (
         <Box
           ref={stickyRef}
           sx={{
-            position: 'sticky', top: 0, zIndex: 3, overflow: 'hidden',
+            position: 'sticky', top: 0, zIndex: 5,
             bgcolor: 'background.default',
             px: 2, mx: -2, pt: 1, pb: 1, mb: 1.5,
-            borderBottom: '1px solid',
-            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+            transition: 'box-shadow 0.2s ease',
           }}
         >
           {/* תווית מידע - מוצגת כשיש רשימה אחת. המשתמש יודע על מה הניתוח נעשה. */}
@@ -161,14 +156,20 @@ export const PriceTab = memo(({
           {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
           {allUserLists.length > 1 && (
             <Box>
-              <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
-                {t('whichListToCompare')}
-              </Typography>
-              <Box ref={chipScrollerRef} sx={{
-                display: 'flex', flexWrap: 'nowrap', gap: 0.75,
-                overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-                '&::-webkit-scrollbar': { display: 'none' },
-              }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 0.75, px: 0.5 }}>
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary' }}>
+                  {t('whichListToCompare')}
+                </Typography>
+                {/* רמז עדין (לא לחיץ בפני עצמו) שהשורה מתחת היא בורר - לא רק
+                    תצוגה. אותו רעיון כמו חץ "בחר" בתפריטים, בלי לצייר select box מלא. */}
+                <UnfoldMoreRoundedIcon sx={{ fontSize: 13, color: '#14B8A6', opacity: 0.75 }} />
+              </Box>
+              <Box sx={{ position: 'relative' }}>
+                <Box ref={chipScrollerRef} sx={{
+                  display: 'flex', flexWrap: 'nowrap', gap: 0.75,
+                  overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+                  '&::-webkit-scrollbar': { display: 'none' },
+                }}>
                 {/* "כל הרשימות" - אפשרי, אבל לא דיפולט (אפקט auto-select בוחר רשימה ראשונה
                     כדי למנוע עומס בכניסה). המשתמש יכול לבחור 'הכל' באופן יזום. */}
                 <Box
@@ -227,6 +228,14 @@ export const PriceTab = memo(({
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
                   </Box>
                 ))}
+                </Box>
+                {/* דעיכה עדינה בקצה ימין (התחלת הפס ב-RTL) - רומזת שיש עוד
+                    צ'יפים לגלול אליהם, אותו רעיון כמו trailing ב-CategoryFilterChips. */}
+                <Box sx={{
+                  position: 'absolute', top: 0, bottom: 0, right: 0, width: 20,
+                  background: `linear-gradient(to left, ${isDark ? '#111827' : '#F8FAFC'}, transparent)`,
+                  pointerEvents: 'none',
+                }} />
               </Box>
             </Box>
           )}
