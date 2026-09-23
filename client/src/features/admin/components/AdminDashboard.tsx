@@ -95,13 +95,6 @@ export const AdminDashboard = () => {
       onTouchMove={handlePullMove}
       onTouchEnd={handlePullEnd}
     >
-      <PullToRefreshIndicator
-        pullDistance={pullDistance}
-        refreshing={isRefreshing}
-        pullActive={pullActiveRef.current}
-        lastRefreshedAt={lastRefreshedAt}
-        refreshFailedToken={refreshFailedToken}
-      />
       <AdminDashboardHeader
         isDark={isDark}
         isRtl={isRtl}
@@ -127,21 +120,35 @@ export const AdminDashboard = () => {
         t={t}
       />
 
-      <AdminDashboardContent
-        error={error}
-        loading={loading}
-        isDark={isDark}
-        onRetry={handleRefresh}
-        t={t}
-        userSearch={userSearch}
-        setUserSearch={setUserSearch}
-        filteredUsers={filteredUsers}
-        activities={activities}
-        language={settings.language}
-        onlineUserIds={onlineUserIds}
-        onUserDeleted={refreshData}
-        onUserPlanChanged={updateUserPlanLocal}
-      />
+      {/* עוטפים את האינדיקטור+התוכן יחד ב-position:relative נפרד מהמכל
+          החיצוני (שכולל גם את הכותרת) - כדי שה-top:0 המוחלט של
+          PullToRefreshIndicator יתחיל ממש מתחת לכותרת, לא מאחורי הכותרת
+          עצמה (מה שקרה כשהוא ישב ישירות במכל החיצוני - התנגש עם החריץ/
+          מצלמת הטלפון, אותו באג בדיוק שכבר תוקן ב-ListComponent). */}
+      <Box sx={{ position: 'relative' }}>
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          refreshing={isRefreshing}
+          pullActive={pullActiveRef.current}
+          lastRefreshedAt={lastRefreshedAt}
+          refreshFailedToken={refreshFailedToken}
+        />
+        <AdminDashboardContent
+          error={error}
+          loading={loading}
+          isDark={isDark}
+          onRetry={handleRefresh}
+          t={t}
+          userSearch={userSearch}
+          setUserSearch={setUserSearch}
+          filteredUsers={filteredUsers}
+          activities={activities}
+          language={settings.language}
+          onlineUserIds={onlineUserIds}
+          onUserDeleted={refreshData}
+          onUserPlanChanged={updateUserPlanLocal}
+        />
+      </Box>
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
       {priceSyncOpen && <PriceSyncManager onClose={() => setPriceSyncOpen(false)} />}
