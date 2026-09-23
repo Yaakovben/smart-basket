@@ -15,6 +15,7 @@ import { priceComparisonRoutes } from '../features/priceComparison';
 import emailRoutes from './email.routes';
 import subscriptionRoutes from './subscription.routes';
 import errorReportRoutes from './errorReport.routes';
+import feedbackRoutes from './feedback.routes';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/daily-faith', dailyFaithRoutes);
 router.use('/email', emailRoutes);
 router.use('/subscription', subscriptionRoutes);
 router.use('/error-report', errorReportRoutes);
+router.use('/feedback', feedbackRoutes);
 
 export default router;

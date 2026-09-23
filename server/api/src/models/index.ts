@@ -7,3 +7,4 @@ export { Notification, type INotification as INotificationDoc, type Notification
 export { PushSubscription, type IPushSubscription } from './PushSubscription.model';
 // Price model הועבר ל-features/priceComparison/models/Price.model.ts
 export { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionRequestStatus, type SubscriptionPayMethod } from './SubscriptionRequest.model';
+export { Feedback, type IFeedback } from './Feedback.model';

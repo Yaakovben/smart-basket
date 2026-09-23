@@ -25,6 +25,7 @@ import {
   approveSubscriptionRequest,
   rejectSubscriptionRequest,
   getLegacyTrialGrant,
+  getFeedback,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -51,6 +52,8 @@ router.post('/subscription-requests/:id/reject', validate({ params: requestIdPar
 // מענק Pro חד-פעמי למשתמשים ותיקים - dry-run כברירת מחדל, ביצוע רק עם confirm=true.
 router.get('/subscription/legacy-trial', getLegacyTrialGrant);
 router.post('/subscription/legacy-trial', getLegacyTrialGrant);
+
+router.get('/feedback', getFeedback);
 
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
