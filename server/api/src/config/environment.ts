@@ -141,6 +141,11 @@ const envSchema = Joi.object({
   BANK_ACCOUNT: Joi.string().pattern(/^\d{4,12}$/).optional(),
   // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
   TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
+
+  // מתג כיבוי גלובלי לפיצ'ר ה-Freemium. false (ברירת מחדל) = כולם מטופלים
+  // כ-Pro, בלי שום מגבלה, וה-UI של המנוי מוסתר בקליינט. מאפשר להריץ את כל
+  // קוד ה-Freemium ב-main בלי לחשוף אותו למשתמשים עד הפעלה מכוונת.
+  FREEMIUM_ENABLED: Joi.boolean().default(false),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -197,6 +202,7 @@ export interface Environment {
   BANK_BRANCH?: string;
   BANK_ACCOUNT?: string;
   TRIAL_MONTHS: number;
+  FREEMIUM_ENABLED: boolean;
 }
 
 export const env = parseEnv();

@@ -17,7 +17,7 @@ interface AdminDashboardHeaderProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
-  onOpenSubscriptions: () => void;
+  onOpenSubscriptions?: () => void;
   onRefresh: () => void;
   userFilter: UserFilter;
   onlineCount: number;

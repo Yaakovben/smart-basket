@@ -961,7 +961,6 @@ export const ru: Translations = {
   tipDragFabBody: 'Кнопка ➕ мешает? Нажмите и удерживайте её секунду, а затем перетащите в любое удобное место на экране.',
   // Freemium
   planLimitReached: 'Достигнут лимит бесплатного тарифа',
-  groupFull: 'Группа заполнена — владелец должен перейти на Pro для добавления участников',
   planFree: 'Бесплатно',
   planPro: 'Pro',
   planBadgePro: 'PRO',

@@ -967,7 +967,6 @@ export const he: Translations = {
   tipDragFabBody: 'כפתור ה-➕ מפריע לך למקום מסוים ברשימה? לחצו עליו והחזיקו רגע, ואז גררו אותו לכל מקום נוח על המסך.',
   // Freemium
   planLimitReached: 'הגעת למגבלת התוכנית החינמית',
-  groupFull: 'הקבוצה מלאה — הבעלים צריך לשדרג ל-Pro כדי להוסיף חברים',
   planFree: 'חינמי',
   planPro: 'Pro',
   planBadgePro: 'PRO',

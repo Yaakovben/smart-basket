@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, Paper, Switch, CircularProgress } from '@m
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { usePushNotifications } from '../../../global/hooks';
+import { usePushNotifications, useFreemiumEnabled } from '../../../global/hooks';
 import { SubscriptionRowBadge } from '../../subscription/components/SubscriptionRowBadge';
 import { useReliableTap } from '../../../global/hooks/useReliableTap';
 import type { User, ToastType } from '../../../global/types';
@@ -37,6 +37,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
   // onClick רגיל על שורת המנהל התגלה כלא-אמין (דרש הקשה כפולה) - אותו
   // תיקון כמו ב-HomeHeader/ProfileComponent/Modal.
   const openAdmin = useReliableTap(() => navigate('/admin'));
+  const freemiumEnabled = useFreemiumEnabled();
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   // זיהוי סוג מכשיר להנחיות התקנה
@@ -141,15 +142,17 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
-        {/* ניהול מנוי */}
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
-            <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
-            <SubscriptionRowBadge />
-            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
-          </Box>
-        </Paper>
+        {/* ניהול מנוי - מוסתר כשה-Freemium כבוי בסביבה הזו (ראו FREEMIUM_ENABLED) */}
+        {freemiumEnabled && (
+          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+            <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
+              <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
+              <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
+              <SubscriptionRowBadge />
+              <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+            </Box>
+          </Paper>
+        )}
 
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>

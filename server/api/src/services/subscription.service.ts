@@ -183,9 +183,9 @@ export async function listAdminRequests(statuses: SubscriptionRequestStatus[], l
     .populate('userId', 'name email plan planExpiresAt');
 }
 
-/** שדות Pro במתנה למשתמש חדש (ריק אם TRIAL_MONTHS=0). */
+/** שדות Pro במתנה למשתמש חדש (ריק אם TRIAL_MONTHS=0 או שה-Freemium כבוי בסביבה הזו). */
 export function newUserTrialFields(): { plan: 'pro'; planExpiresAt: Date; planAutoRenew: false; planSource: 'trial' } | Record<string, never> {
-  if (!env.TRIAL_MONTHS) return {};
+  if (!env.FREEMIUM_ENABLED || !env.TRIAL_MONTHS) return {};
   return { plan: 'pro', planExpiresAt: addMonths(new Date(), env.TRIAL_MONTHS), planAutoRenew: false, planSource: 'trial' };
 }
 
@@ -207,7 +207,7 @@ function legacySkipFilter(targetExpiry: Date) {
 }
 
 export async function countLegacyTrialEligible(): Promise<number> {
-  if (!env.TRIAL_MONTHS) return 0;
+  if (!env.FREEMIUM_ENABLED || !env.TRIAL_MONTHS) return 0;
   const targetExpiry = addMonths(new Date(), env.TRIAL_MONTHS);
   return User.countDocuments({
     legacyTrialGrantedAt: { $exists: false },
@@ -218,7 +218,7 @@ export async function countLegacyTrialEligible(): Promise<number> {
 export interface LegacyTrialResult { granted: number; skipped: number }
 
 export async function grantLegacyTrialToExistingUsers(): Promise<LegacyTrialResult> {
-  if (!env.TRIAL_MONTHS) return { granted: 0, skipped: 0 };
+  if (!env.FREEMIUM_ENABLED || !env.TRIAL_MONTHS) return { granted: 0, skipped: 0 };
   const now = new Date();
   const targetExpiry = addMonths(now, env.TRIAL_MONTHS);
   const skipFilter = legacySkipFilter(targetExpiry);

@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync, useFreemiumEnabled } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
@@ -57,6 +57,15 @@ const PageLoader = PageSkeleton;
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
+// עטיפת נתיב המנוי - חוסמת גישה ישירה ל-URL כשה-Freemium כבוי בסביבה הזו
+// (ראו FREEMIUM_ENABLED), גם אם ה-UI שמוביל לכאן כבר מוסתר.
+const SubscriptionRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
+  const freemiumEnabled = useFreemiumEnabled();
+  if (!user) return <Navigate to="/login" replace />;
+  if (!freemiumEnabled) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -524,9 +533,9 @@ export const AppRouter = () => {
         <Route
           path="/subscription"
           element={
-            <ProtectedRoute user={user}>
+            <SubscriptionRoute user={user}>
               <ErrorBoundary><SubscriptionPage showToast={showToast} /></ErrorBoundary>
-            </ProtectedRoute>
+            </SubscriptionRoute>
           }
         />
         <Route path="/privacy" element={<PrivacyPolicy />} />

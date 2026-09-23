@@ -18,6 +18,7 @@ export interface SubscriptionRequestDto {
 }
 
 export interface SubscriptionStatus {
+  freemiumEnabled: boolean;
   plan: 'free' | 'pro';
   // null + plan=pro = מנוי קבוע (הוענק ידנית, בלי תפוגה).
   planExpiresAt: string | null;
@@ -55,6 +56,13 @@ export interface SubscriptionStatus {
 export const subscriptionApi = {
   async getStatus(): Promise<SubscriptionStatus> {
     const res = await apiClient.get<{ data: SubscriptionStatus }>('/subscription');
+    return res.data.data;
+  },
+
+  // נתיב ציבורי (בלי אימות) - נטען מוקדם כדי להחליט אם להציג בכלל את
+  // ממשק המנוי (קישור בהגדרות, אייקון באדמין, נתיב /subscription).
+  async getConfig(): Promise<{ freemiumEnabled: boolean }> {
+    const res = await apiClient.get<{ data: { freemiumEnabled: boolean } }>('/subscription/config');
     return res.data.data;
   },
 

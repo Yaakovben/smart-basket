@@ -15,6 +15,14 @@ import type { AuthRequest } from '../types';
 import type { Response } from 'express';
 
 const router = Router();
+
+// GET /api/subscription/config - נתיב ציבורי, נטען לפני התחברות. הקליינט
+// משתמש בו כדי להסתיר לגמרי את כל ממשק המנוי (קישור בהגדרות, אייקון
+// באדמין, דף /subscription עצמו) בסביבות שבהן ה-Freemium עדיין לא הופעל.
+router.get('/config', (_req, res) => {
+  res.json({ success: true, data: { freemiumEnabled: env.FREEMIUM_ENABLED } });
+});
+
 router.use(authenticate);
 
 const serializeRequest = (r: ISubscriptionRequest) => ({
@@ -47,6 +55,7 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json({
     success: true,
     data: {
+      freemiumEnabled: env.FREEMIUM_ENABLED,
       plan,
       planExpiresAt: user?.planExpiresAt ?? null,
       isTrial,

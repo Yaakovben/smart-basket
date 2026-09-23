@@ -5,7 +5,7 @@ import { DailyFaithManager } from '../../daily-faith';
 import { PriceSyncManager } from './PriceSyncManager';
 import { DbHealthCard } from './DbHealthCard';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { useAuth } from '../../../global/hooks';
+import { useAuth, useFreemiumEnabled } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { useAdminUserFilter } from '../hooks/useAdminUserFilter';
 import { useAiStatus } from '../hooks/useAiStatus';
@@ -30,6 +30,7 @@ export const AdminDashboard = () => {
   const [aiStatusOpen, setAiStatusOpen] = useState(false);
   const [pushOpen, setPushOpen] = useState(false);
   const [subscriptionsOpen, setSubscriptionsOpen] = useState(false);
+  const freemiumEnabled = useFreemiumEnabled();
   const {
     activities,
     usersWithLoginInfo,
@@ -112,7 +113,7 @@ export const AdminDashboard = () => {
         onOpenAiStatus={() => setAiStatusOpen(true)}
         aiStatus={aiStatus.data}
         onOpenPush={() => setPushOpen(true)}
-        onOpenSubscriptions={() => setSubscriptionsOpen(true)}
+        onOpenSubscriptions={freemiumEnabled ? () => setSubscriptionsOpen(true) : undefined}
         onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
@@ -156,7 +157,7 @@ export const AdminDashboard = () => {
         />
       )}
       {pushOpen && <PushBroadcastManager onClose={() => setPushOpen(false)} isDark={isDark} users={usersWithLoginInfo} />}
-      {subscriptionsOpen && (
+      {freemiumEnabled && subscriptionsOpen && (
         <SubscriptionAdminManager
           onClose={() => setSubscriptionsOpen(false)}
           isDark={isDark}

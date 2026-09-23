@@ -961,7 +961,6 @@ export const en: Translations = {
   tipDragFabBody: 'The ➕ button in the way of something? Press and hold it for a moment, then drag it anywhere on the screen.',
   // Freemium
   planLimitReached: 'You\'ve reached your free plan limit',
-  groupFull: 'This group is full — the owner needs to upgrade to Pro to add more members',
   planFree: 'Free',
   planPro: 'Pro',
   planBadgePro: 'PRO',

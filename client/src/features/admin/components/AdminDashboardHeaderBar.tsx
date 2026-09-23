@@ -23,7 +23,8 @@ interface AdminDashboardHeaderBarProps {
   onOpenAiStatus: () => void;
   aiStatus: AiStatus | null;
   onOpenPush: () => void;
-  onOpenSubscriptions: () => void;
+  // undefined כשה-Freemium כבוי בסביבה הזו - האייקון מוסתר לגמרי
+  onOpenSubscriptions?: () => void;
   onRefresh: () => void;
 }
 
@@ -53,7 +54,7 @@ export const AdminDashboardHeaderBar = ({
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
-      <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />
+      {onOpenSubscriptions && <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />}
       {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
           שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי
