@@ -24,6 +24,6 @@ export interface UseAdminDashboardReturn {
   activities: LoginActivity[];
   usersWithLoginInfo: UserWithLastLogin[];
   stats: DashboardStats;
-  refreshData: () => void;
+  refreshData: () => Promise<boolean>;
   lastFetchAt?: number;
 }

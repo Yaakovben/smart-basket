@@ -192,7 +192,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     }
   }, [onSaveSavedLists, showToast, t]);
 
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(refreshList);
+  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
+  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
+  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
+  const handlePullRefresh = useCallback(() => {
+    refreshList().then(ok => { if (!ok) setRefreshFailedToken(Date.now()); });
+  }, [refreshList]);
+  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePullRefresh);
 
   // אומדן עלות עדין לרשימה - נטען ברקע, לא חוסם שום דבר
   const { estimate: costEstimate } = useListCostEstimate(list.id, pending.length);
@@ -499,7 +505,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
             לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
         {/* eslint-disable-next-line react-hooks/refs */}
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} />
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} refreshFailedToken={refreshFailedToken} />
 
         {/* Content */}
         <Box
