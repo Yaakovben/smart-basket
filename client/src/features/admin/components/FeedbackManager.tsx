@@ -4,6 +4,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import { adminApi, type AdminFeedback } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
+import { adminPageSx } from '../styles/adminPage.styles';
 
 interface Props {
   isDark: boolean;
@@ -46,12 +47,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
     : null;
 
   return (
-    <Box sx={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      bgcolor: isDark ? '#0F172A' : '#F8FAFC',
-      display: 'flex', flexDirection: 'column',
-      pt: 'env(safe-area-inset-top)',
-    }}>
+    <Box sx={adminPageSx(isDark)}>
       <DbHealthHeader
         onClose={onClose}
         icon={<RateReviewRoundedIcon sx={{ color: STAR_COLOR }} />}

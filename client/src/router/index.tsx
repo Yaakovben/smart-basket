@@ -35,6 +35,7 @@ const settingsImport = () => import("../features/settings/settings").then(m => (
 const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
+const AdminSectionPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminSectionPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
 const InsightsPage = lazy(insightsImport);
@@ -572,6 +573,22 @@ export const AppRouter = () => {
           element={
             <AdminRoute user={user}>
               <ErrorBoundary><AdminPage /></ErrorBoundary>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/price-sync/help"
+          element={
+            <AdminRoute user={user}>
+              <ErrorBoundary><AdminSectionPage help /></ErrorBoundary>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/:section"
+          element={
+            <AdminRoute user={user}>
+              <ErrorBoundary><AdminSectionPage /></ErrorBoundary>
             </AdminRoute>
           }
         />

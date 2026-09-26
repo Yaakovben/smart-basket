@@ -1,10 +1,10 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { ReactNode } from 'react';
 
 interface DbHealthHeaderProps {
   onClose: () => void;
-  icon: ReactNode;
+  icon?: ReactNode;
   title: string;
   meta?: ReactNode; // שורת מטא קטנה מתחת לכותרת (badge/עודכן/מגבלה) - תלוית טאב
 }
@@ -13,9 +13,12 @@ interface DbHealthHeaderProps {
 // אין כפתור רענון ידני - הרענון נעשה בגרירה (pull-to-refresh), ראו DbHealthCard.
 export const DbHealthHeader = ({ onClose, icon, title, meta }: DbHealthHeaderProps) => (
   <Box sx={{
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider',
+    display: 'flex', alignItems: 'center', gap: 0.5,
+    px: 1, pe: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
   }}>
+    <IconButton onClick={onClose} aria-label="חזרה">
+      <ArrowForwardIcon />
+    </IconButton>
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
       {icon}
       <Box sx={{ minWidth: 0 }}>
@@ -26,11 +29,6 @@ export const DbHealthHeader = ({ onClose, icon, title, meta }: DbHealthHeaderPro
           </Box>
         )}
       </Box>
-    </Box>
-    <Box sx={{ display: 'flex', gap: 0.5 }}>
-      <IconButton onClick={onClose} aria-label="סגירה">
-        <CloseIcon />
-      </IconButton>
     </Box>
   </Box>
 );

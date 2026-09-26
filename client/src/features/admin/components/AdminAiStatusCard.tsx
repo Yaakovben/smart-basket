@@ -8,6 +8,7 @@ import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndic
 import { PULL_MAX } from '../../list/helpers/list-helpers';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
+import { adminPageSx } from '../styles/adminPage.styles';
 
 // שעות עגולות עד resetAt, לפחות 1. null אם אין/עבר.
 function hoursUntil(resetAt: string | null): number | null {
@@ -96,12 +97,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
   useEffect(() => { if (!refreshing) setPullRefreshing(false); }, [refreshing]);
 
   return (
-    <Box sx={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      bgcolor: isDark ? '#0F172A' : '#F8FAFC',
-      display: 'flex', flexDirection: 'column',
-      pt: 'env(safe-area-inset-top)',
-    }}>
+    <Box sx={adminPageSx(isDark)}>
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
       <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>

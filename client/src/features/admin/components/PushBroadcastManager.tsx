@@ -9,7 +9,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
-import { Modal } from '../../../global/components';
+import { AdminSectionShell } from './AdminSectionShell';
 import { pushApi, emailApi, type UserDeliveryStatus, type BroadcastEmailResult } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 
@@ -178,7 +178,7 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
   const result = isPush ? pushResult : emailResult;
 
   return (
-    <Modal title="שליחת הודעה" onClose={onClose}>
+    <AdminSectionShell title="שליחת הודעה" onBack={onClose} isDark={isDark}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
         {/* מתג ערוץ push / email */}
@@ -346,6 +346,6 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
           </Box>
         )}
       </Box>
-    </Modal>
+    </AdminSectionShell>
   );
 };

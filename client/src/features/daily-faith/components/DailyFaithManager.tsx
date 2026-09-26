@@ -2,7 +2,7 @@ import { Box, Typography, TextField, IconButton, InputAdornment, Collapse } from
 import SearchIcon from '@mui/icons-material/Search';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
-import { Modal } from '../../../global/components/Modal';
+import { AdminSectionShell } from '../../admin/components/AdminSectionShell';
 import { ConfirmModal } from '../../../global/components/ConfirmModal';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDailyFaithManager } from '../hooks/useDailyFaithManager';
@@ -27,7 +27,7 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   } = useDailyFaithManager();
 
   return (
-    <Modal title={t('dailyFaithManagerTitle')} onClose={onClose}>
+    <AdminSectionShell title={t('dailyFaithManagerTitle')} onBack={onClose} isDark={isDark}>
       {/* גובה קבוע — גם ברשימה ריקה וגם מלאה. מונע "קפיצה" של ה-popup */}
       <Box sx={modalBodySx}>
 
@@ -131,6 +131,6 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           onCancel={() => setDuplicateCandidate(null)}
         />
       )}
-    </Modal>
+    </AdminSectionShell>
   );
 };

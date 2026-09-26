@@ -20,7 +20,7 @@ export const goldFieldOnPaperSx: SxProps<Theme> = {
 };
 
 export const modalBodySx: SxProps<Theme> = {
-  display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)',
+  display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1, minHeight: 0,
 };
 
 export const statsRowSx: SxProps<Theme> = { display: 'flex', alignItems: 'center', gap: 1, px: 0.25, flexShrink: 0 };

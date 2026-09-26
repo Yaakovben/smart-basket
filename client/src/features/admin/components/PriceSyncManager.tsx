@@ -7,13 +7,14 @@
  *  3. רשימת רשתות: לחיצה על שורה מציגה את הסניפים שלה
  */
 
-import { useState } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Modal, ShimmerList, ShimmerBlock } from '../../../global/components';
+import { useNavigate } from 'react-router-dom';
+import { ShimmerList, ShimmerBlock } from '../../../global/components';
+import { AdminSectionShell } from './AdminSectionShell';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePriceSyncStatus } from '../hooks/usePriceSyncStatus';
 import { useChainBranches } from '../hooks/useChainBranches';
@@ -28,7 +29,6 @@ import { PriceSyncBulkImportForm } from './PriceSyncBulkImportForm';
 import { PriceSyncFeedbackBanner } from './PriceSyncFeedbackBanner';
 import { PriceSyncStatusFilterBar } from './PriceSyncStatusFilterBar';
 import { PriceSyncChainList } from './PriceSyncChainList';
-import { PriceSyncHelpModal } from './PriceSyncHelpModal';
 
 interface Props {
   onClose: () => void;
@@ -37,7 +37,7 @@ interface Props {
 export const PriceSyncManager = ({ onClose }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const [showHelp, setShowHelp] = useState(false);
+  const navigate = useNavigate();
 
   const {
     status, loading, feedback, setFeedback, load, syncActive, handleRefresh,
@@ -57,7 +57,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const { statusFilter, setStatusFilter, filteredChains, errorCount, noBranchCount, noPriceCount } = useChainStatusFilter(chains);
 
   return (
-    <Modal title="ניהול מאגר" onClose={onClose}>
+    <AdminSectionShell title="ניהול מאגר" onBack={onClose} isDark={isDark}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'hidden' }}>
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, py: 1 }}>
@@ -106,7 +106,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Typography>
               <IconButton
                 size="small"
-                onClick={() => setShowHelp(true)}
+                onClick={() => navigate('/admin/price-sync/help')}
                 sx={{ ml: 0.5, p: 0.25, color: '#0D9488' }}
                 aria-label="הסבר מפורט על המאגר"
                 title="איך פועל המאגר? - הסבר לאדמין"
@@ -191,7 +191,6 @@ export const PriceSyncManager = ({ onClose }: Props) => {
           </>
         )}
       </Box>
-      {showHelp && <PriceSyncHelpModal onClose={() => setShowHelp(false)} isDark={isDark} />}
-    </Modal>
+    </AdminSectionShell>
   );
 };

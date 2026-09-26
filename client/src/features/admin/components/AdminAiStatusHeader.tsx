@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 
@@ -18,9 +18,12 @@ export const AdminAiStatusHeader = ({ data, onClose }: AdminAiStatusHeaderProps)
 
   return (
     <Box sx={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
+      display: 'flex', alignItems: 'center', gap: 0.5,
+      px: 1, pe: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
     }}>
+      <IconButton onClick={onClose} aria-label="חזרה">
+        <ArrowForwardIcon />
+      </IconButton>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
         <Box sx={{
           width: 32, height: 32, borderRadius: '10px', flexShrink: 0,
@@ -57,11 +60,6 @@ export const AdminAiStatusHeader = ({ data, onClose }: AdminAiStatusHeaderProps)
             </Box>
           )}
         </Box>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-        <IconButton onClick={onClose} aria-label="סגירה">
-          <CloseIcon />
-        </IconButton>
       </Box>
     </Box>
   );

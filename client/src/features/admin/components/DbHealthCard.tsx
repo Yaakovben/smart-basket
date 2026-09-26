@@ -16,6 +16,7 @@ import { DbHealthSummaryBreakdown } from './DbHealthSummaryBreakdown';
 import { DbHealthCollectionsBreakdown } from './DbHealthCollectionsBreakdown';
 import { DbHealthCollectionsList } from './DbHealthCollectionsList';
 import { CloudinaryHealthContent } from './CloudinaryHealthContent';
+import { adminPageSx } from '../styles/adminPage.styles';
 
 interface Props {
   isDark: boolean;
@@ -77,12 +78,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
       ) : undefined);
 
   return (
-    <Box sx={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      bgcolor: isDark ? '#0F172A' : '#F8FAFC',
-      display: 'flex', flexDirection: 'column',
-      pt: 'env(safe-area-inset-top)',
-    }}>
+    <Box sx={adminPageSx(isDark)}>
       <DbHealthHeader
         onClose={onClose}
         icon={tab === 'mongo'

@@ -1,4 +1,5 @@
 export { AdminPage } from './pages/AdminPage';
+export { AdminSectionPage } from './pages/AdminSectionPage';
 export { AdminDashboard } from './components/AdminDashboard';
 export { RecentActivityFeed } from './components/RecentActivityFeed';
 export { useAdminDashboard } from './hooks/admin-hooks';

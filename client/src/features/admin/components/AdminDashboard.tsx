@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { DailyFaithManager } from '../../daily-faith';
-import { PriceSyncManager } from './PriceSyncManager';
-import { DbHealthCard } from './DbHealthCard';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
@@ -12,10 +9,6 @@ import { useAiStatus } from '../hooks/useAiStatus';
 import { mergeOnlineWithSelf } from '../helpers/adminDashboardHelpers';
 import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
-import { PushBroadcastManager } from './PushBroadcastManager';
-import { AdminAiStatusCard } from './AdminAiStatusCard';
-import { SubscriptionAdminManager } from './SubscriptionAdminManager';
-import { FeedbackManager } from './FeedbackManager';
 import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
 
@@ -25,13 +18,7 @@ export const AdminDashboard = () => {
   const { user } = useAuth();
   const isDark = settings.theme === 'dark';
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [faithOpen, setFaithOpen] = useState(false);
-  const [priceSyncOpen, setPriceSyncOpen] = useState(false);
-  const [dbHealthOpen, setDbHealthOpen] = useState(false);
-  const [aiStatusOpen, setAiStatusOpen] = useState(false);
-  const [pushOpen, setPushOpen] = useState(false);
-  const [subscriptionsOpen, setSubscriptionsOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  // כל אזור (ניהול מאגר, סניפים, מנויים, משובים וכו') נפתח כעמוד נפרד ב-/admin/<אזור>, לא כפופאפ.
   const {
     activities,
     usersWithLoginInfo,
@@ -101,14 +88,14 @@ export const AdminDashboard = () => {
         title={t('adminDashboard')}
         faithTitle={t('dailyFaithManagerTitle')}
         onBack={() => navigate('/settings')}
-        onOpenDbHealth={() => setDbHealthOpen(true)}
-        onOpenFaith={() => setFaithOpen(true)}
-        onOpenPriceSync={() => setPriceSyncOpen(true)}
-        onOpenAiStatus={() => setAiStatusOpen(true)}
+        onOpenDbHealth={() => navigate('/admin/db')}
+        onOpenFaith={() => navigate('/admin/faith')}
+        onOpenPriceSync={() => navigate('/admin/price-sync')}
+        onOpenAiStatus={() => navigate('/admin/ai')}
         aiStatus={aiStatus.data}
-        onOpenPush={() => setPushOpen(true)}
-        onOpenSubscriptions={() => setSubscriptionsOpen(true)}
-        onOpenFeedback={() => setFeedbackOpen(true)}
+        onOpenPush={() => navigate('/admin/push')}
+        onOpenSubscriptions={() => navigate('/admin/subscriptions')}
+        onOpenFeedback={() => navigate('/admin/feedback')}
         onRefresh={handleRefresh}
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
@@ -150,30 +137,6 @@ export const AdminDashboard = () => {
         />
       </Box>
 
-      {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
-      {priceSyncOpen && <PriceSyncManager onClose={() => setPriceSyncOpen(false)} />}
-      {dbHealthOpen && <DbHealthCard onClose={() => setDbHealthOpen(false)} isDark={isDark} />}
-      {aiStatusOpen && (
-        <AdminAiStatusCard
-          onClose={() => setAiStatusOpen(false)}
-          isDark={isDark}
-          data={aiStatus.data}
-          loading={aiStatus.loading}
-          refreshing={aiStatus.refreshing}
-          lastFetchAt={aiStatus.lastFetchAt}
-          refreshError={aiStatus.refreshError}
-          onRefresh={aiStatus.forceRefresh}
-        />
-      )}
-      {pushOpen && <PushBroadcastManager onClose={() => setPushOpen(false)} isDark={isDark} users={usersWithLoginInfo} />}
-      {subscriptionsOpen && (
-        <SubscriptionAdminManager
-          onClose={() => setSubscriptionsOpen(false)}
-          isDark={isDark}
-          onChanged={refreshData}
-        />
-      )}
-      {feedbackOpen && <FeedbackManager onClose={() => setFeedbackOpen(false)} isDark={isDark} />}
     </Box>
   );
 };

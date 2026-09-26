@@ -4,7 +4,7 @@ import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import EditLocationIcon from '@mui/icons-material/EditLocation';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
-import { Modal } from '../../../global/components';
+import { AdminSectionShell } from './AdminSectionShell';
 
 // שורה במודאל ההסבר - לא מיוצא, משמשת רק את HelpModal
 const SourceRow = ({ icon, label, desc, color, isDark }: { icon: React.ReactNode; label: string; desc: string; color: string; isDark: boolean }) => (
@@ -22,9 +22,9 @@ const SourceRow = ({ icon, label, desc, color, isDark }: { icon: React.ReactNode
   </Box>
 );
 
-// מודאל הסבר מפורט לאדמין - איך הסניפים והמחירים מגיעים למאגר
+// עמוד הסבר מפורט לאדמין - איך הסניפים והמחירים מגיעים למאגר
 export const PriceSyncHelpModal = ({ onClose, isDark }: { onClose: () => void; isDark: boolean }) => (
-  <Modal title="איך פועל המאגר?" onClose={onClose}>
+  <AdminSectionShell title="איך פועל המאגר?" onBack={onClose} isDark={isDark}>
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 13, lineHeight: 1.6 }}>
 
       {/* סקציה 1: סוגי מקורות לסניפים */}
@@ -81,5 +81,5 @@ export const PriceSyncHelpModal = ({ onClose, isDark }: { onClose: () => void; i
       </Box>
 
     </Box>
-  </Modal>
+  </AdminSectionShell>
 );

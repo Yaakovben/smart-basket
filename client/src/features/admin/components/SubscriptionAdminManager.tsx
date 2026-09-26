@@ -5,6 +5,7 @@ import { adminApi, type AdminSubscriptionRequest } from '../../../services/api/a
 import { DbHealthHeader } from './DbHealthHeader';
 import { LegacyTrialGrantCard } from './LegacyTrialGrantCard';
 import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
+import { adminPageSx } from '../styles/adminPage.styles';
 
 interface Props {
   isDark: boolean;
@@ -94,12 +95,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
   const waiting = (pendingItems ?? []).filter((i) => i.status === 'pending');
 
   return (
-    <Box sx={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      bgcolor: isDark ? '#0F172A' : '#F8FAFC',
-      display: 'flex', flexDirection: 'column',
-      pt: 'env(safe-area-inset-top)',
-    }}>
+    <Box sx={adminPageSx(isDark)}>
       <DbHealthHeader
         onClose={onClose}
         icon={<WorkspacePremiumRoundedIcon sx={{ color: PRO_PURPLE }} />}
