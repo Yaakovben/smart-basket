@@ -2,6 +2,7 @@ import { Dialog, Box, Typography, Button, IconButton } from '@mui/material';
 import SentimentSatisfiedRoundedIcon from '@mui/icons-material/SentimentSatisfiedRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { useSettings } from '../context/SettingsContext';
+import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
 
 interface Props {
   open: boolean;
@@ -20,7 +21,7 @@ export const MaintenanceApologyNotice = ({ open, onClose }: Props) => {
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { borderRadius: '24px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(340px, calc(100vw - 40px))' } }}
+      PaperProps={{ sx: { ...centeredDialogPaperSx, borderRadius: '24px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(340px, calc(100vw - 40px))' } }}
     >
       <Box sx={{
         position: 'relative', textAlign: 'center', px: 3, pt: 4, pb: 3,

@@ -2,16 +2,17 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-// כרטיס צף במרכז המסך, עם dvh - dvh מכסה בדיוק את האזור הנראה במובייל בלי
-// לכלול את סרגל הכתובת שמתקפל/נפתח. הגובה מוגבל ל-78dvh כדי שהדיאלוג לא
-// ייראה כמו מסך מלא אלא כמו מודל. מרווחים וקפיצת כניסה מגיעים מה-theme.
+// bottom-sheet מודאלי עם dvh - מותיר מרווח עליון משמעותי, dvh מכסה בדיוק את
+// האזור הנראה במובייל בלי לכלול את סרגל הכתובת שמתקפל/נפתח.
+// הגובה מוגבל ל-78dvh כדי שהדיאלוג לא ייראה כמו מסך מלא אלא כמו מודל.
 export const dialogPaperSx: SxProps<Theme> = {
   bgcolor: '#000',
-  borderRadius: '20px',
+  borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
+  m: { xs: 0, sm: 2 },
   maxHeight: { xs: '78dvh', sm: '82dvh' },
   minHeight: { xs: '480px', sm: '480px' },
   height: { xs: '78dvh', sm: 'auto' },
-  width: { xs: 'calc(100% - 32px)', sm: 480 },
+  width: { xs: '100%', sm: 480 },
   overflow: 'hidden',
 };
 

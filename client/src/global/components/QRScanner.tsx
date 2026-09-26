@@ -101,6 +101,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
       onClose={onClose}
       transitionDuration={180}
       PaperProps={{ sx: dialogPaperSx }}
+      sx={{ '& .MuiDialog-container': { alignItems: { xs: 'flex-end', sm: 'center' } } }}
     >
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
 

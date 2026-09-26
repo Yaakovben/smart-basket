@@ -13,6 +13,7 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import type { SubscriptionStatus, SubscriptionRequestDto, SubscriptionPayMethod } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { cardSx, primaryCtaSx, ghostCtaSx, PRO_PURPLE } from '../subscription.styles';
+import { centeredDialogPaperSx } from '../../../global/styles/centeredDialog.styles';
 
 interface Props {
   status: SubscriptionStatus;
@@ -316,7 +317,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        PaperProps={{ sx: { borderRadius: '22px', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(340px, calc(100vw - 40px))' } }}
+        PaperProps={{ sx: { ...centeredDialogPaperSx, borderRadius: '22px', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(340px, calc(100vw - 40px))' } }}
       >
         <Box sx={{ p: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography sx={{ fontSize: 18, fontWeight: 900 }}>{s.confirmTitle}</Typography>

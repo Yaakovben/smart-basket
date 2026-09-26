@@ -43,6 +43,7 @@ export const FeedbackPopup = ({ onClose, showToast }: FeedbackPopupProps) => {
 
   return (
     <Modal
+      centered
       title={t('feedbackTitle')}
       onClose={onClose}
       footer={

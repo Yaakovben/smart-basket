@@ -155,13 +155,22 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     <Dialog
       open={!!branch}
       onClose={onClose}
-      // כרטיס צף במרכז המסך (מרווחים וקפיצת כניסה מה-theme)
+      // bottom-sheet style: דבוק לתחתית במובייל, מרכזי בדסקטופ
       PaperProps={{
         sx: {
+          borderRadius: { xs: '24px 24px 0 0', sm: '20px' },
           p: 0,
-          maxWidth: 380,
+          m: 0,
+          maxWidth: { xs: '100%', sm: 380 },
+          width: '100%',
           bgcolor: isDark ? '#0F1F1E' : '#fff',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.3)',
           overflow: 'hidden',
+        },
+      }}
+      sx={{
+        '& .MuiDialog-container': {
+          alignItems: { xs: 'flex-end', sm: 'center' },
         },
       }}
     >

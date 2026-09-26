@@ -9,6 +9,7 @@ import SellRoundedIcon from '@mui/icons-material/SellRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getSubscriptionStrings } from '../subscription.strings';
 import { PRO_LILAC, primaryCtaSx, ghostCtaSx } from '../subscription.styles';
+import { centeredDialogPaperSx } from '../../../global/styles/centeredDialog.styles';
 
 // שלושה יתרונות מרכזיים בתמצית - עונה מיד על "אז מה זה נותן לי בפועל",
 // לא רק "קיבלת מתנה" בלי הקשר.
@@ -56,7 +57,7 @@ export const WelcomeProDialog = ({ open, months, expiryDate, onClose, onDetails 
     <Dialog
       open={open !== null}
       onClose={onClose}
-      PaperProps={{ sx: { borderRadius: '28px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(350px, calc(100vw - 40px))' } }}
+      PaperProps={{ sx: { ...centeredDialogPaperSx, borderRadius: '28px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#fff', width: 'min(350px, calc(100vw - 40px))' } }}
     >
       <Box sx={{
         position: 'relative', overflow: 'hidden', textAlign: 'center', px: 3, pt: 5, pb: 3,

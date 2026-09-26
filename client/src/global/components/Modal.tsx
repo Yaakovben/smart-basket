@@ -1,7 +1,10 @@
-import { Dialog, DialogTitle, DialogContent, Box, IconButton } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Box, Slide, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useCallback } from 'react';
+import type { TransitionProps } from '@mui/material/transitions';
+import { forwardRef, useCallback } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
+import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
 import { useReliableTap } from '../hooks/useReliableTap';
 import { useSettings } from '../context/SettingsContext';
 
@@ -14,9 +17,18 @@ interface ModalProps {
   // בלי זה, כפתור "שמור"/"הוסף" בסוף children היה נעלם מתחת לקיפול וגורם
   // למשתמש לא לדעת איך לסיים - ראו AddProductModal/EditProductModal.
   footer?: React.ReactNode;
+  // כרטיס צף במרכז המסך במקום גיליון שצמוד לתחתית (למשל פופאפ המשוב)
+  centered?: boolean;
 }
 
-export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
+const Transition = forwardRef(function Transition(
+  props: TransitionProps & { children: ReactElement },
+  ref: Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} timeout={180} {...props} />;
+});
+
+export const Modal = ({ title, onClose, children, footer, centered = false }: ModalProps) => {
   // נעילת ה-body מטופלת אוטומטית ע"י MUI Dialog (disableScrollLock=false ברירת מחדל).
   // אסור להוסיף נעילה משלנו - שתי שכבות נועלות מתנגשות וגורמות לתוכן הפנימי להיחתך.
   const handleClose = useCallback(() => {
@@ -34,30 +46,42 @@ export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
     <Dialog
       open={true}
       onClose={handleClose}
+      TransitionComponent={centered ? undefined : Transition}
       fullWidth
       maxWidth="xs"
-      // כרטיס צף במרכז המסך (מרווחים, פינות וקפיצת כניסה מגיעים מה-theme)
       PaperProps={{
-        sx: {
-          maxWidth: { xs: 'calc(100% - 32px)', sm: 480 },
+        sx: centered ? { ...centeredDialogPaperSx, maxWidth: { xs: 'calc(100% - 32px)', sm: 480 }, bgcolor: 'background.paper' } : {
+          m: 0,
+          borderRadius: '20px 20px 0 0',
+          maxHeight: '90vh',
+          maxWidth: { xs: '100%', sm: 480 },
+          width: '100%',
+          pb: 'env(safe-area-inset-bottom)',
           bgcolor: 'background.paper',
-          // מסכים זעירים - radius ומרווח קטנים יותר
-          '@media (max-width: 360px)': { borderRadius: '18px', m: 1.5, maxWidth: 'calc(100% - 24px)', width: 'calc(100% - 24px)' },
-          // Landscape - המסך נמוך, מנצלים כמעט את כל הגובה
-          '@media (orientation: landscape) and (max-height: 500px)': { maxHeight: 'calc(100dvh - 16px)', my: 1 },
+          // מסכים זעירים - radius קטן יותר
+          '@media (max-width: 360px)': { borderRadius: '16px 16px 0 0' },
+          '@media (max-width: 320px)': { borderRadius: '14px 14px 0 0' },
+          // Landscape - גובה גבול 95vh כי המסך נמוך
+          '@media (orientation: landscape) and (max-height: 500px)': { maxHeight: '95vh' },
         }
       }}
       sx={{
+        '& .MuiDialog-container': {
+          alignItems: centered ? 'center' : 'flex-end',
+        },
         '& .MuiBackdrop-root': {
           backdropFilter: 'blur(4px)',
           bgcolor: 'rgba(0,0,0,0.4)'
         }
       }}
     >
+      {/* ידית גרירה, רק בגיליון שצמוד לתחתית */}
+      {!centered && <Box aria-hidden="true" sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />}
+
       {/* כותרת וכפתור סגירה */}
       <Box sx={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
-        px: 2, pt: 2, pb: 1, minHeight: 44,
+        px: 2, pt: 1.5, pb: 1, minHeight: 44,
         '@media (max-width: 360px)': { px: 1.5, pt: 1, pb: 0.75, minHeight: 38 },
         '@media (max-width: 320px)': { px: 1, pt: 0.75, pb: 0.5, minHeight: 34 },
       }}>

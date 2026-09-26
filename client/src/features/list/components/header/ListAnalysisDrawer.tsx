@@ -166,14 +166,9 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       open={open}
       onClose={handleClose}
       slotProps={{ backdrop: { sx: { backdropFilter: 'blur(2px)' } } }}
-      // כרטיס צף מעל התחתית (לא צמוד): מרווח מהצדדים ומהתחתית, פינות מכל הכיוונים
       PaperProps={{
         sx: {
-          borderRadius: '24px',
-          m: '0 auto calc(12px + env(safe-area-inset-bottom))',
-          width: 'calc(100% - 24px)',
-          maxWidth: 600,
-          boxShadow: isDark ? '0 24px 60px rgba(0,0,0,0.6)' : '0 24px 60px rgba(15,23,42,0.22)',
+          borderRadius: '24px 24px 0 0',
           maxHeight: '75dvh',
           bgcolor: isDark ? '#1E293B' : '#FAFAFA',
           overflow: 'hidden',
@@ -181,7 +176,10 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
         },
       }}
     >
-      <Box sx={{ pt: 2 }} />
+      {/* ידית גרירה */}
+      <Box sx={{ pt: 1.25, pb: 0.5, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ width: 36, height: 4, borderRadius: 2, bgcolor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)' }} />
+      </Box>
 
       {/* כותרת */}
       <Box sx={{ display: 'flex', alignItems: 'center', px: 2, pb: 1.5, gap: 1 }}>

@@ -14,6 +14,7 @@ import Zoom from '@mui/material/Zoom';
 import type { TransitionProps } from '@mui/material/transitions';
 import { useSettings } from '../context/SettingsContext';
 import type { PlanLimitFeature } from './UpgradeModalContext';
+import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
 
 interface UpgradeModalProps {
   open: boolean;
@@ -62,7 +63,7 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
       maxWidth="xs"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: '24px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
+        sx: { ...centeredDialogPaperSx, borderRadius: '24px', overflow: 'hidden', bgcolor: isDark ? '#0F172A' : '#F8FAFC' },
       }}
     >
       {/* כותרת - זהה במבנה לכותרת עמוד המנוי (גרדיאנט סגול חי, עיגולי קישוט, אייקון בתוך אריח) */}
