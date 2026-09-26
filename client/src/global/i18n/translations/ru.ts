@@ -849,7 +849,7 @@ export const ru: Translations = {
   matchExcludedByYou: 'Исключён вами',
   matchNotSoldHere: 'Нет в этой сети',
   branchPriceTypicalHint: 'Обычная цена сети. Филиал проверен, товар продаётся в большинстве филиалов, скорее всего цена такая же',
-  branchAllVerified: 'Цены филиала',
+  branchAllVerified: 'Точные цены филиала',
   noBranchesFound: 'Филиалы не найдены',
   sourceLabel: 'Источник:',
   reportLabel: '🚩 Сообщить',

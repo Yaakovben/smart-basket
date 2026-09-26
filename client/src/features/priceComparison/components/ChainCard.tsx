@@ -152,7 +152,10 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
                 {chain.hasData ? t('noMatches') : t('notPublished')}
               </Typography>
             )}
-            {chain.nearestBranch && chain.matchedCount > 0 && chain.branchVerifiedCount === chain.matchedCount && (
+            {/* "מחיר מדויק לסניף": כל המוצרים שזוהו תומחרו לפי הסניף הקרוב. לא מציגים
+                כשהנתונים ישנים, כדי לא לסתור את אזהרת "נתונים מלפני X ימים" */}
+            {chain.nearestBranch && chain.matchedCount > 0 && chain.branchVerifiedCount === chain.matchedCount
+              && !(chain.hasData && (daysSince(chain.lastUpdatedISO) ?? 0) >= STALE_CHAIN_DAYS) && (
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Typography sx={{ fontSize: 10.5, color: '#059669', fontWeight: 700 }}>

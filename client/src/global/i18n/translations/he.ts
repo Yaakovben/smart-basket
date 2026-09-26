@@ -855,7 +855,7 @@ export const he: Translations = {
   matchExcludedByYou: 'הוסר מההשוואה על ידך',
   matchNotSoldHere: 'לא נמצא ברשת זו',
   branchPriceTypicalHint: 'המחיר הנפוץ ברשת. הסניף נסרק והמוצר נמכר ברוב הסניפים, לכן זה כנראה גם מחירו כאן',
-  branchAllVerified: 'מחירי הסניף',
+  branchAllVerified: 'מחיר מדויק לסניף',
   noBranchesFound: 'לא נמצאו סניפים לרשת',
   sourceLabel: 'מקור:',
   reportLabel: '🚩 דווח',
