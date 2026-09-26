@@ -46,21 +46,45 @@ export interface BarcodeStats {
 const cents = (p: number): number => Math.round(p * 100);
 
 // סטטיסטיקה לכל ברקוד מתוך פיד הרשת. totalStores = מספר הסניפים השונים בפיד.
-export function buildBarcodeStats(items: FeedItem[], totalStores: number): Map<string, BarcodeStats> {
-  const acc = new Map<string, { prices: Map<number, number>; stores: Set<string> }>();
+// הפיד מכיל שורה לכל (סניף x מוצר), כלומר מיליוני שורות ברשת גדולה. לכן מקבלים
+// Iterable ולא מערך (בלי עותק נוסף של כל השורות בזיכרון), וזוכרים אילו סניפים
+// נספרו לכל ברקוד במערך ביטים לפי אינדקס סניף ולא ב-Set של מחרוזות. Set לכל ברקוד
+// הפיל את השרת (512MB ב-Render) מחוסר זיכרון באמצע הסנכרון הלילי.
+export function buildBarcodeStats(items: Iterable<FeedItem>, totalStores: number): Map<string, BarcodeStats> {
+  const storeIndex = new Map<string, number>();
+  let bitmapBytes = Math.max(1, Math.ceil(totalStores / 8));
+  const acc = new Map<string, { prices: Map<number, number>; seen: Uint8Array; storeCount: number }>();
   for (const it of items) {
-    const entry = acc.get(it.barcode) ?? { prices: new Map<number, number>(), stores: new Set<string>() };
+    let idx = storeIndex.get(it.storeId);
+    if (idx === undefined) {
+      idx = storeIndex.size;
+      storeIndex.set(it.storeId, idx);
+    }
+    let entry = acc.get(it.barcode);
+    if (!entry) {
+      entry = { prices: new Map<number, number>(), seen: new Uint8Array(bitmapBytes), storeCount: 0 };
+      acc.set(it.barcode, entry);
+    }
+    const byte = idx >> 3;
+    // יותר סניפים מהצפוי: מגדילים את מערך הביטים של הברקוד הזה
+    if (byte >= entry.seen.length) {
+      bitmapBytes = Math.max(bitmapBytes, byte + 1);
+      const grown = new Uint8Array(bitmapBytes);
+      grown.set(entry.seen);
+      entry.seen = grown;
+    }
+    const bit = 1 << (idx & 7);
     // סניף שמופיע פעמיים לאותו ברקוד נספר פעם אחת
-    if (!entry.stores.has(it.storeId)) {
-      entry.stores.add(it.storeId);
+    if ((entry.seen[byte] & bit) === 0) {
+      entry.seen[byte] |= bit;
+      entry.storeCount++;
       const c = cents(it.price);
       entry.prices.set(c, (entry.prices.get(c) ?? 0) + 1);
     }
-    acc.set(it.barcode, entry);
   }
 
   const result = new Map<string, BarcodeStats>();
-  for (const [barcode, { prices, stores }] of acc) {
+  for (const [barcode, { prices, storeCount }] of acc) {
     let modalCents = -1;
     let modalCount = 0;
     for (const [c, count] of prices) {
@@ -68,8 +92,8 @@ export function buildBarcodeStats(items: FeedItem[], totalStores: number): Map<s
     }
     result.set(barcode, {
       modalPrice: modalCents / 100,
-      storeCount: stores.size,
-      coverage: totalStores > 0 ? stores.size / totalStores : 0,
+      storeCount,
+      coverage: totalStores > 0 ? storeCount / totalStores : 0,
     });
   }
   return result;

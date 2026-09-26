@@ -278,10 +278,14 @@ async function processChainItems(
   // מזהי סניף מנורמלים (בלי אפסים מובילים) - כך הם מתאימים לקובץ הסניפים
   const feedStoreIds = new Set<string>();
   for (const it of validItems) if (it.storeId) feedStoreIds.add(normStoreId(it.storeId));
-  const barcodeStats = buildBarcodeStats(
-    validItems.filter(it => it.storeId).map(it => ({ storeId: normStoreId(it.storeId!), barcode: it.barcode, price: it.price })),
-    feedStoreIds.size
-  );
+  // גנרטור ולא filter+map: מערך ביניים של כל שורות הפיד (מיליונים ברשת גדולה)
+  // היה מכפיל את צריכת הזיכרון בסנכרון
+  function* feedRows() {
+    for (const it of validItems) {
+      if (it.storeId) yield { storeId: normStoreId(it.storeId), barcode: it.barcode, price: it.price };
+    }
+  }
+  const barcodeStats = buildBarcodeStats(feedRows(), feedStoreIds.size);
 
   // חריגות מחיר ברמת סניף: לכל ברקוד, "סניף:מחיר" לכל סניף שמחירו שונה מהנפוץ.
   // נשמרות בתוך מסמך ה-Price עצמו (storePrices) ולא באוסף נפרד: שורה נפרדת לכל
