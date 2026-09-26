@@ -32,7 +32,7 @@ export interface User {
   createdAt?: string;
   plan?: 'free' | 'pro';
   planExpiresAt?: string | null;
-  planSource?: 'trial' | 'paid';
+  planSource?: 'trial' | 'paid' | 'store';
 }
 
 // ===== מוצר =====

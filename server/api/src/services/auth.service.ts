@@ -112,11 +112,44 @@ export async function login(
  *  5. אם נמצא חשבון email ללא googleId — מקשרים אותם אטומית
  *  6. מחזירים טוקנים ו-user
  */
+// אימות ID token מההתחברות הנייטיב (אנדרואיד/iOS). כאן, בניגוד ל-access
+// token, השדה aud אמין ואחיד: זה ה-client ID שביקש את הטוקן, ולכן חוסמים
+// אם הוא לא שלנו. גוגל עצמה מאמתת את החתימה והתוקף ב-tokeninfo.
+async function googleUserFromIdToken(idToken: string): Promise<GoogleUserInfo> {
+  const response = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+    { signal: AbortSignal.timeout(10000) }
+  );
+  if (!response.ok) throw AuthError.googleAuthFailed();
+  const info = (await response.json()) as {
+    aud?: string; iss?: string; sub?: string; email?: string;
+    email_verified?: string | boolean; name?: string; picture?: string;
+  };
+  const allowedAudiences = [env.GOOGLE_CLIENT_ID, ...env.GOOGLE_NATIVE_CLIENT_IDS.split(',').map(s => s.trim())].filter(Boolean);
+  if (!info.aud || !allowedAudiences.includes(info.aud)) throw AuthError.googleAuthFailed();
+  if (info.iss !== 'accounts.google.com' && info.iss !== 'https://accounts.google.com') throw AuthError.googleAuthFailed();
+  return {
+    sub: info.sub ?? '',
+    email: info.email ?? '',
+    // לחשבונות בלי שם תצוגה בטוקן משתמשים בחלק הראשון של המייל
+    name: info.name || (info.email ?? '').split('@')[0],
+    email_verified: info.email_verified === true || info.email_verified === 'true',
+    picture: info.picture,
+  };
+}
+
 export async function googleAuth(
-  data: { accessToken: string },
+  data: { accessToken?: string; idToken?: string },
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
+  const googleUser = data.idToken
+    ? await googleUserFromIdToken(data.idToken)
+    : await googleUserFromAccessToken(data.accessToken ?? '');
+  return completeGoogleAuth(googleUser, ipAddress, userAgent);
+}
+
+async function googleUserFromAccessToken(accessToken: string): Promise<GoogleUserInfo> {
   // בדיקת audience ב-fire-and-forget: לוג בלבד, ללא חסימה.
   // תוקן בחזרה ל-log-only ב-2026-09-20: הגרסה החוסמת (aud/azp !==
   // GOOGLE_CLIENT_ID => throw) התבררה כתקרית פרודקשן חמורה - חסמה כניסת
@@ -126,7 +159,7 @@ export async function googleAuth(
   // (rate limit/5xx) הייתה חוסמת התחברות באופן גורף. אין לחסום שוב בלי
   // לאמת קודם בלוגים על פני מדגם רחב של כניסות אמיתיות.
   fetch(
-    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
     { signal: AbortSignal.timeout(5000) }
   )
     .then(r => r.json())
@@ -148,15 +181,21 @@ export async function googleAuth(
   const response = await fetch(
     'https://www.googleapis.com/oauth2/v3/userinfo',
     {
-      headers: { Authorization: `Bearer ${data.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
       signal: AbortSignal.timeout(10000),
     }
   );
 
   if (!response.ok) throw AuthError.googleAuthFailed();
 
-  const googleUser = (await response.json()) as GoogleUserInfo;
+  return (await response.json()) as GoogleUserInfo;
+}
 
+async function completeGoogleAuth(
+  googleUser: GoogleUserInfo,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
   // אימות שדות חובה מ-Google
   if (!googleUser.sub || !googleUser.email || !googleUser.name) {
     throw AuthError.googleAuthFailed();

@@ -48,10 +48,11 @@ export const authApi = {
     }
   },
 
-  async googleAuth(accessToken: string): Promise<AuthResponse> {
+  // באתר: accessToken מזרימת הדפדפן. באפליקציה הנייטיב: idToken מההתחברות המובנית.
+  async googleAuth(token: { accessToken: string } | { idToken: string }): Promise<AuthResponse> {
     setAuthInProgress(true);
     try {
-      const response = await apiClient.post<{ data: AuthResponse }>('/auth/google', { accessToken });
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/google', token);
       const responseData = response.data?.data;
       if (!responseData?.user || !responseData?.tokens) {
         throw new Error('Invalid server response');

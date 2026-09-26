@@ -6,6 +6,7 @@ import { UserDAL } from '../dal';
 import { PLAN_LIMITS, isPro } from '../constants';
 import { env } from '../config/environment';
 import { planUsage } from '../services/plan-usage.service';
+import { isStoreBillingConfigured } from '../services/storeSubscription.service';
 import {
   getPlansCatalog, getPaymentMethods, getOpenRequest, listUserRequests,
   createRequest, reportPaid, cancelRequest, ALLOWED_MONTHS,
@@ -65,6 +66,16 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
         paybox: methods.paybox,
         bank: methods.bank,
         supportEmail: 'smartbasket129@gmail.com',
+      },
+      // רכישה דרך App Store / Google Play (באפליקציה הנייטיב בלבד).
+      store: {
+        enabled: isStoreBillingConfigured(),
+        entitlementId: env.REVENUECAT_ENTITLEMENT_ID,
+        // מזהה המשתמש אצלנו משמש גם כמזהה ב-RevenueCat, כדי שה-webhook ידע למי לשייך.
+        appUserId: userId,
+        // המנוי הנוכחי נרכש בחנות: ניהול וביטול נעשים שם, לא אצלנו.
+        isStorePlan: plan === 'pro' && user?.planSource === 'store',
+        autoRenew: user?.planAutoRenew ?? false,
       },
       openRequest: openRequest ? serializeRequest(openRequest) : null,
       history: history.map(serializeRequest),

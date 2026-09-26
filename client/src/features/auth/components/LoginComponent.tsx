@@ -7,6 +7,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useClearCache } from '../hooks/useClearCache';
 import { AppLogo } from './LoginLogos';
 import { GoogleSignInButton } from './GoogleSignInButton';
+import { isNativeApp } from '../../../global/services/storeBilling';
+import { nativeGoogleLogin } from '../../../global/services/nativeGoogleAuth';
 import { LoginErrorAlert } from './LoginErrorAlert';
 import { EmailLoginToggle } from './EmailLoginToggle';
 import { EmailLoginForm } from './EmailLoginForm';
@@ -27,10 +29,18 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
   const auth = useAuth({ onLogin });
   const { error, googleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, toggleEmailForm } = auth;
 
-  const googleLogin = useGoogleLogin({
+  const webGoogleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: handleGoogleError
   });
+
+  // באפליקציה מהחנות: חלון ההתחברות המובנה של המכשיר (גוגל חוסמת OAuth ב-WebView).
+  const googleLogin = () => {
+    if (!isNativeApp()) { webGoogleLogin(); return; }
+    nativeGoogleLogin()
+      .then((res) => { if ('idToken' in res) void handleGoogleSuccess({ id_token: res.idToken }); })
+      .catch(() => handleGoogleError());
+  };
 
   return (
     <Box sx={{

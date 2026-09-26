@@ -14,6 +14,7 @@ import { dailyFaithRoutes } from '../features/daily-faith';
 import { priceComparisonRoutes } from '../features/priceComparison';
 import emailRoutes from './email.routes';
 import subscriptionRoutes from './subscription.routes';
+import storeBillingRoutes from './storeBilling.routes';
 import errorReportRoutes from './errorReport.routes';
 import feedbackRoutes from './feedback.routes';
 
@@ -34,6 +35,7 @@ router.use('/price-comparison', priceComparisonRoutes);
 router.use('/daily-faith', dailyFaithRoutes);
 router.use('/email', emailRoutes);
 router.use('/subscription', subscriptionRoutes);
+router.use('/store-billing', storeBillingRoutes);
 router.use('/error-report', errorReportRoutes);
 router.use('/feedback', feedbackRoutes);
 

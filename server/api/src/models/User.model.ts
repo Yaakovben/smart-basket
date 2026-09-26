@@ -50,8 +50,9 @@ export interface IUser extends Document {
   // מכבד את התאריך), רק לא "מחודש" אחריו. ברירת מחדל true (גם למשתמשי
   // free - לא רלוונטי להם, אבל עקבי).
   planAutoRenew: boolean;
-  // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין.
-  planSource?: 'trial' | 'paid';
+  // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין,
+  // 'store' = מנוי מתחדש שנרכש באפליקציה דרך App Store או Google Play.
+  planSource?: 'trial' | 'paid' | 'store';
   // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
   // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
   legacyTrialGrantedAt?: Date;
@@ -152,7 +153,7 @@ const userSchema = new Schema<IUser>(
     },
     planSource: {
       type: String,
-      enum: ['trial', 'paid'],
+      enum: ['trial', 'paid', 'store'],
     },
     legacyTrialGrantedAt: {
       type: Date,

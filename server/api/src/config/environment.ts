@@ -55,6 +55,11 @@ const envSchema = Joi.object({
     'any.required': 'Google Client ID is required',
   }),
 
+  // client IDs נוספים של Google שמותר לקבל מהם ID token (למשל client של
+  // iOS/אנדרואיד), מופרדים בפסיקים. בדרך כלל ריק: הפלאגין הנייטיב מבקש את
+  // הטוקן בשם ה-client של האתר (GOOGLE_CLIENT_ID), ואז אין צורך בערך כאן.
+  GOOGLE_NATIVE_CLIENT_IDS: Joi.string().allow('').default(''),
+
   // CORS - רשימת origins מופרדת בפסיקים
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
 
@@ -141,6 +146,16 @@ const envSchema = Joi.object({
   BANK_ACCOUNT: Joi.string().pattern(/^\d{4,12}$/).optional(),
   // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
   TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
+
+  // ===== מנוי דרך חנויות האפליקציות (RevenueCat) =====
+  // באפליקציה הנייטיב הרכישה עוברת דרך App Store / Google Play, ו-RevenueCat
+  // מאמת אותה מולן. REVENUECAT_SECRET_KEY הוא המפתח הסודי (sk_...) מלוח
+  // הבקרה של RevenueCat, לשרת בלבד. REVENUECAT_WEBHOOK_AUTH הוא ערך שבוחרים
+  // בעצמכם ומגדירים גם בהגדרות ה-webhook ב-RevenueCat (כותרת Authorization).
+  // אם המפתח חסר, הרכישה באפליקציה פשוט לא מוצעת.
+  REVENUECAT_SECRET_KEY: Joi.string().optional(),
+  REVENUECAT_WEBHOOK_AUTH: Joi.string().min(16).optional(),
+  REVENUECAT_ENTITLEMENT_ID: Joi.string().default('pro'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -169,6 +184,7 @@ export interface Environment {
   JWT_ACCESS_EXPIRES_IN: string;
   JWT_REFRESH_EXPIRES_IN: string;
   GOOGLE_CLIENT_ID: string;
+  GOOGLE_NATIVE_CLIENT_IDS: string;
   CORS_ORIGIN: string;
   ADMIN_EMAIL: string;
   SENTRY_DSN?: string;
@@ -197,6 +213,9 @@ export interface Environment {
   BANK_BRANCH?: string;
   BANK_ACCOUNT?: string;
   TRIAL_MONTHS: number;
+  REVENUECAT_SECRET_KEY?: string;
+  REVENUECAT_WEBHOOK_AUTH?: string;
+  REVENUECAT_ENTITLEMENT_ID: string;
 }
 
 export const env = parseEnv();

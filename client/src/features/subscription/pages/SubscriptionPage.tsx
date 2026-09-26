@@ -18,6 +18,8 @@ import { StepIndicator } from '../components/StepIndicator';
 import { TrustRow } from '../components/PerksAndTrust';
 import { PlanComparisonTable } from '../components/PlanComparisonTable';
 import { primaryCtaSx, revealSx } from '../subscription.styles';
+import { StoreCheckout } from '../components/StoreCheckout';
+import { isNativeApp } from '../../../global/services/storeBilling';
 
 // כותרת ייעודית בסגול המותג של המינוי - לא הגרדיאנט התכלת הכללי של האפליקציה
 // (COMMON_STYLES.gradients.header), שלא קשור לכלום כאן ויוצר חוסר עקביות
@@ -39,7 +41,12 @@ export const SubscriptionPage = ({ showToast }: Props) => {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const s = getSubscriptionStrings(settings.language);
+  // באפליקציה מהחנות הרכישה עוברת רק דרך App Store / Google Play. מסלול
+  // התשלום הידני (ביט, PayBox, העברה) לא מוצג שם בכלל, כי החנויות אוסרות
+  // להפנות לתשלום חיצוני על תוכן דיגיטלי.
+  const native = isNativeApp();
+  const baseStrings = getSubscriptionStrings(settings.language);
+  const s = native ? { ...baseStrings, heroFreeSub: baseStrings.heroFreeSubStore } : baseStrings;
   const locale = LOCALES[settings.language] ?? 'he-IL';
 
   const { status, loading, error, busy, reload, createRequest, reportPaid, cancelRequest } = useSubscription();
@@ -156,14 +163,25 @@ export const SubscriptionPage = ({ showToast }: Props) => {
             {/* מחוון השלבים מוצג רק אחרי שנבחרה תקופה ונפתחה בקשת תשלום - בתחילת
                 הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר.
                 step=4 (activated) = שלב סופי אמיתי, לא רק "3 - עדיין מאשרים". */}
-            {(open || activated) && (
+            {native && (
+              <Reveal i={2}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <StoreCheckout
+                    status={status} language={settings.language} isDark={isDark}
+                    showToast={showToast} onChanged={() => reload(true)}
+                  />
+                </Box>
+              </Reveal>
+            )}
+
+            {!native && (open || activated) && (
               <Reveal i={1}><StepIndicator step={activated ? 4 : open?.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
             )}
 
             {/* אושר בזמן שהמשתמש עדיין כאן - מסך מנוחה "זהו, נגמר" בתוך העמוד
                 עצמו, בלי חלון קופץ נוסף מעליו (שהיה חוזר על אותה הודעה
                 פעמיים). נשאר עד שלוחצים "מתחילים". */}
-            {activated ? (
+            {native ? null : activated ? (
               <Reveal i={2}><ApprovedCard expiryDate={activatedExpiry} s={s} isDark={isDark} onDismiss={() => setActivated(false)} /></Reveal>
             ) : open?.status === 'pending' ? (
               <Reveal i={2}>
@@ -176,9 +194,9 @@ export const SubscriptionPage = ({ showToast }: Props) => {
               <Reveal i={2}><ReportedCard request={open} s={s} isDark={isDark} locale={locale} /></Reveal>
             ) : null}
 
-            {showRejected && lastResolved && <Reveal i={1}><RejectedNotice request={lastResolved} s={s} isDark={isDark} /></Reveal>}
+            {!native && showRejected && lastResolved && <Reveal i={1}><RejectedNotice request={lastResolved} s={s} isDark={isDark} /></Reveal>}
 
-            {showCheckout && !showUnavailable && (
+            {!native && showCheckout && !showUnavailable && (
               <>
                 {/* מה כלול כבר מוצג למעלה ב-PlanComparisonTable (עם מספרים אמיתיים) -
                     אריח "מה מקבלים" נוסף כאן היה חוזר על אותם 4 פריטים בדיוק, בלי
@@ -198,11 +216,11 @@ export const SubscriptionPage = ({ showToast }: Props) => {
               </>
             )}
 
-            {showCheckout && showUnavailable && (
+            {!native && showCheckout && showUnavailable && (
               <Reveal i={2}><PaymentUnavailableCard s={s} isDark={isDark} email={status.payment.supportEmail} onBack={() => setShowUnavailable(false)} /></Reveal>
             )}
 
-            <HistoryCard history={status.history} s={s} isDark={isDark} locale={locale} />
+            {!native && <HistoryCard history={status.history} s={s} isDark={isDark} locale={locale} />}
           </Box>
         ) : null}
       </Box>

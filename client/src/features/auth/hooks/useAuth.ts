@@ -174,14 +174,17 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   }, [handleEmailSubmit]);
 
   // ===== טיפול בהתחברות Google =====
-  const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string }) => {
+  const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string } | { id_token: string }) => {
+    const token = 'id_token' in tokenResponse
+      ? { idToken: tokenResponse.id_token }
+      : { accessToken: tokenResponse.access_token };
     setGoogleLoading(true);
     try {
       // ניסיון ראשון + retry אחד במקרה של שגיאת רשת
       let lastError: unknown;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const { user } = await authApi.googleAuth(tokenResponse.access_token);
+          const { user } = await authApi.googleAuth(token);
           haptic('medium');
           trackEvent('user_logged_in', { method: 'google' });
           onLogin(user, 'google');

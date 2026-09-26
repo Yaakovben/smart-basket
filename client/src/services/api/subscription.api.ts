@@ -48,6 +48,13 @@ export interface SubscriptionStatus {
     bank: { bankName: string; branch: string; account: string } | null;
     supportEmail: string;
   };
+  store: {
+    enabled: boolean;
+    entitlementId: string;
+    appUserId: string;
+    isStorePlan: boolean;
+    autoRenew: boolean;
+  };
   openRequest: SubscriptionRequestDto | null;
   history: SubscriptionRequestDto[];
 }
@@ -65,6 +72,12 @@ export const subscriptionApi = {
 
   async reportPaid(id: string): Promise<SubscriptionRequestDto> {
     const res = await apiClient.post<{ data: SubscriptionRequestDto }>(`/subscription/requests/${id}/paid`);
+    return res.data.data;
+  },
+
+  // אחרי רכישה/שחזור באפליקציה: השרת בודק מול RevenueCat ומפעיל את המנוי.
+  async syncStore(): Promise<{ active: boolean; expiresAt: string | null }> {
+    const res = await apiClient.post<{ data: { active: boolean; expiresAt: string | null } }>('/store-billing/sync');
     return res.data.data;
   },
 
