@@ -22,6 +22,7 @@ import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } f
 import { deleteAccount } from '../services/user.service';
 import { listAdminRequests, approveRequest, rejectRequest, countLegacyTrialEligible, grantLegacyTrialToExistingUsers } from '../services/subscription.service';
 import { listFeedback } from '../services/feedback.service';
+import { getAdminAlerts, markFeedbackSeen, updateAdminPushSettings } from '../services/adminAlerts.service';
 import type { SubscriptionRequestStatus } from '../models';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages, migrateLocalImagesToCloudinary, clearDeadCloudinaryReferences } from '../services/imageUpload.service';
@@ -440,4 +441,28 @@ export const getLegacyTrialGrant = asyncHandler(async (req: AuthRequest, res: Re
 
   const { granted, skipped } = await grantLegacyTrialToExistingUsers();
   res.json({ success: true, data: { dryRun: false, granted, skipped } });
+});
+
+/**
+ * GET /api/admin/alerts
+ * מספר הדברים החדשים לאייקוני הכותרת (מנויים, משוב) והגדרות הפוש לכל אחד.
+ */
+export const getAlerts = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  res.json({ success: true, data: await getAdminAlerts() });
+});
+
+/** POST /api/admin/feedback/seen - האדמין פתח את מסך המשובים, המספר מתאפס. */
+export const postFeedbackSeen = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  await markFeedbackSeen();
+  res.json({ success: true });
+});
+
+/** PUT /api/admin/alert-settings - הפעלה או כיבוי של פוש לכל תחום בנפרד. */
+export const putAlertSettings = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { pushOnSubscription, pushOnFeedback } = req.body as { pushOnSubscription?: boolean; pushOnFeedback?: boolean };
+  const patch: { pushOnSubscription?: boolean; pushOnFeedback?: boolean } = {};
+  if (typeof pushOnSubscription === 'boolean') patch.pushOnSubscription = pushOnSubscription;
+  if (typeof pushOnFeedback === 'boolean') patch.pushOnFeedback = pushOnFeedback;
+  await updateAdminPushSettings(patch);
+  res.json({ success: true, data: await getAdminAlerts() });
 });

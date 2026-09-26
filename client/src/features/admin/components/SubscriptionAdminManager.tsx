@@ -4,6 +4,7 @@ import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRou
 import { adminApi, type AdminSubscriptionRequest } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
 import { LegacyTrialGrantCard } from './LegacyTrialGrantCard';
+import { AdminPushToggle } from './AdminPushToggle';
 import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
 import { adminPageSx } from '../styles/adminPage.styles';
 
@@ -131,6 +132,13 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
       </Box>
 
       <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2 }}>
+        <AdminPushToggle
+          kind="pushOnSubscription"
+          label="התראת פוש על תשלום מנוי"
+          hint="כשמשתמש מדווח שילם, תקבל התראה לטלפון"
+          color={PRO_PURPLE}
+          isDark={isDark}
+        />
         {tab === 'pending' ? (
           <>
             <LegacyTrialGrantCard isDark={isDark} onChanged={onChanged} />

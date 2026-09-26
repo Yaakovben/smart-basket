@@ -4,6 +4,8 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import { adminApi, type AdminFeedback } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
+import { AdminPushToggle } from './AdminPushToggle';
+import { markAdminFeedbackSeen } from '../hooks/useAdminAlerts';
 import { adminPageSx } from '../styles/adminPage.styles';
 
 interface Props {
@@ -28,6 +30,8 @@ const StarsRow = ({ rating }: { rating: number }) => (
 // מפופאפ המשוב החד-פעמי בקליינט (ראו FeedbackPopup/useFeedbackPopup).
 // תצוגה בלבד, בלי פעולות - זה לא תור שדורש טיפול כמו בקשות מנוי.
 export const FeedbackManager = ({ isDark, onClose }: Props) => {
+  // פתיחת המסך = כל המשובים נראו, המספר על האייקון בכותרת מתאפס
+  useEffect(() => { markAdminFeedbackSeen(); }, []);
   const [items, setItems] = useState<AdminFeedback[] | null>(null);
   const [error, setError] = useState(false);
 
@@ -58,6 +62,13 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
       />
 
       <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2 }}>
+        <AdminPushToggle
+          kind="pushOnFeedback"
+          label="התראת פוש על משוב חדש"
+          hint="כשמשתמש שולח משוב, תקבל התראה לטלפון"
+          color="#0D9488"
+          isDark={isDark}
+        />
         {error ? (
           <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
             לא הצלחנו לטעון את המשובים.

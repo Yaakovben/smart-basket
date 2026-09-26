@@ -20,6 +20,14 @@ export interface AdminSubscriptionRequest {
   adminNote: string | null;
 }
 
+// מספר הדברים החדשים לאייקוני הכותרת, והאם פוש מופעל לכל תחום
+export interface AdminAlerts {
+  subscriptionPending: number;
+  feedbackNew: number;
+  pushOnSubscription: boolean;
+  pushOnFeedback: boolean;
+}
+
 export interface AdminFeedback {
   id: string;
   user: { id: string; name: string; email: string } | null;
@@ -149,6 +157,23 @@ export const adminApi = {
   /** משובי משתמשים (דירוג + הודעה חופשית), החדשים ביותר קודם. */
   async getFeedback(): Promise<AdminFeedback[]> {
     const response = await apiClient.get<{ data: AdminFeedback[] }>('/admin/feedback');
+    return response.data.data;
+  },
+
+  /** מספר הדברים החדשים במנויים ובמשוב, והגדרות הפוש. */
+  async getAlerts(): Promise<AdminAlerts> {
+    const response = await apiClient.get<{ data: AdminAlerts }>('/admin/alerts');
+    return response.data.data;
+  },
+
+  /** האדמין פתח את מסך המשובים - מאפס את מספר המשובים החדשים. */
+  async markFeedbackSeen(): Promise<void> {
+    await apiClient.post('/admin/feedback/seen');
+  },
+
+  /** הפעלה או כיבוי של פוש על דברים חדשים, לכל תחום בנפרד. */
+  async updateAlertSettings(patch: { pushOnSubscription?: boolean; pushOnFeedback?: boolean }): Promise<AdminAlerts> {
+    const response = await apiClient.put<{ data: AdminAlerts }>('/admin/alert-settings', patch);
     return response.data.data;
   },
 };

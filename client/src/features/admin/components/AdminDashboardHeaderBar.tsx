@@ -6,12 +6,11 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import StorageIcon from "@mui/icons-material/Storage";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import RateReviewRoundedIcon from "@mui/icons-material/RateReviewRounded";
 import { headerIconButtonSx } from "../styles/AdminDashboard.styles";
 import { AiAssistantIcon } from "../../../global/components";
 import type { AiStatus } from "../../../services/api/admin.api";
 import { getAiHealth, AI_HEALTH_LABEL } from "../helpers/aiStatusHelpers";
-import { SubscriptionHeaderIcon } from "./SubscriptionHeaderIcon";
+import { SubscriptionHeaderIcon, FeedbackHeaderIcon } from "./SubscriptionHeaderIcon";
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -107,16 +106,9 @@ export const AdminDashboardHeaderBar = ({
         >
           <CampaignIcon sx={{ fontSize: 26 }} />
         </Box>
+        {/* מנוי ומשוב: מספר הדברים החדשים מעל האייקון */}
         <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />
-        <Box
-          onClick={onOpenFeedback}
-          role="button"
-          tabIndex={0}
-          aria-label="משובי משתמשים"
-          sx={headerIconButtonSx(44)}
-        >
-          <RateReviewRoundedIcon sx={{ fontSize: 26 }} />
-        </Box>
+        <FeedbackHeaderIcon onClick={onOpenFeedback} />
         {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
           שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי

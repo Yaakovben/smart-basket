@@ -8,3 +8,4 @@ export { PushSubscription, type IPushSubscription } from './PushSubscription.mod
 // Price model הועבר ל-features/priceComparison/models/Price.model.ts
 export { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionRequestStatus, type SubscriptionPayMethod } from './SubscriptionRequest.model';
 export { Feedback, type IFeedback } from './Feedback.model';
+export { AdminSettings, type IAdminSettings } from './AdminSettings.model';

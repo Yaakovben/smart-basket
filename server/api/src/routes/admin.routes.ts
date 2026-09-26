@@ -26,6 +26,9 @@ import {
   rejectSubscriptionRequest,
   getLegacyTrialGrant,
   getFeedback,
+  getAlerts,
+  postFeedbackSeen,
+  putAlertSettings,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -54,6 +57,15 @@ router.get('/subscription/legacy-trial', getLegacyTrialGrant);
 router.post('/subscription/legacy-trial', getLegacyTrialGrant);
 
 router.get('/feedback', getFeedback);
+router.post('/feedback/seen', postFeedbackSeen);
+
+// מספר הדברים החדשים לאייקוני הכותרת, והגדרות הפוש לכל תחום
+const alertSettingsBody = Joi.object({
+  pushOnSubscription: Joi.boolean().optional(),
+  pushOnFeedback: Joi.boolean().optional(),
+}).min(1);
+router.get('/alerts', getAlerts);
+router.put('/alert-settings', validate({ body: alertSettingsBody }), putAlertSettings);
 
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);

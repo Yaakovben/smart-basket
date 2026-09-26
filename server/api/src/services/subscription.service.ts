@@ -7,6 +7,7 @@ import { UserDAL } from '../dal';
 import { ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
 import { sendToUser, sendToUsers } from './push.service';
 import { sendAdminNotice } from './email.service';
+import { getAdminSettings } from './adminAlerts.service';
 
 // אותו אייקון בפוש כמו כל שאר ההתראות באפליקציה (notification.service.ts) -
 // בלעדיו הפוש מציג אייקון דפדפן גנרי במקום לוגו Smart Basket.
@@ -140,7 +141,8 @@ export async function reportPaid(userId: string, requestId: string): Promise<ISu
   await req.save();
 
   void (async () => {
-    const [user, adminIds] = await Promise.all([UserDAL.findById(userId), UserDAL.findAdminIds()]);
+    const [user, adminIds, adminSettings] = await Promise.all([UserDAL.findById(userId), UserDAL.findAdminIds(), getAdminSettings()]);
+    // המייל נשלח תמיד, הפוש רק אם האדמין השאיר אותו פעיל בדף המנהל
     await Promise.all([
       sendAdminNotice(
         `דיווח תשלום מנוי: ${req.reference}`,
@@ -153,7 +155,7 @@ export async function reportPaid(userId: string, requestId: string): Promise<ISu
           'בדוק שההעברה נכנסה ואשר בפאנל האדמין.',
         ].join('\n'),
       ),
-      sendToUsers(adminIds, {
+      adminSettings.pushOnSubscription && sendToUsers(adminIds, {
         title: '💳 תשלום מנוי ממתין לאישור',
         body: `${user?.name ?? 'משתמש'} דיווח ₪${req.amount} · קוד ${req.reference}`,
         icon: PUSH_ICON,
