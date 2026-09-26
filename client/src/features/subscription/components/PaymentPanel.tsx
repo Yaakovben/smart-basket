@@ -199,7 +199,7 @@ export const PaymentPanel = ({ status, request, s, isDark, busy, onChangeMethod,
               rel="noopener noreferrer"
               onClick={() => setLeftForPayment(true)}
               startIcon={<OpenInNewRoundedIcon sx={{ fontSize: 18 }} />}
-              sx={{ borderRadius: '14px', py: 1.35, textTransform: 'none', fontWeight: 800, fontSize: 15.5, gap: 1, bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' } }}
+              sx={{ borderRadius: '14px', py: 1.35, textTransform: 'none', fontWeight: 800, fontSize: 15.5, gap: 1, background: PRO_PURPLE, boxShadow: 'none', '&:hover': { background: '#6D28D9', boxShadow: 'none' } }}
             >
               {method === 'bit' ? s.payOpenBit : s.payOpenPaybox}
             </Button>

@@ -36,28 +36,30 @@ export const HomeMenuSheet = ({ closing, onClose, onSelectOption, t }: HomeMenuS
           },
         }}
       />
-      {/* התפריט - עולה מלמטה ובסגירה יורד חזרה. אנימציה דו-כיוונית */}
+      {/* התפריט - כרטיס צף מעל התחתית (לא צמוד), קופץ פנימה ובסגירה יורד חזרה */}
       <Box
         sx={{
-          position: 'fixed', bottom: 0, left: 0, right: 0,
+          position: 'fixed', left: 12, right: 12,
+          bottom: 'calc(12px + env(safe-area-inset-bottom))',
           bgcolor: 'background.paper',
-          borderRadius: '24px 24px 0 0',
-          p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))',
+          borderRadius: '24px',
+          p: 2,
           zIndex: 999,
           maxWidth: { xs: '100%', sm: 400 },
           mx: 'auto',
-          boxShadow: '0 -8px 30px rgba(0,0,0,0.15)',
+          boxShadow: '0 24px 60px rgba(15,23,42,0.25)',
           animation: closing
             ? 'menuSlideDown 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards'
-            : 'menuSlideUp 0.36s cubic-bezier(0.34, 1.32, 0.64, 1)',
+            : 'menuSlideUp 0.42s cubic-bezier(0.34, 1.45, 0.64, 1)',
           '@keyframes menuSlideUp': {
-            from: { transform: 'translateY(100%)', opacity: 0.9 },
-            to: { transform: 'translateY(0)', opacity: 1 },
+            from: { transform: 'translateY(40px) scale(0.92)', opacity: 0 },
+            to: { transform: 'translateY(0) scale(1)', opacity: 1 },
           },
           '@keyframes menuSlideDown': {
-            from: { transform: 'translateY(0)', opacity: 1 },
-            to: { transform: 'translateY(100%)', opacity: 0.9 },
+            from: { transform: 'translateY(0) scale(1)', opacity: 1 },
+            to: { transform: 'translateY(40px) scale(0.94)', opacity: 0 },
           },
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
         }}
       >
         {/* כפתור X צף - חצי-חצי בקצה העליון של התפריט, באותו עיצוב כמו ה-FAB */}
@@ -101,7 +103,6 @@ export const HomeMenuSheet = ({ closing, onClose, onSelectOption, t }: HomeMenuS
             '@media (max-width: 320px)': { fontSize: 26 },
           }} />
         </Box>
-        <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
         {/* ה-X להסגרה הוא ה-FAB עצמו (מסתובב 135° כשהתפריט פתוח) */}
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 4, mt: 2 }}>
           <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>

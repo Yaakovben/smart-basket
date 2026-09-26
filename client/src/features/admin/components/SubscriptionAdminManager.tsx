@@ -144,7 +144,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
                 לא הצלחנו לטעון בקשות תשלום. גררו למטה לרענן.
               </Typography>
             ) : pendingItems === null ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={22} /></Box>
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={22} sx={{ color: PRO_PURPLE }} /></Box>
             ) : reported.length === 0 && waiting.length === 0 ? (
               <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
                 אין כרגע בקשות תשלום פתוחות.
@@ -169,7 +169,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                       <Button size="small" variant="contained" disabled={busyId === r.id} onClick={() => act(r.id, 'approve')}
-                        sx={{ flex: 1, borderRadius: '10px', fontWeight: 800, bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' } }}>
+                        sx={{ flex: 1, borderRadius: '10px', fontWeight: 800, background: PRO_PURPLE, boxShadow: 'none', '&:hover': { background: PRO_PURPLE_DARK, boxShadow: 'none' } }}>
                         {busyId === r.id ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'אשר והפעל'}
                       </Button>
                       <Button size="small" variant="outlined" color="error" disabled={busyId === r.id} onClick={() => act(r.id, 'reject')}
@@ -190,7 +190,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
         ) : (
           <>
             {historyItems === null ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={22} /></Box>
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={22} sx={{ color: PRO_PURPLE }} /></Box>
             ) : historyItems.filter((h) => h.status !== 'pending').length === 0 ? (
               <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
                 עדיין אין היסטוריית בקשות.

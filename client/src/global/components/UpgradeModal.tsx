@@ -173,9 +173,9 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
             mt: 2, borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
             textTransform: 'none',
-            bgcolor: '#7C3AED',
+            background: '#7C3AED',
             boxShadow: 'none',
-            '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' },
+            '&:hover': { background: '#6D28D9', boxShadow: 'none' },
             '&:active': { transform: 'scale(0.98)' },
           }}
         >

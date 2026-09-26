@@ -22,14 +22,16 @@ export const sectionLabelSx: SxProps<Theme> = {
 
 // כפתור שקט ובטוח: צבע אחיד, בלי הברקה חוזרת-לנצח - זה נראה "נדחף" יותר
 // משהוא עוזר. תשומת לב מגיעה מהצבע והמשקל, לא מתנועה מתמשכת.
+// background ולא bgcolor: ה-theme מגדיר לכפתור contained גרדיאנט טורקיז
+// ב-background, שגובר על background-color ולכן הכפתור יצא טורקיז ולא סגול.
 export const primaryCtaSx: SxProps<Theme> = {
   borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
   textTransform: 'none',
-  bgcolor: PRO_PURPLE,
+  background: PRO_PURPLE,
   boxShadow: 'none',
   color: '#fff',
   transition: 'background-color 0.15s ease',
-  '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' },
+  '&:hover': { background: PRO_PURPLE_DARK, boxShadow: 'none' },
   '&:active': { transform: 'scale(0.985)' },
   '&.Mui-disabled': { color: 'rgba(255,255,255,0.7)', opacity: 0.65 },
 };

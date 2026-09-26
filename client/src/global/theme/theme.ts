@@ -214,18 +214,37 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
           }
         }
       },
+      // כל פופאפ הוא כרטיס צף במרכז המסך, עם מרווח מכל הצדדים ופינות מעוגלות
+      // מכל הכיוונים, ולא גיליון שצמוד לתחתית. נכנס בקפיצה קלה (scale + עלייה).
+      // fill-mode backwards ולא both: אחרי הכניסה האנימציה משתחררת, כך שמעברי
+      // הסגירה של MUI (Fade/Zoom) עדיין עובדים.
       MuiDialog: {
         styleOverrides: {
           paper: {
-            borderRadius: '24px 24px 0 0',
-            margin: 0,
+            borderRadius: 24,
+            margin: 16,
             maxWidth: 600,
+            width: 'calc(100% - 32px)',
+            maxHeight: 'calc(100dvh - 48px)',
+            backgroundColor: colors.paper,
+            boxShadow: isDark ? '0 24px 60px rgba(0,0,0,0.6)' : '0 24px 60px rgba(15,23,42,0.22)',
+            animation: 'sbDialogPop 0.42s cubic-bezier(0.34, 1.45, 0.64, 1) backwards',
+            '@keyframes sbDialogPop': {
+              from: { opacity: 0, transform: 'translateY(28px) scale(0.9)' },
+              to: { opacity: 1, transform: 'translateY(0) scale(1)' },
+            },
+            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+          },
+          // מסך מלא (מפה, סריקת רשימה) נשאר מסך מלא, בלי מרווחים ובלי קפיצה
+          paperFullScreen: {
+            borderRadius: 0,
+            margin: 0,
             width: '100%',
-            maxHeight: '85vh',
-            position: 'fixed',
-            bottom: 0,
-            backgroundColor: colors.paper
-          }
+            maxWidth: '100%',
+            maxHeight: 'none',
+            boxShadow: 'none',
+            animation: 'none',
+          },
         }
       },
       MuiChip: {

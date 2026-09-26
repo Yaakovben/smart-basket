@@ -70,7 +70,7 @@ export const LegacyTrialGrantCard = ({ isDark, onChanged }: Props) => {
       {!result && (
         <Button
           variant="contained" disabled={busy} onClick={run}
-          sx={{ borderRadius: '10px', fontWeight: 800, whiteSpace: 'nowrap', bgcolor: PRO_PURPLE, boxShadow: 'none', '&:hover': { bgcolor: PRO_PURPLE_DARK, boxShadow: 'none' } }}
+          sx={{ borderRadius: '10px', fontWeight: 800, whiteSpace: 'nowrap', background: PRO_PURPLE, boxShadow: 'none', '&:hover': { background: PRO_PURPLE_DARK, boxShadow: 'none' } }}
         >
           {busy ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'הענק לכולם'}
         </Button>

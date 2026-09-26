@@ -165,7 +165,7 @@ export const PaymentUnavailableCard = ({ s, isDark, email, onBack }: Unavailable
     <Button
       variant="contained"
       href={`mailto:${email}?subject=${encodeURIComponent('Smart Basket Pro')}`}
-      sx={{ mt: 1, borderRadius: '12px', textTransform: 'none', fontWeight: 800, bgcolor: PRO_PURPLE, '&:hover': { bgcolor: '#6D28D9' } }}
+      sx={{ mt: 1, borderRadius: '12px', textTransform: 'none', fontWeight: 800, background: PRO_PURPLE, '&:hover': { background: '#6D28D9' } }}
     >
       {s.contactUs}
     </Button>

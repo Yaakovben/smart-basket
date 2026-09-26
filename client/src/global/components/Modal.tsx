@@ -1,8 +1,6 @@
-import { Dialog, DialogTitle, DialogContent, Box, Slide, IconButton } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { TransitionProps } from '@mui/material/transitions';
-import { forwardRef, useCallback } from 'react';
-import type { ReactElement, Ref } from 'react';
+import { useCallback } from 'react';
 import { haptic } from '../helpers';
 import { useReliableTap } from '../hooks/useReliableTap';
 import { useSettings } from '../context/SettingsContext';
@@ -17,13 +15,6 @@ interface ModalProps {
   // למשתמש לא לדעת איך לסיים - ראו AddProductModal/EditProductModal.
   footer?: React.ReactNode;
 }
-
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & { children: ReactElement },
-  ref: Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} timeout={180} {...props} />;
-});
 
 export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
   // נעילת ה-body מטופלת אוטומטית ע"י MUI Dialog (disableScrollLock=false ברירת מחדל).
@@ -43,42 +34,30 @@ export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
     <Dialog
       open={true}
       onClose={handleClose}
-      TransitionComponent={Transition}
       fullWidth
       maxWidth="xs"
+      // כרטיס צף במרכז המסך (מרווחים, פינות וקפיצת כניסה מגיעים מה-theme)
       PaperProps={{
         sx: {
-          m: 0,
-          borderRadius: '20px 20px 0 0',
-          maxHeight: '90vh',
-          maxWidth: { xs: '100%', sm: 480 },
-          width: '100%',
-          pb: 'env(safe-area-inset-bottom)',
+          maxWidth: { xs: 'calc(100% - 32px)', sm: 480 },
           bgcolor: 'background.paper',
-          // מסכים זעירים - radius קטן יותר
-          '@media (max-width: 360px)': { borderRadius: '16px 16px 0 0' },
-          '@media (max-width: 320px)': { borderRadius: '14px 14px 0 0' },
-          // Landscape - גובה גבול 95vh כי המסך נמוך
-          '@media (orientation: landscape) and (max-height: 500px)': { maxHeight: '95vh' },
+          // מסכים זעירים - radius ומרווח קטנים יותר
+          '@media (max-width: 360px)': { borderRadius: '18px', m: 1.5, maxWidth: 'calc(100% - 24px)', width: 'calc(100% - 24px)' },
+          // Landscape - המסך נמוך, מנצלים כמעט את כל הגובה
+          '@media (orientation: landscape) and (max-height: 500px)': { maxHeight: 'calc(100dvh - 16px)', my: 1 },
         }
       }}
       sx={{
-        '& .MuiDialog-container': {
-          alignItems: 'flex-end',
-        },
         '& .MuiBackdrop-root': {
           backdropFilter: 'blur(4px)',
           bgcolor: 'rgba(0,0,0,0.4)'
         }
       }}
     >
-      {/* ידית גרירה */}
-      <Box aria-hidden="true" sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />
-
       {/* כותרת וכפתור סגירה */}
       <Box sx={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
-        px: 2, pt: 1.5, pb: 1, minHeight: 44,
+        px: 2, pt: 2, pb: 1, minHeight: 44,
         '@media (max-width: 360px)': { px: 1.5, pt: 1, pb: 0.75, minHeight: 38 },
         '@media (max-width: 320px)': { px: 1, pt: 0.75, pb: 0.5, minHeight: 34 },
       }}>
