@@ -126,11 +126,14 @@ export default defineConfig({
           // עצמאיים, הטעינה נופלת אקראית ל-"ReferenceError: Cannot access 'X'
           // before initialization" בהתאם לסדר הטעינה בדפדפן. mui/emotion תלויים
           // ב-react גם ככה, אז אין הפסד בשילובם יחד.
+          // Sentry נבדק לפני react: הנתיב node_modules/@sentry/react/ מכיל "/react/"
+          // ונתפס בכלל של vendor-react. כך @sentry/react ישב בתוך vendor-react
+          // וייבא סטטית את כל שאר Sentry (134KB דחוס) לכל פתיחת אפליקציה, למרות
+          // שהקוד טוען את Sentry רק ב-import() דינמי אחרי העלייה.
+          if (/[\\/]@sentry[\\/]/.test(id)) return 'vendor-sentry'
           if (/[\\/]react-dom[\\/]|[\\/]react[\\/]|[\\/]react-router[\\/]|[\\/]@mui[\\/]|[\\/]@emotion[\\/]/.test(id)) return 'vendor-react'
           // Socket.io in separate chunk (loaded after auth)
           if (/[\\/]socket\.io-client[\\/]/.test(id)) return 'vendor-socket'
-          // Sentry in separate chunk (monitoring can load late)
-          if (/[\\/]@sentry[\\/]/.test(id)) return 'vendor-sentry'
           // zxing נטען אך ורק דרך import() דינמי (ראו useQRCameraScanner.ts +
           // QRScanner.tsx) - שם משלו רק לנוחות דיבוג, לא הופך אותו לטעינה מיידית.
           if (/[\\/]@zxing[\\/]/.test(id)) return 'vendor-zxing'
