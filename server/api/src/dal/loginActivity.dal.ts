@@ -10,8 +10,34 @@ type UserLoginStats = {
   lastAppOpenAt: Date | null;
 };
 
-const LOGIN_STATS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 דקות — נתוני "כניסה אחרונה" לא צריכים דיוק לשנייה
+const LOGIN_STATS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 דקות — הספירות הכבדות לא צריכות דיוק לשנייה
 const loginStatsCache = new Map<string, { data: UserLoginStats[]; expiresAt: number; refreshing?: boolean }>();
+
+// הכניסה ופתיחת האפליקציה האחרונות של כל משתמש, מתעדכנות מיד בכל רישום.
+// הן מונחות מעל ה-cache של 30 הדקות, כך שבדף האדמין "פתח לאחרונה" מתעדכן
+// מיד (גם בחזרה מהרקע), בלי להריץ את האגרגציה הכבדה בכל פתיחה.
+const latestByUser = new Map<string, { appOpenAt?: Date; loginAt?: Date; loginMethod?: string }>();
+
+const newer = (a: Date | null | undefined, b: Date | null | undefined): Date | null => {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return new Date(a).getTime() >= new Date(b).getTime() ? a : b;
+};
+
+function withLatest(stats: UserLoginStats[]): UserLoginStats[] {
+  if (latestByUser.size === 0) return stats;
+  return stats.map(s => {
+    const latest = latestByUser.get(s.userId);
+    if (!latest) return s;
+    const lastLoginAt = newer(s.lastLoginAt, latest.loginAt);
+    return {
+      ...s,
+      lastAppOpenAt: newer(s.lastAppOpenAt, latest.appOpenAt),
+      lastLoginAt,
+      lastLoginMethod: latest.loginAt && lastLoginAt === latest.loginAt ? latest.loginMethod ?? s.lastLoginMethod : s.lastLoginMethod,
+    };
+  });
+}
 
 async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> {
   return LoginActivity.aggregate([
@@ -113,7 +139,7 @@ export const LoginActivityDAL = {
     const cached = loginStatsCache.get(cacheKey);
 
     // cache טרי - מחזירים מיד
-    if (cached && cached.expiresAt > now) return cached.data;
+    if (cached && cached.expiresAt > now) return withLatest(cached.data);
 
     // cache פג אבל קיים - מחזירים ישן מיד, מרעננים ברקע (בלי לחסום)
     if (cached) {
@@ -126,14 +152,14 @@ export const LoginActivityDAL = {
           })
           .catch(() => { cached.refreshing = false; /* משאירים את הישן, ננסה שוב בקריאה הבאה */ });
       }
-      return cached.data;
+      return withLatest(cached.data);
     }
 
     // אין כלום ב-cache - חייבים לחשב (חוסם, קורה רק בקריאה הראשונה)
     const data = await computeStatsByUser(userIds);
     loginStatsCache.clear(); // slot יחיד בפועל (קורא יחיד) - מונע דליפת זיכרון מ-cacheKey-ים ישנים
     loginStatsCache.set(cacheKey, { data, expiresAt: Date.now() + LOGIN_STATS_CACHE_TTL_MS });
-    return data;
+    return withLatest(data);
   },
 
   // ספירת כניסות מתאריך מסוים (כולל ייחודיים)
@@ -166,6 +192,7 @@ export const LoginActivityDAL = {
   },
 
   async deleteByUser(userId: string): Promise<number> {
+    latestByUser.delete(userId);
     const result = await LoginActivity.deleteMany({ user: userId });
     return result.deletedCount;
   },
@@ -178,6 +205,11 @@ export const LoginActivityDAL = {
     ipAddress?: string;
     userAgent?: string;
   }): Promise<ILoginActivity> {
+    const now = new Date();
+    const latest = latestByUser.get(data.userId) ?? {};
+    if (data.loginMethod === 'app_open') latest.appOpenAt = now;
+    else { latest.loginAt = now; latest.loginMethod = data.loginMethod; }
+    latestByUser.set(data.userId, latest);
     return LoginActivity.create({
       user: data.userId,
       userName: data.userName,

@@ -21,9 +21,9 @@ function clearPerUserCache() {
 
 // מעקב אחר זמן כניסות וחזרות מרקע (מודולרי, שורד StrictMode re-mount).
 let _lastAppOpenLogAt = 0;
-let _hiddenAt = 0; // מתי האפליקציה הלכה לרקע
-const APP_OPEN_LOG_THROTTLE_MS = 15 * 60 * 1000; // 15 דקות
-const MIN_BACKGROUND_FOR_LOG_MS = 2 * 60 * 1000; // חזרה אחרי 2+ דקות = כניסה "חדשה"
+// כל פתיחה נרשמת, כולל חזרה מהרקע או מחלון שכבר פתוח, כדי ש"פתח לאחרונה"
+// בדף האדמין יהיה מדויק. המרווח רק מונע רישום כפול בהחלפות חלון מהירות.
+const APP_OPEN_LOG_THROTTLE_MS = 2 * 60 * 1000; // 2 דקות
 
 const logAppOpenThrottled = () => {
   const now = Date.now();
@@ -217,26 +217,22 @@ export function useAuth() {
     checkAuth();
   }, []);
 
-  // רישום פתיחת אפליקציה גם כשה-PWA/טאב חוזר לחזית מהרקע.
-  // אם המשתמש היה ברקע 2+ דקות — זו "כניסה חדשה" שנרשמת מיידית ללא throttle.
-  // חזרה מהירה (פחות מ-2 דקות, למשל לחיצה על לינק ב-WhatsApp וחזרה) — throttle רגיל.
+  // רישום פתיחת אפליקציה גם כשהיא חוזרת לחזית: מהרקע (visibilitychange),
+  // משחזור דף שמור בדפדפן (pageshow), או מלחיצה על חלון שכבר היה פתוח
+  // ליד חלון אחר (focus, בלי שה-visibility השתנה).
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        _hiddenAt = Date.now();
-      } else if (document.visibilityState === 'visible' && getAccessToken()) {
-        const awayMs = _hiddenAt > 0 ? Date.now() - _hiddenAt : 0;
-        _hiddenAt = 0;
-        if (awayMs >= MIN_BACKGROUND_FOR_LOG_MS) {
-          _lastAppOpenLogAt = Date.now();
-          authApi.logAppOpen();
-        } else {
-          logAppOpenThrottled();
-        }
-      }
+    const handleReturn = () => {
+      if (document.visibilityState === 'visible' && getAccessToken()) logAppOpenThrottled();
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    const handlePageShow = (e: PageTransitionEvent) => { if (e.persisted) handleReturn(); };
+    document.addEventListener('visibilitychange', handleReturn);
+    window.addEventListener('focus', handleReturn);
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      document.removeEventListener('visibilitychange', handleReturn);
+      window.removeEventListener('focus', handleReturn);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   const login = useCallback(
