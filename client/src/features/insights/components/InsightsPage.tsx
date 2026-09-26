@@ -18,6 +18,7 @@ import { InsightsTabsBar } from './InsightsTabsBar';
 import { InsightsHeroCard } from './InsightsHeroCard';
 import { InsightsBottomNav } from './InsightsBottomNav';
 import { PriceTab } from './tabs/PriceTab';
+import { PriceScanEntry } from '../../priceComparison';
 import { ListsTab } from './tabs/ListsTab';
 import { ActivityTab } from './tabs/ActivityTab';
 import { SpendingTab } from './tabs/SpendingTab';
@@ -160,6 +161,7 @@ export const InsightsPage = memo(() => {
       <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>
         {tab === 'price' && (
           <ErrorBoundary fallback={tabCrashFallback}>
+            <PriceScanEntry isDark={isDark} language={settings.language} onOpen={() => navigate('/price-scan')} />
             <PriceTab
               isDark={isDark}
               priceData={priceData}

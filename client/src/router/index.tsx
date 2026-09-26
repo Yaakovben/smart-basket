@@ -35,6 +35,7 @@ const settingsImport = () => import("../features/settings/settings").then(m => (
 const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
+const PriceScanPage = lazy(() => import("../features/priceComparison").then(m => ({ default: m.PriceScanPage })));
 const AdminSectionPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminSectionPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
@@ -590,6 +591,14 @@ export const AppRouter = () => {
             <AdminRoute user={user}>
               <ErrorBoundary><AdminSectionPage /></ErrorBoundary>
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/price-scan"
+          element={
+            <ProtectedRoute user={user}>
+              <ErrorBoundary><PriceScanPage /></ErrorBoundary>
+            </ProtectedRoute>
           }
         />
         <Route

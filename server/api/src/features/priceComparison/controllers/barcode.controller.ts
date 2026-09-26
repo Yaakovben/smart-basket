@@ -2,6 +2,12 @@ import type { Response } from 'express';
 import { PriceDAL } from '../dal/price.dal';
 import { asyncHandler } from '../../../utils';
 import type { AuthRequest } from '../../../types';
+import { UserDAL } from '../../../dal';
+import { PlanLimitError } from '../../../errors';
+import { PLAN_LIMITS, isPro } from '../../../constants';
+import { planUsage } from '../../../services/plan-usage.service';
+import { parseUserLocation } from '../services/branches.service';
+import { scanBarcodePrices } from '../services/barcodeScan.service';
 
 const BARCODE_PATTERN = /^\d{6,14}$/;
 
@@ -29,4 +35,29 @@ export const lookupBarcode = asyncHandler(async (req: AuthRequest, res: Response
   const [bestName] = [...nameCounts.entries()].sort((a, b) => b[1] - a[1])[0];
 
   res.json({ success: true, data: { name: bestName } });
+});
+
+// GET /api/price-comparison/scan/:barcode[?lat=&lng=] - "איפה הכי זול" למוצר
+// שנסרק: הסניפים הזולים קרוב למשתמש, הזול בכל הארץ, ומחיר לכל רשת.
+// למשתמש חינמי נספר כהשוואת מחיר אחת (אותה מכסה יומית כמו השוואת רשימה),
+// ורק כשהמוצר נמצא, כדי לא לשרוף מכסה על ברקוד שאין עליו נתונים.
+export const scanBarcode = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { barcode } = req.params;
+  if (!BARCODE_PATTERN.test(barcode)) {
+    res.json({ success: true, data: null });
+    return;
+  }
+
+  const userId = req.user!.id;
+  const user = await UserDAL.findById(userId).catch(() => null);
+  const userIsFree = !!user && !isPro(user);
+  if (userIsFree) {
+    const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
+    if (planUsage.getPriceCount(userId) >= limit) throw PlanLimitError.priceComparison(limit);
+  }
+
+  const location = parseUserLocation(req.query.lat, req.query.lng);
+  const result = await scanBarcodePrices(barcode, location);
+  if (result && userIsFree) planUsage.incrementPrice(userId);
+  res.json({ success: true, data: result });
 });

@@ -5,3 +5,5 @@ export { BetaRibbon } from './components/BetaRibbon';
 export { priceComparisonApi, type PriceSyncStatus, type PriceChainStatus, type UserLocation } from './services/priceComparison.api';
 export type { PriceComparisonData, PriceMatch, PriceChainTotal, NearestBranch } from './types/priceComparison.types';
 export { useUserLocation } from './hooks/useUserLocation';
+export { PriceScanPage } from './pages/PriceScanPage';
+export { PriceScanEntry } from './components/PriceScanEntry';

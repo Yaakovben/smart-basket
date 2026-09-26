@@ -102,3 +102,44 @@ export interface PriceComparisonData {
   sourceName: string;
   sourceUrl: string;
 }
+
+// ===== סריקת מוצר: איפה הכי זול =====
+export interface ScanBranchLabel {
+  storeId: string;
+  branchName: string;
+  city: string;
+}
+
+export interface ScanChainPrice {
+  chainId: string;
+  chainName: string;
+  // המחיר שרוב סניפי הרשת גובים
+  typicalPrice: number;
+  minPrice: number;
+  cheapestBranch: ScanBranchLabel | null;
+}
+
+export interface ScanNearbyBranch {
+  chainId: string;
+  chainName: string;
+  storeId: string;
+  branchName: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  distanceKm: number;
+  price: number;
+  // false = מחיר ברשת, לא אומת לסניף הזה
+  verified: boolean;
+}
+
+export interface BarcodeScanResult {
+  barcode: string;
+  productName: string;
+  chains: ScanChainPrice[];
+  cheapest: { chainId: string; chainName: string; price: number; branch: ScanBranchLabel | null };
+  // null = לא נשלח מיקום
+  nearby: ScanNearbyBranch[] | null;
+  nearbyRadiusKm: number | null;
+}

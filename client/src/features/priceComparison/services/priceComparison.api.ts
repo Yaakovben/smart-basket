@@ -1,5 +1,5 @@
 import apiClient from '../../../services/api/client';
-import type { PriceComparisonData, ChainBranchOption } from '../types/priceComparison.types';
+import type { PriceComparisonData, ChainBranchOption, BarcodeScanResult } from '../types/priceComparison.types';
 
 export interface PriceChainStatus {
   chainId: string;
@@ -95,6 +95,19 @@ export const priceComparisonApi = {
     } catch {
       return null;
     }
+  },
+
+  // "איפה הכי זול" למוצר שנסרק. null = הברקוד לא נמצא במאגר המחירים.
+  // שגיאות (כולל 402 מגבלת מנוי) נזרקות, כדי שהעמוד יטפל בהן.
+  async scanProduct(barcode: string, location?: UserLocation | null): Promise<BarcodeScanResult | null> {
+    const params = new URLSearchParams();
+    if (location) {
+      params.set('lat', String(location.lat));
+      params.set('lng', String(location.lng));
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiClient.get<{ data: BarcodeScanResult | null }>(`/price-comparison/scan/${encodeURIComponent(barcode)}${query}`);
+    return response.data.data;
   },
 
   // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש.

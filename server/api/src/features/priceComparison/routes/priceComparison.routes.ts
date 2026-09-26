@@ -4,7 +4,7 @@ import { loadKnownBranchesSeed, getBranchesByChain, getBranchesNearby, getChainB
 import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
 import { testOsm } from '../controllers/diagnostics.controller';
 import { getStatus } from '../controllers/status.controller';
-import { lookupBarcode } from '../controllers/barcode.controller';
+import { lookupBarcode, scanBarcode } from '../controllers/barcode.controller';
 import { searchProducts, setOverride, clearOverride } from '../controllers/overrides.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
@@ -15,6 +15,7 @@ router.use(authenticate);
 // פתוח לכל משתמש מאומת
 router.get('/', getComparison);
 router.get('/barcode/:barcode', lookupBarcode);
+router.get('/scan/:barcode', scanBarcode);
 router.get('/search', searchProducts);
 router.put('/overrides', setOverride);
 router.delete('/overrides', clearOverride);

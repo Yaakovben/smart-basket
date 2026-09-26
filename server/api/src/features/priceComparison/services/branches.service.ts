@@ -209,6 +209,37 @@ export async function getBranchLabel(chainId: ChainId, storeId: string): Promise
   return { branchName: b.storeName, city: b.city || '' };
 }
 
+export interface BranchWithDistance {
+  chainId: ChainId;
+  chainName: string;
+  storeId: string;
+  storeName: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  distanceKm: number;
+}
+
+// סניפים בטווח מהמשתמש, מהקרוב לרחוק, עם המזהה שלהם (בשביל התאמה למחירי
+// סניף). רק קואורדינטות מדויקות: סניף שמיקומו הוא מרכז העיר לא נכנס, כדי
+// לא להציג "קרוב אליך" לפי מרחק מומצא.
+export async function getBranchesWithin(user: UserLocation, radiusKm: number): Promise<BranchWithDistance[]> {
+  const all = await getBranches();
+  const result: BranchWithDistance[] = [];
+  for (const b of all) {
+    if (typeof b.lat !== 'number' || typeof b.lng !== 'number' || b.coordSource === 'unknown') continue;
+    const dist = haversineKm(user, { lat: b.lat, lng: b.lng });
+    if (dist > radiusKm) continue;
+    result.push({
+      chainId: b.chainId, chainName: b.chainName, storeId: b.storeId, storeName: b.storeName,
+      address: b.address || '', city: b.city || '', lat: b.lat, lng: b.lng,
+      distanceKm: Math.round(dist * 10) / 10,
+    });
+  }
+  return result.sort((x, y) => x.distanceKm - y.distanceKm);
+}
+
 // ולידציה של קואורדינטות שהגיעו מהמשתמש.
 export function parseUserLocation(
   latRaw: unknown,
