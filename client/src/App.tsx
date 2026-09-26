@@ -40,6 +40,22 @@ const handleNewVersion = () => {
 
   if (!storedVersion || storedVersion === buildVersion) return;
 
+  // כל הגרסאות שכבר רצו במכשיר הזה. בלי זה המסך "עודכן לגרסה חדשה" הופיע גם
+  // כשלא היה שום עדכון: אם במכשיר נטענה לרגע גרסה ישנה (index.html מהמטמון
+  // ברשת חלשה, לשונית ישנה שנפתחה מחדש, דפדפן ואפליקציה מותקנת על אותו
+  // אחסון), המכשיר קפץ בין שתי גרסאות והמסך הוצג בכל קפיצה. עכשיו הוא מוצג
+  // רק לגרסה שבאמת לא רצה כאן אף פעם.
+  let seen: string[] = [];
+  try { seen = JSON.parse(localStorage.getItem('app_seen_versions') || '[]'); } catch { /* ערך פגום */ }
+  if (!Array.isArray(seen)) seen = [];
+  const isReallyNew = !seen.includes(buildVersion);
+  const updatedSeen = [...seen.filter(v => v !== buildVersion && v !== storedVersion), storedVersion, buildVersion].slice(-20);
+  try { localStorage.setItem('app_seen_versions', JSON.stringify(updatedSeen)); } catch { /* quota */ }
+  if (!isReallyNew) {
+    diagLog('version', 'switched back to a version already seen on this device, no update screen');
+    return;
+  }
+
   diagLog('version', 'new version detected, clearing user cache + browser caches');
   // מסמנים "יש שדרוג גרסה אמיתי לביקור הזה" - useConnectionStatus.ts משתמש
   // בזה כדי להבחין בין חיבור תקוע בגלל JS ישן שקורא לחוזה שהשתנה (כן לרענן
