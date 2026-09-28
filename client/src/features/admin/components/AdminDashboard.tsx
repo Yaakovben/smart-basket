@@ -6,7 +6,7 @@ import { useAuth } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { useAdminUserFilter } from '../hooks/useAdminUserFilter';
 import { useAiStatus } from '../hooks/useAiStatus';
-import { mergeOnlineWithSelf } from '../helpers/adminDashboardHelpers';
+import { mergeOnlineWithSelf, isEffectivePro } from '../helpers/adminDashboardHelpers';
 import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
@@ -51,9 +51,9 @@ export const AdminDashboard = () => {
     [socketOnlineUserIds, user?.id]
   );
 
-  // ספירת משתמשי Pro מתוך רשימת כל המשתמשים
+  // ספירת משתמשי Pro פעילים באמת (Pro שתוקפו עבר לא נספר)
   const proCount = useMemo(
-    () => usersWithLoginInfo.filter(u => u.plan === 'pro').length,
+    () => usersWithLoginInfo.filter(isEffectivePro).length,
     [usersWithLoginInfo]
   );
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button, Chip } from '@mui/material';
+import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -18,6 +18,9 @@ import type { LoginActivity, Language } from '../../../global/types';
 import { EVENT_COLORS } from '../helpers/usersTableHelpers';
 import { UserListCard } from './UserListCard';
 import { UserMethodBadge } from './UserMethodBadge';
+import { ProPill } from './ProPill';
+import { proKindOf, proDaysLeft } from '../helpers/adminDashboardHelpers';
+import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
 import {
   eventCardSx, eventHeaderSx, eventTitleSx, eventBodySx, eventDateSx,
   detailsButtonSx, expandArrowSx, listsSummaryLabelSx,
@@ -58,7 +61,10 @@ export const UserRowExpandedContent = ({
   // ניהול מנוי
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState(false);
-  const currentPlan: 'free' | 'pro' = (user as UserWithLastLogin & { plan?: 'free' | 'pro' }).plan ?? 'free';
+  // המצב האמיתי: Pro שתוקפו עבר נחשב חינמי, וכפתור השדרוג זמין לו
+  const proKind = proKindOf(user);
+  const currentPlan: 'free' | 'pro' = proKind ? 'pro' : 'free';
+  const daysLeft = proDaysLeft(user);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -254,20 +260,16 @@ export const UserRowExpandedContent = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WorkspacePremiumIcon sx={{ fontSize: 16, color: currentPlan === 'pro' ? '#F59E0B' : '#9CA3AF' }} />
+          <WorkspacePremiumIcon sx={{ fontSize: 16, color: currentPlan === 'pro' ? PRO_PURPLE : '#9CA3AF' }} />
           <Typography sx={{ fontSize: 12, color: isDark ? '#D1D5DB' : '#374151', fontWeight: 600 }}>
             מנוי
           </Typography>
-          <Chip
-            label={currentPlan === 'pro' ? 'PRO' : 'Free'}
-            size="small"
-            sx={{
-              height: 18, fontSize: 10, fontWeight: 700,
-              bgcolor: currentPlan === 'pro' ? '#F59E0B' : (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6'),
-              color: currentPlan === 'pro' ? '#fff' : (isDark ? '#9CA3AF' : '#6B7280'),
-              borderRadius: '6px',
-            }}
-          />
+          <ProPill kind={proKind} showFree isDark={isDark} />
+          {proKind && proKind !== 'permanent' && daysLeft !== null && (
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', whiteSpace: 'nowrap' }}>
+              {daysLeft} ימים{proKind === 'store' ? (user.planAutoRenew ? ' · מתחדש' : ' · חידוש בוטל') : ''}
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {planError && (
@@ -285,8 +287,8 @@ export const UserRowExpandedContent = ({
               fontWeight: 700,
               minWidth: 80,
               ...(currentPlan !== 'pro' && {
-                bgcolor: '#F59E0B',
-                '&:hover': { bgcolor: '#D97706' },
+                background: PRO_PURPLE, boxShadow: 'none',
+                '&:hover': { background: PRO_PURPLE_DARK, boxShadow: 'none' },
               }),
               ...(currentPlan === 'pro' && {
                 borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#D1D5DB',

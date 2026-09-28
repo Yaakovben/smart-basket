@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { isActiveToday, isActiveThisMonth } from '../../../global/helpers';
+import { isEffectivePro } from '../helpers/adminDashboardHelpers';
 import type { UserFilter, UserWithLastLogin } from '../types';
 
 interface UseAdminUserFilterReturn {
@@ -44,7 +45,7 @@ export const useAdminUserFilter = (
         isActiveThisMonth(u.lastLoginAt) || isActiveThisMonth(u.lastAppOpenAt)
       );
     } else if (userFilter === 'pro') {
-      result = result.filter(u => u.plan === 'pro');
+      result = result.filter(isEffectivePro);
     }
 
     // סינון לפי חיפוש

@@ -12,6 +12,8 @@ export interface UserWithLastLogin extends User {
   hasPushSubscription: boolean;
   plan: 'free' | 'pro';
   planExpiresAt?: string | null;
+  planSource?: 'trial' | 'paid' | 'store';
+  planAutoRenew?: boolean;
 }
 
 export interface DashboardStats {

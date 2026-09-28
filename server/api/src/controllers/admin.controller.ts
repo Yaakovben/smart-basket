@@ -188,17 +188,17 @@ export const updateUserPlan = asyncHandler(async (req: AuthRequest, res: Respons
   const user = await UserDAL.findById(userId);
   if (!user) throw NotFoundError.user();
 
-  const update: { plan: 'free' | 'pro'; planExpiresAt?: Date | null } = { plan };
-  if (plan === 'pro') {
-    update.planExpiresAt = planExpiresAt ? new Date(planExpiresAt) : null;
-  } else {
-    // חזרה ל-free מנקה את תאריך התפוגה
-    update.planExpiresAt = null;
-  }
+  // מקור המנוי מתאפס יחד עם שינוי ידני של התוכנית: בלי מקור = "הופעל על ידי
+  // הצוות". בלי זה משתמש בניסיון שקיבל Pro קבוע המשיך להיראות "Pro במתנה",
+  // ומשתמש שהורד לחינמי הוצג "הניסיון הסתיים".
+  const expiresAt = plan === 'pro' && planExpiresAt ? new Date(planExpiresAt) : null;
+  const update = plan === 'pro'
+    ? { $set: { plan, planExpiresAt: expiresAt, planAutoRenew: false }, $unset: { planSource: 1 } }
+    : { $set: { plan, planAutoRenew: false }, $unset: { planExpiresAt: 1, planSource: 1 } };
 
-  await UserDAL.updateById(userId, update as Partial<typeof user>);
+  await UserDAL.updateById(userId, update);
 
-  res.json({ success: true, data: { plan, planExpiresAt: update.planExpiresAt } });
+  res.json({ success: true, data: { plan, planExpiresAt: expiresAt } });
 });
 
 /**

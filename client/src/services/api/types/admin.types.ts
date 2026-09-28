@@ -11,6 +11,10 @@ export interface AdminUser {
   // מנוי
   plan: 'free' | 'pro';
   planExpiresAt?: string | null;
+  // מקור המנוי: חנות, ניסיון במתנה, או תשלום ידני ישן / מענק אדמין
+  planSource?: 'trial' | 'paid' | 'store';
+  // מנוי חנות: false אחרי שהמשתמש ביטל חידוש (נשאר Pro עד סוף התקופה)
+  planAutoRenew?: boolean;
   // סטטיסטיקות התחברות מהשרת (aggregation)
   totalLogins: number;
   lastLoginAt: string | null;
