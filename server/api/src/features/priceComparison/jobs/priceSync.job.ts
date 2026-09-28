@@ -1,7 +1,7 @@
 import cron from 'node-cron';
-import { syncAllChains, syncBranchesFromOsm } from '../services/priceSync.service';
-import { PriceDAL } from '../dal/price.dal';
+import { syncAllChains, syncBranchesFromOsm, getRegisteredChains, type SyncResult } from '../services/priceSync.service';
 import { Price } from '../models/Price.model';
+import { PriceSyncLog } from '../models/PriceSyncLog.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { geocodeAddress } from '../services/geocoder.service';
@@ -23,6 +23,10 @@ let syncInProgress = false;
 // להאטה ללקוחות שנכנסים בבוקר. התעדכנות אחת ביום מספיקה (המחירים לא
 // משתנים תוך כדי יום כך שאין יתרון לסנכרון נוסף).
 const CRON_EXPRESSION = '0 4 * * *';
+// סבב השלמה: פורטלים שמציגים רק את קובצי היום (ויקטורי ומחסני השוק ב-laibcatalog,
+// קרפור) עדיין ריקים ב-04:00 (מחסני השוק מפרסמת PriceFull ב-06:07). ב-10:30 כולן כבר
+// פרסמו, ורשת שהסנכרון הלילי שלה נכשל או נחסם בבדיקת התקינות מקבלת עוד סבב.
+const CATCH_UP_CRON_EXPRESSION = '30 10 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
 // אם הנתונים ישנים מ-72 שעות בעת הפעלת השרת, נסנכרן ברקע אחרי 30 דקות.
 // 72 שעות (במקום 36) - מונע סנכרון מיותר אחרי deploys תכופים בסוף שבוע.
@@ -32,17 +36,32 @@ const STARTUP_STALENESS_MS = 72 * 60 * 60 * 1000;
 const STARTUP_DELAY_MS = 30 * 60 * 1000;
 
 // פונקציית עזר לרענון - משותפת ל-cron ול-startup
-async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
+// תקלת רשת זמנית (DNS, ניתוק): הרשת תקבל סבב נוסף אחרי הפסקה. בשרת Render
+// תקלת DNS מול פורטל המחירים נמשכה דקות, יותר מהניסיון החוזר הקצר בכל בקשה.
+const NETWORK_ERROR = /EAI_AGAIN|ENOTFOUND|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up|timeout of \d+ms/i;
+const NETWORK_RETRY_DELAY_MS = 2 * 60 * 1000;
+const isNetworkFailure = (r: SyncResult) => !!r.error && NETWORK_ERROR.test(r.error);
+
+// פונקציית עזר לרענון - משותפת ל-cron ול-startup. chainIds = רק הרשתות האלה
+async function runSync(trigger: 'cron' | 'startup' | 'manual' | 'catch-up', chainIds?: string[]): Promise<void> {
   if (syncInProgress) {
     logger.warn(`[price-sync-job] ${trigger}: sync already in progress, skipping`);
     return;
   }
   syncInProgress = true;
   try {
-    logger.info(`[price-sync-job] ${trigger}: starting sync of all chains`);
-    const results = await syncAllChains();
+    logger.info(`[price-sync-job] ${trigger}: starting sync of ${chainIds ? chainIds.join(',') : 'all chains'}`);
+    const results = await syncAllChains(chainIds);
     const summary = results.map(r => `${r.chainId}:${r.upserted}${r.error ? '(err)' : ''}`).join(', ');
     logger.info(`[price-sync-job] ${trigger}: completed — ${summary}`);
+
+    const retry = results.filter(isNetworkFailure).map(r => r.chainId);
+    if (retry.length > 0) {
+      logger.warn(`[price-sync-job] ${trigger}: network failures in ${retry.join(',')}, retrying in ${NETWORK_RETRY_DELAY_MS / 1000}s`);
+      await new Promise(r => setTimeout(r, NETWORK_RETRY_DELAY_MS));
+      const again = await syncAllChains(retry);
+      logger.info(`[price-sync-job] ${trigger}: retry — ${again.map(r => `${r.chainId}:${r.upserted}${r.error ? '(err)' : ''}`).join(', ')}`);
+    }
   } catch (err) {
     logger.error(`[price-sync-job] ${trigger}: unhandled error:`, err);
   } finally {
@@ -50,23 +69,42 @@ async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
   }
 }
 
-// בדיקה אם הנתונים ישנים ומצריכים סנכרון מיידי (ב-boot)
-async function shouldRunStartupSync(): Promise<boolean> {
+// רשתות שלא היה להן היום (שעון ישראל) סנכרון מחירים מוצלח, לפי לוג הסנכרון השמור
+async function chainsWithoutSuccessToday(): Promise<string[]> {
   try {
-    // מחפשים את הרשומה העדכנית ביותר בכל רשת
-    const latest = await PriceDAL.findOne({}, { sort: { updatedAt: -1 } });
-    if (!latest) {
-      logger.info('[price-sync-job] Startup: no prices in DB, will trigger initial sync');
-      return true;
-    }
-    const ageMs = Date.now() - new Date(latest.updatedAt).getTime();
-    const ageHours = ageMs / (60 * 60 * 1000);
-    const stale = ageMs > STARTUP_STALENESS_MS;
-    logger.info(`[price-sync-job] Startup: latest price age=${ageHours.toFixed(1)}h, stale=${stale}`);
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
+    // תחילת היום בשעון ישראל, בקירוב של שעתיים לכיוון המוקדם (בלי תלות בשעון קיץ)
+    const since = new Date(`${today}T00:00:00Z`);
+    since.setUTCHours(since.getUTCHours() - 3);
+    const ok = await PriceSyncLog.distinct('chainId', { type: 'price-full', status: 'success', startedAt: { $gte: since } });
+    const done = new Set<string>(ok);
+    return getRegisteredChains().map(c => c.chainId).filter(id => !done.has(id));
+  } catch (err) {
+    logger.error('[price-sync-job] catch-up: failed to read sync logs:', err);
+    return [];
+  }
+}
+
+// הרשתות שצריכות סנכרון בעליית השרת: בלי מחירים בכלל, או שהעדכון האחרון שלהן
+// ישן. נבדק לכל רשת בנפרד: בעבר נבדק רק המחיר העדכני מכל הרשתות יחד, ולכן רשת
+// אחת שעודכנה הסתירה רשתות שמעולם לא נטענו (ויקטורי, מעיין 2000, סופר ספיר...).
+async function staleChainsAtStartup(): Promise<string[]> {
+  try {
+    const latest = await Price.aggregate<{ _id: string; last: Date }>([
+      { $group: { _id: '$chainId', last: { $max: '$updatedAt' } } },
+    ]);
+    const lastByChain = new Map(latest.map(l => [l._id, new Date(l.last).getTime()]));
+    const stale = getRegisteredChains()
+      .map(c => c.chainId)
+      .filter(id => {
+        const last = lastByChain.get(id);
+        return last === undefined || Date.now() - last > STARTUP_STALENESS_MS;
+      });
+    logger.info(`[price-sync-job] Startup: ${stale.length} chains missing or stale${stale.length ? `: ${stale.join(',')}` : ''}`);
     return stale;
   } catch (err) {
     logger.error('[price-sync-job] Startup: failed to check staleness, skipping auto-sync:', err);
-    return false;
+    return [];
   }
 }
 
@@ -137,11 +175,12 @@ async function cleanupOldPricesImpl(trigger: 'cron' | 'manual'): Promise<{ delet
 }
 
 // Geocoding לילי - משלים קואורדינטות אמיתיות לסניפים עם כתובת בלי lat/lng.
-// רץ ברקע אחרי סנכרון, מוגבל ל-50 סניפים לריצה (Nominatim 1 req/s = ~55 שניות).
+// רץ ברקע אחרי סנכרון, מוגבל ל-200 סניפים לריצה (Nominatim 1 req/s, עד כמה וריאציות
+// כתובת לסניף: כ-10 דקות). הוגדל מ-50 כשנוספו כ-450 סניפים חדשים בלי מיקום מהפורטלים.
 // אפס השפעה על בקשות משתמש - יוצא מתהליך הקרון.
-const GEOCODE_BATCH_LIMIT = 50;
+const GEOCODE_BATCH_LIMIT = 200;
 
-async function runNightlyGeocode(trigger: 'cron'): Promise<void> {
+async function runNightlyGeocode(trigger: 'cron' | 'startup' | 'catch-up'): Promise<void> {
   try {
     // קודם מאפסים מיקומים שגויים שנשמרו בעבר, כדי שייכנסו לגיאוקודינג מחדש
     const reset = await BranchDAL.resetInvalidGeocodedCoords(b => isCountryCentroid(b.lat, b.lng) || coordsConflictWithName(b.lat, b.lng, b.storeName));
@@ -215,6 +254,20 @@ export function startPriceSyncJob(): void {
     { timezone: TIMEZONE }
   );
 
+  cron.schedule(
+    CATCH_UP_CRON_EXPRESSION,
+    async () => {
+      const pending = await chainsWithoutSuccessToday();
+      if (pending.length === 0) {
+        logger.info('[price-sync-job] catch-up: all chains synced today');
+        return;
+      }
+      await runSync('catch-up', pending);
+      await runNightlyGeocode('catch-up');
+    },
+    { timezone: TIMEZONE }
+  );
+
   scheduled = true;
   logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — once daily at 04:00`);
 
@@ -222,10 +275,11 @@ export function startPriceSyncJob(): void {
   // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (72 שעות+) ואחרי 30 דקות
   //    כדי לא להפריע ללקוחות שנכנסים בזמן ה-boot. אם המשתמש שמעיר את השרת
   //    כבר סיים, הסנכרון לא משפיע על אף אחד.
-  void shouldRunStartupSync().then(shouldRun => {
-    if (shouldRun) {
-      logger.info('[price-sync-job] Startup: data stale 72h+, scheduling sync in 30 minutes');
-      setTimeout(() => runSync('startup'), STARTUP_DELAY_MS);
+  void staleChainsAtStartup().then(stale => {
+    if (stale.length > 0) {
+      logger.info(`[price-sync-job] Startup: scheduling sync of ${stale.length} chains in ${STARTUP_DELAY_MS / 60000} minutes`);
+      // אחרי הסנכרון: מיקום לסניפים החדשים, כדי שיופיעו ב"קרוב אליך" בלי לחכות ללילה
+      setTimeout(() => { void runSync('startup', stale).then(() => runNightlyGeocode('startup')); }, STARTUP_DELAY_MS);
     }
   });
 

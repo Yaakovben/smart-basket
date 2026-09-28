@@ -70,13 +70,25 @@ function droppedSharply(current: number, previous: number | undefined): boolean 
 }
 
 // previousBarcodes = כמה מוצרים שמורים היום לרשת (לפני הסנכרון)
-export function validatePriceFeed(stats: PriceFeedStats, previousBarcodes?: number): ValidationResult {
+// מתחת לזה ירידה במספר הסניפים בפיד לא נבדקת (רשת קטנה, סניף שנסגר)
+export const MIN_PREVIOUS_STORES_FOR_DROP_CHECK = 5;
+
+// feedStores / previousStores = כמה סניפים הופיעו בפיד עכשיו ובסנכרון הקודם.
+// פורטל שמציג רק את קובצי היום (laibcatalog, קרפור) מחזיר מוקדם בבוקר קובץ או
+// שניים: מספר המוצרים דומה, אבל אם הפיד יתקבל, כיסוי המחירים של כל שאר הסניפים יימחק.
+export function validatePriceFeed(
+  stats: PriceFeedStats, previousBarcodes?: number, feedStores?: number, previousStores?: number,
+): ValidationResult {
   if (stats.total === 0) return { ok: false, reason: 'empty_feed' };
   if (stats.valid / stats.total < MIN_VALID_RATIO) {
     return { ok: false, reason: `too_many_invalid_rows:${stats.total - stats.valid}/${stats.total}` };
   }
   if (droppedSharply(stats.distinctBarcodes, previousBarcodes)) {
     return { ok: false, reason: `barcode_count_dropped:${previousBarcodes}->${stats.distinctBarcodes}` };
+  }
+  if (feedStores !== undefined && previousStores !== undefined && previousStores >= MIN_PREVIOUS_STORES_FOR_DROP_CHECK
+    && feedStores < previousStores * (1 - MAX_DROP_RATIO)) {
+    return { ok: false, reason: `store_count_dropped:${previousStores}->${feedStores}` };
   }
   return { ok: true };
 }

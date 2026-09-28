@@ -55,3 +55,13 @@ test('מבצעים: יותר מחצי מהקבצים נכשלו, או מבצעי
   assert.equal(validatePromoFeed({ filesOk: 10, filesTotal: 10, promotions: 0, previousPromotions: 0 }).ok, true);
   assert.equal(validatePromoFeed({ filesOk: 9, filesTotal: 10, promotions: 800, previousPromotions: 1000 }).ok, true);
 });
+
+test('פיד מחירים ממעט סניפים (פורטל שמציג רק את קובצי היום) נחסם', () => {
+  const items = Array.from({ length: 1000 }, (_, i) => item(String(i), 5, '134'));
+  const s = collectPriceFeedStats(items);
+  // קרפור אחרי חצות: קובץ של סניף אחד מול 160 שסונכרנו
+  assert.match(validatePriceFeed(s, 1000, 1, 160).reason ?? '', /store_count_dropped/);
+  assert.equal(validatePriceFeed(s, 1000, 150, 160).ok, true);
+  // רשת קטנה: לא בודקים
+  assert.equal(validatePriceFeed(s, 1000, 1, 3).ok, true);
+});

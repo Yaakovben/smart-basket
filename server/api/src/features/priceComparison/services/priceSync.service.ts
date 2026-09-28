@@ -26,6 +26,8 @@ import { normStoreId } from './storeId';
 import { buildBarcodeStats, isPriceException, encodeStorePrice, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from './branchPricing';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { syncPromotionsForChain } from './promoSync.service';
+import { storageAllowsWrite, invalidateUsageCache, MAX_CLUSTER_USAGE_MB } from './storageGuard';
+import { CBS_LOCALITY_NAMES } from '../data/cbsLocalities.data';
 import { collectPriceFeedStats, countDuplicateRows, validatePriceFeed, validateStoresFeed, type PriceFeedStats } from './syncValidation';
 import { PriceSyncLogDAL, type SyncLogFields } from '../dal/priceSyncLog.dal';
 import { Price } from '../models/Price.model';
@@ -154,6 +156,15 @@ export function getSyncProgress(): SyncProgress {
   return { ...syncProgress };
 }
 
+// העיר מקובץ הסניפים. רשתות רבות מפרסמות סמל יישוב של הלמ"ס (3000, 8300) ולא שם:
+// מתורגם לפי הרשימה הרשמית. קוד שלא ברשימה (או "0") לא נשמר, כדי לא לדרוס שם אמיתי.
+export function cityFromStoresFile(city: string | undefined): string | undefined {
+  const t = city?.trim();
+  if (!t) return undefined;
+  if (!/^\d+$/.test(t)) return t;
+  return CBS_LOCALITY_NAMES[String(Number(t))];
+}
+
 // סנכרון סניפים של רשת אחת. קואורדינטות: portal > fallback-של-עיר > Nominatim (חי, מוגבל).
 async function syncStoresForChain(
   adapter: ChainAdapter,
@@ -186,9 +197,7 @@ async function syncStoresForChain(
       return {
         chainId: adapter.chainId, chainName: adapter.chainName,
         storeId: s.storeId, storeName: s.storeName,
-        // רמי לוי וחצי חינם מפרסמות ב-City קוד יישוב מספרי (3000, 8300) ולא שם.
-        // קוד כזה לא נשמר כעיר, כדי לא לדרוס שם עיר אמיתי שכבר שמור לסניף.
-        address: s.address, city: s.city && !/^\d+$/.test(s.city) ? s.city : undefined, zipCode: s.zipCode,
+        address: s.address, city: cityFromStoresFile(s.city), zipCode: s.zipCode,
         lat: hasRealCoords ? s.lat : undefined,
         lng: hasRealCoords ? s.lng : undefined,
         coordSource: hasRealCoords ? ('portal' as const) : ('unknown' as const),
@@ -220,6 +229,8 @@ async function syncStoresForChain(
 async function syncSingleChain(adapter: ChainAdapter, runId: string): Promise<SyncResult> {
   const r = await syncChainPrices(adapter, runId);
   const promo = await syncPromotionsForChain(adapter, runId);
+  // הרשת כתבה נתונים: הרשת הבאה מודדת את נפח האשכול מחדש
+  invalidateUsageCache();
   const withPromo: SyncResult = {
     ...r,
     promotions: promo.promotions,
@@ -247,6 +258,13 @@ async function syncChainPrices(adapter: ChainAdapter, runId: string): Promise<Sy
     return { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error };
   };
 
+  // שומר מכסה לפני ההורדה: אם האשכול קרוב למכסה, לא מורידים ולא כותבים
+  const storage = await storageAllowsWrite();
+  if (!storage.ok) {
+    logger.warn(`[price-sync] ${adapter.chainId}: cluster at ${storage.usageMb?.toFixed(0)}MB (limit ${MAX_CLUSTER_USAGE_MB}MB), skipping to protect the shared quota`);
+    return failed(`storage_quota_guard:${storage.usageMb?.toFixed(0)}MB`);
+  }
+
   const result = await adapter.fetchLatestPrices();
   if (result.error) {
     logger.error(`[price-sync] ${adapter.chainId}: fetch error: ${result.error}`);
@@ -256,14 +274,18 @@ async function syncChainPrices(adapter: ChainAdapter, runId: string): Promise<Sy
   // בדיקת תקינות לפני כל כתיבה: פיד ריק, חלקי או שבור לא נוגע במחירים הקיימים
   const stats = collectPriceFeedStats(result.items);
   const previousBarcodes = await Price.countDocuments({ chainId: adapter.chainId });
-  const validation = validatePriceFeed(stats, previousBarcodes);
+  // כמה סניפים הופיעו בפיד עכשיו, מול כמה סונכרנו בפעם הקודמת
+  const feedStores = new Set<string>();
+  for (const it of result.items) if (it.storeId) feedStores.add(normStoreId(it.storeId));
+  const previousStores = (await BranchPriceDAL.storeIdsWithPrices(adapter.chainId)).size;
+  const validation = validatePriceFeed(stats, previousBarcodes, feedStores.size, previousStores);
   if (!validation.ok) {
     logger.warn(`[price-sync] ${adapter.chainId}: validation failed (${validation.reason}), keeping existing prices`);
     return failed(`validation:${validation.reason}`, {
       filesDownloaded: result.fetchedFiles,
       recordsDownloaded: stats.total,
       recordsUnmatched: stats.missingBarcode,
-      details: { ...stats, previousBarcodes },
+      details: { ...stats, previousBarcodes, feedStores: feedStores.size, previousStores },
     });
   }
 
