@@ -434,6 +434,7 @@ export type TranslationKeys =
   | 'adminLoadError'
   // WhatsApp share
   | 'listCompleted'
+  | 'shareListEmpty'
   | 'sessionExpired'
   // Convert list to group
   | 'convertToGroup'

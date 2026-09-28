@@ -435,6 +435,7 @@ export const he: Translations = {
   adminLoadError: 'שגיאה בטעינת נתוני הניהול',
   // WhatsApp share
   listCompleted: 'הרשימה הושלמה',
+  shareListEmpty: 'הרשימה ריקה, עדיין אין בה מוצרים',
   sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
   convertToGroup: 'הפוך לרשימה משותפת',
   convertToGroupHint: 'שתף את הרשימה עם אחרים',

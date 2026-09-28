@@ -435,6 +435,7 @@ export const en: Translations = {
   adminLoadError: 'Failed to load admin data',
   // WhatsApp share
   listCompleted: 'List completed',
+  shareListEmpty: 'The list is empty, no products yet',
   sessionExpired: 'Session expired, please log in again',
   convertToGroup: 'Convert to shared list',
   convertToGroupHint: 'Share this list with others',

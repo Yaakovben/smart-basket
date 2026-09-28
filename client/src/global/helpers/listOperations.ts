@@ -32,6 +32,9 @@ export const generateShareListMessage = (list: List, t: TranslateFn): string => 
     pendingProducts.forEach((p: Product) => {
       lines.push(`• ${p.name} - ${p.quantity} ${p.unit}`);
     });
+  } else if (list.products.length === 0) {
+    // רשימה בלי אף מוצר: לא "הושלמה", פשוט ריקה
+    lines.push(`📭 ${t('shareListEmpty')}`);
   } else {
     lines.push(`✅ ${t('listCompleted')}`);
   }

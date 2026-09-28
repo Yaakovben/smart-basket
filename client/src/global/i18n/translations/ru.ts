@@ -435,6 +435,7 @@ export const ru: Translations = {
   adminLoadError: 'Ошибка загрузки данных',
   // WhatsApp share
   listCompleted: 'Список завершён',
+  shareListEmpty: 'Список пуст, товаров пока нет',
   sessionExpired: 'Сессия истекла, войдите снова',
   convertToGroup: 'Сделать совместным списком',
   convertToGroupHint: 'Поделитесь списком с другими',
