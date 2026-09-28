@@ -18,6 +18,8 @@ export const AdminSectionShell = ({ title, onBack, isDark, icon, children }: Pro
     <Box sx={{
       flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch',
       display: 'flex', flexDirection: 'column',
+      // ילדים לא מתכווצים לגובה המסך: בלי זה תוכן ארוך נחתך ומוסתר במקום להיגלל
+      '& > *': { flexShrink: 0 },
       p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
     }}>
       {children}

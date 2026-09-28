@@ -58,7 +58,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <AdminSectionShell title="ניהול מאגר" onBack={onClose} isDark={isDark}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'clip' }}>
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, py: 1 }}>
             <ShimmerBlock height={56} radius={12} />
@@ -73,7 +73,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               overflowX: 'auto', overflowY: 'hidden',
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' },
-              mx: -2.5, px: 2.5,
+              mx: -2, px: 2, flexShrink: 0,
             }}>
               <PriceSyncStatCard
                 icon={<StorefrontIcon sx={{ fontSize: 14, color: '#0D9488' }} />}
