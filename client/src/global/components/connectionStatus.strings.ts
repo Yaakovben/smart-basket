@@ -23,7 +23,7 @@ const he: ConnectionStrings = {
   reconnecting: 'מתחבר מחדש…',
   connecting: 'מתחבר…',
   offlineCalm: 'אפשר להמשיך כרגיל. כל שינוי נשמר ויסונכרן כשהחיבור יחזור.',
-  weakCalm: 'השינויים נשמרים ויישלחו כשהחיבור יתייצב',
+  weakCalm: 'השינויים נשמרים ויסונכרנו כשהחיבור יתייצב',
   offlinePending: (n) => n === 1
     ? 'שינוי אחד שמור ויסונכרן כשהחיבור יחזור'
     : `${n} שינויים שמורים ויסונכרנו כשהחיבור יחזור`,
@@ -39,7 +39,7 @@ const en: ConnectionStrings = {
   reconnecting: 'Reconnecting…',
   connecting: 'Connecting…',
   offlineCalm: 'Keep going as usual. Every change is saved and will sync when you are back online.',
-  weakCalm: 'Changes are saved and will be sent once the connection stabilizes',
+  weakCalm: 'Changes are saved and will sync once the connection stabilizes',
   offlinePending: (n) => n === 1
     ? '1 change saved, it will sync when you are back online'
     : `${n} changes saved, they will sync when you are back online`,
@@ -56,7 +56,7 @@ const ru: ConnectionStrings = {
   reconnecting: 'Переподключение…',
   connecting: 'Подключение…',
   offlineCalm: 'Можно продолжать как обычно. Все изменения сохраняются и синхронизируются, когда связь вернётся.',
-  weakCalm: 'Изменения сохраняются и будут отправлены, когда соединение стабилизируется',
+  weakCalm: 'Изменения сохраняются и синхронизируются, когда соединение стабилизируется',
   offlinePending: (n) => `Сохранено изменений: ${n}. Синхронизируем, когда связь вернётся`,
   weakPending: (n) => `Сохранено изменений: ${n}. Синхронизируем, как только соединение стабилизируется`,
   syncingPending: (n) => `Ожидают синхронизации: ${n}`,
