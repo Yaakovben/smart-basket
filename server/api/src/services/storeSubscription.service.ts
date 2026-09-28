@@ -114,7 +114,15 @@ export async function syncStoreSubscription(userId: string, notify = false): Pro
 
   if (!update) return { active, expiresAt: storeExpiry, changed: false };
 
-  await UserDAL.updateById(userId, update as Parameters<typeof UserDAL.updateById>[1]);
+  // רכישה ראשונה בחנות: הסנכרון מהאפליקציה וה-webhook מגיעים כמעט יחד, ושניהם
+  // רואים משתמש שעוד לא מהחנות. העדכון מותנה ב"עוד לא מהחנות", כך שרק הראשון
+  // מצליח ורק הוא שולח התראות. בלי זה האדמין קיבל "מנוי חדש" פעמיים.
+  const firstStorePurchase = active && user.planSource !== 'store';
+  const updated = await UserDAL.updateOne(
+    firstStorePurchase ? { _id: userId, planSource: { $ne: 'store' } } : { _id: userId },
+    update as Parameters<typeof UserDAL.updateOne>[1],
+  );
+  if (firstStorePurchase && !updated) return { active, expiresAt: storeExpiry, changed: false };
 
   if (notify && active && !wasPro) {
     void sendToUser(userId, {
@@ -127,7 +135,7 @@ export async function syncStoreSubscription(userId: string, notify = false): Pro
   }
 
   // רכישה ראשונה בחנות (גם מתוך ניסיון): התראה לאדמינים אם הפעילו אותה
-  if (notify && active && user.planSource !== 'store') {
+  if (notify && firstStorePurchase) {
     void notifyAdminsOfPurchase(user.name).catch((e) => logger.warn('store purchase admin notice failed: %s', (e as Error).message));
   }
 

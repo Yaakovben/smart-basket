@@ -18,7 +18,8 @@ interface Props {
 export const AdminPushToggle = ({ kind, label, hint, color, isDark }: Props) => {
   const alerts = useAdminAlerts();
   const [failed, setFailed] = useState(false);
-  const checked = alerts?.[kind] ?? true;
+  // עד שההגדרה נטענת מהשרת לא מציגים "מופעל" (צבוע) כשאולי היא כבויה
+  const checked = alerts?.[kind] ?? false;
 
   const toggle = (value: boolean) => {
     setFailed(false);

@@ -21,7 +21,7 @@ export async function submitFeedback(userId: string, rating: number, message?: s
       body: `${user?.name ?? 'משתמש'}${text}`,
       icon: PUSH_ICON,
       badge: PUSH_ICON,
-      data: { url: '/admin', type: 'feedback' },
+      data: { url: '/admin/feedback', type: 'feedback' },
     });
   })().catch((e) => logger.warn('feedback admin push failed: %s', (e as Error).message));
 
