@@ -142,4 +142,6 @@ export interface BarcodeScanResult {
   // null = לא נשלח מיקום
   nearby: ScanNearbyBranch[] | null;
   nearbyRadiusKm: number | null;
+  // המחיר היקר ביותר בין הסניפים בטווח (לחישוב "כמה חוסכים")
+  nearbyMaxPrice: number | null;
 }

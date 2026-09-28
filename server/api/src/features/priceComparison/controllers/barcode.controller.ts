@@ -51,13 +51,18 @@ export const scanBarcode = asyncHandler(async (req: AuthRequest, res: Response) 
   const userId = req.user!.id;
   const user = await UserDAL.findById(userId).catch(() => null);
   const userIsFree = !!user && !isPro(user);
-  if (userIsFree) {
+  // אותו מוצר שכבר נסרק היום לא נספר שוב ולא נחסם
+  const alreadyCounted = userIsFree && planUsage.wasScannedToday(userId, barcode);
+  if (userIsFree && !alreadyCounted) {
     const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
     if (planUsage.getPriceCount(userId) >= limit) throw PlanLimitError.priceComparison(limit);
   }
 
   const location = parseUserLocation(req.query.lat, req.query.lng);
   const result = await scanBarcodePrices(barcode, location);
-  if (result && userIsFree) planUsage.incrementPrice(userId);
+  if (result && userIsFree && !alreadyCounted) {
+    planUsage.incrementPrice(userId);
+    planUsage.markScanned(userId, barcode);
+  }
   res.json({ success: true, data: result });
 });

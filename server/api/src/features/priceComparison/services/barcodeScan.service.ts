@@ -16,7 +16,8 @@ import { normStoreId } from './storeId';
 
 // קודם מחפשים ממש קרוב; אם אין שם אף סניף עם המוצר, מרחיבים פעם אחת.
 const NEARBY_RADII_KM = [10, 25];
-const MAX_NEARBY_RESULTS = 8;
+const MAX_NEARBY_RESULTS = 10;
+const CLOSEST_ALWAYS_INCLUDED = 3;
 
 type BranchLabel = { storeId: string; branchName: string; city: string };
 
@@ -51,9 +52,38 @@ export interface BarcodeScanResult {
   cheapest: { chainId: ChainId; chainName: string; price: number; branch: BranchLabel | null };
   nearby: ScanNearbyBranch[] | null; // null = לא נשלח מיקום
   nearbyRadiusKm: number | null;
+  // המחיר היקר ביותר בין הסניפים בטווח (לחישוב "כמה חוסכים"). null בלי מיקום.
+  nearbyMaxPrice: number | null;
 }
 
-export async function scanBarcodePrices(barcode: string, user: UserLocation | null): Promise<BarcodeScanResult | null> {
+// מטמון קצר לנתוני המוצר (מחירים, רשתות, חריגות סניף), שלא תלויים במיקום:
+// המחירים משתנים רק בסנכרון, וסריקה חוזרת של אותו מוצר נפוצה. המרחקים
+// מחושבים מחדש בכל בקשה מהמיקום המדויק, כך שהם תמיד נכונים.
+const PRODUCT_CACHE_TTL_MS = 10 * 60_000;
+const PRODUCT_CACHE_MAX = 500;
+
+interface PreparedProduct {
+  productName: string;
+  chains: ScanChainPrice[];
+  cheapest: BarcodeScanResult['cheapest'];
+  byChain: Map<ChainId, { modalPrice?: number; coverage?: number; chainMin: number; exceptions: Map<string, number>; synced: Set<string> }>;
+}
+
+const productCache = new Map<string, { at: number; value: PreparedProduct | null }>();
+
+async function prepareProduct(barcode: string): Promise<PreparedProduct | null> {
+  const hit = productCache.get(barcode);
+  if (hit && Date.now() - hit.at < PRODUCT_CACHE_TTL_MS) return hit.value;
+  const value = await loadProduct(barcode);
+  if (productCache.size >= PRODUCT_CACHE_MAX) {
+    const oldest = productCache.keys().next().value;
+    if (oldest !== undefined) productCache.delete(oldest);
+  }
+  productCache.set(barcode, { at: Date.now(), value });
+  return value;
+}
+
+async function loadProduct(barcode: string): Promise<PreparedProduct | null> {
   const docs = (await Price.find({ barcode }).select('+storePrices').lean())
     .filter(d => d.blockedItem !== true && d.price > 0);
   if (docs.length === 0) return null;
@@ -78,31 +108,47 @@ export async function scanBarcodePrices(barcode: string, user: UserLocation | nu
   const best = [...chains].sort((a, b) => a.minPrice - b.minPrice)[0];
   const cheapest = { chainId: best.chainId, chainName: best.chainName, price: best.minPrice, branch: best.cheapestBranch };
 
-  if (!user) return { barcode, productName, chains, cheapest, nearby: null, nearbyRadiusKm: null };
+  const byChain: PreparedProduct['byChain'] = new Map();
+  await Promise.all(docs.map(async d => {
+    byChain.set(d.chainId, {
+      modalPrice: d.modalPrice,
+      coverage: d.storeCoverage,
+      chainMin: d.price,
+      exceptions: parseStorePrices(d.storePrices),
+      synced: await BranchPriceDAL.storeIdsWithPrices(d.chainId),
+    });
+  }));
 
-  const docByChain = new Map(docs.map(d => [d.chainId, d]));
-  const synced = new Map<ChainId, Set<string>>();
-  await Promise.all([...docByChain.keys()].map(async c => { synced.set(c, await BranchPriceDAL.storeIdsWithPrices(c)); }));
-  const exceptionsByChain = new Map([...docByChain].map(([c, d]) => [c, parseStorePrices(d.storePrices)]));
+  return { productName, chains, cheapest, byChain };
+}
 
+export async function scanBarcodePrices(barcode: string, user: UserLocation | null): Promise<BarcodeScanResult | null> {
+  const product = await prepareProduct(barcode);
+  if (!product) return null;
+  const { productName, chains, cheapest, byChain } = product;
+
+  if (!user) return { barcode, productName, chains, cheapest, nearby: null, nearbyRadiusKm: null, nearbyMaxPrice: null };
+
+  // חישוב מרחקים פעם אחת לטווח הרחב, ואז סינון לכל טווח
+  const inMaxRadius = await getBranchesWithin(user, NEARBY_RADII_KM[NEARBY_RADII_KM.length - 1]);
   let nearby: ScanNearbyBranch[] = [];
   let radiusUsed = NEARBY_RADII_KM[0];
   for (const radius of NEARBY_RADII_KM) {
     radiusUsed = radius;
     nearby = [];
-    for (const b of await getBranchesWithin(user, radius)) {
-      const doc = docByChain.get(b.chainId);
-      if (!doc) continue;
+    for (const b of inMaxRadius) {
+      if (b.distanceKm > radius) continue;
+      const chain = byChain.get(b.chainId);
+      if (!chain) continue;
       const storeId = normStoreId(b.storeId);
-      const syncedStores = synced.get(b.chainId) ?? new Set<string>();
       // רשת שסונכרנה ברמת סניף אבל הסניף הזה לא הופיע בפיד: לא ידוע שהוא מוכר את המוצר
-      if (syncedStores.size > 0 && !syncedStores.has(storeId)) continue;
+      if (chain.synced.size > 0 && !chain.synced.has(storeId)) continue;
       const resolved = resolveBranchPrice({
-        explicit: exceptionsByChain.get(b.chainId)?.get(storeId),
-        modalPrice: doc.modalPrice,
-        coverage: doc.storeCoverage,
-        storeHasPrices: syncedStores.has(storeId),
-        chainMin: doc.price,
+        explicit: chain.exceptions.get(storeId),
+        modalPrice: chain.modalPrice,
+        coverage: chain.coverage,
+        storeHasPrices: chain.synced.has(storeId),
+        chainMin: chain.chainMin,
       });
       nearby.push({
         chainId: b.chainId, chainName: b.chainName, storeId: b.storeId, branchName: b.storeName,
@@ -115,5 +161,11 @@ export async function scanBarcodePrices(barcode: string, user: UserLocation | nu
 
   // הזול קודם; במחיר זהה מחיר מאומת לסניף קודם, ואחריו הקרוב.
   nearby.sort((a, b) => a.price - b.price || Number(b.verified) - Number(a.verified) || a.distanceKm - b.distanceKm);
-  return { barcode, productName, chains, cheapest, nearby: nearby.slice(0, MAX_NEARBY_RESULTS), nearbyRadiusKm: radiusUsed };
+  // הזולים ביותר, ובנוסף הקרובים ביותר (גם אם יקרים יותר), כדי שמיון "לפי
+  // מרחק" בלקוח יציג באמת את הסניפים הכי קרובים.
+  const cheapestFirst = nearby.slice(0, MAX_NEARBY_RESULTS);
+  const closest = [...nearby].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, CLOSEST_ALWAYS_INCLUDED);
+  const picked = [...cheapestFirst, ...closest.filter(c => !cheapestFirst.includes(c))];
+  const nearbyMaxPrice = nearby.length > 0 ? Math.max(...nearby.map(n => n.price)) : null;
+  return { barcode, productName, chains, cheapest, nearby: picked, nearbyRadiusKm: radiusUsed, nearbyMaxPrice };
 }

@@ -36,9 +36,27 @@ function increment(map: Map<string, DayUsage>, userId: string): number {
   return entry.count;
 }
 
+// ברקודים שכל משתמש כבר סרק היום ("איפה הכי זול"). סריקה חוזרת של אותו מוצר
+// באותו יום (למשל אחרי אישור מיקום, או חזרה לעמוד) לא נספרת שוב במכסה.
+const scannedToday = new Map<string, { date: string; barcodes: Set<string> }>();
+
+function wasScannedToday(userId: string, barcode: string): boolean {
+  const entry = scannedToday.get(userId);
+  return !!entry && entry.date === todayStr() && entry.barcodes.has(barcode);
+}
+
+function markScanned(userId: string, barcode: string): void {
+  const today = todayStr();
+  const entry = scannedToday.get(userId);
+  if (!entry || entry.date !== today) scannedToday.set(userId, { date: today, barcodes: new Set([barcode]) });
+  else entry.barcodes.add(barcode);
+}
+
 export const planUsage = {
   getAiCount: (userId: string) => getCount(aiUsage, userId),
   incrementAi: (userId: string) => increment(aiUsage, userId),
   getPriceCount: (userId: string) => getCount(priceUsage, userId),
   incrementPrice: (userId: string) => increment(priceUsage, userId),
+  wasScannedToday,
+  markScanned,
 };

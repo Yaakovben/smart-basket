@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ButtonBase, Box, Typography } from '@mui/material';
 import QrCodeScannerRoundedIcon from '@mui/icons-material/QrCodeScannerRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
@@ -13,6 +14,20 @@ const TEXT: Record<Language, { title: string; sub: string }> = {
 // כניסה לעמוד "איפה הכי זול" מטאב המחירים
 export const PriceScanEntry = ({ isDark, language, onOpen }: { isDark: boolean; language: Language; onOpen: () => void }) => {
   const txt = TEXT[language] ?? TEXT.he;
+  // טעינה מוקדמת ברקע של העמוד ושל הסורק (@zxing), כדי שהלחיצה תפתח מצלמה מיד
+  useEffect(() => {
+    const warm = () => {
+      void import('../pages/PriceScanPage');
+      void import('../../../global/components/QRScanner');
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warm);
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
   return (
     <ButtonBase
       onClick={() => { haptic('light'); onOpen(); }}
