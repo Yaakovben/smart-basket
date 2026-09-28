@@ -24,6 +24,7 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   addedBy: p.addedBy,
   updatedBy: p.updatedBy ?? null,
   purchasedBy: p.purchasedBy ?? null,
+  purchasedAt: p.purchasedAt ?? null,
   createdAt: p.createdAt,
   updatedAt: p.updatedAt,
   note: p.note,

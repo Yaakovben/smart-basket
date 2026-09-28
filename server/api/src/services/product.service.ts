@@ -119,6 +119,7 @@ export async function updateProduct(
   if (data.isPurchased !== undefined) {
     updates.isPurchased = data.isPurchased;
     updates.purchasedBy = data.isPurchased ? userId : null;
+    updates.purchasedAt = data.isPurchased ? new Date() : null;
   }
 
   let product: IProductDoc | null;

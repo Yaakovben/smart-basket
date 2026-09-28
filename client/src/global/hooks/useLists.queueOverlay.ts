@@ -28,6 +28,7 @@ export async function overlayQueuedMutations(lists: List[], userName: string): P
           category: m.productData.category as Product['category'],
           isPurchased: !!m.pendingIsPurchased,
           purchasedBy: m.pendingIsPurchased ? userName : null,
+          purchasedAt: m.pendingIsPurchased ? new Date(m.timestamp).toISOString() : null,
           addedBy: userName,
           createdAt: new Date(m.timestamp).toISOString(),
           note: m.productData.note,
@@ -36,7 +37,11 @@ export async function overlayQueuedMutations(lists: List[], userName: string): P
         products = [...products, temp];
       } else if (m.type === 'toggle') {
         products = products.map(p => p.id === m.productId && p.isPurchased !== m.isPurchased
-          ? { ...p, isPurchased: m.isPurchased, purchasedBy: m.isPurchased ? userName : null }
+          ? {
+            ...p, isPurchased: m.isPurchased, purchasedBy: m.isPurchased ? userName : null,
+            // זמן הפעולה עצמה (כשסומן באופליין), לא זמן הסנכרון
+            purchasedAt: m.isPurchased ? new Date(m.timestamp).toISOString() : null,
+          }
           : p);
       } else if (m.type === 'update') {
         products = products.map(p => p.id === m.productId ? { ...p, ...(m.changes as Partial<Product>) } : p);

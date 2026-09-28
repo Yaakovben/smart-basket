@@ -37,6 +37,9 @@ export interface IProductDoc extends Document {
   // מי סימן את המוצר כ"נקנה" לאחרונה. מתאפס ל-null כשמסמנים "לא נקנה" -
   // אין טעם ב"מי קנה" למוצר שכרגע לא מסומן כנקנה.
   purchasedBy?: Types.ObjectId | null;
+  // מתי סומן כ"נקנה" לאחרונה, למיון לשונית "נקנו" לפי סדר הקנייה. מתאפס
+  // יחד עם purchasedBy. מוצרים שנקנו לפני שהשדה נוסף מגיעים בלעדיו.
+  purchasedAt?: Date | null;
   // לוג עריכות תוכן - כל עריכה (שמירה אחת בעורך) כרשומה נפרדת עם כל השדות
   // שהשתנו בה יחד (לא שדה בודד לרשומה - כך "שיניתי שם וכמות באותה שמירה"
   // מוצג כאירוע אחד, לא שניים). מוגבל ל-MAX_EDIT_HISTORY האחרונים כדי
@@ -104,6 +107,10 @@ const productSchema = new Schema<IProductDoc>(
     purchasedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      default: null,
+    },
+    purchasedAt: {
+      type: Date,
       default: null,
     },
     editHistory: {

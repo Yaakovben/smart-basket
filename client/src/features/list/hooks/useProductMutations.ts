@@ -65,7 +65,11 @@ export const useProductMutations = ({
     }
     onUpdateProductsForList(list.id, (currentProducts) =>
       currentProducts.map((p: Product) =>
-        p.id === productId ? { ...p, isPurchased: newIsPurchased, purchasedBy: newIsPurchased ? user.name : null } : p
+        p.id === productId ? {
+          ...p, isPurchased: newIsPurchased, purchasedBy: newIsPurchased ? user.name : null,
+          // זמן הקנייה נקבע מיד, כדי שהמוצר יקפוץ לראש לשונית "נקנו" כבר עכשיו
+          purchasedAt: newIsPurchased ? new Date().toISOString() : null,
+        } : p
       )
     );
 
@@ -93,7 +97,7 @@ export const useProductMutations = ({
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
       onUpdateProductsForList(list.id, (currentProducts) =>
         currentProducts.map((p: Product) =>
-          p.id === productId ? { ...p, isPurchased: product.isPurchased, purchasedBy: product.purchasedBy } : p
+          p.id === productId ? { ...p, isPurchased: product.isPurchased, purchasedBy: product.purchasedBy, purchasedAt: product.purchasedAt } : p
         )
       );
       showToast(t('errorOccurred'), 'error');

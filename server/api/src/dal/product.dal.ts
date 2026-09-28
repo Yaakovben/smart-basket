@@ -231,7 +231,7 @@ export const ProductDAL = {
   async resetAll(listId: string): Promise<number> {
     const result = await Product.updateMany(
       { listId, isPurchased: true },
-      { $set: { isPurchased: false } }
+      { $set: { isPurchased: false, purchasedAt: null } }
     );
     return result.modifiedCount;
   },

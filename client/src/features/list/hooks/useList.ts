@@ -90,12 +90,20 @@ export const useList = ({
   //    מוצר חדש מקבל position גדול בשרת (Date.now) ולכן נופל לסוף.
   //  - אחרת (ברירת מחדל): מיון אוטומטי לפי קטגוריה (ירקות → פירות → חלב...
   //    זרימת קניות טבעית), ובתוך קטגוריה לפי שם בא"ב.
+  //  - לשונית "נקנו": תמיד לפי זמן הקנייה, האחרון שנקנה ראשון. הסדר הידני
+  //    והקטגוריות חלים רק על "לא נקנו", שם מתכננים את הקנייה.
   const items = useMemo(() => {
     const source = filter === 'pending' ? pending : purchased;
     const needle = debouncedSearch.toLowerCase();
     const filtered = needle
       ? source.filter((p: Product) => p.name.toLowerCase().includes(needle))
       : source;
+    if (filter !== 'pending') {
+      // מוצרים שנקנו לפני שנשמר זמן קנייה: אחרי כל המתוארכים, לפי העדכון האחרון
+      const boughtAt = (p: Product) => (p.purchasedAt ? Date.parse(p.purchasedAt) : 0);
+      const fallback = (p: Product) => Date.parse(p.updatedAt ?? p.createdAt) || 0;
+      return [...filtered].sort((a, b) => boughtAt(b) - boughtAt(a) || fallback(b) - fallback(a));
+    }
     if (list.productsManuallyOrdered) {
       return [...filtered].sort((a, b) => {
         const pa = a.position ?? Number.MAX_SAFE_INTEGER;

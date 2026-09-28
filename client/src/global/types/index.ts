@@ -75,6 +75,9 @@ export interface Product {
   addedBy: string;
   updatedBy?: string | null;
   purchasedBy?: string | null;
+  // מתי סומן כ"נקנה" (ISO). לשונית "נקנו" ממוינת לפיו. חסר במוצרים שנקנו
+  // לפני שהשדה נוסף.
+  purchasedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
   note?: string;

@@ -127,12 +127,12 @@ export const useAddProduct = ({
             // התגובה הגולמית של ההוספה (עוד לא נקנה) - בלי זה "מי הוסיף"
             // נשאר מוצג במקום "מי קנה" עד לרענון מלא של הרשימה.
             onUpdateProductsForList(list.id, (current) =>
-              current.map(p => p.id === realId ? { ...p, isPurchased: true, purchasedBy: user.name } : p)
+              current.map(p => p.id === realId ? { ...p, isPurchased: true, purchasedBy: user.name, purchasedAt: new Date().toISOString() } : p)
             );
           } catch {
             // שחזור הסימון
             onUpdateProductsForList(list.id, (current) =>
-              current.map(p => p.id === realId ? { ...p, isPurchased: false, purchasedBy: null } : p)
+              current.map(p => p.id === realId ? { ...p, isPurchased: false, purchasedBy: null, purchasedAt: null } : p)
             );
           }
         }

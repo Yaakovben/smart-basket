@@ -64,6 +64,7 @@ export interface IProductResponse {
   addedBy: string;
   updatedBy?: string | null;
   purchasedBy?: string | null;
+  purchasedAt?: Date | null;
   createdAt: Date;
   note?: string;
   image?: string;

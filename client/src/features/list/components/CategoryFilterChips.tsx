@@ -55,8 +55,8 @@ export const CategoryFilterChips = memo(({
   // אזור ההשתלבות בין הצ'יפים לכפתור: הצ'יפ הקרוב דועך בעדינות לפני הכפתור
   // במקום להיתקל בו. TRAILING_CLEAR שקוף לגמרי (הכפתור ומרווח קטן),
   // ואחריו TRAILING_SOFT של דעיכה רכה. שניהם מתכווצים יחד עם הכפתור.
-  const TRAILING_CLEAR = TRAILING_WIDTH + 4;
-  const TRAILING_SOFT = 16;
+  const TRAILING_CLEAR = TRAILING_WIDTH + 2;
+  const TRAILING_SOFT = 10;
   // הדעיכה הרגילה בקצה הרצועה כשאין כפתור (כמו שהיה תמיד)
   const EDGE_SOFT = 12;
   const trailingRef = useRef<HTMLDivElement | null>(null);
