@@ -5,7 +5,7 @@ import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
 import { haptic } from '../../../global/helpers';
 import { PlanLimitHandledError } from '../../../global/hooks/useLists.actions';
-import { subscriptionApi } from '../../../services/api/subscription.api';
+import { loadSubscriptionStatus } from '../../subscription/subscriptionStatusStore';
 import type {
   NewListForm,
   HomeTab,
@@ -242,7 +242,7 @@ export const useHome = ({
       // "עוד מעט ומגיעים למגבלה" - נטען כל פעם מחדש (לא cache), כי מספר
       // הרשימות בבעלות יכול להשתנות בין פתיחה לפתיחה. best-effort: כשל
       // כאן פשוט לא מציג את הרמז, לא חוסם את היצירה עצמה.
-      subscriptionApi.getStatus()
+      loadSubscriptionStatus(true)
         .then(s => setListLimitMax(s.plan === 'pro' ? null : (s.limits?.maxOwnedLists ?? null)))
         .catch(() => setListLimitMax(null));
     }

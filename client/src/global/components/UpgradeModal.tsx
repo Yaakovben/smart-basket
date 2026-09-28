@@ -7,8 +7,7 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import SellRoundedIcon from '@mui/icons-material/SellRounded';
 import { useNavigate } from 'react-router-dom';
 import type { ReactElement, Ref, ComponentType } from 'react';
-import { forwardRef, useEffect, useState } from 'react';
-import { subscriptionApi } from '../../services/api/subscription.api';
+import { forwardRef } from 'react';
 import { getSubscriptionStrings } from '../../features/subscription/subscription.strings';
 import Zoom from '@mui/material/Zoom';
 import type { TransitionProps } from '@mui/material/transitions';
@@ -45,14 +44,8 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
   const { t, settings } = useSettings();
   const navigate = useNavigate();
   const s = getSubscriptionStrings(settings.language);
-  // המחיר האמיתי מהשרת (לא טקסט קבוע) - נטען כשהחלון נפתח; כשל = בלי שורת מחיר.
-  const [monthly, setMonthly] = useState<number | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    subscriptionApi.getStatus().then((st) => { if (!cancelled) setMonthly(st.catalog.monthly); }).catch(() => { /* ללא מחיר */ });
-    return () => { cancelled = true; };
-  }, [open]);
+  // אין כאן מחיר: הרכישה נעשית ב־App Store או ב־Google Play, והמחיר הסופי
+  // נקבע בחנות לפי המדינה. המחירים המדויקים מוצגים בעמוד המנוי, מהחנות עצמה.
   const isDark = settings.theme === 'dark';
 
   return (
@@ -154,16 +147,6 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
             </Box>
           ))}
         </Box>
-
-        {monthly !== null && (
-          <Box sx={{ textAlign: 'center', mt: 2.5 }}>
-            <Typography sx={{ fontSize: 26, fontWeight: 900, color: isDark ? 'white' : '#4C1D95', lineHeight: 1.1 }}>
-              {s.from}₪{Number.isInteger(monthly) ? monthly : monthly.toFixed(2)}
-              <Typography component="span" sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}> {s.perMonth}</Typography>
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.4 }}>{s.upgradeModalPrice}</Typography>
-          </Box>
-        )}
 
         {/* CTA - אותו "ברק" נע כמו כפתור ההמשך בעמוד המנוי */}
         <Button

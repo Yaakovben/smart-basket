@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { subscriptionApi, type SubscriptionStatus, type SubscriptionPayMethod } from '../../../services/api/subscription.api';
+import type { SubscriptionStatus } from '../../../services/api/subscription.api';
+import { peekSubscriptionStatus, loadSubscriptionStatus, subscribeSubscriptionStatus } from '../subscriptionStatusStore';
 
-// טעינה ופעולות של עמוד המנוי. אחרי כל פעולה טוענים מחדש את המצב מהשרת (מקור
-// האמת) במקום לנחש אותו בלקוח.
+// מצב עמוד המנוי. מה שכבר ידוע מוצג מיד (בלי שלד טעינה), והנתון מהשרת
+// מתעדכן ברקע. השרת הוא מקור האמת: אחרי רכישה טוענים מחדש, לא מנחשים.
 export function useSubscription() {
-  const [status, setStatus] = useState<SubscriptionStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<SubscriptionStatus | null>(peekSubscriptionStatus);
+  const [loading, setLoading] = useState(() => peekSubscriptionStatus() === null);
   const [error, setError] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(false);
     try {
-      setStatus(await subscriptionApi.getStatus());
+      setStatus(await loadSubscriptionStatus(true));
     } catch {
       setError(true);
     } finally {
@@ -21,27 +21,12 @@ export function useSubscription() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
-
-  // כל פעולה מחזירה true בהצלחה. שגיאות מוחזרות ל-caller כדי להציג הודעה מתאימה.
-  const run = useCallback(async (action: () => Promise<unknown>): Promise<{ ok: boolean; code?: string }> => {
-    setBusy(true);
-    try {
-      await action();
-      await load(true);
-      return { ok: true };
-    } catch (err) {
-      const code = (err as { response?: { data?: { error?: { code?: string } } } }).response?.data?.error?.code;
-      await load(true);
-      return { ok: false, code };
-    } finally {
-      setBusy(false);
-    }
+  useEffect(() => {
+    const unsubscribe = subscribeSubscriptionStatus(setStatus);
+    // כשכבר יש נתון מוצג, הרענון שקט
+    void load(peekSubscriptionStatus() !== null);
+    return unsubscribe;
   }, [load]);
 
-  const createRequest = useCallback((months: number, method: SubscriptionPayMethod) => run(() => subscriptionApi.createRequest(months, method)), [run]);
-  const reportPaid = useCallback((id: string) => run(() => subscriptionApi.reportPaid(id)), [run]);
-  const cancelRequest = useCallback((id: string) => run(() => subscriptionApi.cancelRequest(id)), [run]);
-
-  return { status, loading, error, busy, reload: load, createRequest, reportPaid, cancelRequest };
+  return { status, loading, error, reload: load };
 }

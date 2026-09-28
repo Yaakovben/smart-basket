@@ -1,24 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Button, Link } from '@mui/material';
 import type { ReactNode } from 'react';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/constants';
 import type { ToastType } from '../../../global/types';
-import type { SubscriptionPayMethod } from '../../../services/api/subscription.api';
 import { getSubscriptionStrings } from '../subscription.strings';
 import { useSubscription } from '../hooks/useSubscription';
 import { PlanHero } from '../components/PlanHero';
-import { PeriodPicker, priceFor } from '../components/PeriodPicker';
-import { PaymentPanel } from '../components/PaymentPanel';
-import { ReportedCard, ApprovedCard, RejectedNotice, HistoryCard, PaymentUnavailableCard } from '../components/RequestCards';
 import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
-import { StepIndicator } from '../components/StepIndicator';
-import { TrustRow } from '../components/PerksAndTrust';
 import { PlanComparisonTable } from '../components/PlanComparisonTable';
-import { primaryCtaSx, revealSx } from '../subscription.styles';
 import { StoreCheckout } from '../components/StoreCheckout';
+import { AppOnlyCheckout } from '../components/AppOnlyCheckout';
+import { revealSx, PRO_PURPLE } from '../subscription.styles';
 import { isNativeApp } from '../../../global/services/storeBilling';
 
 // כותרת ייעודית בסגול המותג של המינוי - לא הגרדיאנט התכלת הכללי של האפליקציה
@@ -37,91 +31,18 @@ const Reveal = ({ i, children }: { i: number; children: ReactNode }) => <Box sx=
 
 const LOCALES = { he: 'he-IL', en: 'en-GB', ru: 'ru-RU' } as const;
 
+// עמוד המנוי. התשלום נעשה רק דרך App Store / Google Play:
+//  • באפליקציה: בחירת תוכנית ורכישה בחנות, או ניהול מנוי קיים
+//  • באתר: הסבר שההצטרפות נעשית באפליקציה, עם קישורים לחנויות
+// סדר העמוד זהה לפני ואחרי מנוי: מצב, פעולה, מה כלול, עזרה.
 export const SubscriptionPage = ({ showToast }: Props) => {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  // באפליקציה מהחנות הרכישה עוברת רק דרך App Store / Google Play. מסלול
-  // התשלום הידני (ביט, PayBox, העברה) לא מוצג שם בכלל, כי החנויות אוסרות
-  // להפנות לתשלום חיצוני על תוכן דיגיטלי.
   const native = isNativeApp();
-  const baseStrings = getSubscriptionStrings(settings.language);
-  const s = native ? { ...baseStrings, heroFreeSub: baseStrings.heroFreeSubStore } : baseStrings;
+  const s = getSubscriptionStrings(settings.language);
   const locale = LOCALES[settings.language] ?? 'he-IL';
-
-  const { status, loading, error, busy, reload, createRequest, reportPaid, cancelRequest } = useSubscription();
-  const [monthsChoice, setMonthsChoice] = useState<number | null>(null);
-  const [showUnavailable, setShowUnavailable] = useState(false);
-  const [activated, setActivated] = useState(false);
-  const wasReportedRef = useRef(false);
-  const activatedExpiry = status?.planExpiresAt
-    ? new Date(status.planExpiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
-    : undefined;
-
-  const months = useMemo(() => {
-    if (!status) return 1;
-    const allowed = status.catalog.allowedMonths;
-    if (monthsChoice && allowed.includes(monthsChoice)) return monthsChoice;
-    return allowed.includes(12) ? 12 : allowed[0] ?? 1;
-  }, [status, monthsChoice]);
-
-  const isPro = status?.plan === 'pro';
-  const isPermanent = isPro && !status?.planExpiresAt;
-  const hasPaymentMethod = !!(status?.payment.bit || status?.payment.paybox || status?.payment.bank);
-  const defaultMethod: SubscriptionPayMethod = status?.payment.bit ? 'bit' : status?.payment.paybox ? 'paybox' : 'bank';
-  const open = status?.openRequest ?? null;
-  const lastResolved = status?.history.find((h) => h.status !== 'pending' && h.status !== 'reported' && h.status !== 'cancelled');
-  const showRejected = !open && lastResolved?.status === 'rejected';
-
-  const reportedNow = open?.status === 'reported';
-
-  // בזמן שהתשלום בבדיקה - בודקים שקט כל 20 שניות אם הופעל, וגם כשחוזרים לאפליקציה.
-  useEffect(() => {
-    if (!reportedNow) return;
-    const poll = () => { if (document.visibilityState === 'visible') void reload(true); };
-    const id = window.setInterval(poll, 20_000);
-    document.addEventListener('visibilitychange', poll);
-    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', poll); };
-  }, [reportedNow, reload]);
-
-  // הבקשה עברה מ"בבדיקה" ל"אושרה" בזמן שהמשתמש כאן - חוגגים.
-  useEffect(() => {
-    if (!status) return;
-    if (wasReportedRef.current && !status.openRequest && status.plan === 'pro' && status.history[0]?.status === 'approved') {
-      setActivated(true);
-    }
-    wasReportedRef.current = status.openRequest?.status === 'reported';
-  }, [status]);
-
-  const errorMessage = (code?: string) => (code === 'REQUEST_ALREADY_REPORTED' ? s.errorAlreadyReported : s.errorGeneric);
-
-  const handleContinue = async () => {
-    if (!hasPaymentMethod) { setShowUnavailable(true); return; }
-    const res = await createRequest(months, defaultMethod);
-    if (!res.ok) showToast(errorMessage(res.code), 'error');
-  };
-
-  const handleChangeMethod = async (method: SubscriptionPayMethod) => {
-    if (!open) return;
-    const res = await createRequest(open.months, method);
-    if (!res.ok) showToast(errorMessage(res.code), 'error');
-  };
-
-  const handlePaid = async () => {
-    if (!open) return;
-    const res = await reportPaid(open.id);
-    if (res.ok) showToast(s.reportedToast, 'success');
-    else showToast(errorMessage(res.code), 'error');
-  };
-
-  const handleCancel = async () => {
-    if (!open) return;
-    const res = await cancelRequest(open.id);
-    if (res.ok) showToast(s.cancelledToast, 'info');
-    else showToast(errorMessage(res.code), 'error');
-  };
-
-  const showCheckout = !!status && !open && !isPermanent && !activated;
+  const { status, loading, error, reload } = useSubscription();
 
   return (
     <Box sx={{
@@ -150,77 +71,40 @@ export const SubscriptionPage = ({ showToast }: Props) => {
         ) : error && !status ? (
           <Box sx={{ textAlign: 'center', py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <Typography sx={{ color: 'text.secondary' }}>{s.loadError}</Typography>
-            <Button variant="outlined" onClick={() => void reload()} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: '#7C3AED', borderColor: '#7C3AED', '&:hover': { borderColor: '#6D28D9', bgcolor: 'rgba(124,58,237,0.06)' } }}>{s.retry}</Button>
+            <Button variant="outlined" onClick={() => void reload()} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: PRO_PURPLE, borderColor: PRO_PURPLE, '&:hover': { borderColor: '#6D28D9', bgcolor: 'rgba(124,58,237,0.06)' } }}>{s.retry}</Button>
           </Box>
         ) : status ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Reveal i={0}><PlanHero status={status} s={s} isDark={isDark} locale={locale} /></Reveal>
 
-            {/* מה כלול בכל תוכנית - תמיד מוצג (גם למי שכבר Pro), כדי שברור בכל
-                רגע מה ההבדל, לא רק ברגע השדרוג. */}
-            <Reveal i={1}><PlanComparisonTable status={status} s={s} isDark={isDark} /></Reveal>
-
-            {/* מחוון השלבים מוצג רק אחרי שנבחרה תקופה ונפתחה בקשת תשלום - בתחילת
-                הדרך (בחירת תקופה) הוא רק מבלבל בלי שום פעולה שהוא מתאר.
-                step=4 (activated) = שלב סופי אמיתי, לא רק "3 - עדיין מאשרים". */}
-            {native && (
-              <Reveal i={2}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Reveal i={1}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {native ? (
                   <StoreCheckout
                     status={status} language={settings.language} isDark={isDark}
                     showToast={showToast} onChanged={() => reload(true)}
                   />
-                </Box>
-              </Reveal>
-            )}
-
-            {!native && (open || activated) && (
-              <Reveal i={1}><StepIndicator step={activated ? 4 : open?.status === 'pending' ? 2 : 3} s={s} isDark={isDark} /></Reveal>
-            )}
-
-            {/* אושר בזמן שהמשתמש עדיין כאן - מסך מנוחה "זהו, נגמר" בתוך העמוד
-                עצמו, בלי חלון קופץ נוסף מעליו (שהיה חוזר על אותה הודעה
-                פעמיים). נשאר עד שלוחצים "מתחילים". */}
-            {native ? null : activated ? (
-              <Reveal i={2}><ApprovedCard expiryDate={activatedExpiry} s={s} isDark={isDark} onDismiss={() => setActivated(false)} /></Reveal>
-            ) : open?.status === 'pending' ? (
-              <Reveal i={2}>
-                <PaymentPanel
-                  status={status} request={open} s={s} isDark={isDark} busy={busy}
-                  onChangeMethod={handleChangeMethod} onPaid={handlePaid} onCancel={handleCancel}
-                />
-              </Reveal>
-            ) : open?.status === 'reported' ? (
-              <Reveal i={2}><ReportedCard request={open} s={s} isDark={isDark} locale={locale} /></Reveal>
-            ) : null}
-
-            {!native && showRejected && lastResolved && <Reveal i={1}><RejectedNotice request={lastResolved} s={s} isDark={isDark} /></Reveal>}
-
-            {!native && showCheckout && !showUnavailable && (
-              <>
-                {/* מה כלול כבר מוצג למעלה ב-PlanComparisonTable (עם מספרים אמיתיים) -
-                    אריח "מה מקבלים" נוסף כאן היה חוזר על אותם 4 פריטים בדיוק, בלי
-                    ערך מידע נוסף. */}
-                <Reveal i={2}><PeriodPicker status={status} s={s} isDark={isDark} months={months} onChange={setMonthsChoice} /></Reveal>
-                <Reveal i={3}>
-                  <Button variant="contained" fullWidth disabled={busy} onClick={handleContinue} sx={primaryCtaSx}>
-                    {busy
-                      ? <CircularProgress size={22} sx={{ color: '#fff' }} />
-                      : `${status.isTrial ? s.trialKeepCta : isPro ? s.renewCta : s.upgradeCta} · ₪${priceFor(status, months)}`}
-                  </Button>
-                </Reveal>
-                {isPro && (
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center' }}>{status.isTrial ? s.trialKeepNote : s.renewNote}</Typography>
+                ) : (
+                  <AppOnlyCheckout status={status} s={s} isDark={isDark} />
                 )}
-                <Reveal i={4}><TrustRow s={s} isDark={isDark} /></Reveal>
-              </>
-            )}
+              </Box>
+            </Reveal>
 
-            {!native && showCheckout && showUnavailable && (
-              <Reveal i={2}><PaymentUnavailableCard s={s} isDark={isDark} email={status.payment.supportEmail} onBack={() => setShowUnavailable(false)} /></Reveal>
-            )}
+            {/* מה כלול בכל תוכנית - תמיד מוצג (גם למי שכבר Pro), כדי שברור
+                בכל רגע מה ההבדל, לא רק ברגע השדרוג. */}
+            <Reveal i={2}><PlanComparisonTable status={status} s={s} isDark={isDark} /></Reveal>
 
-            {!native && <HistoryCard history={status.history} s={s} isDark={isDark} locale={locale} />}
+            <Reveal i={3}>
+              <Typography sx={{ fontSize: 12.5, color: 'text.secondary', textAlign: 'center', mt: 0.5 }}>
+                {s.supportPrompt}{' '}
+                <Link
+                  href={`mailto:${status.supportEmail}?subject=${encodeURIComponent('Smart Basket Pro')}`}
+                  underline="hover" sx={{ fontWeight: 700, color: PRO_PURPLE }}
+                >
+                  {s.supportCta}
+                </Link>
+              </Typography>
+            </Reveal>
           </Box>
         ) : null}
       </Box>

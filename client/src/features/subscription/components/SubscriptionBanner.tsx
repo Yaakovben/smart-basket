@@ -5,14 +5,13 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { subscriptionApi, type SubscriptionStatus } from '../../../services/api/subscription.api';
+import type { SubscriptionStatus } from '../../../services/api/subscription.api';
+import { peekSubscriptionStatus, loadSubscriptionStatus } from '../subscriptionStatusStore';
 import { getSubscriptionStrings } from '../subscription.strings';
 // אייקון לבן על אריח סגול - עקבי עם שאר המינוי
 
 const DAY_MS = 86_400_000;
 const DISMISS_KEY = 'sb_sub_banner_dismissed_on';
-const CACHE_TTL_MS = 5 * 60_000;
-let cache: { at: number; status: SubscriptionStatus } | null = null;
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const wasDismissedToday = () => { try { return localStorage.getItem(DISMISS_KEY) === todayKey(); } catch { return false; } };
@@ -24,19 +23,19 @@ export const SubscriptionBanner = () => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const s = getSubscriptionStrings(settings.language);
-  const [status, setStatus] = useState<SubscriptionStatus | null>(() => (cache && Date.now() - cache.at < CACHE_TTL_MS ? cache.status : null));
+  const [status, setStatus] = useState<SubscriptionStatus | null>(peekSubscriptionStatus);
   const [dismissed, setDismissed] = useState(wasDismissedToday);
 
   useEffect(() => {
-    if (status || dismissed) return;
+    if (dismissed) return;
     let cancelled = false;
-    subscriptionApi.getStatus()
-      .then((st) => { cache = { at: Date.now(), status: st }; if (!cancelled) setStatus(st); })
+    loadSubscriptionStatus()
+      .then((st) => { if (!cancelled) setStatus(st); })
       .catch(() => { /* ללא באנר */ });
     return () => { cancelled = true; };
-  }, [status, dismissed]);
+  }, [dismissed]);
 
-  if (!status || dismissed || status.openRequest) return null;
+  if (!status || dismissed) return null;
 
   const days = status.planExpiresAt
     ? Math.ceil((new Date(status.planExpiresAt).getTime() - Date.now()) / DAY_MS)

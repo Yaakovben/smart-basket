@@ -8,6 +8,7 @@ import { diagLog } from "../helpers/crashLog";
 import { countAppOpen } from "../helpers/appOpenCount";
 import { clearOfflineQueue } from "../../services/offlineQueue";
 import { INSIGHTS_CACHE_KEY } from "../../features/insights/helpers/insightsCache";
+import { clearSubscriptionStatus } from "../../features/subscription/subscriptionStatusStore";
 
 // נתונים ששייכים למשתמש הספציפי (לא הטוקן/cached_user עצמו) - חייבים להימחק
 // ביציאה ובכל מעבר בין משתמשים על אותו מכשיר, אחרת המשתמש הבא רואה לרגע
@@ -16,6 +17,7 @@ function clearPerUserCache() {
   ['cached_lists', INSIGHTS_CACHE_KEY, 'cached_prices'].forEach(k => {
     try { localStorage.removeItem(k); } catch { /* quota */ }
   });
+  clearSubscriptionStatus();
   void clearOfflineQueue();
 }
 

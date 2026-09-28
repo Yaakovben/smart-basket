@@ -146,7 +146,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
             <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
-            <SubscriptionRowBadge />
+            <SubscriptionRowBadge user={user} />
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>

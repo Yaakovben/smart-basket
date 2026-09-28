@@ -4,7 +4,8 @@ import { env } from '../config/environment';
 import { logger } from '../config';
 import { UserDAL } from '../dal';
 import { AppError } from '../errors';
-import { sendToUser } from './push.service';
+import { sendToUser, sendToUsers } from './push.service';
+import { getAdminSettings } from './adminAlerts.service';
 
 // ===== מנוי דרך חנויות האפליקציות (App Store / Google Play) =====
 // בתוך האפליקציה הנייטיב אפל וגוגל מחייבות רכישה דרך מערכת התשלום שלהן.
@@ -125,7 +126,24 @@ export async function syncStoreSubscription(userId: string, notify = false): Pro
     }).catch(() => { /* push הוא בונוס */ });
   }
 
+  // רכישה ראשונה בחנות (גם מתוך ניסיון): התראה לאדמינים אם הפעילו אותה
+  if (notify && active && user.planSource !== 'store') {
+    void notifyAdminsOfPurchase(user.name).catch((e) => logger.warn('store purchase admin notice failed: %s', (e as Error).message));
+  }
+
   return { active, expiresAt: storeExpiry, changed: true };
+}
+
+async function notifyAdminsOfPurchase(userName: string): Promise<void> {
+  const [settings, adminIds] = await Promise.all([getAdminSettings(), UserDAL.findAdminIds()]);
+  if (!settings.pushOnSubscription || adminIds.length === 0) return;
+  await sendToUsers(adminIds, {
+    title: '✦ מנוי Pro חדש',
+    body: `${userName} הצטרף ל-Pro דרך חנות האפליקציות`,
+    icon: PUSH_ICON,
+    badge: PUSH_ICON,
+    data: { url: '/admin/subscriptions', type: 'subscription' },
+  });
 }
 
 interface RcWebhookEvent {

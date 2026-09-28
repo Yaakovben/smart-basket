@@ -15,6 +15,12 @@ interface Props {
 
 const DAY_MS = 86_400_000;
 
+// תגית סגלגלה אחידה לכל המידע הקטן בכרטיס (ימים שנותרו, מקור המנוי)
+const pillSx = {
+  px: 1.25, py: 0.4, borderRadius: '999px', border: '1px solid',
+  fontSize: 12, fontWeight: 700, lineHeight: 1.4, color: '#fff',
+} as const;
+
 // ספירה מעלה חלקה עד הערך האמיתי (ללא אנימציה למי שביקש פחות תנועה).
 const useCountUp = (target: number | null, ms = 900): number | null => {
   const [value, setValue] = useState<number | null>(target === null ? null : 0);
@@ -42,7 +48,13 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
   const trialEnded = status.trialEnded;
   const expires = status.planExpiresAt ? new Date(status.planExpiresAt) : null;
   const daysLeft = expires ? Math.max(0, Math.ceil((expires.getTime() - Date.now()) / DAY_MS)) : null;
-  const expiringSoon = daysLeft !== null && daysLeft <= 7;
+  // מנוי חנות שמתחדש אוטומטית לא "נגמר": מציגים את תאריך החידוש ולא ספירה לאחור
+  const autoRenews = isPro && status.store.isStorePlan && status.store.autoRenew;
+  const expiringSoon = !autoRenews && daysLeft !== null && daysLeft <= 7;
+  // בניסיון התגית "מתנה" למעלה כבר אומרת את זה
+  const sourceLabel = !isPro || isTrial ? null
+    : status.planSource === 'store' ? s.sourceStore
+    : s.sourceGranted;
   const shownDays = useCountUp(daysLeft);
   const expiryLabel = expires
     ? expires.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
@@ -90,18 +102,21 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       <Typography sx={{ position: 'relative', fontSize: 13.5, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5 }}>
         {!isPro && (trialEnded ? s.trialEndedSub : s.heroFreeSub)}
         {isPro && !expires && s.heroPermanentSub}
-        {isPro && expires && `${isTrial ? s.trialSub : s.heroActiveUntil} ${expiryLabel}`}
+        {isPro && expires && `${autoRenews ? s.heroRenewsOn : isTrial ? s.trialSub : s.heroActiveUntil} ${expiryLabel}`}
       </Typography>
 
-      {isPro && daysLeft !== null && (
-        <Box sx={{
-          position: 'relative', alignSelf: 'flex-start', mt: 0.5,
-          px: 1.25, py: 0.4, borderRadius: '10px',
-          bgcolor: expiringSoon ? 'rgba(251,191,36,0.22)' : 'rgba(255,255,255,0.14)',
-          border: '1px solid', borderColor: expiringSoon ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.2)',
-          fontSize: 12.5, fontWeight: 700,
-        }}>
-          {daysLeft === 0 ? s.expiresToday : daysLeft === 1 ? s.dayLeft : `${shownDays ?? daysLeft} ${s.daysLeft}`}
+      {(sourceLabel || (isPro && daysLeft !== null && !autoRenews)) && (
+        <Box sx={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
+          {isPro && daysLeft !== null && !autoRenews && (
+            <Box sx={{ ...pillSx, bgcolor: expiringSoon ? 'rgba(251,191,36,0.22)' : 'rgba(255,255,255,0.16)', borderColor: expiringSoon ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.22)' }}>
+              {daysLeft === 0 ? s.expiresToday : daysLeft === 1 ? s.dayLeft : `${shownDays ?? daysLeft} ${s.daysLeft}`}
+            </Box>
+          )}
+          {sourceLabel && (
+            <Box sx={{ ...pillSx, bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.28)', color: 'rgba(255,255,255,0.88)', fontWeight: 600 }}>
+              {sourceLabel}
+            </Box>
+          )}
         </Box>
       )}
       {isPro && expiringSoon && (

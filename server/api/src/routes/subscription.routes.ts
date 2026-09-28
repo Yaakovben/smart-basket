@@ -1,40 +1,24 @@
 import { Router } from 'express';
-import Joi from 'joi';
-import { authenticate, validate } from '../middleware';
+import { authenticate } from '../middleware';
 import { asyncHandler } from '../utils';
 import { UserDAL } from '../dal';
 import { PLAN_LIMITS, isPro } from '../constants';
 import { env } from '../config/environment';
 import { planUsage } from '../services/plan-usage.service';
 import { isStoreBillingConfigured } from '../services/storeSubscription.service';
-import {
-  getPlansCatalog, getPaymentMethods, getOpenRequest, listUserRequests,
-  createRequest, reportPaid, cancelRequest, ALLOWED_MONTHS,
-} from '../services/subscription.service';
-import type { ISubscriptionRequest } from '../models';
 import type { AuthRequest } from '../types';
 import type { Response } from 'express';
 
 const router = Router();
 router.use(authenticate);
 
-const serializeRequest = (r: ISubscriptionRequest) => ({
-  id: String(r._id),
-  months: r.months,
-  amount: r.amount,
-  currency: r.currency,
-  method: r.method,
-  reference: r.reference,
-  status: r.status,
-  createdAt: r.createdAt,
-  reportedAt: r.reportedAt ?? null,
-  resolvedAt: r.resolvedAt ?? null,
-  adminNote: r.adminNote ?? null,
-});
+// מקור המנוי כפי שמוצג ללקוח: חנות, ניסיון במתנה, או מענק ידני של אדמין
+// (כולל מנוי קבוע ובקשות תשלום ישנות שאושרו לפני שהמסלול הידני הוסר).
+const sourceOf = (planSource: string | undefined): 'store' | 'trial' | 'granted' =>
+  planSource === 'store' ? 'store' : planSource === 'trial' ? 'trial' : 'granted';
 
-// GET /api/subscription - מצב המנוי, שימוש יומי, קטלוג מחירים, אמצעי תשלום
-// זמינים, הבקשה הפתוחה והיסטוריה. הכל מהשרת - הלקוח לא מחזיק מחירים/פרטי
-// תשלום משלו, כדי שלא יוצג מידע לא נכון.
+// GET /api/subscription - מצב המנוי, מגבלות ושימוש יומי, ופרטי הרכישה בחנות.
+// הרכישה עצמה נעשית רק ב־App Store / Google Play, והמחיר מגיע מהחנות.
 router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const user = await UserDAL.findById(userId);
@@ -42,14 +26,13 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const plan = user && isPro(user) ? 'pro' : 'free';
   const isTrial = plan === 'pro' && user?.planSource === 'trial';
   const trialEnded = plan === 'free' && user?.planSource === 'trial';
-  const methods = getPaymentMethods();
-  const [openRequest, history] = await Promise.all([getOpenRequest(userId), listUserRequests(userId, 8)]);
 
   res.json({
     success: true,
     data: {
       plan,
       planExpiresAt: user?.planExpiresAt ?? null,
+      planSource: plan === 'pro' ? sourceOf(user?.planSource) : null,
       isTrial,
       trialEnded,
       trialMonths: env.TRIAL_MONTHS,
@@ -60,14 +43,7 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
         aiToday: planUsage.getAiCount(userId),
         priceToday: planUsage.getPriceCount(userId),
       },
-      catalog: { ...getPlansCatalog(), allowedMonths: ALLOWED_MONTHS.filter(m => m !== 12 || !!env.PRO_PRICE_YEARLY) },
-      payment: {
-        bit: methods.bit,
-        paybox: methods.paybox,
-        bank: methods.bank,
-        supportEmail: 'smartbasket129@gmail.com',
-      },
-      // רכישה דרך App Store / Google Play (באפליקציה הנייטיב בלבד).
+      supportEmail: 'smartbasket129@gmail.com',
       store: {
         enabled: isStoreBillingConfigured(),
         entitlementId: env.REVENUECAT_ENTITLEMENT_ID,
@@ -77,48 +53,8 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
         isStorePlan: plan === 'pro' && user?.planSource === 'store',
         autoRenew: user?.planAutoRenew ?? false,
       },
-      openRequest: openRequest ? serializeRequest(openRequest) : null,
-      history: history.map(serializeRequest),
     },
   });
 }));
-
-const requestIdParams = Joi.object({ id: Joi.string().hex().length(24).required() });
-
-// POST /api/subscription/requests - פתיחת (או עדכון) בקשת מנוי לפני תשלום
-router.post(
-  '/requests',
-  validate({
-    body: Joi.object({
-      months: Joi.number().valid(...ALLOWED_MONTHS).required(),
-      method: Joi.string().valid('bit', 'paybox', 'bank').required(),
-    }),
-  }),
-  asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { months, method } = req.body as { months: number; method: 'bit' | 'paybox' | 'bank' };
-    const request = await createRequest(req.user!.id, months, method);
-    res.status(201).json({ success: true, data: serializeRequest(request) });
-  }),
-);
-
-// POST /api/subscription/requests/:id/paid - "שילמתי", עובר לאישור אדמין
-router.post(
-  '/requests/:id/paid',
-  validate({ params: requestIdParams }),
-  asyncHandler(async (req: AuthRequest, res: Response) => {
-    const request = await reportPaid(req.user!.id, req.params.id as string);
-    res.json({ success: true, data: serializeRequest(request) });
-  }),
-);
-
-// DELETE /api/subscription/requests/:id - ביטול בקשה שעדיין לא אושרה
-router.delete(
-  '/requests/:id',
-  validate({ params: requestIdParams }),
-  asyncHandler(async (req: AuthRequest, res: Response) => {
-    await cancelRequest(req.user!.id, req.params.id as string);
-    res.json({ success: true });
-  }),
-);
 
 export default router;

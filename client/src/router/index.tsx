@@ -176,8 +176,13 @@ export const AppRouter = () => {
   const [welcomePlan, setWelcomePlan] = useState<{ variant: PlanWelcomeVariant; months?: number; expiryDate?: string } | null>(null);
   useEffect(() => {
     if (authLoading || !user?.id || user.plan !== 'pro') return;
-    const variant: PlanWelcomeVariant = user.planSource === 'trial' ? 'trial' : user.planSource === 'paid' ? 'paid' : 'manual';
-    const key = `sb_plan_welcome_${user.id}_${variant}_${user.planExpiresAt ?? 'permanent'}`;
+    // רכישה בחנות היא תשלום אמיתי (לא "הצוות הפעיל"). מנוי חנות מתחדש כל
+    // תקופה ותאריך התפוגה זז, אז המפתח שלו לא תלוי בתאריך: ברכה פעם אחת בלבד.
+    const variant: PlanWelcomeVariant = user.planSource === 'trial' ? 'trial'
+      : user.planSource === 'paid' || user.planSource === 'store' ? 'paid' : 'manual';
+    const key = user.planSource === 'store'
+      ? `sb_plan_welcome_${user.id}_store`
+      : `sb_plan_welcome_${user.id}_${variant}_${user.planExpiresAt ?? 'permanent'}`;
     try {
       if (localStorage.getItem(key)) return;
     } catch { return; /* localStorage חסום - מוותרים על הברכה */ }

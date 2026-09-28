@@ -1,180 +1,20 @@
-import crypto from 'crypto';
-import mongoose from 'mongoose';
 import { env } from '../config/environment';
 import { logger } from '../config';
-import { SubscriptionRequest, User, type ISubscriptionRequest, type SubscriptionPayMethod, type SubscriptionRequestStatus } from '../models';
+import { SubscriptionRequest, User, type ISubscriptionRequest, type SubscriptionRequestStatus } from '../models';
 import { UserDAL } from '../dal';
-import { ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
+import { ConflictError, NotFoundError } from '../errors';
 import { sendToUser, sendToUsers } from './push.service';
-import { sendAdminNotice } from './email.service';
-import { getAdminSettings } from './adminAlerts.service';
 
 // אותו אייקון בפוש כמו כל שאר ההתראות באפליקציה (notification.service.ts) -
 // בלעדיו הפוש מציג אייקון דפדפן גנרי במקום לוגו Smart Basket.
 const PUSH_ICON = '/icon-192x192.png';
 
-// ===== מחירים ושיטות תשלום =====
-// כל הערכים מגיעים ממשתני סביבה. לא ממציאים מחיר שנתי/פרטי תשלום: אם משהו לא
-// הוגדר הוא פשוט לא מוצע ללקוח.
-
-export const ALLOWED_MONTHS = [1, 3, 12] as const;
+// ===== תשלום =====
+// Pro נרכש רק דרך App Store / Google Play (ראו storeSubscription.service).
+// מסלול התשלום הידני (ביט, PayBox, העברה ואישור אדמין) הוסר. מה שנשאר כאן
+// מהמסלול הישן הוא רק הטיפול בבקשות שכבר דווחו כשולמו לפני ההסרה, כדי שאף
+// אחד שכבר שילם לא יישאר בלי מנוי.
 const OPEN_STATUSES: SubscriptionRequestStatus[] = ['pending', 'reported'];
-const REFERENCE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // בלי תווים מבלבלים (0/O, 1/I)
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
-
-export function priceForMonths(months: number): number {
-  if (months === 12 && env.PRO_PRICE_YEARLY) return round2(env.PRO_PRICE_YEARLY);
-  return round2(env.PRO_PRICE_MONTHLY * months);
-}
-
-export interface PaymentMethodsConfig {
-  bit: { url: string } | null;
-  paybox: { url: string } | null;
-  bank: { bankName: string; branch: string; account: string } | null;
-}
-
-export function getPaymentMethods(): PaymentMethodsConfig {
-  // ביט זמין רק עם קישור תשלום: לא חושפים מספר טלפון או שם מקבל ללקוחות.
-  const bit = env.BIT_PAYMENT_URL ? { url: env.BIT_PAYMENT_URL } : null;
-  const paybox = env.PAYBOX_PAYMENT_URL ? { url: env.PAYBOX_PAYMENT_URL } : null;
-  const bank = env.BANK_NAME && env.BANK_BRANCH && env.BANK_ACCOUNT
-    ? { bankName: env.BANK_NAME, branch: env.BANK_BRANCH, account: env.BANK_ACCOUNT }
-    : null;
-  return { bit, paybox, bank };
-}
-
-export function getPlansCatalog() {
-  const yearly = env.PRO_PRICE_YEARLY ? round2(env.PRO_PRICE_YEARLY) : null;
-  const monthly = round2(env.PRO_PRICE_MONTHLY);
-  return {
-    currency: 'ILS',
-    monthly,
-    // אחוז חיסכון אמיתי מחושב מהמחירים שהוגדרו, לא מספר קבוע.
-    yearly,
-    yearlySavingsPercent: yearly && monthly * 12 > yearly
-      ? Math.round((1 - yearly / (monthly * 12)) * 100)
-      : null,
-  };
-}
-
-function isMethodAvailable(method: SubscriptionPayMethod): boolean {
-  const m = getPaymentMethods();
-  if (method === 'bit') return !!m.bit;
-  if (method === 'paybox') return !!m.paybox;
-  return !!m.bank;
-}
-
-function generateReference(): string {
-  const bytes = crypto.randomBytes(6);
-  let code = '';
-  for (let i = 0; i < 6; i++) code += REFERENCE_ALPHABET[bytes[i] % REFERENCE_ALPHABET.length];
-  return `SB-${code}`;
-}
-
-// ===== צד משתמש =====
-
-export async function listUserRequests(userId: string, limit = 10): Promise<ISubscriptionRequest[]> {
-  return SubscriptionRequest.find({ userId }).sort({ createdAt: -1 }).limit(limit);
-}
-
-export async function getOpenRequest(userId: string): Promise<ISubscriptionRequest | null> {
-  return SubscriptionRequest.findOne({ userId, status: { $in: OPEN_STATUSES } }).sort({ createdAt: -1 });
-}
-
-/** יצירת בקשה (או עדכון בקשה פתוחה שעוד לא דווח עליה תשלום). */
-export async function createRequest(userId: string, months: number, method: SubscriptionPayMethod): Promise<ISubscriptionRequest> {
-  if (!(ALLOWED_MONTHS as readonly number[]).includes(months)) {
-    throw ValidationError.single('months', 'Invalid subscription period');
-  }
-  if (months === 12 && !env.PRO_PRICE_YEARLY) {
-    throw ValidationError.single('months', 'Yearly plan is not available');
-  }
-  if (!isMethodAvailable(method)) {
-    throw new AppError('This payment method is not available', 503, 'PAYMENT_METHOD_UNAVAILABLE');
-  }
-
-  const open = await getOpenRequest(userId);
-  if (open) {
-    if (open.status === 'reported') {
-      throw new ConflictError('You already have a payment awaiting approval', 'REQUEST_ALREADY_REPORTED');
-    }
-    open.months = months;
-    open.method = method;
-    open.amount = priceForMonths(months);
-    await open.save();
-    return open;
-  }
-
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      return await SubscriptionRequest.create({
-        userId: new mongoose.Types.ObjectId(userId),
-        months,
-        method,
-        amount: priceForMonths(months),
-        currency: 'ILS',
-        reference: generateReference(),
-      });
-    } catch (err) {
-      if ((err as { code?: number }).code !== 11000) throw err;
-    }
-  }
-  throw new AppError('Could not create request, try again', 500, 'REQUEST_CREATE_FAILED');
-}
-
-async function findOwned(userId: string, requestId: string): Promise<ISubscriptionRequest> {
-  const req = await SubscriptionRequest.findOne({ _id: requestId, userId });
-  if (!req) throw new NotFoundError('Subscription request');
-  return req;
-}
-
-/** המשתמש מדווח "שילמתי" - עובר לתור האישור של האדמין. */
-export async function reportPaid(userId: string, requestId: string): Promise<ISubscriptionRequest> {
-  const req = await findOwned(userId, requestId);
-  if (req.status === 'reported') return req;
-  if (req.status !== 'pending') {
-    throw new ConflictError('This request can no longer be reported', 'REQUEST_NOT_OPEN');
-  }
-  req.status = 'reported';
-  req.reportedAt = new Date();
-  await req.save();
-
-  void (async () => {
-    const [user, adminIds, adminSettings] = await Promise.all([UserDAL.findById(userId), UserDAL.findAdminIds(), getAdminSettings()]);
-    // המייל נשלח תמיד, הפוש רק אם האדמין השאיר אותו פעיל בדף המנהל
-    await Promise.all([
-      sendAdminNotice(
-        `דיווח תשלום מנוי: ${req.reference}`,
-        [
-          `משתמש: ${user?.name ?? '?'} (${user?.email ?? '?'})`,
-          `סכום: ₪${req.amount} עבור ${req.months} חודשים`,
-          `אמצעי: ${req.method}`,
-          `קוד הפניה: ${req.reference}`,
-          '',
-          'בדוק שההעברה נכנסה ואשר בפאנל האדמין.',
-        ].join('\n'),
-      ),
-      adminSettings.pushOnSubscription && sendToUsers(adminIds, {
-        title: '💳 תשלום מנוי ממתין לאישור',
-        body: `${user?.name ?? 'משתמש'} דיווח ₪${req.amount} · קוד ${req.reference}`,
-        icon: PUSH_ICON,
-        badge: PUSH_ICON,
-        data: { url: '/admin', type: 'subscription_request' },
-      }),
-    ]);
-  })().catch((e) => logger.warn('subscription admin notice failed: %s', (e as Error).message));
-
-  return req;
-}
-
-export async function cancelRequest(userId: string, requestId: string): Promise<void> {
-  const req = await findOwned(userId, requestId);
-  if (!OPEN_STATUSES.includes(req.status)) return;
-  req.status = 'cancelled';
-  req.resolvedAt = new Date();
-  await req.save();
-}
 
 // ===== צד אדמין =====
 
