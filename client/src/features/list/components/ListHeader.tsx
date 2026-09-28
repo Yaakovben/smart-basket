@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -18,6 +18,8 @@ import { ListProgressBar } from './header/ListProgressBar';
 import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
 const glassButtonSx = COMMON_STYLES.glassIconButton;
+// כמה זמן חיפוש פתוח וריק נשאר לפני שנסגר לבד
+const SEARCH_IDLE_CLOSE_MS = 8000;
 
 interface ListHeaderProps {
   list: List;
@@ -112,6 +114,17 @@ export const ListHeader = memo(({
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [showSearch, onSearchChange]);
+
+  // חיפוש שנפתח ולא הוקלד בו כלום נסגר לבד אחרי כמה שניות.
+  // כל שינוי בטקסט מאפס את הספירה, וכשיש טקסט לא נסגר.
+  useEffect(() => {
+    if (!showSearch || search) return;
+    const timer = window.setTimeout(() => {
+      searchInputRef.current?.blur();
+      setShowSearch(false);
+    }, SEARCH_IDLE_CLOSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [showSearch, search]);
 
   const searchButton = (
     <IconButton
