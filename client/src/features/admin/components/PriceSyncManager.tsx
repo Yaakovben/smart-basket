@@ -57,7 +57,8 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const { statusFilter, setStatusFilter, filteredChains, errorCount, noBranchCount, noPriceCount } = useChainStatusFilter(chains);
 
   return (
-    <AdminSectionShell title="ניהול מאגר" onBack={onClose} isDark={isDark}>
+    // גרירה מרעננת את התצוגה בלבד. סנכרון אמיתי מול הרשתות רק מהכפתור 'רענן עכשיו'.
+    <AdminSectionShell title="ניהול מאגר" onBack={onClose} isDark={isDark} onRefresh={load}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'clip' }}>
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, py: 1 }}>

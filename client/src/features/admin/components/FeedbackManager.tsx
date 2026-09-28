@@ -5,6 +5,7 @@ import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import { adminApi, type AdminFeedback } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
 import { AdminPushToggle } from './AdminPushToggle';
+import { AdminPullRefresh } from './AdminPullRefresh';
 import { markAdminFeedbackSeen } from '../hooks/useAdminAlerts';
 import { adminPageSx } from '../styles/adminPage.styles';
 
@@ -35,12 +36,16 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
   const [items, setItems] = useState<AdminFeedback[] | null>(null);
   const [error, setError] = useState(false);
 
-  const load = useCallback(async () => {
+  // מחזיר true בהצלחה (לחיווי רענון בגרירה). כשל ברענון לא מעלים משובים
+  // שכבר מוצגים: שגיאה מלאה רק כשאין עדיין מה להציג.
+  const load = useCallback(async (): Promise<boolean> => {
     try {
       setItems(await adminApi.getFeedback());
       setError(false);
+      return true;
     } catch {
       setError(true);
+      return false;
     }
   }, []);
 
@@ -61,7 +66,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
           : undefined}
       />
 
-      <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2 }}>
+      <AdminPullRefresh onRefresh={load} sx={{ p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
         <AdminPushToggle
           kind="pushOnFeedback"
           label="התראת פוש על משוב חדש"
@@ -69,7 +74,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
           color="#0D9488"
           isDark={isDark}
         />
-        {error ? (
+        {error && !items ? (
           <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
             לא הצלחנו לטעון את המשובים.
           </Typography>
@@ -99,7 +104,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
             </Box>
           ))
         )}
-      </Box>
+      </AdminPullRefresh>
     </Box>
   );
 };

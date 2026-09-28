@@ -24,19 +24,24 @@ export function useDailyFaithManager() {
   // האם מוצג טיפ העיצוב (*bold*) - סגור כברירת מחדל, המנהל פותח רק אם צריך
   const [showFormatTip, setShowFormatTip] = useState(false);
 
-  const load = useCallback(async () => {
+  // silent: רענון בגרירה, בלי שלד טעינה מעל משפטים שכבר מוצגים.
+  // מחזיר true בהצלחה, כדי שהחיווי יציג "עודכן" או "נכשל".
+  const load = useCallback(async (silent = false): Promise<boolean> => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await dailyFaithApi.getAll();
       setQuotes(data);
+      return true;
     } catch {
-      /* ignore */
+      return false;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const refresh = useCallback(() => load(true), [load]);
 
   const filteredQuotes = useMemo(() => {
     if (!search.trim()) return quotes;
@@ -99,6 +104,6 @@ export function useDailyFaithManager() {
     quotes, text, setText, loading, saving, search, setSearch, searchOpen, setSearchOpen,
     quoteToDelete, setQuoteToDelete, duplicateCandidate, setDuplicateCandidate,
     showFormatTip, setShowFormatTip,
-    filteredQuotes, handleAdd, handleDelete, confirmDuplicateAdd,
+    filteredQuotes, handleAdd, handleDelete, confirmDuplicateAdd, refresh,
   };
 }

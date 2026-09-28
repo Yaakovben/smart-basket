@@ -23,11 +23,11 @@ export const DailyFaithManager = ({ onClose }: Props) => {
     quotes, text, setText, loading, saving, search, setSearch, searchOpen, setSearchOpen,
     quoteToDelete, setQuoteToDelete, duplicateCandidate, setDuplicateCandidate,
     showFormatTip, setShowFormatTip,
-    filteredQuotes, handleAdd, handleDelete, confirmDuplicateAdd,
+    filteredQuotes, handleAdd, handleDelete, confirmDuplicateAdd, refresh,
   } = useDailyFaithManager();
 
   return (
-    <AdminSectionShell title={t('dailyFaithManagerTitle')} onBack={onClose} isDark={isDark}>
+    <AdminSectionShell title={t('dailyFaithManagerTitle')} onBack={onClose} isDark={isDark} onRefresh={refresh}>
       {/* גובה קבוע — גם ברשימה ריקה וגם מלאה. מונע "קפיצה" של ה-popup */}
       <Box sx={modalBodySx}>
 

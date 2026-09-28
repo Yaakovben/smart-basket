@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -9,15 +9,13 @@ import { useAiStatus } from '../hooks/useAiStatus';
 import { mergeOnlineWithSelf, isEffectivePro } from '../helpers/adminDashboardHelpers';
 import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
-import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
-import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
+import { AdminPullRefresh } from './AdminPullRefresh';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const { user } = useAuth();
   const isDark = settings.theme === 'dark';
-  const [isRefreshing, setIsRefreshing] = useState(false);
   // כל אזור (ניהול מאגר, סניפים, מנויים, משובים וכו') נפתח כעמוד נפרד ב-/admin/<אזור>, לא כפופאפ.
   const {
     activities,
@@ -27,9 +25,7 @@ export const AdminDashboard = () => {
     updateUserPlanLocal,
     loading,
     error,
-    lastFetchAt,
   } = useAdminDashboard();
-  const lastRefreshedAt = lastFetchAt ? new Date(lastFetchAt) : null;
   const socketOnlineUserIds = useOnlineUsers();
   // מוחזק כאן פעם אחת (לא בתוך הפאנל) כדי שנקודת הסטטוס על האייקון בכותרת
   // תשקף את אותם הנתונים בלי לירות בקשת רשת כפולה כשפותחים את הפאנל.
@@ -60,28 +56,13 @@ export const AdminDashboard = () => {
   const { userSearch, setUserSearch, userFilter, setUserFilter, handleFilterClick, filteredUsers } =
     useAdminUserFilter(usersWithLoginInfo, onlineUserIds);
 
-  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
-  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
-  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
-  // "עודכן"/"נכשל" מוצגים רק לפי התוצאה האמיתית של refreshData - לא לפי
-  // טיימר קבוע בלי קשר לתוצאה (אותו באג שתוקן קודם בעמוד התובנות).
-  const handleRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    refreshData().then(ok => {
-      setIsRefreshing(false);
-      if (!ok) setRefreshFailedToken(Date.now());
-    });
-  }, [refreshData]);
+  const handleRefresh = useCallback(() => { void refreshData(); }, [refreshData]);
 
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handleRefresh);
-
+  // רענון בגרירה: כל העמוד (כולל הכותרת) זז למטה והחיווי מופיע ברווח
+  // שנפתח מעליו, מתחת לחריץ המצלמה. כך הוא לא מכסה כפתורים או כרטיסים.
   return (
-    <Box
-      sx={{ height: 'var(--app-height, 100dvh)', position: 'relative', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}
-      onTouchStart={handlePullStart}
-      onTouchMove={handlePullMove}
-      onTouchEnd={handlePullEnd}
-    >
+    <Box sx={{ height: 'var(--app-height, 100dvh)', display: 'flex', flexDirection: 'column', bgcolor: isDark ? '#0F1419' : '#F8FAFB' }}>
+    <AdminPullRefresh onRefresh={refreshData} safeTop sx={{ pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
       <AdminDashboardHeader
         isDark={isDark}
         isRtl={isRtl}
@@ -105,17 +86,6 @@ export const AdminDashboard = () => {
         onFilterClick={handleFilterClick}
         onSelectAll={() => setUserFilter('all')}
         t={t}
-        pullIndicator={
-          <PullToRefreshIndicator
-            pullDistance={pullDistance}
-            refreshing={isRefreshing}
-            // ref מכוון, ראו usePullToRefresh.ts
-            // eslint-disable-next-line react-hooks/refs
-            pullActive={pullActiveRef.current}
-            lastRefreshedAt={lastRefreshedAt}
-            refreshFailedToken={refreshFailedToken}
-          />
-        }
       />
 
       <AdminDashboardContent
@@ -133,7 +103,7 @@ export const AdminDashboard = () => {
           onUserDeleted={refreshData}
           onUserPlanChanged={updateUserPlanLocal}
         />
-
+    </AdminPullRefresh>
     </Box>
   );
 };

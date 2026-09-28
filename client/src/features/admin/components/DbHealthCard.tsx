@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import StorageIcon from '@mui/icons-material/Storage';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
@@ -6,9 +6,7 @@ import { ShimmerBlock } from '../../../global/components';
 import { useDbHealth } from '../hooks/useDbHealth';
 import { useCloudinaryHealth } from '../hooks/useCloudinaryHealth';
 import { statusInfo, tierName } from '../helpers/dbHealthHelpers';
-import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
-import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
-import { PULL_MAX } from '../../list/helpers/list-helpers';
+import { AdminPullRefresh } from './AdminPullRefresh';
 import { DbHealthHeader } from './DbHealthHeader';
 import { DbHealthHero } from './DbHealthHero';
 import { DbHealthStatsRow } from './DbHealthStatsRow';
@@ -41,16 +39,6 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
   const active = tab === 'mongo' ? mongo : cloud;
   const lastUpdatedText = timeText(active.lastFetchAt);
 
-  // pullRefreshing: מוצג רק כשהמשתמש משך בפועל, לא בטעינה ראשונית.
-  const [pullRefreshing, setPullRefreshing] = useState(false);
-  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
-  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
-  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(() => {
-    setPullRefreshing(true);
-    active.load().then(ok => { if (!ok) setRefreshFailedToken(Date.now()); });
-  });
-  useEffect(() => { if (!active.loading) setPullRefreshing(false); }, [active.loading]);
 
   const metaChip = (text: string) => (
     <Box sx={{
@@ -113,18 +101,8 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         ))}
       </Box>
 
-      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={active.lastFetchAt} refreshFailedToken={refreshFailedToken} />
-        <Box
-          sx={{
-            height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',
-            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
-            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
-          }}
-          onTouchStart={handlePullStart}
-          onTouchMove={handlePullMove}
-          onTouchEnd={handlePullEnd}
-        >
+      {/* רענון בגרירה אחיד לכל עמודי המנהל (ראו AdminPullRefresh) */}
+      <AdminPullRefresh onRefresh={() => active.load()} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {tab === 'mongo' && (
           <>
             {mongo.loading && !mongo.data && (
@@ -159,8 +137,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
             {!cloud.loading || cloud.data ? <CloudinaryHealthContent data={cloud.data} isDark={isDark} /> : null}
           </>
         )}
-        </Box>
-      </Box>
+      </AdminPullRefresh>
     </Box>
   );
 };

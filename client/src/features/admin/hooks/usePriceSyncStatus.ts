@@ -11,12 +11,15 @@ export function usePriceSyncStatus() {
   const [refreshing, setRefreshing] = useState(false);
   const [feedback, setFeedback] = useState<SyncFeedback | null>(null);
 
-  const load = useCallback(async () => {
+  // מחזיר true בהצלחה, כדי שרענון בגרירה ידע להציג "עודכן" או "נכשל"
+  const load = useCallback(async (): Promise<boolean> => {
     try {
       const data = await priceComparisonApi.getStatus();
       setStatus(data);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+      return true;
+    } catch {
+      return false;
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);

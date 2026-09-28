@@ -1,11 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
-import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
-import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
-import { PULL_MAX } from '../../list/helpers/list-helpers';
+import { AdminPullRefresh } from './AdminPullRefresh';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
 import { adminPageSx } from '../styles/adminPage.styles';
@@ -84,34 +81,13 @@ interface Props {
 // data/loading/refreshing מגיעים מ-useAiStatus שמוחזק פעם אחת ב-AdminDashboard
 // (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
 // את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
-export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, refreshError, onRefresh, onClose }: Props) => {
-  // pullRefreshing: מוצג רק כשמשכו בפועל, לא בטעינה ראשונית (אותו דפוס כמו DbHealthCard).
-  const [pullRefreshing, setPullRefreshing] = useState(false);
-  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
-  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
-  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(() => {
-    setPullRefreshing(true);
-    onRefresh().then(ok => { if (!ok) setRefreshFailedToken(Date.now()); });
-  });
-  useEffect(() => { if (!refreshing) setPullRefreshing(false); }, [refreshing]);
-
+export const AdminAiStatusCard = ({ isDark, data, loading, refreshError, onRefresh, onClose }: Props) => {
+  // רענון בגרירה אחיד לכל עמודי המנהל (ראו AdminPullRefresh)
   return (
     <Box sx={adminPageSx(isDark)}>
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
-      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pullRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} refreshFailedToken={refreshFailedToken} />
-        <Box
-          sx={{
-            height: '100%', overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)',
-            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
-            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
-          }}
-          onTouchStart={handlePullStart}
-          onTouchMove={handlePullMove}
-          onTouchEnd={handlePullEnd}
-        >
+      <AdminPullRefresh onRefresh={onRefresh} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {refreshError && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
@@ -152,8 +128,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
             </Typography>
           </>
         )}
-        </Box>
-      </Box>
+      </AdminPullRefresh>
     </Box>
   );
 };
