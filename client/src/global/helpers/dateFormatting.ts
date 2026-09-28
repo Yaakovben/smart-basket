@@ -74,16 +74,25 @@ const RELATIVE_TIME_STRINGS: Record<Language, RelativeTimeStrings> = {
   },
 };
 
+// הפרש ימים לפי לוח השנה המקומי (יום מתחיל ב־00:00), לא לפי חלונות של 24 שעות.
+// כך כניסה ב־23:00 ביום שני לא נקראת "אתמול" ביום רביעי בערב.
+const calendarDayDiff = (a: Date, b: Date): number => {
+  const startA = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+  const startB = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+  // עיגול מנטרל את השעה שנוספת או נגרעת במעבר שעון קיץ
+  return Math.round((startA - startB) / 86_400_000);
+};
+
 export const getRelativeTime = (timestamp: string, language: Language): string => {
-  const now = Date.now();
-  const target = new Date(timestamp).getTime();
-  const diffMs = target - now;
+  const nowDate = new Date();
+  const targetDate = new Date(timestamp);
+  const diffMs = targetDate.getTime() - nowDate.getTime();
   const isFuture = diffMs > 0;
   const absMs = Math.abs(diffMs);
 
   const mins = Math.floor(absMs / 60_000);
   const hours = Math.floor(absMs / 3_600_000);
-  const days = Math.floor(absMs / 86_400_000);
+  const days = Math.abs(calendarDayDiff(targetDate, nowDate));
   const weeks = Math.floor(days / 7);
   const months = Math.floor(days / 30);
 
@@ -91,7 +100,7 @@ export const getRelativeTime = (timestamp: string, language: Language): string =
 
   if (mins < 1) return s.now;
   if (mins < 60) return isFuture ? s.inMins(mins) : s.minsAgo(mins);
-  if (hours < 24) return isFuture ? s.inHours(hours) : s.hoursAgo(hours);
+  if (days === 0) return isFuture ? s.inHours(hours) : s.hoursAgo(hours);
   if (days === 1) return isFuture ? s.tomorrow : s.yesterday;
   if (days < 7) return isFuture ? s.inDays(days) : s.daysAgo(days);
   if (days < 30) return isFuture ? s.inWeeks(weeks) : s.weeksAgo(weeks);
@@ -100,12 +109,16 @@ export const getRelativeTime = (timestamp: string, language: Language): string =
 };
 
 // ===== בדיקות תאריך =====
-const todayStr = () => new Date().toISOString().split('T')[0];
+// "היום" לפי השעון המקומי של המכשיר. לא toISOString, שמחזיר תאריך UTC
+// ולכן בישראל בין חצות לשלוש לפנות בוקר עדיין מחזיר את התאריך של אתמול.
+const localDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayStr = () => localDateStr(new Date());
 
 export const isToday = (dateStr: string): boolean => dateStr === todayStr();
 
 export const isActiveToday = (timestamp?: string): boolean =>
-  !!timestamp && timestamp.startsWith(todayStr());
+  !!timestamp && localDateStr(new Date(timestamp)) === todayStr();
 
 export const isActiveThisMonth = (timestamp?: string): boolean => {
   if (!timestamp) return false;

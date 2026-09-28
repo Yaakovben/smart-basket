@@ -6,7 +6,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { formatDateShort, formatTimeShort, isToday } from '../../../global/helpers';
+import { formatDateShort, formatTimeShort, isActiveToday } from '../../../global/helpers';
 import type { LoginActivity, Language } from '../../../global/types';
 
 const MAX_ENTRIES = 30;
@@ -98,7 +98,7 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
                     <Typography sx={{
                       fontSize: 10.5,
                       fontWeight: 600,
-                      color: isToday(activity.timestamp.split('T')[0]) ? '#14B8A6' : '#9CA3AF',
+                      color: isActiveToday(activity.timestamp) ? '#14B8A6' : '#9CA3AF',
                       textTransform: 'uppercase',
                       letterSpacing: 0.3,
                     }}>

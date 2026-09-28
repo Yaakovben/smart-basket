@@ -16,7 +16,7 @@
 import type { Response } from 'express';
 import mongoose from 'mongoose';
 import type { AuthRequest } from '../types';
-import { asyncHandler } from '../utils';
+import { asyncHandler, israelDayStart, israelMonthStart } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
@@ -102,9 +102,9 @@ export const getLoginActivity = asyncHandler(async (req: AuthRequest, res: Respo
  * נתוני Dashboard: סה״כ משתמשים + כניסות היום + כניסות החודש.
  */
 export const getStats = asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // היום והחודש לפי שעון ישראל, מחצות. השרת רץ ב־UTC ולכן לא new Date(y, m, d).
+  const todayStart = israelDayStart();
+  const monthStart = israelMonthStart();
 
   // שאילתות קלות בלבד במקביל, ללא ספירות כבדות שלא מוצגות
   const [totalUsers, todayStats, monthStats] = await Promise.all([
