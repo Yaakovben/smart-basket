@@ -1,63 +1,86 @@
-import { z } from 'zod';
+// ===== אימות טפסים =====
+// אימות קטן בלי ספרייה: zod שימש רק לשני הטפסים האלה, ולבד הוסיף כ-150KB
+// (לפני דחיסה) לקובץ שנטען בכל פתיחת אפליקציה. ההתנהגות זהה: השגיאה
+// הראשונה לפי סדר השדות, והודעה = מפתח תרגום.
 
-// ===== סכמות אימות =====
-const emailSchema = z
-  .string()
-  .min(1, 'enterEmail')
-  .email('invalidEmail');
+// בודק שדה אחד: מחזיר מפתח תרגום של השגיאה הראשונה, או null אם תקין
+type FieldCheck = (value: unknown) => string | null;
 
-const passwordSchema = z
-  .string()
-  .min(8, 'passwordTooShort');
+interface Schema<T> {
+  check: (data: Record<string, unknown>) => string | null;
+  // טיפוס בלבד, לשימוש ב-Infer
+  readonly _type?: T;
+}
 
-const nameSchema = z
-  .string()
-  .min(1, 'enterName')
-  .min(2, 'nameTooShort');
-
-export const registerSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema
+const objectSchema = <T>(fields: Record<keyof T & string, FieldCheck>): Schema<T> => ({
+  check: (data) => {
+    for (const key of Object.keys(fields) as (keyof T & string)[]) {
+      const error = fields[key](data[key]);
+      if (error) return error;
+    }
+    return null;
+  },
 });
 
-// ===== סכמות מוצר =====
-const productNameSchema = z
-  .string()
-  .min(1, 'enterProductName')
-  .min(2, 'productNameTooShort');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-const quantitySchema = z
-  .number()
-  .min(1, 'quantityMin');
+const emailCheck: FieldCheck = (v) => {
+  if (typeof v !== 'string' || v.length < 1) return 'enterEmail';
+  return EMAIL_RE.test(v) ? null : 'invalidEmail';
+};
 
-export const newProductSchema = z.object({
-  name: productNameSchema,
-  quantity: quantitySchema,
-  unit: z.string(),
-  category: z.string()
+const passwordCheck: FieldCheck = (v) =>
+  typeof v === 'string' && v.length >= 8 ? null : 'passwordTooShort';
+
+const nameCheck: FieldCheck = (v) => {
+  if (typeof v !== 'string' || v.length < 1) return 'enterName';
+  return v.length >= 2 ? null : 'nameTooShort';
+};
+
+const productNameCheck: FieldCheck = (v) => {
+  if (typeof v !== 'string' || v.length < 1) return 'enterProductName';
+  return v.length >= 2 ? null : 'productNameTooShort';
+};
+
+const quantityCheck: FieldCheck = (v) =>
+  typeof v === 'number' && Number.isFinite(v) && v >= 1 ? null : 'quantityMin';
+
+const stringCheck: FieldCheck = (v) => (typeof v === 'string' ? null : 'invalidInput');
+
+// ===== סכמות =====
+export interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface NewProductFormData {
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+}
+
+export const registerSchema = objectSchema<RegisterFormData>({
+  name: nameCheck,
+  email: emailCheck,
+  password: passwordCheck,
 });
 
-// ===== טיפוסים מסכמות =====
-export type RegisterFormData = z.infer<typeof registerSchema>;
-export type NewProductFormData = z.infer<typeof newProductSchema>;
+export const newProductSchema = objectSchema<NewProductFormData>({
+  name: productNameCheck,
+  quantity: quantityCheck,
+  unit: stringCheck,
+  category: stringCheck,
+});
 
 // ===== עזר ולידציה =====
 export type ValidationResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-export function validateForm<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): ValidationResult<T> {
-  const result = schema.safeParse(data);
-
-  if (result.success) {
-    return { success: true, data: result.data };
-  }
-
-  // החזרת השגיאה הראשונה (מפתח תרגום)
-  const firstError = result.error.issues[0];
-  return { success: false, error: firstError.message };
+export function validateForm<T>(schema: Schema<T>, data: unknown): ValidationResult<T> {
+  const record = (data ?? {}) as Record<string, unknown>;
+  const error = schema.check(record);
+  return error ? { success: false, error } : { success: true, data: record as T };
 }
