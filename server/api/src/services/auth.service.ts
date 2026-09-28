@@ -14,6 +14,7 @@ import { newUserTrialFields } from './subscription.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
+import type { LoginPlatform } from '../models';
 
 interface GoogleUserInfo {
   sub: string;
@@ -28,10 +29,10 @@ interface GoogleUserInfo {
 // יצירת טוקנים + רישום פעילות כניסה ב-log
 async function createTokensAndLog(
   userId: string, email: string, name: string, tokenVersion: number,
-  loginMethod: 'email' | 'google', ipAddress?: string, userAgent?: string
+  loginMethod: 'email' | 'google', ipAddress?: string, userAgent?: string, platform?: LoginPlatform
 ): Promise<AuthTokens> {
   const tokens = await createTokens(userId, email, name, tokenVersion);
-  await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, ipAddress, userAgent });
+  await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, platform, ipAddress, userAgent });
   return tokens;
 }
 
@@ -63,7 +64,8 @@ const matchesAdminEmail = (email: string): boolean =>
 export async function register(
   data: RegisterInput,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
+  platform?: LoginPlatform
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
   const existingUser = await UserDAL.findByEmail(data.email);
   if (existingUser) throw ConflictError.emailExists();
@@ -78,7 +80,7 @@ export async function register(
     ...newUserTrialFields(),
   });
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent, platform);
   return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }
 
@@ -89,7 +91,8 @@ export async function register(
 export async function login(
   data: LoginInput,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
+  platform?: LoginPlatform
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
   const user = await UserDAL.findByEmailWithPassword(data.email);
   if (!user || !user.password) throw AuthError.invalidCredentials();
@@ -97,7 +100,7 @@ export async function login(
   const isMatch = await user.comparePassword(data.password);
   if (!isMatch) throw AuthError.invalidCredentials();
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent, platform);
   return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }
 
@@ -141,12 +144,13 @@ async function googleUserFromIdToken(idToken: string): Promise<GoogleUserInfo> {
 export async function googleAuth(
   data: { accessToken?: string; idToken?: string },
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
+  platform?: LoginPlatform
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
   const googleUser = data.idToken
     ? await googleUserFromIdToken(data.idToken)
     : await googleUserFromAccessToken(data.accessToken ?? '');
-  return completeGoogleAuth(googleUser, ipAddress, userAgent);
+  return completeGoogleAuth(googleUser, ipAddress, userAgent, platform);
 }
 
 async function googleUserFromAccessToken(accessToken: string): Promise<GoogleUserInfo> {
@@ -194,7 +198,8 @@ async function googleUserFromAccessToken(accessToken: string): Promise<GoogleUse
 async function completeGoogleAuth(
   googleUser: GoogleUserInfo,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
+  platform?: LoginPlatform
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
   // אימות שדות חובה מ-Google
   if (!googleUser.sub || !googleUser.email || !googleUser.name) {
@@ -237,6 +242,6 @@ async function completeGoogleAuth(
     if (hadPassword) user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   }
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent, platform);
   return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }

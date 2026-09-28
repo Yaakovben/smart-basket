@@ -136,6 +136,8 @@ export interface LoginActivity {
   userEmail: string;
   timestamp: string;
   loginMethod: LoginMethod;
+  // מאיפה: דפדפן / מסך הבית / אפליקציה מהחנות. חסר ברשומות ישנות.
+  platform?: 'browser' | 'pwa' | 'ios' | 'android';
 }
 
 // ===== הגדרות =====

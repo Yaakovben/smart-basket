@@ -59,6 +59,7 @@ const convertApiActivity = (apiActivity: AdminLoginActivity): LoginActivity => (
   userName: apiActivity.userName,
   userEmail: apiActivity.userEmail,
   loginMethod: apiActivity.loginMethod,
+  platform: apiActivity.platform,
   timestamp: apiActivity.createdAt,
 });
 
@@ -134,6 +135,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       lastLoginAt: user.lastLoginAt || undefined,
       lastLoginMethod: user.lastLoginMethod || undefined,
       lastAppOpenAt: user.lastAppOpenAt || undefined,
+      lastAppOpenPlatform: user.lastAppOpenPlatform ?? undefined,
       registrationMethod: (user.googleId ? 'google' : 'email') as 'google' | 'email',
       createdAt: user.createdAt,
       hasPushSubscription: user.hasPushSubscription,

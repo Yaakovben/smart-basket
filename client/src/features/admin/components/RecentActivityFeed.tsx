@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import GoogleIcon from '@mui/icons-material/Google';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { ActivityIcon } from './UserMethodBadge';
+import { activityLabel } from '../helpers/loginActivityHelpers';
 import { formatDateShort, formatTimeShort, isActiveToday } from '../../../global/helpers';
 import type { LoginActivity, Language } from '../../../global/types';
 
@@ -131,9 +130,7 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    {activity.loginMethod === 'google' && <GoogleIcon sx={{ fontSize: 12, color }} />}
-                    {activity.loginMethod === 'app_open' && <PhoneAndroidIcon sx={{ fontSize: 12, color }} />}
-                    {activity.loginMethod === 'email' && <EmailIcon sx={{ fontSize: 12, color }} />}
+                    <ActivityIcon method={activity.loginMethod} platform={activity.platform} size={12} color={color} />
                   </Box>
 
                   {/* שעה */}
@@ -156,7 +153,7 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
 
                   {/* label סוג */}
                   <Typography sx={{ fontSize: 10, color, fontWeight: 600, flexShrink: 0 }}>
-                    {activity.loginMethod === 'app_open' ? t('methodApp') : activity.loginMethod === 'google' ? t('methodGoogle') : t('methodEmail')}
+                    {activityLabel(activity.loginMethod, activity.platform, { app: t('methodApp'), google: t('methodGoogle'), email: t('methodEmail') })}
                   </Typography>
                 </Box>
               </Box>

@@ -2,7 +2,7 @@ export { User, type IUser, type ISavedList, type ISavedListItem } from './User.m
 export { List, type IList, type IMember } from './List.model';
 export { Product, MAX_EDIT_HISTORY, type IProductDoc, type IProductEditEntry, type IProductEditChange } from './Product.model';
 export { RefreshToken, type IRefreshToken } from './RefreshToken.model';
-export { LoginActivity, type ILoginActivity, type LoginMethod } from './LoginActivity.model';
+export { LoginActivity, type ILoginActivity, type LoginMethod, type LoginPlatform, parseLoginPlatform } from './LoginActivity.model';
 export { Notification, type INotification as INotificationDoc, type NotificationType } from './Notification.model';
 export { PushSubscription, type IPushSubscription } from './PushSubscription.model';
 // Price model הועבר ל-features/priceComparison/models/Price.model.ts

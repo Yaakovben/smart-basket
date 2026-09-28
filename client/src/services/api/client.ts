@@ -3,6 +3,7 @@ import { socketService } from '../socket/socket.service';
 import { debugLog } from './debug-log';
 import { getAccessToken, setTokens } from './token-storage';
 import { isNetworkWeak, reportNetworkStall, reportNetworkOk } from '../networkQuality';
+import { detectAppPlatform } from '../../global/helpers/appPlatform';
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
 import { consumeLegacyRefreshToken } from './token-storage';
@@ -215,6 +216,9 @@ apiClient.interceptors.request.use(
     config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
     config.headers['Pragma'] = 'no-cache';
     config.headers['X-Request-Time'] = Date.now().toString();
+    // דפדפן / מסך הבית / אפליקציה מהחנות, לרישום כניסות ופתיחות בדף המנהל.
+    // מחושב בכל בקשה (זול) כי אותו טאב יכול לעבור ל-standalone אחרי התקנה.
+    config.headers['X-App-Platform'] = detectAppPlatform();
 
     // timeout שנקבע במפורש בקריאה עצמה נשאר כמו שהוא
     if (isLightRequest(config.url) && config.timeout === DEFAULT_TIMEOUT_MS) {

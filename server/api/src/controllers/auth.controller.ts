@@ -15,6 +15,7 @@ import { AuthError, ConflictError } from '../errors';
 import { logger } from '../config';
 import { env } from '../config';
 import { LoginActivityDAL } from '../dal';
+import { parseLoginPlatform } from '../models';
 import * as authService from '../services/auth.service';
 import { refreshAccessToken, invalidateRefreshToken } from '../services/token.service';
 
@@ -23,6 +24,8 @@ import { refreshAccessToken, invalidateRefreshToken } from '../services/token.se
 const getClientInfo = (req: Request) => ({
   ipAddress: req.ip || req.socket.remoteAddress,
   userAgent: req.get('User-Agent'),
+  // דפדפן / מסך הבית / אפליקציה מהחנות, כפי שהלקוח מזהה את עצמו
+  platform: parseLoginPlatform(req.get('X-App-Platform')),
 });
 
 // שם ה-cookie של ה-refresh token. path מוגבל ל-/api/auth כדי שלא ייסגר
@@ -70,8 +73,8 @@ export const checkEmail = asyncHandler(async (req: Request, res: Response) => {
  */
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const registerInput = req.body as RegisterInput;
-  const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.register(registerInput, ipAddress, userAgent);
+  const { ipAddress, userAgent, platform } = getClientInfo(req);
+  const result = await authService.register(registerInput, ipAddress, userAgent, platform);
   setRefreshCookie(res, result.tokens.refreshToken);
   res.status(201).json({ success: true, data: result });
 });
@@ -82,8 +85,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
  */
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const loginInput = req.body as LoginInput;
-  const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.login(loginInput, ipAddress, userAgent);
+  const { ipAddress, userAgent, platform } = getClientInfo(req);
+  const result = await authService.login(loginInput, ipAddress, userAgent, platform);
   setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });
@@ -94,8 +97,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
  */
 export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   const googleAuthInput = req.body as GoogleAuthInput;
-  const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.googleAuth(googleAuthInput, ipAddress, userAgent);
+  const { ipAddress, userAgent, platform } = getClientInfo(req);
+  const result = await authService.googleAuth(googleAuthInput, ipAddress, userAgent, platform);
   setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });
@@ -127,13 +130,14 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
  */
 export const logAppOpen = asyncHandler(async (req: AuthRequest, res: Response) => {
   const user = req.user!;
-  const { ipAddress, userAgent } = getClientInfo(req);
+  const { ipAddress, userAgent, platform } = getClientInfo(req);
 
   LoginActivityDAL.logActivity({
     userId: user.id,
     userName: user.name,
     userEmail: user.email,
     loginMethod: 'app_open',
+    platform,
     ipAddress,
     userAgent,
   }).catch(err => logger.warn('Failed to log app open:', err));

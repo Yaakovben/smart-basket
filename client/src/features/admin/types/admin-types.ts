@@ -6,6 +6,7 @@ export interface UserWithLastLogin extends User {
   lastLoginAt?: string;
   lastLoginMethod?: 'email' | 'google' | 'app_open';
   lastAppOpenAt?: string;
+  lastAppOpenPlatform?: 'browser' | 'pwa' | 'ios' | 'android';
   registrationMethod: 'google' | 'email';
   createdAt: string;
   totalLogins: number;

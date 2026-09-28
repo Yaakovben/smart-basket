@@ -251,6 +251,10 @@ export function useAuth() {
       try { localStorage.setItem('cached_user', JSON.stringify({ ...userData, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(userData);
       identifyUser(userData.id);
+      // הכניסה עצמה (גוגל או אימייל) כבר נרשמה בשרת והיא גם הפתיחה. בלי זה
+      // החזרה מחלון גוגל (אירוע focus) רשמה מיד עוד "פתיחת אפליקציה", ובדף
+      // המנהל כל כניסה הופיעה פעמיים ושיטת הכניסה האחרונה נדרסה.
+      _lastAppOpenLogAt = Date.now();
       // פעילות כניסה נשמרת בשרת
       // חיבור socket אחרי כניסה
       socketService.connect();

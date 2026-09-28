@@ -71,6 +71,7 @@ export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) =>
       lastLoginAt: stats?.lastLoginAt || null,
       lastLoginMethod: stats?.lastLoginMethod || null,
       lastAppOpenAt: stats?.lastAppOpenAt || null,
+      lastAppOpenPlatform: stats?.lastAppOpenPlatform ?? null,
       hasPushSubscription: pushSubscribedSet.has(userId),
     };
   });

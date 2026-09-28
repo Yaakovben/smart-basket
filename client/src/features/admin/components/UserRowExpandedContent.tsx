@@ -17,7 +17,8 @@ import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
 import { EVENT_COLORS } from '../helpers/usersTableHelpers';
 import { UserListCard } from './UserListCard';
-import { UserMethodBadge } from './UserMethodBadge';
+import { UserMethodBadge, ActivityIcon } from './UserMethodBadge';
+import { activityLabel } from '../helpers/loginActivityHelpers';
 import { ProPill } from './ProPill';
 import { proKindOf, proDaysLeft } from '../helpers/adminDashboardHelpers';
 import { PRO_PURPLE, PRO_PURPLE_DARK } from '../../subscription/subscription.styles';
@@ -140,6 +141,15 @@ export const UserRowExpandedContent = ({
               <Typography sx={{ fontSize: 11.5, color: '#9CA3AF', mt: 0.25 }}>
                 {formatDateShort(user.lastAppOpenAt, language)} · {formatTimeShort(user.lastAppOpenAt, language)}
               </Typography>
+              {/* מאיפה: דפדפן / מסך הבית / אפליקציה (רק כשידוע, לא ברשומות ישנות) */}
+              {user.lastAppOpenPlatform && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                  <ActivityIcon method="app_open" platform={user.lastAppOpenPlatform} size={13} color={EVENT_COLORS.app_open} />
+                  <Typography sx={{ fontSize: 11, color: '#6B7280' }}>
+                    {activityLabel('app_open', user.lastAppOpenPlatform, { app: t('methodApp'), google: t('methodGoogle'), email: t('methodEmail') })}
+                  </Typography>
+                </Box>
+              )}
             </>
           ) : (
             <Typography sx={{ fontSize: 12, color: '#D1D5DB', fontStyle: 'italic' }}>
@@ -241,7 +251,10 @@ export const UserRowExpandedContent = ({
                   <Typography sx={{ fontSize: 11, color: '#6B7280', minWidth: 62 }}>
                     {formatDateShort(activity.timestamp, language)}
                   </Typography>
-                  <UserMethodBadge method={activity.loginMethod} size={22} />
+                  <UserMethodBadge method={activity.loginMethod} platform={activity.platform} size={22} />
+                  <Typography sx={{ fontSize: 10.5, color: '#6B7280', whiteSpace: 'nowrap' }}>
+                    {activityLabel(activity.loginMethod, activity.platform, { app: t('methodApp'), google: t('methodGoogle'), email: t('methodEmail') })}
+                  </Typography>
                 </Box>
               );
             })}

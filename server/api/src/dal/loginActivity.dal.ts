@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { LoginActivity, type ILoginActivity, type LoginMethod } from '../models';
+import { LoginActivity, type ILoginActivity, type LoginMethod, type LoginPlatform } from '../models';
 import { createBaseDal } from './base.dal';
 
 type UserLoginStats = {
@@ -8,6 +8,8 @@ type UserLoginStats = {
   lastLoginAt: Date | null;
   lastLoginMethod: string | null;
   lastAppOpenAt: Date | null;
+  // מאיפה נפתחה האפליקציה בפעם האחרונה (null ברשומות ישנות)
+  lastAppOpenPlatform: LoginPlatform | null;
 };
 
 const LOGIN_STATS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 דקות — הספירות הכבדות לא צריכות דיוק לשנייה
@@ -19,7 +21,7 @@ const loginStatsCache = new Map<string, { data: UserLoginStats[]; computedAt: nu
 // מיד (גם בחזרה מהרקע), בלי להריץ את האגרגציה הכבדה בכל פתיחה.
 // events: זמני הכניסות שנרשמו מאז החישוב האחרון, כדי שגם מספר הכניסות יהיה
 // מדויק מיד ולא רק זמן הכניסה האחרונה.
-const latestByUser = new Map<string, { appOpenAt?: Date; loginAt?: Date; loginMethod?: string; events: number[] }>();
+const latestByUser = new Map<string, { appOpenAt?: Date; appOpenPlatform?: LoginPlatform; loginAt?: Date; loginMethod?: string; events: number[] }>();
 
 const newer = (a: Date | null | undefined, b: Date | null | undefined): Date | null => {
   if (!a) return b ?? null;
@@ -33,17 +35,21 @@ function withLatest(stats: UserLoginStats[], userIds: string[], computedAt: numb
   // גם משתמש שהכניסה הראשונה שלו הגיעה אחרי החישוב: בלי זה הוא נראה "לא התחבר אף פעם"
   for (const id of userIds) {
     if (!byId.has(id) && latestByUser.has(id)) {
-      byId.set(id, { userId: id, totalLogins: 0, lastLoginAt: null, lastLoginMethod: null, lastAppOpenAt: null });
+      byId.set(id, { userId: id, totalLogins: 0, lastLoginAt: null, lastLoginMethod: null, lastAppOpenAt: null, lastAppOpenPlatform: null });
     }
   }
   return [...byId.values()].map(s => {
     const latest = latestByUser.get(s.userId);
     if (!latest) return s;
     const lastLoginAt = newer(s.lastLoginAt, latest.loginAt);
+    const lastAppOpenAt = newer(s.lastAppOpenAt, latest.appOpenAt);
     return {
       ...s,
       totalLogins: s.totalLogins + latest.events.filter(t => t >= computedAt).length,
-      lastAppOpenAt: newer(s.lastAppOpenAt, latest.appOpenAt),
+      lastAppOpenAt,
+      lastAppOpenPlatform: latest.appOpenAt && lastAppOpenAt === latest.appOpenAt
+        ? latest.appOpenPlatform ?? null
+        : s.lastAppOpenPlatform,
       lastLoginAt,
       lastLoginMethod: latest.loginAt && lastLoginAt === latest.loginAt ? latest.loginMethod ?? s.lastLoginMethod : s.lastLoginMethod,
     };
@@ -86,6 +92,16 @@ async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> 
             ],
           },
         },
+        // מאיפה הייתה הפתיחה האחרונה: אותו טריק של תאריך+ערך
+        _lastOpenEntry: {
+          $max: {
+            $cond: [
+              { $eq: ['$loginMethod', 'app_open'] },
+              { $concat: [{ $dateToString: { format: '%Y%m%d%H%M%S', date: '$createdAt' } }, ':', { $ifNull: ['$platform', ''] }] },
+              null,
+            ],
+          },
+        },
       },
     },
     {
@@ -101,6 +117,12 @@ async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> 
             null,
             { $arrayElemAt: [{ $split: ['$_lastLoginEntry', ':'] }, 1] },
           ],
+        },
+        lastAppOpenPlatform: {
+          $let: {
+            vars: { p: { $arrayElemAt: [{ $split: [{ $ifNull: ['$_lastOpenEntry', ''] }, ':'] }, 1] } },
+            in: { $cond: [{ $in: ['$$p', [null, '']] }, null, '$$p'] },
+          },
         },
       },
     },
@@ -143,13 +165,7 @@ export const LoginActivityDAL = {
   // חוסמת. נתוני "כניסה אחרונה" ממילא לא צריכים דיוק לשנייה.
   // cache פר-userIds (לא slot גלובלי) כדי שקריאה עם תת-קבוצה שונה של
   // משתמשים לא תקבל תוצאה של קבוצה אחרת.
-  async getStatsByUser(userIds: string[]): Promise<Array<{
-    userId: string;
-    totalLogins: number;
-    lastLoginAt: Date | null;
-    lastLoginMethod: string | null;
-    lastAppOpenAt: Date | null;
-  }>> {
+  async getStatsByUser(userIds: string[]): Promise<UserLoginStats[]> {
     if (userIds.length === 0) return [];
 
     const cacheKey = [...userIds].sort().join(',');
@@ -224,12 +240,13 @@ export const LoginActivityDAL = {
     userName: string;
     userEmail: string;
     loginMethod: LoginMethod;
+    platform?: LoginPlatform;
     ipAddress?: string;
     userAgent?: string;
   }): Promise<ILoginActivity> {
     const now = new Date();
     const latest = latestByUser.get(data.userId) ?? { events: [] };
-    if (data.loginMethod === 'app_open') latest.appOpenAt = now;
+    if (data.loginMethod === 'app_open') { latest.appOpenAt = now; latest.appOpenPlatform = data.platform; }
     else { latest.loginAt = now; latest.loginMethod = data.loginMethod; }
     latestByUser.set(data.userId, latest);
     const doc = await (LoginActivity.create({
@@ -237,6 +254,7 @@ export const LoginActivityDAL = {
       userName: data.userName,
       userEmail: data.userEmail,
       loginMethod: data.loginMethod,
+      ...(data.platform ? { platform: data.platform } : {}),
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
     }) as Promise<ILoginActivity>);
