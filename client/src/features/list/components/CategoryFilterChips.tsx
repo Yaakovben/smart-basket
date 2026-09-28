@@ -52,7 +52,15 @@ export const CategoryFilterChips = memo(({
   // מרחק הגלילה (px) שמעליו הכפתור נעלם כליל - קשור לרוחב שלו עצמו
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
   const COLLAPSE_DISTANCE = TRAILING_WIDTH;
+  // אזור ההשתלבות בין הצ'יפים לכפתור: הצ'יפ הקרוב דועך בעדינות לפני הכפתור
+  // במקום להיתקל בו. TRAILING_CLEAR שקוף לגמרי (הכפתור ומרווח קטן),
+  // ואחריו TRAILING_SOFT של דעיכה רכה. שניהם מתכווצים יחד עם הכפתור.
+  const TRAILING_CLEAR = TRAILING_WIDTH + 4;
+  const TRAILING_SOFT = 16;
+  // הדעיכה הרגילה בקצה הרצועה כשאין כפתור (כמו שהיה תמיד)
+  const EDGE_SOFT = 12;
   const trailingRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const paintTrailing = useCallback((scrollLeft: number) => {
@@ -67,7 +75,15 @@ export const CategoryFilterChips = memo(({
     el.style.opacity = String(1 - progress);
     el.style.transform = `scale(${1 - progress * 0.4})`;
     el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
-  }, [COLLAPSE_DISTANCE]);
+    // המסכה של הרצועה עוקבת אחרי הכפתור באותו יחס: כשהוא מלא יש מקום נקי
+    // ודעיכה לפניו, וכשהוא נעלם חוזרים לדעיכת הקצה הרגילה.
+    const scroller = scrollerRef.current;
+    if (scroller) {
+      const visible = 1 - progress;
+      scroller.style.setProperty('--trail-clear', `${(TRAILING_CLEAR * visible).toFixed(1)}px`);
+      scroller.style.setProperty('--trail-soft', `${(EDGE_SOFT + (TRAILING_SOFT - EDGE_SOFT) * visible).toFixed(1)}px`);
+    }
+  }, [COLLAPSE_DISTANCE, TRAILING_CLEAR]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft } = e.currentTarget;
@@ -87,6 +103,7 @@ export const CategoryFilterChips = memo(({
     // position:relative - עוגן ל-trailing (absolute) למטה.
     <Box sx={{ position: 'relative', mb: 1.5 }}>
       <Box
+        ref={scrollerRef}
         onScroll={handleScroll}
         sx={{
           display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, width: '100%',
@@ -99,8 +116,17 @@ export const CategoryFilterChips = memo(({
           // גלילה חלקה/יציבה ב-iOS (momentum) - בלי זה overflow-x:auto נגלל
           // "קשה"/לא רציף במיוחד כשיש הרבה צ'יפים.
           WebkitOverflowScrolling: 'touch',
-          maskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
-          WebkitMaskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
+          // בלי כפתור: דעיכה רגילה בקצה. עם כפתור: מקום נקי + דעיכה רכה לפניו
+          // (המשתנים מתעדכנים ב-paintTrailing לפי מצב הכפתור)
+          ...(trailing ? {
+            '--trail-clear': `${TRAILING_CLEAR}px`,
+            '--trail-soft': `${TRAILING_SOFT}px`,
+            maskImage: 'linear-gradient(to right, transparent var(--trail-clear), black calc(var(--trail-clear) + var(--trail-soft)))',
+            WebkitMaskImage: 'linear-gradient(to right, transparent var(--trail-clear), black calc(var(--trail-clear) + var(--trail-soft)))',
+          } : {
+            maskImage: `linear-gradient(to left, black calc(100% - ${EDGE_SOFT}px), transparent)`,
+            WebkitMaskImage: `linear-gradient(to left, black calc(100% - ${EDGE_SOFT}px), transparent)`,
+          }),
         }}>
         <Chip
           label={`${t('all')} (${totalCount})`}
