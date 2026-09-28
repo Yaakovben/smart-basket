@@ -165,6 +165,17 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
         pb: 'calc(24px + env(safe-area-inset-bottom))',
         display: 'flex', flexDirection: 'column', gap: 1.5, '& > *': { flexShrink: 0 },
       }}>
+        {/* מתג ההתראות תמיד ראשון, כמו במסך המשוב. mb:0 כי המרווח מגיע מה-gap */}
+        <Box sx={{ '& > *': { mb: '0 !important' } }}>
+          <AdminPushToggle
+            kind="pushOnSubscription"
+            label="התראת פוש על מנוי חדש"
+            hint="כשמשתמש מצטרף ל-Pro דרך החנות, תקבל התראה לטלפון"
+            color={PRO_PURPLE}
+            isDark={isDark}
+          />
+        </Box>
+
         {/* סיכום */}
         <Box sx={{ display: 'flex', gap: 1 }}>
           {tile(counts.all, 'פעילים', PRO_PURPLE)}
@@ -268,14 +279,6 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
             })}
           </Box>
         )}
-
-        <AdminPushToggle
-          kind="pushOnSubscription"
-          label="התראת פוש על מנוי חדש"
-          hint="כשמשתמש מצטרף ל-Pro דרך החנות, תקבל התראה לטלפון"
-          color={PRO_PURPLE}
-          isDark={isDark}
-        />
 
         <LegacyTrialGrantCard isDark={isDark} onChanged={() => { onChanged(); void loadAdminUsers(true); }} />
       </Box>

@@ -111,28 +111,28 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
         </Typography>
       </Box>
 
-      {/* כרטיס Pro - לחיץ, מסנן לרשימת משתמשי Pro. בסגול של המנוי ועם אותה
+      {/* כרטיס Pro - לחיץ, מסנן לרשימת משתמשי Pro. סגול בהיר ועדין (אטום,
+          לא שקוף: סגול שקוף מעל הטורקיז של הכותרת יצא כהה ועכור), ועם אותה
           תגית סגלגלה כמו בשאר דף המנהל. */}
       <Box
         sx={{
           ...infoCardSx(userFilter === 'pro'),
-          background: userFilter === 'pro'
-            ? 'rgba(124, 58, 237, 0.55)'
-            : 'rgba(124, 58, 237, 0.32)',
-          borderColor: userFilter === 'pro' ? 'rgba(221,214,254,0.85)' : 'rgba(196,181,253,0.45)',
+          background: userFilter === 'pro' ? '#DDD6FE' : '#EDE9FE',
+          borderColor: userFilter === 'pro' ? '#7C3AED' : 'rgba(255,255,255,0.7)',
+          boxShadow: userFilter === 'pro' ? '0 4px 14px rgba(124,58,237,0.35)' : 'none',
         }}
         onClick={() => onFilterClick('pro')}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-          <WorkspacePremiumIcon sx={{ fontSize: 14, color: '#EDE9FE' }} />
+          <WorkspacePremiumIcon sx={{ fontSize: 14, color: '#7C3AED' }} />
           {loading
             ? <StatSkeleton />
-            : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{proCount}</Typography>
+            : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#5B21B6', lineHeight: 1 }}>{proCount}</Typography>
           }
         </Box>
         <Box component="span" sx={{
           display: 'inline-block', mt: 0.4, px: 0.9, py: '1px', borderRadius: '999px',
-          bgcolor: '#fff', color: '#6D28D9', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
+          bgcolor: '#7C3AED', color: '#fff', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
         }}>
           PRO
         </Box>
