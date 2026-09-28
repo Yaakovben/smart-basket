@@ -2,6 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { socketService } from '../socket/socket.service';
 import { debugLog } from './debug-log';
 import { getAccessToken, setTokens } from './token-storage';
+import { isNetworkWeak, reportNetworkStall, reportNetworkOk } from '../networkQuality';
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
 import { consumeLegacyRefreshToken } from './token-storage';
@@ -35,12 +36,31 @@ function reportAuthDiagnostic(reason: string, context: Record<string, unknown>) 
 }
 
 // timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
+// בקשות קלות מקבלות זמן קצר יותר, ראו "קליטה חלשה" למטה.
+const DEFAULT_TIMEOUT_MS = 60000;
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 60000,
+  timeout: DEFAULT_TIMEOUT_MS,
   withCredentials: true, // שולח את ה-httpOnly refresh cookie לנתיבי /api/auth
 });
+
+// ===== קליטה חלשה =====
+// בקשות "קלות" (רשימות, מוצרים, התראות) עונות בדרך כלל תוך פחות משנייה.
+// בקשה כזו שלא ענתה תוך STALL_MS מסמנת קליטה חלשה, ובזמן קליטה חלשה היא
+// מקבלת WEAK_TIMEOUT_MS: נכשלת מהר ועוברת לתור האופליין במקום לתקוע את
+// המסך. פעולות שינוי על מוצרים בטוחות לשליחה חוזרת (clientId בהוספה, ערך
+// מוחלט בסימון ועריכה), ולכן מקבלות גם בזמן רגיל זמן המתנה קצר יותר.
+// בקשות כבדות (AI, השוואת מחירים, העלאות) לא מושפעות.
+const STALL_MS = 6000;
+const WEAK_TIMEOUT_MS = 8000;
+const LIGHT_MUTATION_TIMEOUT_MS = 15000;
+const isLightRequest = (url?: string) => !!url && /^\/(lists|notifications)(\/|$|\?)/.test(url);
+
+type TimedConfig = InternalAxiosRequestConfig & { _stallTimer?: ReturnType<typeof setTimeout> };
+const clearStallTimer = (config?: TimedConfig) => {
+  if (config?._stallTimer) { clearTimeout(config._stallTimer); config._stallTimer = undefined; }
+};
 
 // ===== רענון טוקן מרכזי =====
 // פונקציה אחת משותפת ל HTTP interceptor ול socket service
@@ -196,6 +216,16 @@ apiClient.interceptors.request.use(
     config.headers['Pragma'] = 'no-cache';
     config.headers['X-Request-Time'] = Date.now().toString();
 
+    // timeout שנקבע במפורש בקריאה עצמה נשאר כמו שהוא
+    if (isLightRequest(config.url) && config.timeout === DEFAULT_TIMEOUT_MS) {
+      const isGet = (config.method || 'get').toLowerCase() === 'get';
+      if (isNetworkWeak()) config.timeout = WEAK_TIMEOUT_MS;
+      else if (!isGet) config.timeout = LIGHT_MUTATION_TIMEOUT_MS;
+      const timed = config as TimedConfig;
+      clearStallTimer(timed);
+      timed._stallTimer = setTimeout(reportNetworkStall, STALL_MS);
+    }
+
     debugLog(`Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
       method: config.method,
       url: `${config.baseURL}${config.url}`,
@@ -227,10 +257,16 @@ function redirectToSessionExpiredLogin(reason: string, extra: Record<string, unk
 
 apiClient.interceptors.response.use(
   (response) => {
+    clearStallTimer(response.config as TimedConfig);
+    reportNetworkOk();
     debugLog(`Response OK: ${response.status}`, { url: response.config.url }, false);
     return response;
   },
   async (error: AxiosError) => {
+    clearStallTimer(error.config as TimedConfig | undefined);
+    // תשובה עם סטטוס (גם שגיאה) = הרשת עובדת; בלי תשובה = תקלת רשת או timeout
+    if (error.response) reportNetworkOk();
+    else if (error.code !== 'ERR_CANCELED') reportNetworkStall();
     debugLog(`Response ERROR: ${error.response?.status || 'NO STATUS'}`, {
       url: error.config?.url,
       baseURL: error.config?.baseURL,
@@ -256,12 +292,15 @@ apiClient.interceptors.response.use(
     );
     const isGetMethod = (originalRequest.method || 'get').toLowerCase() === 'get';
     const retryCount = reqWithRetry._retryCount || 0;
-    if (isNetworkOrTimeout && isGetMethod && retryCount < 2) {
+    const maxRetries = isNetworkWeak() && isLightRequest(originalRequest.url) ? 1 : 2;
+    if (isNetworkOrTimeout && isGetMethod && retryCount < maxRetries) {
       reqWithRetry._retryCount = retryCount + 1;
       // backoff: 1.5s, 3s
       const delay = 1500 * (retryCount + 1);
       debugLog(`Retry ${retryCount + 1}/2 in ${delay}ms for ${originalRequest.url}`, {}, false);
       await new Promise<void>(r => setTimeout(r, delay));
+      // הניסיון החוזר עובר שוב ב-interceptor ומקבל timeout לפי מצב הרשת העדכני
+      if (isLightRequest(originalRequest.url)) originalRequest.timeout = DEFAULT_TIMEOUT_MS;
       return apiClient(originalRequest);
     }
 

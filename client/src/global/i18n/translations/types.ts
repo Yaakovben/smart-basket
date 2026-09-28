@@ -935,6 +935,8 @@ export type TranslationKeys =
   | 'loadRetryDesc'
   | 'retrying'
   | 'reloadPageAction'
+  | 'weakConnectionShort'
+  | 'weakConnectionWillSync'
   | 'offlineShort'
   | 'syncingShort'
   | 'offlineWillSync'

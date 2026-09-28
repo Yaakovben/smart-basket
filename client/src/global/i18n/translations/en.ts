@@ -930,6 +930,8 @@ export const en: Translations = {
   loadRetryDesc: 'The connection dropped for a moment - we\'re trying again.',
   retrying: 'Retrying',
   reloadPageAction: 'Reload the page',
+  weakConnectionShort: 'Weak signal',
+  weakConnectionWillSync: 'Your changes are saved and will sync when the signal improves',
   offlineShort: 'Offline',
   syncingShort: 'Saving...',
   offlineWillSync: 'Your changes are saved and will sync when you\'re back online',

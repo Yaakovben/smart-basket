@@ -936,6 +936,8 @@ export const he: Translations = {
   loadRetryDesc: 'החיבור נקטע לרגע — אנחנו מנסים שוב.',
   retrying: 'מנסה שוב',
   reloadPageAction: 'טען מחדש את הדף',
+  weakConnectionShort: 'קליטה חלשה',
+  weakConnectionWillSync: 'השינויים נשמרים וישלחו כשהקליטה תשתפר',
   offlineShort: 'אין חיבור',
   syncingShort: 'שומר...',
   offlineWillSync: 'הנתונים יישמרו וישלחו כשיחזור החיבור',

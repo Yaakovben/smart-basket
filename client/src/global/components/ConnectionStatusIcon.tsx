@@ -39,10 +39,13 @@ export const ConnectionStatusIcon = () => {
   if (phase === 'online' || phase === 'trying' || dismissed) return null;
 
   const isOffline = phase === 'offline';
+  const isWeak = phase === 'weak';
   const isServerStarting = phase === 'server-starting';
 
   const mainText = isOffline
     ? t('offlineShort')
+    : isWeak
+      ? t('weakConnectionShort')
     : isServerStarting
       ? t('connectingMessage')
       : t('reconnectingMessage');
@@ -52,7 +55,9 @@ export const ConnectionStatusIcon = () => {
     ? (pendingCount > 0
         ? t('offlineActionsPending').replace('{count}', String(pendingCount))
         : t('offlineWillSync'))
-    : null;
+    : isWeak
+      ? t('weakConnectionWillSync')
+      : null;
 
   const bg = isOffline
     ? 'linear-gradient(135deg, rgba(146,138,132,0.97), rgba(87,83,78,0.97))'

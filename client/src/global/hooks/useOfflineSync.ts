@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import type { Product, ToastType } from '../types';
 import { getAllQueued, removeQueued } from '../../services/offlineQueue';
 import { productsApi } from '../../services/api';
+import { subscribeNetworkWeak } from '../../services/networkQuality';
 
 // בדיקה תקופתית נוספת מעבר לאירוע 'online' - מכסה מצב שבו navigator.onLine
 // עדיין true אבל בקשות בפועל נכשלות (רשת רעועה, קרש רגעי בשרת/Render
@@ -106,9 +107,13 @@ export function useOfflineSync(
       if (navigator.onLine) void runSync();
     }, PERIODIC_RETRY_MS);
 
+    // הקליטה החלשה השתפרה (בקשה הצליחה): שולחים את התור מיד
+    const unsubscribeWeak = subscribeNetworkWeak(weak => { if (!weak) void runSync(); });
+
     return () => {
       window.removeEventListener('online', onOnline);
       window.clearInterval(intervalId);
+      unsubscribeWeak();
     };
   }, [runSync]);
 }

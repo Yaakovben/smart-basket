@@ -930,6 +930,8 @@ export const ru: Translations = {
   loadRetryDesc: 'Соединение на мгновение прервалось — мы повторяем попытку.',
   retrying: 'Повтор',
   reloadPageAction: 'Перезагрузить страницу',
+  weakConnectionShort: 'Слабый сигнал',
+  weakConnectionWillSync: 'Изменения сохранены и отправятся, когда сигнал улучшится',
   offlineShort: 'Не в сети',
   syncingShort: 'Сохраняем...',
   offlineWillSync: 'Изменения сохранены и синхронизируются, когда вы снова будете в сети',

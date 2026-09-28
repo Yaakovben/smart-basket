@@ -12,10 +12,11 @@ import { useSyncExternalStore } from 'react';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';
 import { subscribeFetchIssue } from '../services/connectionIssue';
+import { subscribeNetworkWeak } from '../../services/networkQuality';
 import { wasVersionUpgrade } from '../services/versionUpgrade';
 import { clearCacheAndReload } from '../helpers/clearCacheAndReload';
 
-export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting' | 'server-starting';
+export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting' | 'server-starting' | 'weak';
 
 const OFFLINE_CONFIRM_MS = 3000;
 const SOCKET_GRACE_MS = 4000;
@@ -162,6 +163,13 @@ subscribeFetchIssue(active => {
   } else if (!active && currentPhase === 'server-starting') {
     setState({ phase: 'online' });
   }
+});
+
+// קליטה חלשה (בקשות נתקעות בזמן שהמכשיר "מחובר"): מוצג רק מעל מצב תקין,
+// חיוויים חמורים יותר (אופליין, מתחבר מחדש) גוברים עליו.
+subscribeNetworkWeak(weak => {
+  if (weak && state.phase === 'online') setState({ phase: 'weak' });
+  else if (!weak && state.phase === 'weak') setState({ phase: socketDown ? 'reconnecting' : 'online' });
 });
 
 export function useConnectionStatus() {
