@@ -24,7 +24,7 @@ import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { extractDateStamp, extractStoreIdFromName } from './binaFileNames';
 import type {
-  ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
+  ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
 import type { ChainId } from '../models/Price.model';
 
@@ -41,6 +41,7 @@ interface BinaSPathEntry {
 
 const FILE_TYPE_PRICE_FULL = 4;
 const FILE_TYPE_STORES = 1;
+const FILE_TYPE_PROMO_FULL = 5;
 // הגנה מפני קובץ דחוס ענק - ראו הסבר ב-portalFiles.ts
 const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
 
@@ -198,6 +199,15 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
         logger.warn(`[bina:${chainId}] fetchLatestStores failed: ${msg}`);
         return { chainId, chainName, stores: [], fetchedFiles: 0, error: msg };
       }
+    },
+
+    async listPromoFullFiles(): Promise<ChainFileRef[]> {
+      const list = await listFiles(baseUrl, binaChainId, FILE_TYPE_PROMO_FULL);
+      return pickLatestPerStore(list, /PromoFull.*\.(gz|xml)$/i).map(fileName => ({
+        fileName,
+        storeId: extractStoreIdFromName(fileName) || undefined,
+        download: () => resolveAndDownload(baseUrl, fileName),
+      }));
     },
   };
 }

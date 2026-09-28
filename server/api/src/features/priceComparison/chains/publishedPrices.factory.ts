@@ -17,11 +17,11 @@
 
 import { logger } from '../../../config/logger';
 import { tryAuthenticateWithCandidates, withRetry } from './portalAuth';
-import { listLatestMatchingFile, listAllLatestPriceFullFiles, downloadFile } from './portalFiles';
+import { listLatestMatchingFile, listAllLatestPriceFullFiles, listAllLatestFilesPerStore, downloadFile } from './portalFiles';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult,
-  ChainStoresFetchResult,
+  ChainStoresFetchResult, ChainFileRef,
 } from './types';
 import type { ChainId } from '../models/Price.model';
 
@@ -118,6 +118,19 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
         const msg = err instanceof Error ? err.message : 'unknown_error';
         return { chainId, chainName, stores: [], fetchedFiles: 0, error: msg };
       }
+    },
+    async listPromoFullFiles(): Promise<ChainFileRef[]> {
+      // ההורדה משתמשת בחיבור המאומת של הרישום. אם הסשן פג באמצע, ההורדות הבאות
+      // נכשלות, נספרות כקבצים שנכשלו, ובדיקת התקינות מחליטה אם לשמור.
+      return withRetry(async () => {
+        const { client, csrftoken } = await tryAuthenticate();
+        const files = await listAllLatestFilesPerStore(client, csrftoken, chainId, 'PromoFull');
+        return files.map(f => ({
+          fileName: f.path,
+          storeId: f.storeId,
+          download: () => downloadFile(client, f.path),
+        }));
+      });
     },
   };
 }

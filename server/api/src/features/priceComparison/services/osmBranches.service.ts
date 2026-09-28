@@ -24,7 +24,9 @@ const OVERPASS_ENDPOINTS = [
 // אומת ע"י קריאות ישירות ל-Overpass: ה-brand ב-OSM הוא בד"כ באנגלית.
 // נוספו וריאציות רבות (כתיב חלופי, כינויי-משנה, שמות עבריים מקוצרים)
 // כדי לתפוס סניפים עם תיוג שונה בקהילת OSM.
-const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
+// Partial: רשת בלי תיוג מותג מאומת ב-OSM (חצי חינם, מחסני השוק) נשענת רק על
+// קובץ הסניפים הרשמי שלה, ולא מנחשים לה שמות מותג.
+const CHAIN_BRANDS: Partial<Record<ChainId, { brands: string[]; names: string[] }>> = {
   shufersal: {
     brands: ['Shufersal', 'Shufersal Deal', 'Shufersal Express', 'Shufersal Yesh', 'Shufersal Sheli', 'Yesh', 'BE Pharm'],
     names: ['שופרסל', 'שופרסל דיל', 'שופרסל אקספרס', 'שופרסל יש', 'שופרסל שלי', 'שופרסל בי', 'יש'],

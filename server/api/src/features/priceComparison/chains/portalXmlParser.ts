@@ -20,10 +20,10 @@ const MAX_DECOMPRESSED_BYTES = 300 * 1024 * 1024;
 // פורטל Bina מתייג קבצים בסיומת .gz אך הם בעצם ZIP (חתימה PK).
 // פורטל publishedprices מספק קבצי gzip אמיתיים. הפונקציה מזהה את הפורמט
 // לפי מאגיק-בייטס ופותחת בהתאם.
-function decompressBuffer(buf: Buffer): string {
+export function decompressBuffer(buf: Buffer): string {
   if (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
     try {
-      return gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }).toString('utf-8');
+      return decodeText(gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }));
     } catch (err) {
       throw new Error(`gzip_decompress_failed_or_too_large: ${err instanceof Error ? err.message : 'unknown'}`);
     }
@@ -36,8 +36,24 @@ function decompressBuffer(buf: Buffer): string {
     if (uncompressedSize > MAX_DECOMPRESSED_BYTES) {
       throw new Error(`zip_decompressed_too_large: ${uncompressedSize} bytes`);
     }
-    return entries[0].getData().toString('utf-8');
+    return decodeText(entries[0].getData());
   }
+  return decodeText(buf);
+}
+
+// קידוד לפי ה-BOM. קובץ הסניפים של רמי לוי ב-publishedprices הוא UTF-16LE (FF FE):
+// קריאה כ-UTF-8 השאירה בייט אפס בין כל שני תווים, והפענוח נכשל ב-"Maximum nested
+// tags exceeded", כך שרשימת הסניפים הרשמית של הרשת לא נטענה בכלל.
+export function decodeText(buf: Buffer): string {
+  if (buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe) return buf.subarray(2).toString('utf16le');
+  if (buf.length >= 2 && buf[0] === 0xfe && buf[1] === 0xff) {
+    // UTF-16BE: Node לא מפענח ישירות, ולכן מחליפים סדר בתים
+    const body = buf.subarray(2);
+    const le = Buffer.from(body.subarray(0, body.length - (body.length % 2)));
+    le.swap16();
+    return le.toString('utf16le');
+  }
+  if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) return buf.subarray(3).toString('utf-8');
   return buf.toString('utf-8');
 }
 
@@ -152,7 +168,8 @@ export function parseStoresXml(buf: Buffer, _filename: string): ChainStoreItem[]
     return undefined;
   };
 
-  const root = pickAny(parsed, ['Root', 'root', 'asx:abap', 'OrderXml', 'XmlDoc']);
+  // קובץ הסניפים של שופרסל מתחיל ב-<Chain> ולא ב-<Root>
+  const root = pickAny(parsed, ['Root', 'root', 'asx:abap', 'OrderXml', 'XmlDoc', 'Chain']);
   const storesContainer = pickAny(root, ['SubChains', 'Stores', 'STORES']);
   // חלק מהרשתות ממש משתמשות ב-SubChains → SubChain → Stores → Store
   const stores = pickAny(storesContainer, ['SubChain', 'Stores', 'Store', 'STORE'])
@@ -165,22 +182,39 @@ export function parseStoresXml(buf: Buffer, _filename: string): ChainStoreItem[]
     return keys.some(k => k === 'itemcode' || k === 'itemname' || k === 'itemprice');
   };
 
+  // תת-הרשת מופיעה ברמת SubChain ולא בכל Store (SubChains > SubChain > Stores > Store),
+  // ולכן עוברת מההורה לסניפים שבתוכו. בלי זה סניפי "יש חסד" בשופרסל ו"נטו חיסכון"
+  // בסופר ספיר לא מסומנים בתת-הרשת שלהם.
+  const subChainOf = (rec: Record<string, unknown>): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(rec)) {
+      const lower = k.toLowerCase();
+      if ((lower === 'subchainid' || lower === 'subchainname') && v !== undefined && v !== '' && typeof v !== 'object') {
+        out[lower === 'subchainid' ? 'SubChainId' : 'SubChainName'] = v;
+      }
+    }
+    return out;
+  };
+  const withParent = (v: unknown, parent: Record<string, unknown>): unknown =>
+    v && typeof v === 'object' && !Array.isArray(v) && Object.keys(parent).length > 0 ? { ...parent, ...(v as object) } : v;
+
   // נרד עד שמגיעים לרמת ה-Store. לא רוצים להחזיר רשומות שנראות כמו price items.
-  const collectStores = (node: unknown): unknown[] => {
+  const collectStores = (node: unknown, parent: Record<string, unknown> = {}): unknown[] => {
     if (!node) return [];
-    if (Array.isArray(node)) return node.flatMap(collectStores);
+    if (Array.isArray(node)) return node.flatMap(n => collectStores(n, parent));
     if (typeof node !== 'object') return [];
     const rec = node as Record<string, unknown>;
+    const inherited = { ...parent, ...subChainOf(rec) };
     // נחפש Store / STORE בתת-צמתים
     const keys = Object.keys(rec);
     const storeKey = keys.find(k => k.toLowerCase() === 'store');
     if (storeKey) {
       const v = rec[storeKey];
-      return Array.isArray(v) ? v : [v];
+      return (Array.isArray(v) ? v : [v]).map(s => withParent(s, inherited));
     }
     // אם יש Stores/STORES - נרד לתוכו
     const storesKey = keys.find(k => k.toLowerCase() === 'stores');
-    if (storesKey) return collectStores(rec[storesKey]);
+    if (storesKey) return collectStores(rec[storesKey], inherited);
     // אם מבנה יחיד (רשומה של סניף בודד) - חייב לא להיראות כמו פריט מחיר
     if (('StoreId' in rec || 'STOREID' in rec || 'storeId' in rec) && !isPriceItem(rec)) {
       return [rec];

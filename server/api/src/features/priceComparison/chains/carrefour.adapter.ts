@@ -19,7 +19,7 @@ import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
-  ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
+  ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
 
 const PORTAL_BASE = 'https://prices.carrefour.co.il';
@@ -68,38 +68,39 @@ function extractStamp(filename: string): string {
   return oldFmt ? oldFmt[1] : '';
 }
 
-// מחלץ את חתימת הסניף משם-קובץ. תבניות:
-// ישן: PriceFull{chainId}-{storeId}-DATETIME12.gz
-// חדש: PriceFull{chainId}-{subChain}-{storeId}-DATE8-TIME6.gz
-function extractStoreId(filename: string): string {
+// מחלץ את חתימת הסניף משם-קובץ. תבניות (Prefix = PriceFull / PromoFull):
+// ישן: {Prefix}{chainId}-{storeId}-DATETIME12.gz
+// חדש: {Prefix}{chainId}-{subChain}-{storeId}-DATE8-TIME6.gz
+// key = מפתח ייחודי לסניף (subChain-storeId), storeId = מזהה הסניף עצמו
+function extractStoreId(filename: string, prefix = 'PriceFull'): { key: string; storeId: string } | null {
   // נסה קודם את הפורמט החדש (3 חלקים מספריים אחרי chainId)
-  const newFmt = filename.match(/PriceFull\d+-(\d+)-(\d+)-\d{8}-\d{6}\.(?:gz|xml)$/i);
-  if (newFmt) return `${newFmt[1]}-${newFmt[2]}`; // subChain-storeId כייחודי
+  const newFmt = filename.match(new RegExp(`^${prefix}\\d+-(\\d+)-(\\d+)-\\d{8}-\\d{6}\\.(?:gz|xml)$`, 'i'));
+  if (newFmt) return { key: `${newFmt[1]}-${newFmt[2]}`, storeId: newFmt[2] };
   // פורמט ישן
-  const oldFmt = filename.match(/PriceFull\d+-(\d+)-\d{12}\.(?:gz|xml)$/i);
-  return oldFmt ? oldFmt[1] : '';
+  const oldFmt = filename.match(new RegExp(`^${prefix}\\d+-(\\d+)-\\d{12}\\.(?:gz|xml)$`, 'i'));
+  return oldFmt ? { key: oldFmt[1], storeId: oldFmt[1] } : null;
 }
 
 // בוחר את הקובץ הטרי ביותר לכל סניף בנפרד. הפורטל מפרסם 1+ קובץ פר-סניף
 // בכל יום (5 בבוקר עד 23:00) - אנחנו רוצים רק את הטרי לכל סניף, אבל את
 // כל הסניפים. אחרת נפספס סניפים שפרסמו בשעה אחרת.
-function pickLatestPriceFullBatch(files: CarrefourFile[]): string[] {
-  const matches = files
-    .map(f => f.name)
-    .filter(name => /^PriceFull\d+/i.test(name) && /\.(gz|xml)$/i.test(name));
-  if (matches.length === 0) return [];
-  // קיבוץ לפי storeId, בחירת stamp המאוחר ביותר לכל סניף
-  const latestPerStore = new Map<string, { name: string; stamp: string }>();
-  for (const name of matches) {
-    const storeId = extractStoreId(name);
+function pickLatestPerStore(files: CarrefourFile[], prefix: 'PriceFull' | 'PromoFull'): Array<{ name: string; storeId: string }> {
+  // קיבוץ לפי סניף, בחירת stamp המאוחר ביותר לכל סניף
+  const latestPerStore = new Map<string, { name: string; stamp: string; storeId: string }>();
+  for (const { name } of files) {
+    const store = extractStoreId(name, prefix);
     const stamp = extractStamp(name);
-    if (!storeId || !stamp) continue;
-    const existing = latestPerStore.get(storeId);
+    if (!store || !stamp) continue;
+    const existing = latestPerStore.get(store.key);
     if (!existing || stamp > existing.stamp) {
-      latestPerStore.set(storeId, { name, stamp });
+      latestPerStore.set(store.key, { name, stamp, storeId: store.storeId });
     }
   }
-  return Array.from(latestPerStore.values()).map(v => v.name);
+  return Array.from(latestPerStore.values()).map(v => ({ name: v.name, storeId: v.storeId }));
+}
+
+function pickLatestPriceFullBatch(files: CarrefourFile[]): string[] {
+  return pickLatestPerStore(files, 'PriceFull').map(f => f.name);
 }
 
 function pickLatestStoresFile(files: CarrefourFile[]): string | null {
@@ -175,5 +176,14 @@ export const carrefourAdapter: ChainAdapter = {
       logger.warn(`[chain:carrefour] fetchLatestStores failed: ${msg}`);
       return { chainId: 'carrefour', chainName: 'Carrefour / יינות ביתן', stores: [], fetchedFiles: 0, error: msg };
     }
+  },
+
+  async listPromoFullFiles(): Promise<ChainFileRef[]> {
+    const { path, files } = await fetchIndex();
+    return pickLatestPerStore(files, 'PromoFull').map(f => ({
+      fileName: f.name,
+      storeId: f.storeId,
+      download: () => downloadFile(path, f.name),
+    }));
   },
 };

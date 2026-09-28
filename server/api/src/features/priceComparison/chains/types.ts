@@ -56,6 +56,16 @@ export interface ChainStoresFetchResult {
   error?: string;
 }
 
+// הפניה לקובץ בפורטל, בלי להוריד אותו עדיין. הסנכרון מוריד ומפענח קובץ אחד
+// בכל פעם ומשחרר אותו: קובץ מבצעים מלא של סניף שופרסל הוא כ-11MB של XML, ו-424
+// סניפים יחד לא נכנסים בזיכרון של השרת.
+export interface ChainFileRef {
+  fileName: string;
+  // מזהה הסניף כפי שמופיע בשם הקובץ. הקובץ עצמו מכיל את המזהה הקובע.
+  storeId?: string;
+  download(): Promise<Buffer>;
+}
+
 export interface ChainAdapter {
   readonly chainId: ChainId;
   readonly chainName: string;
@@ -63,4 +73,6 @@ export interface ChainAdapter {
   // אופציונלי: מביא את רשימת הסניפים הרשמית של הרשת מהפורטל.
   // רשתות שלא מפרסמות Stores*.xml - לא יממשו או יחזירו ריק.
   fetchLatestStores?(): Promise<ChainStoresFetchResult>;
+  // אופציונלי: קובץ PromoFull העדכני של כל סניף (מבצעים מלאים, לא עדכון חלקי)
+  listPromoFullFiles?(): Promise<ChainFileRef[]>;
 }

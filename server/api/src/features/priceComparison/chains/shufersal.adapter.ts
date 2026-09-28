@@ -5,17 +5,19 @@
  * הפורטל הזה שונה מ-publishedprices.co.il:
  *  - ללא login
  *  - דף HTML שרושם קבצי XML.gz
- *  - catID=0/1/2 - מחירים; catID=5 - סניפים (StoresFull)
+ *  - catID: 1=Price, 2=PriceFull, 3=Promo, 4=PromoFull, 5=Stores. 20 קבצים לדף (&page=N)
  *
- * מבנה ה-XML זהה (Root/Items/Item) — אפשר להשתמש באותו parser.
+ * קובצי המחירים במבנה Root/Items/Item. קובץ הסניפים מתחיל ב-<Chain> ומפוענח
+ * ב-parseStoresXml הכללי, כולל תתי-הרשתות (יש חסד, דיל, אקספרס...).
  */
 
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
 import { axiosGetWithTlsFallback } from './insecureAgent';
+import { parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
-  ChainStoreItem, ChainStoresFetchResult,
+  ChainStoresFetchResult, ChainFileRef,
 } from './types';
 
 const SHUFERSAL_PORTAL = 'https://prices.shufersal.co.il';
@@ -82,6 +84,64 @@ async function fetchCategoryHtml(catID: number): Promise<string> {
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
   });
   return res.data;
+}
+
+// catID=2 בפורטל = PriceFull, catID=4 = PromoFull. הרשימה מחולקת לדפים של 20 קבצים (&page=N)
+const CAT_PRICE_FULL = 2;
+const CAT_PROMO_FULL = 4;
+const MAX_LISTING_PAGES = 60;
+
+async function fetchCategoryPage(catID: number, page: number): Promise<string> {
+  const res = await axiosGetWithTlsFallback<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=${catID}&storeId=0&page=${page}`, {
+    timeout: FETCH_TIMEOUT_MS,
+    headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
+  });
+  return res.data;
+}
+
+interface StoreFileUrl { url: string; name: string; subChainId: string; storeId: string }
+
+// הקובץ העדכני של כל סניף מסוג נתון, מכל דפי הרשימה
+async function listLatestPerStore(catID: number, prefix: 'PriceFull' | 'PromoFull'): Promise<StoreFileUrl[]> {
+  const pattern = new RegExp(`${prefix}(\\d+)-(\\d+)-(\\d+)-(\\d{8})-(\\d{6})\\.gz`, 'i');
+  const latest = new Map<string, StoreFileUrl & { stamp: string }>();
+  const seen = new Set<string>();
+  for (let page = 1; page <= MAX_LISTING_PAGES; page++) {
+    const html = await withRetry(() => fetchCategoryPage(catID, page));
+    let added = 0;
+    for (const url of extractAllFileUrls(html, prefix)) {
+      const m = url.match(pattern);
+      if (!m || seen.has(m[0])) continue;
+      seen.add(m[0]);
+      added++;
+      const key = `${m[2]}-${m[3]}`;
+      const stamp = `${m[4]}${m[5]}`;
+      const existing = latest.get(key);
+      if (!existing || stamp > existing.stamp) latest.set(key, { url, name: m[0], subChainId: m[2], storeId: m[3], stamp });
+    }
+    // דף בלי קבצים חדשים = הגענו לסוף הרשימה
+    if (added === 0) break;
+  }
+  return [...latest.values()];
+}
+
+// עד max סניפים, לסירוגין בין תתי-הרשתות (שלי, דיל, אקספרס, יש חסד...), כדי שכל
+// מותג יקבל מחירי סניף אמיתיים ולא רק מה שבמקרה בדף הראשון של הרשימה
+export function spreadAcrossSubChains<T extends { subChainId: string; storeId: string }>(files: T[], max: number): T[] {
+  const bySub = new Map<string, T[]>();
+  for (const f of [...files].sort((a, b) => Number(a.storeId) - Number(b.storeId))) {
+    const list = bySub.get(f.subChainId) ?? [];
+    list.push(f);
+    bySub.set(f.subChainId, list);
+  }
+  const queues = [...bySub.values()];
+  const picked: T[] = [];
+  for (let i = 0; picked.length < max && queues.some(q => i < q.length); i++) {
+    for (const q of queues) {
+      if (i < q.length && picked.length < max) picked.push(q[i]);
+    }
+  }
+  return picked;
 }
 
 async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: boolean }> {
@@ -164,88 +224,14 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
   return results;
 }
 
-// פרסור של קובץ Stores (Asx/STORE) של שופרסל
-function parseStoresXmlShufersal(buf: Buffer, isGzipped: boolean): ChainStoreItem[] {
-  const xml = isGzipped ? gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }).toString('utf-8') : buf.toString('utf-8');
-  const parser = new XMLParser({ ignoreAttributes: true, parseTagValue: false, trimValues: true });
-  const parsed = parser.parse(xml) as Record<string, unknown>;
-
-  const pickAny = (obj: unknown, keys: string[]): unknown => {
-    if (!obj || typeof obj !== 'object') return undefined;
-    const rec = obj as Record<string, unknown>;
-    for (const k of keys) {
-      const found = Object.keys(rec).find(x => x.toLowerCase() === k.toLowerCase());
-      if (found && rec[found] !== undefined) return rec[found];
-    }
-    return undefined;
-  };
-
-  const root = pickAny(parsed, ['asx:abap', 'Root', 'root']);
-  // שופרסל: asx:values -> STORE (array)
-  const values = pickAny(root, ['asx:values', 'values', 'SubChains', 'Stores']);
-  let storeNodes: unknown[] = [];
-  const collected = pickAny(values, ['STORE', 'Store', 'SubChain']);
-  if (Array.isArray(collected)) storeNodes = collected;
-  else if (collected) storeNodes = [collected];
-
-  // fallback: סריקה רקורסיבית אם לא הגענו לרמת הסניף
-  if (storeNodes.length === 0) {
-    const recurse = (n: unknown): unknown[] => {
-      if (!n || typeof n !== 'object') return [];
-      if (Array.isArray(n)) return n.flatMap(recurse);
-      const rec = n as Record<string, unknown>;
-      if ('STOREID' in rec || 'StoreId' in rec) return [rec];
-      return Object.values(rec).flatMap(recurse);
-    };
-    storeNodes = recurse(parsed);
-  }
-
-  const pick = (obj: Record<string, unknown>, keys: string[]): string | undefined => {
-    for (const k of keys) {
-      const found = Object.keys(obj).find(x => x.toLowerCase() === k.toLowerCase());
-      if (found && obj[found] !== undefined && obj[found] !== null && obj[found] !== '') {
-        return String(obj[found]).trim();
-      }
-    }
-    return undefined;
-  };
-  const toNum = (v: string | undefined): number | undefined => {
-    if (!v) return undefined;
-    const n = parseFloat(v);
-    if (!Number.isFinite(n) || n === 0) return undefined;
-    return n;
-  };
-
-  const results: ChainStoreItem[] = [];
-  for (const node of storeNodes) {
-    if (!node || typeof node !== 'object') continue;
-    const rec = node as Record<string, unknown>;
-    const storeId = pick(rec, ['StoreId', 'STOREID']);
-    const storeName = pick(rec, ['StoreName', 'STORENAME']);
-    if (!storeId || !storeName) continue;
-    const lat = toNum(pick(rec, ['Latitude', 'LATITUDE']));
-    const lng = toNum(pick(rec, ['Longitude', 'LONGITUDE']));
-    const valid = lat !== undefined && lng !== undefined && lat >= 29 && lat <= 34 && lng >= 33 && lng <= 36;
-    results.push({
-      storeId,
-      storeName,
-      address: pick(rec, ['Address', 'ADDRESS']),
-      city: pick(rec, ['City', 'CITY']),
-      zipCode: pick(rec, ['ZipCode', 'ZIPCODE']),
-      lat: valid ? lat : undefined,
-      lng: valid ? lng : undefined,
-    });
-  }
-  return results;
-}
-
 // retry helper משותף - רק על תקלות רשת
 function isRetryable(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
   const m = err.message || '';
   const c = (err as { code?: string }).code || '';
-  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up/i.test(m)
-    || /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED/.test(c);
+  // ECONNABORTED = timeout של axios. הפורטל נוטה להאט תחת עומס, וניסיון חוזר עוזר
+  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up|timeout of \d+ms exceeded/i.test(m)
+    || /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ECONNABORTED/.test(c);
 }
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastErr: unknown;
@@ -265,34 +251,20 @@ export const shufersalAdapter: ChainAdapter = {
 
   async fetchLatestPrices(): Promise<ChainFetchResult> {
     try {
-      // שופרסל מפרסמת קובץ נפרד לכל סניף (PriceFull7290...-SS-...gz)
-      // לכן מורידים מספר קבצים ומאחדים. מגבלים ל-15 סניפים כדי לא לחרוג
-      // מ-2 דקות (גם 15 סניפים זה ~75k פריטים אחרי dedup, מספיק לרשת).
-      let urls: string[] = [];
-      // catID=2 הוא PriceFull (מלא, אלפי פריטים לקובץ). catID=0 הוא Price (delta, כ-10
-      // פריטים לקובץ) והוא ראשון ברשימה הישנה, ולכן ההשוואה הסתמכה על 232 פריטים בלבד.
-      const catIdsToTry = [2, 1, 0];
-      const prefixesToTry = ['PriceFull', 'Price'];
-      for (const cat of catIdsToTry) {
-        try {
-          const html = await fetchCategoryHtml(cat);
-          for (const prefix of prefixesToTry) {
-            const found = extractAllFileUrls(html, prefix);
-            if (found.length > 0) { urls = found; break; }
-          }
-          if (urls.length > 0) break;
-        } catch { /* ננסה catID הבא */ }
-      }
-      if (urls.length === 0) {
+      // שופרסל מפרסמת קובץ נפרד לכל סניף (PriceFull7290...-SS-...gz), ולכן
+      // מורידים מספר קבצים ומאחדים. catID=2 הוא PriceFull (מלא, אלפי פריטים לקובץ). קודם נקרא רק הדף הראשון של
+      // הרשימה (20 קבצים), ולכן מחירי סניף הגיעו מ-20 סניפים שנבחרו במקרה.
+      // עכשיו כל הדפים, הקובץ העדכני לכל סניף, ופריסה על פני תתי-הרשתות.
+      const files = await listLatestPerStore(CAT_PRICE_FULL, 'PriceFull');
+      if (files.length === 0) {
         return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
       }
 
-      // 30 סניפים במקבילות של 6 - כיסוי טוב יותר של הקטלוג. 15 הקודמים
-      // נתנו רק 664 מוצרים כי כל סניף מחזיק תת-קטלוג. 30 סניפים מתפזרים
-      // יותר על תתי-מותגים (דיל/שלי/אקספרס) ועל אזורים שונים.
-      const MAX_STORES = 30;
+      // תקרת סניפים בגלל זיכרון השרת (512MB): כל סניף כ-6,000 שורות, ו-100 סניפים
+      // הם כ-600 אלף שורות, פחות מרמי לוי (כמיליון שורות מ-98 סניפים).
+      const MAX_STORES = 100;
       const BATCH = 6;
-      const subset = urls.slice(0, MAX_STORES);
+      const subset = spreadAcrossSubChains(files, MAX_STORES).map(f => f.url);
       const allItems: ChainPriceItem[] = [];
       let fetched = 0;
       let lastError: string | undefined;
@@ -357,13 +329,24 @@ export const shufersalAdapter: ChainAdapter = {
         if (!url) {
           return { chainId: 'shufersal', chainName: 'שופרסל', stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
         }
-        const { buf, isGzipped } = await downloadBuffer(url);
-        const stores = parseStoresXmlShufersal(buf, isGzipped);
+        const { buf } = await downloadBuffer(url);
+        // הקובץ מתחיל ב-<Chain> ולא ב-<Root>, והסניפים בתוך SubChains > SubChain > Stores
+        const stores = parseStoresXml(buf, url);
         return { chainId: 'shufersal', chainName: 'שופרסל', stores, fetchedFiles: 1 };
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown_error';
       return { chainId: 'shufersal', chainName: 'שופרסל', stores: [], fetchedFiles: 0, error: msg };
     }
+  },
+
+  async listPromoFullFiles(): Promise<ChainFileRef[]> {
+    const files = await listLatestPerStore(CAT_PROMO_FULL, 'PromoFull');
+    return files.map(f => ({
+      fileName: f.name,
+      storeId: f.storeId,
+      // הקישורים חתומים לזמן מוגבל. אם פג תוקף, ההורדה נכשלת ונספרת בבדיקת התקינות
+      download: async () => (await withRetry(() => downloadBuffer(f.url))).buf,
+    }));
   },
 };

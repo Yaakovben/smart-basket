@@ -12,5 +12,7 @@ export { maayan2000Adapter } from './maayan-2000.adapter';
 export { shefaBirkatHashemAdapter } from './shefa-birkat-hashem.adapter';
 export { superSapirAdapter } from './super-sapir.adapter';
 export { carrefourAdapter } from './carrefour.adapter';
+export { haziHinamAdapter } from './hazi-hinam.adapter';
+export { machsaneiHashukAdapter } from './machsanei-hashuk.adapter';
 export { normalizeProductName, stemHebrew } from './normalize';
-export type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';
+export type { ChainAdapter, ChainFetchResult, ChainPriceItem, ChainFileRef } from './types';

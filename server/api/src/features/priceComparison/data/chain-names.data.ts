@@ -15,4 +15,6 @@ export const CHAIN_NAMES: Record<string, string> = {
   super_sapir: 'סופר ספיר',
   carrefour: 'Carrefour / יינות ביתן',
   netto_hisachon: 'נטו חיסכון',
+  hazi_hinam: 'חצי חינם',
+  machsanei_hashuk: 'מחסני השוק',
 };

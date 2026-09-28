@@ -15,7 +15,9 @@ export type ChainId =
   | 'shefa_birkat_hashem'
   | 'super_sapir'
   | 'netto_hisachon'
-  | 'carrefour';
+  | 'carrefour'
+  | 'hazi_hinam'
+  | 'machsanei_hashuk';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;

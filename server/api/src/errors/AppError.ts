@@ -160,6 +160,10 @@ export class NotFoundError extends AppError {
   static member(): NotFoundError {
     return new NotFoundError('Member');
   }
+
+  static branch(): NotFoundError {
+    return new NotFoundError('Branch');
+  }
 }
 
 // שגיאת מגבלת מנוי (402) - משתמש חינמי הגיע לתקרת ה-Freemium

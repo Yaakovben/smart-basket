@@ -14,13 +14,23 @@ export interface IChainPriceCoverageDoc extends Document {
   chainId: string;
   storeIds: string[];
   syncedAt: Date;
+  // הסניפים שקובץ המבצעים שלהם עובד בסנכרון האחרון, בסדר של מפות הביטים בפריטי
+  // המבצע. לסניף שלא מופיע כאן אין מידע על מבצעים (לא "אין מבצע").
+  promoStoreIds?: string[];
+  // ריצת הסנכרון שהמבצעים שלה נקראים. מתעדכן יחד עם promoStoreIds בכתיבה אחת
+  promoSyncRunId?: string;
+  promoSyncedAt?: Date;
 }
 
 const schema = new Schema<IChainPriceCoverageDoc>(
   {
     chainId: { type: String, required: true, unique: true },
     storeIds: { type: [String], default: [] },
-    syncedAt: { type: Date, required: true },
+    // לא חובה: רשת שטרם סונכרנו לה מחירים עדיין יכולה לקבל כיסוי מבצעים
+    syncedAt: { type: Date },
+    promoStoreIds: { type: [String], default: undefined },
+    promoSyncRunId: { type: String },
+    promoSyncedAt: { type: Date },
   },
   { collection: 'chain_price_coverage' }
 );

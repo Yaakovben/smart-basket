@@ -13,6 +13,8 @@ import {
   shefaBirkatHashemAdapter,
   superSapirAdapter,
   carrefourAdapter,
+  haziHinamAdapter,
+  machsaneiHashukAdapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -23,6 +25,12 @@ import { invalidateBranchCache } from './branches.service';
 import { normStoreId } from './storeId';
 import { buildBarcodeStats, isPriceException, encodeStorePrice, exceedsExceptionBudget, MAX_EXCEPTION_ROWS_PER_CHAIN } from './branchPricing';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
+import { syncPromotionsForChain } from './promoSync.service';
+import { collectPriceFeedStats, countDuplicateRows, validatePriceFeed, validateStoresFeed, type PriceFeedStats } from './syncValidation';
+import { PriceSyncLogDAL, type SyncLogFields } from '../dal/priceSyncLog.dal';
+import { Price } from '../models/Price.model';
+import { Branch } from '../models/Branch.model';
+import { randomUUID } from 'crypto';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
 
@@ -38,10 +46,13 @@ const adapters: ChainAdapter[] = [
   stopMarketAdapter,
   politzerAdapter,
   doralonAdapter,
+  // laibcatalog.co.il (API פתוח)
   victoryAdapter,
+  machsaneiHashukAdapter,
   // פורטלים עצמאיים פתוחים (אין login):
   shufersalAdapter,    // prices.shufersal.co.il
   carrefourAdapter,    // prices.carrefour.co.il (יינות ביתן/Carrefour)
+  haziHinamAdapter,    // shop.hazi-hinam.co.il/Prices
   // binaprojects.com (פתוח, JSON list + 2-step download)
   maayan2000Adapter,
   shefaBirkatHashemAdapter,
@@ -59,6 +70,9 @@ export interface SyncResult {
   storesFetched?: number;
   storesUpserted?: number;
   storesError?: string;
+  // מבצעים (PromoFull)
+  promotions?: number;
+  promoError?: string;
 }
 
 // (DELAY_BETWEEN_CHAINS_MS הוסר - הסנכרון רץ עכשיו במקבילי, כל רשת ב-portal
@@ -142,18 +156,26 @@ export function getSyncProgress(): SyncProgress {
 
 // סנכרון סניפים של רשת אחת. קואורדינטות: portal > fallback-של-עיר > Nominatim (חי, מוגבל).
 async function syncStoresForChain(
-  adapter: ChainAdapter
+  adapter: ChainAdapter,
+  runId: string,
 ): Promise<{ fetched?: number; upserted?: number; error?: string }> {
-  if (!adapter.fetchLatestStores) return { error: 'adapter_has_no_stores_support' };
+  const startedAt = new Date();
+  const fail = async (error: string, recordsDownloaded?: number) => {
+    await PriceSyncLogDAL.record({ chainId: adapter.chainId, type: 'stores', runId, startedAt, status: 'failed', error, recordsDownloaded });
+    return { error };
+  };
+  if (!adapter.fetchLatestStores) return fail('adapter_has_no_stores_support');
   try {
     const res = await adapter.fetchLatestStores();
     if (res.error) {
       logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${res.error}`);
-      return { error: res.error };
+      return fail(res.error);
     }
-    if (res.stores.length === 0) {
-      logger.warn(`[price-sync] ${adapter.chainId}: stores fetch returned 0 items`);
-      return { error: 'no_stores_in_file' };
+    const previous = await Branch.countDocuments({ chainId: adapter.chainId });
+    const validation = validateStoresFeed(res.stores.length, previous);
+    if (!validation.ok) {
+      logger.warn(`[price-sync] ${adapter.chainId}: stores validation failed (${validation.reason}), keeping existing branches`);
+      return fail(`validation:${validation.reason}`, res.stores.length);
     }
 
     const inputs: UpsertBranchInput[] = res.stores.map(s => {
@@ -164,7 +186,9 @@ async function syncStoresForChain(
       return {
         chainId: adapter.chainId, chainName: adapter.chainName,
         storeId: s.storeId, storeName: s.storeName,
-        address: s.address, city: s.city, zipCode: s.zipCode,
+        // רמי לוי וחצי חינם מפרסמות ב-City קוד יישוב מספרי (3000, 8300) ולא שם.
+        // קוד כזה לא נשמר כעיר, כדי לא לדרוס שם עיר אמיתי שכבר שמור לסניף.
+        address: s.address, city: s.city && !/^\d+$/.test(s.city) ? s.city : undefined, zipCode: s.zipCode,
         lat: hasRealCoords ? s.lat : undefined,
         lng: hasRealCoords ? s.lng : undefined,
         coordSource: hasRealCoords ? ('portal' as const) : ('unknown' as const),
@@ -174,40 +198,76 @@ async function syncStoresForChain(
 
     const upserted = await BranchDAL.bulkUpsert(inputs);
     logger.info(`[price-sync] ${adapter.chainId}: stores fetched=${res.stores.length}, upserted=${upserted}`);
+    await PriceSyncLogDAL.record({
+      chainId: adapter.chainId, type: 'stores', runId, startedAt, status: 'success',
+      filesDownloaded: res.fetchedFiles, recordsDownloaded: res.stores.length, recordsUpdated: upserted,
+      details: { previousBranches: previous },
+    });
     // הגיאוקודינג עבר ל-postSyncGeocode שרץ פעם אחת אחרי כל הרשתות, סדרתי
     // עם 1.1ש' בין בקשות (Nominatim מגביל ל-1 req/sec).
     return { fetched: res.stores.length, upserted };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';
     logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${msg}`);
-    return { error: msg };
+    return fail(msg);
   }
 }
 
 // סנכרון של רשת בודדת - מבודד כפונקציה לאפשר ריצה מקבילית של מספר רשתות.
 // מחזיר את ה-SyncResult המלא ואת התוצאה הגולמית של ה-stores (לבר-תהליכים).
-async function syncSingleChain(adapter: ChainAdapter): Promise<SyncResult> {
+// שלבי רשת: מחירים (וסניפים), ואז מבצעים. המבצעים רצים גם כשהמחירים נכשלו:
+// הם תלויים רק בקובצי PromoFull, והמבצעים הקיימים מוגנים בבדיקת התקינות שלהם.
+async function syncSingleChain(adapter: ChainAdapter, runId: string): Promise<SyncResult> {
+  const r = await syncChainPrices(adapter, runId);
+  const promo = await syncPromotionsForChain(adapter, runId);
+  const withPromo: SyncResult = {
+    ...r,
+    promotions: promo.promotions,
+    promoError: promo.status === 'failed' ? promo.error : undefined,
+  };
+  lastSyncResults.set(adapter.chainId, { ...withPromo, completedAt: new Date().toISOString() });
+  return withPromo;
+}
+
+interface PriceSyncContext {
+  runId: string;
+  startedAt: Date;
+  stats: PriceFeedStats;
+  previousBarcodes: number;
+  fetchedFiles: number;
+}
+
+async function syncChainPrices(adapter: ChainAdapter, runId: string): Promise<SyncResult> {
   const t0 = Date.now();
+  const startedAt = new Date();
   logger.info(`[price-sync] ${adapter.chainId}: fetching latest prices...`);
+
+  const failed = async (error: string, extra: SyncLogFields = {}): Promise<SyncResult> => {
+    await PriceSyncLogDAL.record({ chainId: adapter.chainId, type: 'price-full', runId, startedAt, status: 'failed', error, ...extra });
+    return { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error };
+  };
 
   const result = await adapter.fetchLatestPrices();
   if (result.error) {
     logger.error(`[price-sync] ${adapter.chainId}: fetch error: ${result.error}`);
-    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: result.error };
-    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-    return r;
+    return failed(result.error, { filesDownloaded: result.fetchedFiles });
   }
 
-  if (result.items.length === 0) {
-    logger.warn(`[price-sync] ${adapter.chainId}: no items to upsert`);
-    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: 'no_items_found' };
-    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-    return r;
+  // בדיקת תקינות לפני כל כתיבה: פיד ריק, חלקי או שבור לא נוגע במחירים הקיימים
+  const stats = collectPriceFeedStats(result.items);
+  const previousBarcodes = await Price.countDocuments({ chainId: adapter.chainId });
+  const validation = validatePriceFeed(stats, previousBarcodes);
+  if (!validation.ok) {
+    logger.warn(`[price-sync] ${adapter.chainId}: validation failed (${validation.reason}), keeping existing prices`);
+    return failed(`validation:${validation.reason}`, {
+      filesDownloaded: result.fetchedFiles,
+      recordsDownloaded: stats.total,
+      recordsUnmatched: stats.missingBarcode,
+      details: { ...stats, previousBarcodes },
+    });
   }
 
-  // המשך הקוד מתבצע במקום המקורי - אגרגציה ושמירה ב-DB.
-  // משתמש ב-result דרך closure - שאר הלוגיקה הועברה למטה.
-  return processChainItems(adapter, result, t0);
+  return processChainItems(adapter, result, t0, { runId, startedAt, stats, previousBarcodes, fetchedFiles: result.fetchedFiles });
 }
 
 // רענון מחירים לכל הרשתות - סדרתי. הסנכרון רץ בקרון ופעמיים ביום ויש זמן.
@@ -230,6 +290,8 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
 
   const results: SyncResult[] = [];
   const selected = chainIds ? adapters.filter(a => chainIds.includes(a.chainId)) : adapters;
+  // מזהה ריצה משותף לכל הרשתות והשלבים: מקשר בין רשומות הלוג ומסמן את גרסאות המבצעים
+  const runId = randomUUID();
 
   syncProgress = {
     active: true, currentIndex: 0, currentChainName: '',
@@ -243,7 +305,7 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
     syncProgress.currentChainName = adapter.chainName;
     if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
     try {
-      const r = await syncSingleChain(adapter);
+      const r = await syncSingleChain(adapter, runId);
       results.push(r);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown';
@@ -270,6 +332,7 @@ async function processChainItems(
   adapter: ChainAdapter,
   result: { items: import('../chains/types').ChainPriceItem[] },
   t0: number,
+  ctx: PriceSyncContext,
 ): Promise<SyncResult> {
   const syncStart = new Date();
   // פריטים תקינים: אותם כללי סינון לכל האגרגציות. מוצר חסום (אין במלאי) ומחירים
@@ -395,9 +458,7 @@ async function processChainItems(
   }
 
   // סנכרון סניפים - לא חוסם את המחירים אם נכשל
-  const storesSummary = adapter.fetchLatestStores
-    ? await syncStoresForChain(adapter)
-    : { error: 'adapter_has_no_stores_support' };
+  const storesSummary = await syncStoresForChain(adapter, ctx.runId);
 
   // רושמים אילו סניפים סונכרנו: רק עליהם אפשר להסיק מחיר גם בלי חריגה שמורה.
   // לרשת בלי מזהי סניף או שחרגה מהתקציב אין כיסוי, וההשוואה נשארת ברמת רשת.
@@ -411,11 +472,31 @@ async function processChainItems(
   const elapsedMs = Date.now() - t0;
   logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
 
-  const r: SyncResult = {
+  let rowsWithStore = 0;
+  for (const it of validItems) if (it.storeId) rowsWithStore++;
+  await PriceSyncLogDAL.record({
+    chainId: adapter.chainId, type: 'price-full', runId: ctx.runId, startedAt: ctx.startedAt, status: 'success',
+    filesDownloaded: ctx.fetchedFiles,
+    recordsDownloaded: result.items.length,
+    recordsInserted: Math.max(0, inputs.length - ctx.previousBarcodes),
+    recordsUpdated: totalUpserted,
+    recordsUnmatched: ctx.stats.missingBarcode,
+    details: {
+      distinctBarcodes: ctx.stats.distinctBarcodes,
+      previousBarcodes: ctx.previousBarcodes,
+      invalidPrice: ctx.stats.invalidPrice,
+      missingStore: ctx.stats.missingStore,
+      invalidUpdateDate: ctx.stats.invalidUpdateDate,
+      duplicates: countDuplicateRows(rowsWithStore, Array.from(barcodeStats.values(), s => s.storeCount)),
+      branchesWithPrices: feedStoreIds.size,
+      priceExceptions: exceptionCount,
+      overBudget,
+    },
+  });
+
+  return {
     chainId: adapter.chainId, chainName: adapter.chainName,
     fetched: result.items.length, upserted: totalUpserted, elapsedMs,
     storesFetched: storesSummary.fetched, storesUpserted: storesSummary.upserted, storesError: storesSummary.error,
   };
-  lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-  return r;
 }
