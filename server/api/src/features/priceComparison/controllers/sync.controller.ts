@@ -46,27 +46,33 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
 
   // בדיקת מגבלת Freemium: חינמי מוגבל ל-3 השוואות מחיר ביום.
   // increment מתבצע רק אחרי הצלחה — לא שורף מכסה על קריאות שנכשלות.
-  const priceUser = await UserDAL.findById(userId).catch(() => null);
-  const userIsFree = priceUser && !isPro(priceUser);
-  if (userIsFree) {
-    const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
-    const todayCount = planUsage.getPriceCount(userId);
-    if (todayCount >= limit) throw PlanLimitError.priceComparison(limit);
-  }
-
   const rawListId = req.query.listId;
   const listId = typeof rawListId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawListId)
     ? rawListId
     : undefined;
+
+  // השוואה של אותה רשימה (או של כל הרשימות) שכבר נספרה היום לא נספרת שוב
+  // ולא נחסמת: רענון בגרירה, "נסה שוב" או חזרה למסך הם לא השוואה חדשה.
+  const usageKey = `compare:${listId ?? 'all'}`;
+  const priceUser = await UserDAL.findById(userId).catch(() => null);
+  const userIsFree = !!priceUser && !isPro(priceUser);
+  const alreadyCounted = userIsFree && planUsage.wasScannedToday(userId, usageKey);
+  if (userIsFree && !alreadyCounted) {
+    const limit = PLAN_LIMITS.free.maxPriceComparisonsPerDay;
+    const todayCount = planUsage.getPriceCount(userId);
+    if (todayCount >= limit) throw PlanLimitError.priceComparison(limit);
+  }
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const chosenBranches = parseChosenBranches(req.query.branches);
-  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" בלקוח). לא נספר כבקשה חדשה נגד
-  // מגבלת ה-Freemium שלא הייתה קיימת ממילא - הבקשה המקורית כבר נספרה.
+  // force=1 - מתעלם מהמטמון (כפתור "נסה שוב" ורענון בגרירה בלקוח)
   const bypassCache = req.query.force === '1';
   const data = await getComparisonForUser(userId, listId, userLocation, chosenBranches, bypassCache);
 
-  // increment אחרי הצלחה בלבד
-  if (userIsFree) planUsage.incrementPrice(userId);
+  // נספר אחרי הצלחה בלבד, ופעם אחת ביום לכל רשימה
+  if (userIsFree && !alreadyCounted) {
+    planUsage.incrementPrice(userId);
+    planUsage.markScanned(userId, usageKey);
+  }
 
   res.json({ success: true, data });
   // הוסר: lazy auto-sync שגרם לסנכרון מלא ברקע בזמן בקשות של לקוחות.

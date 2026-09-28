@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
-import { AdminPullRefresh } from './AdminPullRefresh';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
 import { adminPageSx } from '../styles/adminPage.styles';
@@ -82,12 +82,12 @@ interface Props {
 // (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
 // את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
 export const AdminAiStatusCard = ({ isDark, data, loading, refreshError, onRefresh, onClose }: Props) => {
-  // רענון בגרירה אחיד לכל עמודי המנהל (ראו AdminPullRefresh)
+  // רענון בגרירה אחיד לכל עמודי המנהל (ראו PullRefreshArea)
   return (
     <Box sx={adminPageSx(isDark)}>
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
-      <AdminPullRefresh onRefresh={onRefresh} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <PullRefreshArea onRefresh={onRefresh} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {refreshError && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
@@ -128,7 +128,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshError, onRefre
             </Typography>
           </>
         )}
-      </AdminPullRefresh>
+      </PullRefreshArea>
     </Box>
   );
 };

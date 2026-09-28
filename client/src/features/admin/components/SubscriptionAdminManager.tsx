@@ -6,7 +6,7 @@ import type { AdminUser } from '../../../services/api';
 import { DbHealthHeader } from './DbHealthHeader';
 import { LegacyTrialGrantCard } from './LegacyTrialGrantCard';
 import { AdminPushToggle } from './AdminPushToggle';
-import { AdminPullRefresh } from './AdminPullRefresh';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { ProPill } from './ProPill';
 import { PRO_PURPLE, PRO_PURPLE_DARK, PRO_SOFT } from '../../subscription/subscription.styles';
 import { adminPageSx } from '../styles/adminPage.styles';
@@ -168,7 +168,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
           : undefined}
       />
 
-      <AdminPullRefresh onRefresh={refresh} sx={{
+      <PullRefreshArea onRefresh={refresh} sx={{
         p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
         display: 'flex', flexDirection: 'column', gap: 1.5, '& > *': { flexShrink: 0 },
       }}>
@@ -288,7 +288,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
         )}
 
         <LegacyTrialGrantCard isDark={isDark} onChanged={() => { onChanged(); void loadAdminUsers(true); }} />
-      </AdminPullRefresh>
+      </PullRefreshArea>
     </Box>
   );
 };

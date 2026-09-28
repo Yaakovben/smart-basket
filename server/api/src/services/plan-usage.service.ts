@@ -36,8 +36,9 @@ function increment(map: Map<string, DayUsage>, userId: string): number {
   return entry.count;
 }
 
-// ברקודים שכל משתמש כבר סרק היום ("איפה הכי זול"). סריקה חוזרת של אותו מוצר
-// באותו יום (למשל אחרי אישור מיקום, או חזרה לעמוד) לא נספרת שוב במכסה.
+// מה שכל משתמש כבר בדק היום: ברקודים ("איפה הכי זול") והשוואות רשימה
+// (מפתח compare:<רשימה>). בדיקה חוזרת של אותו דבר באותו יום (אישור מיקום,
+// חזרה לעמוד, רענון בגרירה) לא נספרת שוב במכסה.
 const scannedToday = new Map<string, { date: string; barcodes: Set<string> }>();
 
 function wasScannedToday(userId: string, barcode: string): boolean {

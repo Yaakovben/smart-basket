@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import { DbHealthHeader } from './DbHealthHeader';
-import { AdminPullRefresh } from './AdminPullRefresh';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { adminPageSx } from '../styles/adminPage.styles';
 
 // המכל המשותף של כל עמוד אזור בדף המנהל: כותרת קבועה עם כפתור חזרה ותוכן שנגלל.
@@ -26,7 +26,7 @@ export const AdminSectionShell = ({ title, onBack, isDark, icon, onRefresh, chil
   <Box sx={adminPageSx(isDark)}>
     <DbHealthHeader onClose={onBack} icon={icon} title={title} />
     {onRefresh ? (
-      <AdminPullRefresh onRefresh={onRefresh} sx={contentSx}>{children}</AdminPullRefresh>
+      <PullRefreshArea onRefresh={onRefresh} sx={contentSx}>{children}</PullRefreshArea>
     ) : (
       <Box sx={{ ...contentSx, flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
         {children}

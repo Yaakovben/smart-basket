@@ -12,10 +12,9 @@ import { authApi, productsApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { useProductReorder } from '../hooks/useProductReorder';
 import { useProductSelection } from '../hooks/useProductSelection';
-import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useListCostEstimate } from '../hooks/useListCostEstimate';
-import { PULL_MAX } from '../helpers/list-helpers';
 import { CATEGORY_ICONS, getReorderEntrySx } from '../../../global/constants';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 
 // ===== קומפוננטות משנה =====
 import { ListHeader } from './ListHeader';
@@ -27,7 +26,6 @@ import { ProductReorderRow } from './ProductReorderRow';
 import { AddProductFab } from './AddProductFab';
 import { CelebrationOverlay } from './CelebrationOverlay';
 import { ClearListModal } from './ClearListModal';
-import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { CategoryFilterChips } from './CategoryFilterChips';
 import { SelectionActionBar } from './SelectionActionBar';
 import { MoveToListModal } from './MoveToListModal';
@@ -78,7 +76,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError, pendingImageUploadRef,
-    refreshing, lastFetchAt,
     fabPosition, showFab, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
@@ -192,13 +189,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     }
   }, [onSaveSavedLists, showToast, t]);
 
-  // token (לא boolean) - ראו PullToRefreshIndicator: מזהה ייחודי לכל כישלון
-  // כדי שכישלונות חוזרים ברצף יפעילו מחדש את חיווי "הרענון נכשל" האדום.
-  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
-  const handlePullRefresh = useCallback(() => {
-    refreshList().then(ok => { if (!ok) setRefreshFailedToken(Date.now()); });
-  }, [refreshList]);
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePullRefresh);
 
   // אומדן עלות עדין לרשימה - נטען ברקע, לא חוסם שום דבר
   const { estimate: costEstimate } = useListCostEstimate(list.id, pending.length);
@@ -495,25 +485,16 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         </Suspense>
       )}
 
-      {/* עוטפים את האינדיקטור+התוכן יחד ב-position:relative נפרד מהמכל
-          החיצוני (שכולל גם את הכותרת הקבועה) - כדי שה-top:0 המוחלט של
-          PullToRefreshIndicator יתחיל ממש מתחת לכותרת, לא מתחת/מאחורי
-          הכותרת עצמה (מה שקרה כשהוא היה position:absolute ביחס למכל שכולל
-          גם אותה, ולכן כמעט בלתי-נראה). */}
-      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {/* pullActiveRef.current: ref מכוון בכוונה (לא state) כדי להימנע מ-render נוסף
-            במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
-            לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
-        {/* eslint-disable-next-line react-hooks/refs */}
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastFetchAt} refreshFailedToken={refreshFailedToken} />
-
-        {/* Content */}
-        <Box
-          ref={scrollContainerRef}
-          sx={{
-          height: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
+      {/* Content - רענון בגרירה אחיד לכל האפליקציה (ראו PullRefreshArea).
+          חסום לגמרי במצב סידור: transform על המכל בזמן גרירת שורה (position:fixed)
+          משנה את בסיס המיקום שלה, והשורה הנגררת "קופצת" למקום שגוי ונתקעת. */}
+      <PullRefreshArea
+        onRefresh={refreshList}
+        disabled={reorderMode}
+        scrollRef={scrollContainerRef}
+        onScroll={handleContentScroll}
+        scrollAttrs={{ onClick: handleCloseItem, role: 'main', 'aria-label': list.name }}
+        sx={{
           // פס גלילה דק ומעודן - נותן חיווי "יש עוד ברשימה" בלי הגוש של
           // ~15px של ברירת המחדל בדסקטופ. במובייל ממילא overlay שנעלם לבד.
           scrollbarWidth: 'thin',
@@ -523,27 +504,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           '&::-webkit-scrollbar-track': { background: 'transparent' },
           p: { xs: 1.5, sm: 2.5 },
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
-          WebkitOverflowScrolling: 'touch',
           willChange: 'scroll-position',
-          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
-          // pullActiveRef: ראה הערה למעלה ליד PullToRefreshIndicator
-          // eslint-disable-next-line react-hooks/refs
-          transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
         }}
-        // חוסמים pull-to-refresh לגמרי במצב סידור - בלי זה, התחלת גרירה
-        // כשגוללים בראש הרשימה (scrollTop=0, מצב שכיח) מפעילה *גם* את
-        // ה-pull-to-refresh על אותו מגע, שמחיל transform על המכל הזה עצמו
-        // - וזה בדיוק מה שגרם לשורה הנגררת (position:fixed) "לקפוץ"
-        // למקום שגוי ולהיתקע: ה-transform על המכל משנה את ה-containing
-        // block שלה מה-viewport למכל הזה. אחרי שגוללים ולו פיקסל אחד
-        // scrollTop כבר לא 0 בדיוק, ולכן זה נראה כמו "רק בגרירה הראשונה".
-        onTouchStart={reorderMode ? undefined : handlePullStart}
-        onTouchMove={reorderMode ? undefined : handlePullMove}
-        onTouchEnd={reorderMode ? undefined : handlePullEnd}
-        onScroll={handleContentScroll}
-        onClick={handleCloseItem}
-        role="main"
-        aria-label={list.name}
       >
         {/* Swipe Hint */}
         {!reorderMode && showHint && items.length > 0 && (
@@ -730,8 +692,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             )}
           </>
         )}
-      </Box>
-      </Box>
+      </PullRefreshArea>
 
       {/* FAB - Add Product Button (מוסתר במצב סידור מוצרים) */}
       {showFab && !reorderMode && (

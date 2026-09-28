@@ -4,6 +4,7 @@ import type { List, User } from "../types";
 import { listsApi } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { convertApiList } from "./converters";
+import { overlayQueuedMutations } from "./useLists.queueOverlay";
 
 export function useListsSocketSync(user: User | null, listIds: string, setLists: Dispatch<SetStateAction<List[]>>) {
   // משתנים לטעינה מחדש מושהית (מונע קריאות API כפולות לאותה רשימה)
@@ -35,11 +36,15 @@ export function useListsSocketSync(user: User | null, listIds: string, setLists:
 
         // טעינת כל רשימה פעם אחת בלבד
         idsToRefetch.forEach((id) => {
-          listsApi.getList(id).then((updated) => {
+          listsApi.getList(id)
+            // פעולות שעוד ממתינות בתור האופליין נשארות מעל נתוני השרת. בלי זה
+            // שינוי של חבר אחר היה מעלים מהמסך מוצר שהוספת בלי קליטה, עד הסנכרון.
+            .then((updated) => overlayQueuedMutations([convertApiList(updated)], user.name))
+            .then(([fresh]) => {
             setLists((prev) =>
               prev.map((l) => {
-                if (l.id !== updated.id) return l;
-                return convertApiList(updated);
+                if (l.id !== fresh.id) return l;
+                return fresh;
               }),
             );
           }).catch(() => {
@@ -142,5 +147,5 @@ export function useListsSocketSync(user: User | null, listIds: string, setLists:
       currentIds.forEach((id) => socketService.leaveList(id));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- הרצה מחדש רק כשמזהה המשתמש או מזהי הרשימות משתנים
-  }, [user?.id, listIds]);
+  }, [user?.id, user?.name, listIds]);
 }

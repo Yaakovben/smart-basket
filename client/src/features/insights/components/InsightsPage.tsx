@@ -1,13 +1,11 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { SlowLoadIndicator, ErrorBoundary } from '../../../global/components';
 import { haptic } from '../../../global/helpers';
 import { useInsightsData } from '../hooks/useInsightsData';
-import { usePullToRefresh } from '../../list/hooks/usePullToRefresh';
-import { PullToRefreshIndicator } from '../../list/components/PullToRefreshIndicator';
-import { PULL_MAX } from '../../list/helpers/list-helpers';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { tabEnter, InsightsEmptyState } from './insightsShared';
 import type { InsightTab } from '../types/insights-types';
 import { InsightsHeader } from './InsightsHeader';
@@ -65,23 +63,13 @@ export const InsightsPage = memo(() => {
   // קשר לתוצאה בפועל - כך שגם באין-קליטה מוחלטת המסך היה מראה "עודכן עכשיו"
   // *יחד עם* חיווי השגיאה (מסך שגיאה מלא / באנר "הנתונים לא טריים") - שתי
   // הודעות סותרות בו-זמנית.
-  const [pageRefreshing, setPageRefreshing] = useState(false);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(() => new Date());
-  // token (לא boolean) - כל כישלון מקבל ערך ייחודי (Date.now()) כדי
-  // ש-PullToRefreshIndicator יזהה אותו כאירוע חדש גם כשכשלונות חוזרים
-  // ברצף, ויציג בכל פעם מחדש את חיווי "הרענון נכשל" האדום.
-  const [refreshFailedToken, setRefreshFailedToken] = useState<number | null>(null);
-  const handlePageRefresh = useCallback(() => {
-    setPageRefreshing(true);
-    const insightsOk = fetchInsights();
-    const priceOk = tab === 'price' ? retryPriceFetch() : Promise.resolve(true);
-    Promise.all([insightsOk, priceOk]).then(([ok1, ok2]) => {
-      setPageRefreshing(false);
-      if (ok1 && ok2) setLastRefreshedAt(new Date());
-      else setRefreshFailedToken(Date.now());
-    });
+  const handlePageRefresh = useCallback(async (): Promise<boolean> => {
+    const [ok1, ok2] = await Promise.all([
+      fetchInsights(),
+      tab === 'price' ? retryPriceFetch() : Promise.resolve(true),
+    ]);
+    return ok1 && ok2;
   }, [fetchInsights, retryPriceFetch, tab]);
-  const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(handlePageRefresh);
 
   const tStr = t as (k: string) => string;
 
@@ -126,25 +114,12 @@ export const InsightsPage = memo(() => {
           יציף אותה (אותו טעם בדיוק כמו ב-ListComponent). */}
       <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
 
-      <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {/* גרירה-למטה לרענון - אחיד עם רשימה/מנהל. הכרטיס יושב מחוץ למכל הגלילה
-            כדי שיישאר צמוד לראש התוכן (מתחת לכותרת) במקום לגלול איתו. */}
-        {/* eslint-disable-next-line react-hooks/refs */}
-        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={pageRefreshing} pullActive={pullActiveRef.current} lastRefreshedAt={lastRefreshedAt} refreshFailedToken={refreshFailedToken} />
-
-        <Box
-          data-insights-scroll-root
-          onTouchStart={handlePullStart}
-          onTouchMove={handlePullMove}
-          onTouchEnd={handlePullEnd}
-          sx={{
-            height: '100%', pb: 'calc(80px + env(safe-area-inset-bottom))',
-            overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
-            transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
-            // eslint-disable-next-line react-hooks/refs
-            transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
-          }}
-        >
+      {/* גרירה-למטה לרענון - אחיד עם רשימה ומנהל (ראו PullRefreshArea) */}
+      <PullRefreshArea
+        onRefresh={handlePageRefresh}
+        scrollAttrs={{ 'data-insights-scroll-root': true }}
+        sx={{ pb: 'calc(80px + env(safe-area-inset-bottom))' }}
+      >
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
@@ -210,8 +185,7 @@ export const InsightsPage = memo(() => {
           </ErrorBoundary>
         )}
       </Box>
-      </Box>
-      </Box>
+      </PullRefreshArea>
 
       <InsightsBottomNav isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
     </Box>

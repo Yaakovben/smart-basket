@@ -5,7 +5,7 @@ import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import { adminApi, type AdminFeedback } from '../../../services/api/admin.api';
 import { DbHealthHeader } from './DbHealthHeader';
 import { AdminPushToggle } from './AdminPushToggle';
-import { AdminPullRefresh } from './AdminPullRefresh';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { markAdminFeedbackSeen } from '../hooks/useAdminAlerts';
 import { adminPageSx } from '../styles/adminPage.styles';
 
@@ -66,7 +66,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
           : undefined}
       />
 
-      <AdminPullRefresh onRefresh={load} sx={{ p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+      <PullRefreshArea onRefresh={load} sx={{ p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
         <AdminPushToggle
           kind="pushOnFeedback"
           label="התראת פוש על משוב חדש"
@@ -104,7 +104,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
             </Box>
           ))
         )}
-      </AdminPullRefresh>
+      </PullRefreshArea>
     </Box>
   );
 };

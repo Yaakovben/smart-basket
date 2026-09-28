@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import type { List, User, Member, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { convertApiList } from '../../../global/hooks';
+import { overlayQueuedMutations } from '../../../global/hooks/useLists.queueOverlay';
 import { listsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import type { EditListForm, ConfirmState } from '../types/list-types';
@@ -131,11 +132,16 @@ export const useListActions = ({
   // מחזיר Promise<boolean> (הצלחה אמיתית) - כדי שהקורא (רענון בגרירה ב-
   // ListComponent) יציג את חיווי הכישלון האדום על הכרטיס הצף במקום טוסט
   // נפרד. שני חיוויים בו-זמנית על אותה פעולה מיותר ומבלבל.
+  // רענון = קריאה בלבד. קודם הרשימה שנטענה עברה ל-onUpdateList, שכותב לשרת:
+  // כל רענון שלח עדכון רשימה, ואם חבר אחר שינה את השם או את הסיסמה בינתיים,
+  // נשלחה לקבוצה התראה שאתה שינית. עכשיו רק עדכון מקומי, עם הפעולות שעוד
+  // ממתינות בתור האופליין מעל נתוני השרת (אחרת הן נעלמות עד הסנכרון).
   const refreshList = useCallback(async (): Promise<boolean> => {
     setRefreshing(true);
     try {
       const apiList = await listsApi.getList(list.id);
-      onUpdateList(convertApiList(apiList));
+      const [fresh] = await overlayQueuedMutations([convertApiList(apiList)], user.name);
+      onUpdateListLocal(fresh);
       setLastFetchAt(new Date());
       return true;
     } catch {
@@ -143,7 +149,7 @@ export const useListActions = ({
     } finally {
       setRefreshing(false);
     }
-  }, [list.id, onUpdateList]);
+  }, [list.id, user.name, onUpdateListLocal]);
 
   return {
     showEditList, setShowEditList,

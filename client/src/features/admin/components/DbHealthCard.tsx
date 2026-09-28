@@ -6,7 +6,7 @@ import { ShimmerBlock } from '../../../global/components';
 import { useDbHealth } from '../hooks/useDbHealth';
 import { useCloudinaryHealth } from '../hooks/useCloudinaryHealth';
 import { statusInfo, tierName } from '../helpers/dbHealthHelpers';
-import { AdminPullRefresh } from './AdminPullRefresh';
+import { PullRefreshArea } from '../../../global/components/PullRefreshArea';
 import { DbHealthHeader } from './DbHealthHeader';
 import { DbHealthHero } from './DbHealthHero';
 import { DbHealthStatsRow } from './DbHealthStatsRow';
@@ -101,8 +101,8 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         ))}
       </Box>
 
-      {/* רענון בגרירה אחיד לכל עמודי המנהל (ראו AdminPullRefresh) */}
-      <AdminPullRefresh onRefresh={() => active.load()} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      {/* רענון בגרירה אחיד לכל עמודי המנהל (ראו PullRefreshArea) */}
+      <PullRefreshArea onRefresh={() => active.load()} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {tab === 'mongo' && (
           <>
             {mongo.loading && !mongo.data && (
@@ -137,7 +137,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
             {!cloud.loading || cloud.data ? <CloudinaryHealthContent data={cloud.data} isDark={isDark} /> : null}
           </>
         )}
-      </AdminPullRefresh>
+      </PullRefreshArea>
     </Box>
   );
 };
