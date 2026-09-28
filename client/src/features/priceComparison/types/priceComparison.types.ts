@@ -110,17 +110,36 @@ export interface ScanBranchLabel {
   city: string;
 }
 
+export interface ScanPromo {
+  description: string;
+  // "3 ב-10": minQty=3, price=10
+  minQty: number;
+  price: number;
+  unitPrice: number;
+  clubOnly: boolean;
+}
+
 export interface ScanChainPrice {
+  // ייחודי לשורה (רשת, או רשת:מותג)
+  key: string;
   chainId: string;
+  // שם הרשת או המותג (יש חסד, נטו חיסכון)
   chainName: string;
+  isBrand: boolean;
   // המחיר שרוב סניפי הרשת גובים
   typicalPrice: number;
   minPrice: number;
   cheapestBranch: ScanBranchLabel | null;
+  branchesWithProduct: number | null;
+  promo: ScanPromo | null;
+  promoAllBranches: boolean;
+  updatedAt: string;
+  stale: boolean;
 }
 
 export interface ScanNearbyBranch {
   chainId: string;
+  // שם הרשת, או המותג כשהסניף שייך למותג
   chainName: string;
   storeId: string;
   branchName: string;
@@ -129,19 +148,41 @@ export interface ScanNearbyBranch {
   lat: number;
   lng: number;
   distanceKm: number;
+  distanceM: number;
   price: number;
   // false = מחיר ברשת, לא אומת לסניף הזה
   verified: boolean;
+  promo: ScanPromo | null;
+}
+
+// הסניף שהמשתמש נמצא בו. price=null: לרשת הזו אין מחיר למוצר
+export interface ScanHere extends Omit<ScanNearbyBranch, 'price'> {
+  price: number | null;
+}
+
+export interface ScanCheapest {
+  chainId: string;
+  chainName: string;
+  price: number;
+  // null = המחיר ברוב סניפי הרשת
+  branch: ScanBranchLabel | null;
+  chainTypicalPrice: number;
+  // מחיר נמוך במיוחד בסניף בודד (לא מה שישלמו בסניף אחר של הרשת)
+  singleBranchDeal: boolean;
 }
 
 export interface BarcodeScanResult {
   barcode: string;
   productName: string;
   chains: ScanChainPrice[];
-  cheapest: { chainId: string; chainName: string; price: number; branch: ScanBranchLabel | null };
+  cheapest: ScanCheapest;
+  here: ScanHere | null;
   // null = לא נשלח מיקום
   nearby: ScanNearbyBranch[] | null;
   nearbyRadiusKm: number | null;
   // המחיר היקר ביותר בין הסניפים בטווח (לחישוב "כמה חוסכים")
   nearbyMaxPrice: number | null;
+  // העדכון האחרון של המחירים, והאם רוב הרשתות לא עודכנו מזמן
+  pricesAsOf: string;
+  stale: boolean;
 }

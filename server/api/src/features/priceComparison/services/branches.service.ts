@@ -11,6 +11,7 @@ import type { ChainId } from '../models/Price.model';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { normStoreId, makeStoreIdResolver } from './storeId';
+import { coordsConflictWithName, isCountryCentroid } from './cityMatching';
 import { logger } from '../../../config/logger';
 
 export interface NearestBranch {
@@ -99,7 +100,7 @@ async function getBranches(): Promise<IBranchDoc[]> {
   // שדות הכרחיים בלבד - מפחית payload מ-DB ומהירות טעינה לזיכרון
   const all = await Branch.find(
     {},
-    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1 }
+    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1, subChainName: 1 }
   ).lean();
   cache = { branches: all as unknown as IBranchDoc[], loadedAt: Date.now() };
   return cache.branches;
@@ -201,12 +202,17 @@ function pickNearest(
 // מחזיר שם/כתובת סניף ספציפי לפי (רשת, storeId) - משמש להצגת "הסניף הזול
 // ביותר" (ה-DB יודע רק storeId, לא שם קריא ללקוח). מסתמך על ה-cache הקיים
 // של כל הסניפים, אז לא עולה שאילתת DB נוספת.
-export async function getBranchLabel(chainId: ChainId, storeId: string): Promise<{ branchName: string; city: string } | null> {
+export async function getBranchLabel(chainId: ChainId, storeId: string): Promise<{ branchName: string; city: string; subChainName?: string } | null> {
   const all = await getBranches();
   const target = normStoreId(storeId);
   const b = all.find(x => x.chainId === chainId && normStoreId(x.storeId) === target);
   if (!b) return null;
-  return { branchName: b.storeName, city: b.city || '' };
+  return { branchName: b.storeName, city: b.city || '', subChainName: b.subChainName };
+}
+
+// כל סניפי הרשת (מהמטמון), לחישובים לפי תת-רשת
+export async function getChainBranches(chainId: ChainId): Promise<IBranchDoc[]> {
+  return (await getBranches()).filter(b => b.chainId === chainId);
 }
 
 export interface BranchWithDistance {
@@ -219,6 +225,9 @@ export interface BranchWithDistance {
   lat: number;
   lng: number;
   distanceKm: number;
+  // מרחק מדויק במטרים (distanceKm מעוגל ל-100 מטר, לא מספיק לזיהוי "אתה בסניף")
+  distanceM: number;
+  subChainName?: string;
 }
 
 // סניפים בטווח מהמשתמש, מהקרוב לרחוק, עם המזהה שלהם (בשביל התאמה למחירי
@@ -231,10 +240,14 @@ export async function getBranchesWithin(user: UserLocation, radiusKm: number): P
     if (typeof b.lat !== 'number' || typeof b.lng !== 'number' || b.coordSource === 'unknown') continue;
     const dist = haversineKm(user, { lat: b.lat, lng: b.lng });
     if (dist > radiusKm) continue;
+    // מיקום שסותר את העיר בשם הסניף (גיאוקודינג שגוי). מיקום שהוזן ידנית מאומת
+    if (b.coordSource !== 'manual' && (isCountryCentroid(b.lat, b.lng) || coordsConflictWithName(b.lat, b.lng, b.storeName))) continue;
     result.push({
       chainId: b.chainId, chainName: b.chainName, storeId: b.storeId, storeName: b.storeName,
       address: b.address || '', city: b.city || '', lat: b.lat, lng: b.lng,
       distanceKm: Math.round(dist * 10) / 10,
+      distanceM: Math.round(dist * 1000),
+      subChainName: b.subChainName,
     });
   }
   return result.sort((x, y) => x.distanceKm - y.distanceKm);

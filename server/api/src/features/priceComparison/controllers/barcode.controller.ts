@@ -37,8 +37,8 @@ export const lookupBarcode = asyncHandler(async (req: AuthRequest, res: Response
   res.json({ success: true, data: { name: bestName } });
 });
 
-// GET /api/price-comparison/scan/:barcode[?lat=&lng=] - "איפה הכי זול" למוצר
-// שנסרק: הסניפים הזולים קרוב למשתמש, הזול בכל הארץ, ומחיר לכל רשת.
+// GET /api/price-comparison/scan/:barcode[?lat=&lng=&acc=] - "איפה הכי זול" למוצר
+// שנסרק: הסניף שהמשתמש נמצא בו, הסניפים הזולים קרוב אליו, הזול בכל הארץ, ומחיר לכל רשת.
 // למשתמש חינמי נספר כהשוואת מחיר אחת (אותה מכסה יומית כמו השוואת רשימה),
 // ורק כשהמוצר נמצא, כדי לא לשרוף מכסה על ברקוד שאין עליו נתונים.
 export const scanBarcode = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -59,7 +59,10 @@ export const scanBarcode = asyncHandler(async (req: AuthRequest, res: Response) 
   }
 
   const location = parseUserLocation(req.query.lat, req.query.lng);
-  const result = await scanBarcodePrices(barcode, location);
+  // דיוק המיקום במטרים, לזיהוי "אתה נמצא בסניף". ערך לא סביר = לא ידוע
+  const accRaw = typeof req.query.acc === 'string' ? Number(req.query.acc) : NaN;
+  const accuracyM = Number.isFinite(accRaw) && accRaw > 0 && accRaw < 100_000 ? accRaw : undefined;
+  const result = await scanBarcodePrices(barcode, location, accuracyM);
   if (result && userIsFree && !alreadyCounted) {
     planUsage.incrementPrice(userId);
     planUsage.markScanned(userId, barcode);

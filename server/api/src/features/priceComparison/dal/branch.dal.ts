@@ -91,6 +91,17 @@ export const BranchDAL = {
       .lean();
   },
 
+  // מאפס קואורדינטות שגיאוקודינג אוטומטי שם במקום שגוי (סותר את העיר בשם הסניף,
+  // או נקודת ברירת המחדל של הגיאוקודר), כדי שהגיאוקודינג הלילי ינסה שוב עם
+  // הוולידציה המלאה. לא נוגע במיקום מהפורטל או ידני. מחזיר כמה אופסו.
+  async resetInvalidGeocodedCoords(isInvalid: (b: { lat: number; lng: number; storeName: string }) => boolean): Promise<number> {
+    const geocoded = await Branch.find({ coordSource: 'geocoded', lat: { $type: 'number' } }, { lat: 1, lng: 1, storeName: 1 }).lean();
+    const ids = geocoded.filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && isInvalid({ lat: b.lat, lng: b.lng, storeName: b.storeName })).map(b => b._id);
+    if (ids.length === 0) return 0;
+    const res = await Branch.updateMany({ _id: { $in: ids } }, { $unset: { lat: '', lng: '' }, $set: { coordSource: 'unknown' } });
+    return res.modifiedCount ?? 0;
+  },
+
   async updateCoords(id: string, lat: number, lng: number, source: 'portal' | 'geocoded' | 'manual' | 'unknown') {
     return Branch.updateOne({ _id: id }, { $set: { lat, lng, coordSource: source } });
   },

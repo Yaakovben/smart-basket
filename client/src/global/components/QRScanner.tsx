@@ -4,6 +4,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import FlashlightOnRoundedIcon from '@mui/icons-material/FlashlightOnRounded';
+import FlashlightOffRoundedIcon from '@mui/icons-material/FlashlightOffRounded';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
@@ -45,7 +47,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
   });
   const [galleryConsent, setGalleryConsent] = useState(false);
 
-  const { videoRef, error, starting, slowScan } = useQRCameraScanner({ open, cameraConsent, onScan, mode });
+  const { videoRef, error, starting, slowScan, torchSupported, torchOn, toggleTorch } = useQRCameraScanner({ open, cameraConsent, onScan, mode });
 
   // איפוס גלריה/שגיאת קובץ כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
   useEffect(() => {
@@ -85,7 +87,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
       const url = URL.createObjectURL(file);
       try {
         const result = await reader.decodeFromImageUrl(url);
-        haptic('medium');
+        haptic('success');
         onScan(result.getText());
       } finally {
         URL.revokeObjectURL(url);
@@ -128,6 +130,21 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               )}
             </Box>
           </Box>
+          {torchSupported && (
+            <IconButton
+              onClick={() => { haptic('medium'); toggleTorch(); }}
+              aria-label={t('scanTorchAria')}
+              aria-pressed={torchOn}
+              sx={{
+                color: torchOn ? '#111' : '#fff',
+                bgcolor: torchOn ? '#FDE047' : 'rgba(255,255,255,0.18)',
+                width: 36, height: 36, flexShrink: 0, ms: 'auto', me: 1,
+                '&:hover': { bgcolor: torchOn ? '#FDE047' : 'rgba(255,255,255,0.28)' },
+              }}
+            >
+              {torchOn ? <FlashlightOffRoundedIcon sx={{ fontSize: 20 }} /> : <FlashlightOnRoundedIcon sx={{ fontSize: 20 }} />}
+            </IconButton>
+          )}
           <IconButton
             onClick={onClose}
             aria-label={t('scanCloseAria')}

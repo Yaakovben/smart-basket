@@ -88,9 +88,9 @@ export const priceComparisonApi = {
   },
 
   // שם מוצר לפי ברקוד שנסרק (הוספת מוצר מהירה) - null אם לא נמצא במאגר המחירים.
-  async lookupBarcode(barcode: string): Promise<{ name: string } | null> {
+  async lookupBarcode(barcode: string, signal?: AbortSignal): Promise<{ name: string } | null> {
     try {
-      const response = await apiClient.get<{ data: { name: string } | null }>(`/price-comparison/barcode/${barcode}`);
+      const response = await apiClient.get<{ data: { name: string } | null }>(`/price-comparison/barcode/${barcode}`, { signal });
       return response.data.data;
     } catch {
       return null;
@@ -99,14 +99,20 @@ export const priceComparisonApi = {
 
   // "איפה הכי זול" למוצר שנסרק. null = הברקוד לא נמצא במאגר המחירים.
   // שגיאות (כולל 402 מגבלת מנוי) נזרקות, כדי שהעמוד יטפל בהן.
-  async scanProduct(barcode: string, location?: UserLocation | null): Promise<BarcodeScanResult | null> {
+  // accuracy (מטרים) מאפשר לשרת לזהות "אתה נמצא בסניף". signal = ביטול מהמשתמש
+  async scanProduct(
+    barcode: string,
+    location?: (UserLocation & { accuracy?: number }) | null,
+    signal?: AbortSignal,
+  ): Promise<BarcodeScanResult | null> {
     const params = new URLSearchParams();
     if (location) {
       params.set('lat', String(location.lat));
       params.set('lng', String(location.lng));
+      if (location.accuracy !== undefined) params.set('acc', String(Math.round(location.accuracy)));
     }
     const query = params.toString() ? `?${params.toString()}` : '';
-    const response = await apiClient.get<{ data: BarcodeScanResult | null }>(`/price-comparison/scan/${encodeURIComponent(barcode)}${query}`);
+    const response = await apiClient.get<{ data: BarcodeScanResult | null }>(`/price-comparison/scan/${encodeURIComponent(barcode)}${query}`, { signal });
     return response.data.data;
   },
 

@@ -8,7 +8,7 @@ import axios from 'axios';
 import { logger } from '../../../config/logger';
 import { env } from '../../../config/environment';
 import { NOMINATIM_URL, LOCATIONIQ_URL, USER_AGENT, waitForNominatimSlot, waitForLocationIQSlot, inIsraelBounds, type GeocodeResult } from './geocoderShared';
-import { isJunkCity, findKnownCityIn, validateNearCity } from './cityMatching';
+import { isJunkCity, findKnownCityIn, validateNearCity, coordsConflictWithName, isCountryCentroid } from './cityMatching';
 
 // וריאציות של הכתובת - אם הכתובת המלאה נכשלת, מנסים גרסאות פשוטות יותר.
 // משפר משמעותית את אחוז ההצלחה, במיוחד עם קיצורים ("ת״א" → "תל אביב").
@@ -113,12 +113,16 @@ export async function geocodeAddress(
   }
   const variants = buildQueryVariants(address, effectiveCity);
   if (variants.length === 0) return null;
+  // תוצאה תקינה: קרובה לעיר, לא "מרכז המדינה" (מה שחוזר לכתובת שלא נמצאה), ולא
+  // סותרת את העיר בשם הסניף. בלי זה נשמרו עשרות סניפים בנקודת ברירת מחדל בנגב.
+  const acceptable = (r: GeocodeResult) =>
+    validateNearCity(r, effectiveCity) && !isCountryCentroid(r.lat, r.lng) && !coordsConflictWithName(r.lat, r.lng, storeName);
 
   // Nominatim עם וולידציה - אם התוצאה רחוקה מהעיר זה כנראה התאמה שגויה
   // (Nominatim מתבלבל לעיתים בשמות רחובות שדומים לשמות ערים אחרות).
   for (const q of variants) {
     const result = await tryNominatim(q);
-    if (result && validateNearCity(result, effectiveCity)) return result;
+    if (result && acceptable(result)) return result;
     if (result) {
       logger.warn(`[geocoder] rejected nominatim result for "${q}" - far from city "${effectiveCity}"`);
     }
@@ -129,7 +133,7 @@ export async function geocodeAddress(
   if (env.LOCATIONIQ_API_KEY) {
     for (const q of variants) {
       const result = await tryLocationIQ(q);
-      if (result && validateNearCity(result, effectiveCity)) return result;
+      if (result && acceptable(result)) return result;
       if (result) {
         logger.warn(`[geocoder] rejected locationiq result for "${q}" - far from city "${effectiveCity}"`);
       }

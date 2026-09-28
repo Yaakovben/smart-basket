@@ -151,8 +151,6 @@ socketService.on('disconnect', scheduleReconnecting);
 socketService.on('connect_error', scheduleReconnecting);
 socketService.on('connect', handleSocketConnected);
 
-subscribeToQueueCount(n => setState({ pendingCount: n }));
-
 // fetchIssue=true כשטעינת הרשימות/התראות הראשונית נכשלת (שרת קר / אין קליטה).
 // מוצג רק כש-online ולא כבר מוצג חיווי אחר - שכבת "מתחבר לשרת..." שנעלמת
 // ברגע שהשרת מתעורר והנתונים מגיעים.
@@ -167,9 +165,51 @@ subscribeFetchIssue(active => {
 
 // קליטה חלשה (בקשות נתקעות בזמן שהמכשיר "מחובר"): מוצג רק מעל מצב תקין,
 // חיוויים חמורים יותר (אופליין, מתחבר מחדש) גוברים עליו.
+// בלי הבהובים: הפס מופיע רק אם החולשה נמשכת WEAK_SHOW_DELAY_MS (בקשה איטית
+// אחת היא לא "אין קליטה"), ואחרי שהופיע נשאר לפחות WEAK_MIN_VISIBLE_MS גם
+// כשהחיבור קופץ בין תקין לחלש. שינוי שכבר נשמר בתור מציג אותו מיד.
+const WEAK_SHOW_DELAY_MS = 3000;
+const WEAK_MIN_VISIBLE_MS = 4000;
+let weakNow = false;
+let weakShownAt = 0;
+let weakShowTimer: ReturnType<typeof setTimeout> | null = null;
+let weakHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+function showWeak() {
+  if (weakShowTimer) { clearTimeout(weakShowTimer); weakShowTimer = null; }
+  if (state.phase !== 'online') return;
+  weakShownAt = Date.now();
+  setState({ phase: 'weak' });
+}
+
+function hideWeakIfRecovered() {
+  weakHideTimer = null;
+  if (!weakNow && state.phase === 'weak') setState({ phase: socketDown ? 'reconnecting' : 'online' });
+}
+
 subscribeNetworkWeak(weak => {
-  if (weak && state.phase === 'online') setState({ phase: 'weak' });
-  else if (!weak && state.phase === 'weak') setState({ phase: socketDown ? 'reconnecting' : 'online' });
+  weakNow = weak;
+  if (weak) {
+    if (weakHideTimer) { clearTimeout(weakHideTimer); weakHideTimer = null; }
+    if (state.phase === 'weak') return;
+    if (state.pendingCount > 0) { showWeak(); return; }
+    if (!weakShowTimer) {
+      weakShowTimer = setTimeout(() => { weakShowTimer = null; if (weakNow) showWeak(); }, WEAK_SHOW_DELAY_MS);
+    }
+    return;
+  }
+  if (weakShowTimer) { clearTimeout(weakShowTimer); weakShowTimer = null; }
+  if (state.phase !== 'weak' || weakHideTimer) return;
+  const remaining = WEAK_MIN_VISIBLE_MS - (Date.now() - weakShownAt);
+  if (remaining > 0) weakHideTimer = setTimeout(hideWeakIfRecovered, remaining);
+  else hideWeakIfRecovered();
+});
+
+// אחרי הגדרת מצב החולשה (הקריאה הראשונה יכולה לקרות מיד בהרשמה)
+subscribeToQueueCount(n => {
+  setState({ pendingCount: n });
+  // שינוי כבר נשמר בתור בגלל החיבור: החולשה ודאית, מציגים בלי לחכות להשהיה
+  if (n > 0 && weakNow) showWeak();
 });
 
 export function useConnectionStatus() {

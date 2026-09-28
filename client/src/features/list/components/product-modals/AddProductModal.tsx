@@ -1,5 +1,5 @@
 import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense, type RefObject } from 'react';
-import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
+import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment, CircularProgress } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
@@ -76,6 +76,8 @@ export const AddProductModal = memo(({
   // ייטען פעם אחת בלבד וסגירת הדיאלוג לא תפרק/תטען אותו מחדש.
   const [scannerMounted, setScannerMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
+  // חיפוש שם לפי ברקוד שאפשר לבטל: בלחיצה על ביטול, או כשהמשתמש מתחיל להקליד בעצמו
+  const lookupAbortRef = useRef<AbortController | null>(null);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
   // האם שדה ההערה פתוח כרגע - מדווח ע"י ProductNoteField עצמו (מצב
   // expanded הפנימי שלו לא נגיש כאן אחרת). כשפתוח, עמודת ההערה ב-grid
@@ -129,6 +131,14 @@ export const AddProductModal = memo(({
     haptic('light');
   }, [onUpdateField]);
 
+  const cancelLookup = useCallback(() => {
+    lookupAbortRef.current?.abort();
+    lookupAbortRef.current = null;
+    setScanLoading(false);
+  }, []);
+
+  useEffect(() => () => lookupAbortRef.current?.abort(), []);
+
   const handleNameChange = useCallback((value: string) => {
     onUpdateField('name', value);
     setScanNotice(null);
@@ -146,7 +156,13 @@ export const AddProductModal = memo(({
     setShowScanner(false);
     setScanNotice(null);
     setScanLoading(true);
-    const result = await priceComparisonApi.lookupBarcode(barcode);
+    lookupAbortRef.current?.abort();
+    const controller = new AbortController();
+    lookupAbortRef.current = controller;
+    const result = await priceComparisonApi.lookupBarcode(barcode, controller.signal);
+    // בוטל, או שהמשתמש כבר הקליד שם בעצמו: לא דורסים אותו
+    if (controller.signal.aborted) return;
+    lookupAbortRef.current = null;
     setScanLoading(false);
     trackEvent('barcode_scanned', { found: !!result });
     // סינון שמות-פלייסהולדר שחוזרים לפעמים מספריות OCR/ברקוד
@@ -237,7 +253,7 @@ export const AddProductModal = memo(({
           value={newProduct.name}
           onChange={e => handleNameChange(e.target.value)}
           onClear={() => handleNameChange('')}
-          onKeyDown={handleNameKeyDown}
+          onKeyDown={(e) => { if (scanLoading) cancelLookup(); handleNameKeyDown(e); }}
           placeholder={t('productName')}
           aria-required="true"
           // שם ארוך (נפוץ בשמות שמגיעים מסריקת ברקוד) לא ייחתך בלי חיווי
@@ -264,6 +280,15 @@ export const AddProductModal = memo(({
             )
           }}
         />
+        {scanLoading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, px: 0.25 }}>
+            <CircularProgress size={12} thickness={6} />
+            <Typography sx={{ flex: 1, fontSize: 12, color: 'text.secondary' }}>{t('barcodeLookingUp')}</Typography>
+            <Button size="small" onClick={() => { haptic('medium'); cancelLookup(); }} sx={{ minWidth: 0, py: 0, textTransform: 'none', fontWeight: 700, fontSize: 12 }}>
+              {t('cancel')}
+            </Button>
+          </Box>
+        )}
         {scanNotice && (
           <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5, px: 0.25 }}>
             {scanNotice}

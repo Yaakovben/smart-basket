@@ -74,6 +74,50 @@ const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): nu
 // (ת"א, ירושלים) עד 10 ק"מ. סף של 12 נותן מרווח קטן בלי לאשר תוצאות
 // בערים אחרות. בעבר היה 25 ואיפשר תוצאה במודיעין במקום במודיעין עילית.
 const MAX_DIST_FROM_CITY_KM = 12;
+
+// האם קואורדינטות של סניף סותרות את העיר ששם הסניף מציין. באושר עד, למשל, שם
+// הסניף הוא העיר ("בית שמש - גליל", "קרית ים"), והגיאוקודינג שם אותם ברמת גן
+// ובגבעת שמואל. סניף כזה מוצג "קרוב אליך" במרחק שגוי, ולכן לא נסמכים על המיקום
+// שלו. שם בלי עיר מוכרת = אין סתירה.
+export const coordsConflictWithName = (lat: number, lng: number, storeName: string | undefined): boolean => {
+  const cities = findKnownCitiesAsWords(storeName);
+  if (cities.length === 0) return false;
+  // שם שמזכיר כמה ערים ("בני ברק- ירושלים", כשירושלים היא הרחוב): מספיק שהמיקום ליד אחת
+  return !cities.some(city => validateNearCity({ lat, lng }, city));
+};
+
+// הנקודה שהגיאוקודר מחזיר לשאילתה שלא נמצאה ("ישראל"). נמצאה במאגר אצל 22 סניפים
+// מערים שונות (אופקים, בת ים, ראש פינה...), כלומר זה לא מיקום של סניף.
+const COUNTRY_CENTROID = { lat: 30.8952, lng: 34.8752 };
+export const isCountryCentroid = (lat: number, lng: number): boolean =>
+  haversineKm(lat, lng, COUNTRY_CENTROID.lat, COUNTRY_CENTROID.lng) < 1;
+
+// שמות ערים שהם גם שמות רחובות נפוצים ("שדרות האמוראים", "עלי הכהן")
+const AMBIGUOUS_CITY_WORDS = new Set(['שדרות', 'עלי']);
+const HEBREW_LETTER = /[א-ת]/;
+
+// כל שמות הערים המוכרים שמופיעים בטקסט כמילה שלמה, ולא כחלק ממילה
+// ("יהוד" בתוך "בן יהודה", "נשר" בתוך "כנפי נשרים")
+export const findKnownCitiesAsWords = (text: string | undefined): string[] => {
+  if (!text) return [];
+  const found: string[] = [];
+  const names = [...Object.keys(FALLBACK_CITY_COORDS), ...Object.keys(CITY_ALIASES)].sort((a, b) => b.length - a.length);
+  for (const name of names) {
+    if (AMBIGUOUS_CITY_WORDS.has(name)) continue;
+    let from = 0;
+    for (let i = text.indexOf(name, from); i !== -1; i = text.indexOf(name, from)) {
+      const before = i > 0 ? text[i - 1] : '';
+      const after = text[i + name.length] ?? '';
+      if (!HEBREW_LETTER.test(before) && !HEBREW_LETTER.test(after)) {
+        found.push(name);
+        break;
+      }
+      from = i + 1;
+    }
+  }
+  return found;
+};
+
 export const validateNearCity = (
   result: GeocodeResult,
   city: string | undefined

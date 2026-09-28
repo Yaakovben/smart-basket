@@ -5,6 +5,7 @@ import { Price } from '../models/Price.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { geocodeAddress } from '../services/geocoder.service';
+import { coordsConflictWithName, isCountryCentroid } from '../services/cityMatching';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
@@ -142,6 +143,12 @@ const GEOCODE_BATCH_LIMIT = 50;
 
 async function runNightlyGeocode(trigger: 'cron'): Promise<void> {
   try {
+    // קודם מאפסים מיקומים שגויים שנשמרו בעבר, כדי שייכנסו לגיאוקודינג מחדש
+    const reset = await BranchDAL.resetInvalidGeocodedCoords(b => isCountryCentroid(b.lat, b.lng) || coordsConflictWithName(b.lat, b.lng, b.storeName));
+    if (reset > 0) {
+      invalidateBranchCache();
+      logger.info(`[geocode-nightly] ${trigger}: reset ${reset} invalid geocoded coordinates`);
+    }
     const missing = await BranchDAL.findMissingCoords(GEOCODE_BATCH_LIMIT);
     if (missing.length === 0) {
       logger.info(`[geocode-nightly] ${trigger}: nothing to geocode`);
@@ -151,7 +158,8 @@ async function runNightlyGeocode(trigger: 'cron'): Promise<void> {
     let skipped = 0;
     for (const b of missing) {
       if (!b.address && !b.city) { skipped++; continue; }
-      const coords = await geocodeAddress(b.address, b.city);
+      // שם הסניף: רמז לעיר כשהשדה city הוא קוד מספרי, ובדיקה שהתוצאה לא סותרת אותו
+      const coords = await geocodeAddress(b.address, b.city, b.storeName);
       if (coords) {
         const idStr = (b as { _id: { toString(): string } })._id.toString();
         await BranchDAL.updateCoords(idStr, coords.lat, coords.lng, 'geocoded');

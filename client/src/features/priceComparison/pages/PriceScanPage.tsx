@@ -7,19 +7,20 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/constants';
 import { haptic } from '../../../global/helpers';
 import { useUserLocation } from '../hooks/useUserLocation';
+import { useLiveLocation } from '../hooks/useLiveLocation';
 import { usePriceScan } from '../hooks/usePriceScan';
 import { NavigationPicker } from '../components/NavigationPicker';
 import { ScanIdleView } from '../components/scan/ScanIdleView';
 import { ScanResultView } from '../components/scan/ScanResultView';
 import { ScanResultSkeleton } from '../components/scan/ScanResultSkeleton';
 import { scanCardSx, SCAN_TEAL } from '../components/scan/scanStyles';
-import type { NearestBranch, ScanNearbyBranch } from '../types/priceComparison.types';
+import type { NearestBranch, ScanNearbyBranch, ScanHere } from '../types/priceComparison.types';
 import { getPriceScanStrings } from '../priceScan.strings';
 
 // טעינה עצלה: @zxing נטען רק כשפותחים את הסורק (ונטען מראש מכפתור הכניסה)
 const QRScanner = lazy(() => import('../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 
-const toNavBranch = (b: ScanNearbyBranch): NearestBranch => ({
+const toNavBranch = (b: ScanNearbyBranch | ScanHere): NearestBranch => ({
   storeId: b.storeId, branchName: `${b.chainName} ${b.branchName}`.trim(), city: b.city, address: b.address,
   lat: b.lat, lng: b.lng, distanceKm: b.distanceKm,
 });
@@ -30,8 +31,10 @@ export const PriceScanPage = () => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const s = getPriceScanStrings(settings.language);
-  const { location, status: locationStatus, requestLocation, resetDenied } = useUserLocation();
-  const { barcode, phase, result, recent, check, clearRecent } = usePriceScan(location);
+  const { location: storedLocation, status: locationStatus, requestLocation, resetDenied } = useUserLocation();
+  // מיקום GPS חי ומדויק כל עוד העמוד פתוח, כדי לזהות את הסופר שהמשתמש עומד בו
+  const location = useLiveLocation(storedLocation, locationStatus === 'granted');
+  const { barcode, phase, result, slow, timedOut, refreshing, recent, check, cancel, clearRecent } = usePriceScan(location);
 
   const [scannerOpen, setScannerOpen] = useState(true);
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
@@ -42,11 +45,13 @@ export const PriceScanPage = () => {
     requestLocation();
   };
 
+  // הרטט על זיהוי הברקוד כבר קורה בסורק עצמו, ברגע הזיהוי
   const handleScan = (code: string) => {
-    haptic('medium');
     setScannerOpen(false);
     void check(code);
   };
+
+  const cancelCheck = () => { haptic('medium'); cancel(); };
 
   const scanAgain = () => { haptic('light'); setScannerOpen(true); };
 
@@ -72,7 +77,7 @@ export const PriceScanPage = () => {
 
       <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {phase === 'loading' && <ScanResultSkeleton />}
+          {phase === 'loading' && <ScanResultSkeleton s={s} slow={slow} onCancel={cancelCheck} />}
 
           {phase === 'notFound' && (
             <Box sx={{ ...scanCardSx(isDark), textAlign: 'center', py: 2.5 } as object}>
@@ -83,7 +88,7 @@ export const PriceScanPage = () => {
 
           {phase === 'error' && (
             <Box sx={{ ...scanCardSx(isDark), textAlign: 'center', py: 2.5 } as object}>
-              <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 1 }}>{s.error}</Typography>
+              <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 1 }}>{timedOut ? s.timeout : s.error}</Typography>
               {barcode && (
                 <Button onClick={() => void check(barcode)} sx={{ textTransform: 'none', fontWeight: 700, color: SCAN_TEAL }}>{s.retry}</Button>
               )}
@@ -93,8 +98,9 @@ export const PriceScanPage = () => {
           {phase === 'result' && result && (
             <ScanResultView
               key={result.barcode}
-              s={s} isDark={isDark} result={result}
-              hasLocation={!!location} locationStatus={locationStatus}
+              s={s} lang={settings.language} isDark={isDark} result={result}
+              hasLocation={!!location} locating={!!location && !location.live} refreshing={refreshing}
+              locationStatus={locationStatus}
               onEnableLocation={enableLocation}
               onNavigate={(b) => setNavBranch(toNavBranch(b))}
             />

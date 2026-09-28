@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { useSettings } from '../context/SettingsContext';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
+import { getConnectionStrings } from './connectionStatus.strings';
 
 // פס חיבור גלובלי — נצמד לראש המסך (מעל כל תוכן), מוצג רק כשיש בעיה.
 // Portal ל-document.body כדי לעקוף ancestor עם transform שהיה שובר position:fixed.
@@ -15,7 +16,7 @@ import { WifiFadeIcon } from './icons/WifiFadeIcon';
 // פעם לרמוז שהתקלה בשרת שלנו.
 export const ConnectionStatusIcon = () => {
   const { phase, pendingCount } = useConnectionStatus();
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   const [dismissed, setDismissed] = useState(false);
 
   // מאפסים dismissed כשחוזרים ל-online
@@ -41,23 +42,20 @@ export const ConnectionStatusIcon = () => {
   const isOffline = phase === 'offline';
   const isWeak = phase === 'weak';
   const isServerStarting = phase === 'server-starting';
+  const s = getConnectionStrings(settings.language);
 
-  const mainText = isOffline
-    ? t('offlineShort')
-    : isWeak
-      ? t('weakConnectionShort')
-    : isServerStarting
-      ? t('connectingMessage')
-      : t('reconnectingMessage');
+  const mainText = isOffline ? s.offlineTitle
+    : isWeak ? s.weakTitle
+    : isServerStarting ? s.connecting
+    : s.reconnecting;
 
-  // תת-כיתוב רק במצב אין קליטה (ב-reconnecting/server-starting אין מה להסביר)
+  // תת-כיתוב: כשעוד אין שינויים שממתינים, הרגעה ("אפשר להמשיך כרגיל").
+  // כשכבר נשמרו שינויים במכשיר, מספרם האמיתי מהתור במקום ההרגעה.
   const subText = isOffline
-    ? (pendingCount > 0
-        ? t('offlineActionsPending').replace('{count}', String(pendingCount))
-        : t('offlineWillSync'))
+    ? (pendingCount > 0 ? s.offlinePending(pendingCount) : s.offlineCalm)
     : isWeak
-      ? t('weakConnectionWillSync')
-      : null;
+      ? (pendingCount > 0 ? s.weakPending(pendingCount) : s.weakCalm)
+      : pendingCount > 0 ? s.syncingPending(pendingCount) : null;
 
   const bg = isOffline
     ? 'linear-gradient(135deg, rgba(146,138,132,0.97), rgba(87,83,78,0.97))'
@@ -104,21 +102,6 @@ export const ConnectionStatusIcon = () => {
           </Typography>
         )}
       </Box>
-      {pendingCount > 0 && (
-        <Box sx={{
-          minWidth: 19, height: 19, px: '4px',
-          borderRadius: '999px',
-          bgcolor: 'rgba(255,255,255,0.2)',
-          color: 'white',
-          fontSize: 10.5,
-          fontWeight: 800,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid rgba(255,255,255,0.4)',
-          flexShrink: 0,
-        }}>
-          {pendingCount > 99 ? '99+' : pendingCount}
-        </Box>
-      )}
       <IconButton
         size="small"
         onClick={handleDismiss}
