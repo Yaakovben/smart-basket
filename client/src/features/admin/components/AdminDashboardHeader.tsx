@@ -1,4 +1,5 @@
 import { Box } from '@mui/material';
+import type { ReactNode } from 'react';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
 import type { AiStatus } from '../../../services/api/admin.api';
@@ -28,13 +29,15 @@ interface AdminDashboardHeaderProps {
   onFilterClick: (filter: UserFilter) => void;
   onSelectAll: () => void;
   t: (key: TranslationKeys) => string;
+  // חיווי משיכה לרענון, מוצג ממש מתחת לשורת הניווט ולא מתחת לכרטיסים
+  pullIndicator?: ReactNode;
 }
 
 // כותרת הדשבורד: רקע גרדיאנט, שורת ניווט עליונה וכרטיסי סטטיסטיקה לחיצים
 export const AdminDashboardHeader = ({
   isDark, isRtl, title, faithTitle,
   onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onOpenSubscriptions, onOpenFeedback, onRefresh,
-  userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t,
+  userFilter, onlineCount, stats, proCount, loading, onFilterClick, onSelectAll, t, pullIndicator,
 }: AdminDashboardHeaderProps) => (
   <Box
     sx={{
@@ -63,6 +66,8 @@ export const AdminDashboardHeader = ({
       onOpenFeedback={onOpenFeedback}
       onRefresh={onRefresh}
     />
+    {/* גובה אפס: החיווי יורד מעל הכרטיסים בלי להזיז את הפריסה */}
+    <Box sx={{ position: 'relative', height: 0, zIndex: 5 }}>{pullIndicator}</Box>
     <AdminDashboardStatCards
       userFilter={userFilter}
       onlineCount={onlineCount}

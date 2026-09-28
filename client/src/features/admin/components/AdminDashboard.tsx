@@ -105,22 +105,20 @@ export const AdminDashboard = () => {
         onFilterClick={handleFilterClick}
         onSelectAll={() => setUserFilter('all')}
         t={t}
+        pullIndicator={
+          <PullToRefreshIndicator
+            pullDistance={pullDistance}
+            refreshing={isRefreshing}
+            // ref מכוון, ראו usePullToRefresh.ts
+            // eslint-disable-next-line react-hooks/refs
+            pullActive={pullActiveRef.current}
+            lastRefreshedAt={lastRefreshedAt}
+            refreshFailedToken={refreshFailedToken}
+          />
+        }
       />
 
-      {/* עוטפים את האינדיקטור+התוכן יחד ב-position:relative נפרד מהמכל
-          החיצוני (שכולל גם את הכותרת) - כדי שה-top:0 המוחלט של
-          PullToRefreshIndicator יתחיל ממש מתחת לכותרת, לא מאחורי הכותרת
-          עצמה (מה שקרה כשהוא ישב ישירות במכל החיצוני - התנגש עם החריץ/
-          מצלמת הטלפון, אותו באג בדיוק שכבר תוקן ב-ListComponent). */}
-      <Box sx={{ position: 'relative' }}>
-        <PullToRefreshIndicator
-          pullDistance={pullDistance}
-          refreshing={isRefreshing}
-          pullActive={pullActiveRef.current}
-          lastRefreshedAt={lastRefreshedAt}
-          refreshFailedToken={refreshFailedToken}
-        />
-        <AdminDashboardContent
+      <AdminDashboardContent
           error={error}
           loading={loading}
           isDark={isDark}
@@ -135,7 +133,6 @@ export const AdminDashboard = () => {
           onUserDeleted={refreshData}
           onUserPlanChanged={updateUserPlanLocal}
         />
-      </Box>
 
     </Box>
   );
