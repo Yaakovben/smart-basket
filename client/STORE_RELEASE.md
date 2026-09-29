@@ -3,7 +3,7 @@
 מסמך עבודה מסודר: מה כבר מוכן בקוד, ומה נשאר לעשות, לפי הסדר, כדי להגיש
 את שתי האפליקציות ולקבל אישור מהר.
 
-האפליקציה הנייטיב (Capacitor) טוענת את האתר החי `https://prod-smart-basket.vercel.app`
+האפליקציה הנייטיב (Capacitor) טוענת את האתר החי `https://smart-basket.app`
 (ראו `capacitor.config.ts`). כל שינוי באתר מגיע לאפליקציה בלי גרסה חדשה בחנות.
 גרסה חדשה בחנות נדרשת רק כשמשנים פלאגינים נייטיב, אייקונים, הרשאות או קבצים
 בתיקיות `ios/` ו-`android/`.
@@ -42,24 +42,27 @@
 - בדיקה על non-prod לפני המיזוג: אפשר לבנות אפליקציה שמצביעה על אתר ה-non-prod עם
   `CAP_SERVER_URL=<כתובת האתר של non-prod> npx cap sync`. **לא להעלות בנייה כזו לחנות.**
 
-## האם צריך להחליף כתובות (URL)?
+## כתובות (URL)
 
-> **אזהרה:** הכתובת `smart-basket.vercel.app` (בלי `prod-`) **אינה שלנו**. זה אתר של
-> מישהו אחר. הכתובת של הפרודקשן היא `prod-smart-basket.vercel.app`, והיא מופיעה בכל
-> הקבצים. לא להחזיר את הכתובת הישנה.
+הדומיין של הפרודקשן הוא **`smart-basket.app`**. נקנה ב-Vercel, מחובר לפרויקט `prod-smart-basket`,
+וחידוש אוטומטי פועל (תוקף עד ספטמבר 2027, ‏15$ לשנה). הכתובת `prod-smart-basket.vercel.app`
+ממשיכה לעבוד במקביל.
 
-| איפה | הכתובת היום | צריך לשנות? |
+> **אזהרה:** הכתובת `smart-basket.vercel.app` (בלי `prod-`) **אינה שלנו**. זה אתר של מישהו
+> אחר. לא להשתמש בה בשום מקום.
+>
+> **לא לתת לדומיין לפוג.** האפליקציה בחנות טוענת אותו. אם הוא פג ומישהו אחר קונה אותו,
+> האפליקציה שמותקנת אצל המשתמשים תציג את האתר שלו.
+
+| איפה | הכתובת | מה לעשות |
 |---|---|---|
-| האתר שהאפליקציה טוענת (`capacitor.config.ts`) | `https://prod-smart-basket.vercel.app` | לא. רק אם עוברים לדומיין משלכם, ואז גם בנייה חדשה לחנות |
-| מסך האופליין (`public/offline.html`, `APP_URL`) | `https://prod-smart-basket.vercel.app/` | לא. אם מחליפים דומיין, לשנות גם כאן |
-| Webhook של RevenueCat | `https://smart-basket-api-prod.onrender.com/api/store-billing/webhook` | לא. זה שרת הפרודקשן (לפי ה-proxy ב-main) |
-| מדיניות פרטיות ותנאי שימוש בחנויות | `https://prod-smart-basket.vercel.app/privacy`, `/terms` | לא |
-| Google OAuth, client מסוג Web (Authorized origins) | כפי שמוגדר היום לאתר | לא. באפליקציה עובדים client מסוג Android ו-iOS (שלב 5) |
-| `VITE_APP_STORE_URL`, `VITE_PLAY_STORE_URL` ב-Vercel | לא מוגדרים | כן, אחרי שהאפליקציות פורסמו (שלב 6) |
-
-אם בעתיד עוברים לדומיין משלכם (למשל `app.smartbasket.co.il`): לשנות ב-`capacitor.config.ts`
-וב-`public/offline.html`, להוסיף את הדומיין ל-Authorized origins של Google, לבנות גרסה
-חדשה לשתי החנויות, ולעדכן את כתובות המדיניות בחנויות.
+| האתר שהאפליקציה טוענת (`capacitor.config.ts`) | `https://smart-basket.app` | מוכן |
+| מסך האופליין (`public/offline.html`, `APP_URL`) | `https://smart-basket.app/` | מוכן |
+| מדיניות פרטיות ותנאי שימוש בחנויות | `https://smart-basket.app/privacy`, `/terms` | מוכן |
+| Webhook של RevenueCat | `https://smart-basket-api-prod.onrender.com/api/store-billing/webhook` | מוכן. זה שרת הפרודקשן |
+| Google OAuth, client מסוג Web, ‏Authorized JavaScript origins | להוסיף `https://smart-basket.app` | **כן**, בלי זה כניסה עם גוגל לא עובדת בדומיין החדש |
+| `CORS_ORIGIN` בשרת הפרודקשן (Render) | `https://smart-basket.app,https://prod-smart-basket.vercel.app` | **כן**. הכתובת הראשונה היא זו שבקישור במיילים |
+| `VITE_APP_STORE_URL`, `VITE_PLAY_STORE_URL` ב-Vercel | לא מוגדרים | אחרי שהאפליקציות פורסמו (שלב 6) |
 
 ---
 
@@ -133,8 +136,8 @@
 הבית ומאנדרואיד, צריך לרשום את האתר אצל אפל פעם אחת. עד אז הכפתור מוסתר שם.
 - [ ] developer.apple.com, Identifiers, +, **Services IDs**. מזהה: `com.smartbasket.web`.
       לסמן **Sign In with Apple**, Configure, לבחור את ה-App ID הראשי, ולהוסיף:
-      Domains: `prod-smart-basket.vercel.app`
-      Return URLs: `https://prod-smart-basket.vercel.app/api/auth/apple/callback`
+      Domains: `smart-basket.app`
+      Return URLs: `https://smart-basket.app/api/auth/apple/callback`
       (לבדיקה ב-non-prod: להוסיף גם את הדומיין שלו ואת אותו נתיב עליו)
 - [ ] בשרת (Render): `APPLE_CLIENT_IDS=com.smartbasket.app,com.smartbasket.web`
 - [ ] באתר (Vercel): `VITE_APPLE_WEB_CLIENT_ID=com.smartbasket.web`, ואז Redeploy
@@ -218,8 +221,8 @@ Smart Basket Pro פותח את כל האפשרויות בלי הגבלה: רשי
 עוזר AI והשוואות מחירים בלי מכסה יומית. המנוי מתחדש אוטומטית וניתן לביטול
 בכל עת בהגדרות החשבון בחנות.
 
-תנאי שימוש: https://prod-smart-basket.vercel.app/terms
-מדיניות פרטיות: https://prod-smart-basket.vercel.app/privacy
+תנאי שימוש: https://smart-basket.app/terms
+מדיניות פרטיות: https://smart-basket.app/privacy
 ```
 
 ### Full description (English)
@@ -240,8 +243,8 @@ Smart Basket Pro unlocks everything: unlimited lists and groups, and unlimited
 AI assistant and price comparisons. The subscription renews automatically and
 can be cancelled anytime in your store account settings.
 
-Terms of Use: https://prod-smart-basket.vercel.app/terms
-Privacy Policy: https://prod-smart-basket.vercel.app/privacy
+Terms of Use: https://smart-basket.app/terms
+Privacy Policy: https://smart-basket.app/privacy
 ```
 
 ### מילות מפתח (App Store, עד 100 תווים)
@@ -251,8 +254,8 @@ Privacy Policy: https://prod-smart-basket.vercel.app/privacy
 
 ### פרטים נוספים
 - קטגוריה: **Shopping** (משנית: Productivity)
-- כתובת תמיכה ו-Marketing URL: `https://prod-smart-basket.vercel.app`
-- מדיניות פרטיות: `https://prod-smart-basket.vercel.app/privacy`
+- כתובת תמיכה ו-Marketing URL: `https://smart-basket.app`
+- מדיניות פרטיות: `https://smart-basket.app/privacy`
 - אימייל ליצירת קשר: `smartbasket129@gmail.com`
 - דירוג גיל: 4+ (App Store) / Everyone (Google Play). אין תוכן בעייתי, אין צ'אט בין זרים.
 - מחיר האפליקציה: חינם, עם רכישות בתוך האפליקציה.
