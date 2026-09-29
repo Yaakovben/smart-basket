@@ -67,10 +67,22 @@ export const PriceSyncChainListItem = ({
             <Typography sx={{ fontSize: 10.5, color: c.branchCount && c.branchCount > 0 ? '#14B8A6' : 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               📍 {c.branchCount && c.branchCount > 0 ? `${c.branchCount} סניפים` : 'אין סניפים'}
             </Typography>
+            {!!c.branchCount && c.branchCount > 0 && (
+              // סניף בלי מיקום לא מופיע ב"קרוב אליך" ובמפה
+              <Typography sx={{ fontSize: 10.5, color: (c.branchesWithCoords ?? 0) < c.branchCount * 0.7 ? '#D97706' : 'text.secondary', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                🗺️ {c.branchesWithCoords ?? 0} במפה
+              </Typography>
+            )}
+            {!!c.promotions && (
+              <Typography sx={{ fontSize: 10.5, color: '#DB2777', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                🏷️ {c.promotions.toLocaleString('he-IL')} מבצעים
+              </Typography>
+            )}
             {c.lastSyncAt && (() => {
               // eslint-disable-next-line react-hooks/purity -- טקסט "לפני X" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
               const ageH = (Date.now() - new Date(c.lastSyncAt).getTime()) / 3_600_000;
-              const stale = ageH > 24;
+              // כמו בשרת: מעל 48 שעות = ישן (הרשתות מפרסמות פעם ביום)
+              const stale = ageH > 48;
               const label = ageH < 1 ? 'פחות משעה' : ageH < 24 ? `${Math.round(ageH)}ש` : `${Math.round(ageH / 24)}י`;
               return (
                 <Typography sx={{ fontSize: 10.5, color: stale ? '#D97706' : 'text.secondary', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>

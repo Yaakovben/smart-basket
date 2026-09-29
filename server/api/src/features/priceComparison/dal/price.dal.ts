@@ -148,3 +148,8 @@ export interface ActiveChain { chainId: ChainId; chainName: string; count: numbe
 
 const ACTIVE_CHAINS_CACHE_TTL_MS = 60 * 60_000;
 let activeChainsCache: { data: ActiveChain[]; expiresAt: number } | null = null;
+
+// אחרי סנכרון רשת: הספירות והטריות השתנו
+export function invalidateActiveChains(): void {
+  activeChainsCache = null;
+}

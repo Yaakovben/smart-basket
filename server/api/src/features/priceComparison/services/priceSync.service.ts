@@ -18,7 +18,7 @@ import {
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
-import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
+import { PriceDAL, invalidateActiveChains, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from './branches.service';
@@ -229,8 +229,9 @@ async function syncStoresForChain(
 async function syncSingleChain(adapter: ChainAdapter, runId: string): Promise<SyncResult> {
   const r = await syncChainPrices(adapter, runId);
   const promo = await syncPromotionsForChain(adapter, runId);
-  // הרשת כתבה נתונים: הרשת הבאה מודדת את נפח האשכול מחדש
+  // הרשת כתבה נתונים: הרשת הבאה מודדת את נפח האשכול מחדש, והספירות מתרעננות
   invalidateUsageCache();
+  invalidateActiveChains();
   const withPromo: SyncResult = {
     ...r,
     promotions: promo.promotions,

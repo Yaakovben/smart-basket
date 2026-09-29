@@ -6,6 +6,9 @@ import { asyncHandler } from '../../../utils';
 import type { AuthRequest } from '../../../types';
 import type { ChainId } from '../models/Price.model';
 import { getBranchSyncState } from './sync.controller';
+import { PriceSyncLogDAL } from '../dal/priceSyncLog.dal';
+import { Promotion } from '../models/Promotion.model';
+import { isStale } from '../services/scanPricing';
 
 // Cache קצר-טווח לתוצאת getStatus - האגרגציות כבדות, 20s מספיקות לטריות
 let statusCache: { data: Record<string, unknown>; expiresAt: number } | null = null;
@@ -22,6 +25,13 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   const branchCounts = await BranchDAL.countsByChain();
   const branchMap = new Map(branchCounts.map(b => [b.chainId, b]));
   const lastSyncMap = new Map(getLastSyncResults().map(r => [r.chainId, r]));
+  // הלוג השמור: משותף לכל השרתים ושורד הפעלה מחדש (הזיכרון של השרת הזה לא רואה
+  // סנכרון שרץ בשרת אחר או לפני שהשרת עלה)
+  const logs = await PriceSyncLogDAL.latestPerChain().catch(() => []);
+  const logOf = (chainId: string, type: string) => logs.find(l => l.chainId === chainId && l.type === type);
+  const promoCounts = new Map((await Promotion.aggregate<{ _id: string; n: number }>([
+    { $group: { _id: '$chainId', n: { $sum: 1 } } },
+  ]).catch(() => [])).map(p => [p._id, p.n]));
 
   // ממזגים את כל הרשתות הרשומות (מה-adapters) עם כמויות מה-DB + תוצאות סנכרון אחרונות.
   // רשתות שאין להן נתונים עדיין יופיעו עם count=0 — מונע "היעלמות" של רשת שהסנכרון שלה נכשל.
@@ -33,29 +43,38 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     const priceCount = found?.count ?? 0;
     const branchCount = branches?.count ?? 0;
     const branchesWithCoords = branches?.withCoords ?? 0;
+    const priceLog = logOf(r.chainId, 'price-full');
+    const storesLog = logOf(r.chainId, 'stores');
+    const lastUpdated = found?.lastUpdated ? new Date(found.lastUpdated) : null;
+    const stale = !!lastUpdated && isStale(lastUpdated);
     // health: סיווג מהיר לאדמין כדי לראות מה דורש טיפול.
     // ok = יש מחירים + סניפים עם קואורדינטות
     // no_prices = יש סניפים אבל לא הצלחנו לסנכרן מחירים (auth/file path issue)
     // no_branches = יש מחירים אבל אין סניפים (StoresFull נכשל ו-OSM לא מצא)
-    // no_geo = יש סניפים אבל בלי קואורדינטות (לא יוכלו להופיע במפה)
+    // no_geo = יש סניפים אבל פחות מ-70% עם קואורדינטות (השאר לא יופיעו ב"קרוב אליך")
+    // stale = המחירים לא עודכנו מעל 48 שעות
     // no_data = שום דבר - הסנכרון הראשון עוד לא רץ או username שגוי
-    let health: 'ok' | 'no_prices' | 'no_branches' | 'no_geo' | 'no_data';
+    let health: 'ok' | 'no_prices' | 'no_branches' | 'no_geo' | 'stale' | 'no_data';
     if (priceCount === 0 && branchCount === 0) health = 'no_data';
     else if (priceCount === 0) health = 'no_prices';
     else if (branchCount === 0) health = 'no_branches';
-    else if (branchesWithCoords === 0) health = 'no_geo';
+    else if (stale) health = 'stale';
+    else if (branchesWithCoords < branchCount * 0.7) health = 'no_geo';
     else health = 'ok';
     return {
       chainId: r.chainId,
       chainName: r.chainName,
       count: priceCount,
-      lastSyncError: sync?.error ?? null,
-      lastSyncAt: sync?.completedAt ?? null,
-      lastSyncFetched: sync?.fetched ?? null,
+      lastSyncError: sync?.error ?? (priceLog?.status === 'failed' ? priceLog.error ?? 'failed' : null),
+      // מתי המחירים של הרשת עודכנו בפועל במאגר
+      lastSyncAt: lastUpdated?.toISOString() ?? sync?.completedAt ?? null,
+      lastSyncAttemptAt: (priceLog?.finishedAt ?? priceLog?.startedAt)?.toISOString?.() ?? sync?.completedAt ?? null,
+      lastSyncFetched: sync?.fetched ?? priceLog?.recordsDownloaded ?? null,
       branchCount,
       branchesWithCoords,
-      storesError: sync?.storesError ?? null,
-      storesFetched: sync?.storesFetched ?? null,
+      storesError: sync?.storesError ?? (storesLog?.status === 'failed' ? storesLog.error ?? 'failed' : null),
+      storesFetched: sync?.storesFetched ?? storesLog?.recordsDownloaded ?? null,
+      promotions: promoCounts.get(r.chainId) ?? 0,
       health,
     };
   }).sort((a, b) => b.count - a.count);
@@ -66,13 +85,15 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     no_prices: chains.filter(c => c.health === 'no_prices').length,
     no_branches: chains.filter(c => c.health === 'no_branches').length,
     no_geo: chains.filter(c => c.health === 'no_geo').length,
+    stale: chains.filter(c => c.health === 'stale').length,
     no_data: chains.filter(c => c.health === 'no_data').length,
     needsAttention: chains.filter(c => c.health !== 'ok').map(c => ({ chainId: c.chainId, chainName: c.chainName, health: c.health })),
   };
 
-  const latest = await PriceDAL.findOne({}, { sort: { updatedAt: -1 } });
-  const lastUpdatedISO = latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
-  const ageMs = latest?.updatedAt ? Date.now() - new Date(latest.updatedAt).getTime() : null;
+  // העדכון האחרון מבין הרשתות, מהאגרגציה שכבר נעשתה (בלי מיון של כל האוסף)
+  const latestMs = Math.max(0, ...active.map(c => (c.lastUpdated ? new Date(c.lastUpdated).getTime() : 0)));
+  const lastUpdatedISO = latestMs > 0 ? new Date(latestMs).toISOString() : null;
+  const ageMs = latestMs > 0 ? Date.now() - latestMs : null;
   const ageHours = ageMs !== null ? ageMs / (60 * 60 * 1000) : null;
 
   // פיזור סניפים לפי מקור הקואורדינטות - לתצוגת אדמין מפורטת

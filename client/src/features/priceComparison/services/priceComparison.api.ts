@@ -14,6 +14,11 @@ export interface PriceChainStatus {
   // שגיאת סנכרון סניפים (נפרד משגיאת מחירים) - כשלא הצלחנו למשוך קובץ Stores
   storesError?: string | null;
   storesFetched?: number | null;
+  // מבצעים שמורים לרשת
+  promotions?: number;
+  // ניסיון הסנכרון האחרון (lastSyncAt = מתי המחירים עודכנו בפועל)
+  lastSyncAttemptAt?: string | null;
+  health?: 'ok' | 'no_prices' | 'no_branches' | 'no_geo' | 'stale' | 'no_data';
 }
 
 export interface PriceSyncProgress {
