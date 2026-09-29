@@ -1,7 +1,8 @@
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
+import { focusWithKeyboard } from '../../../../global/helpers/focusWithKeyboard';
 import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
 
 interface ConvertToGroupSectionProps {
@@ -15,13 +16,21 @@ interface ConvertToGroupSectionProps {
 export const ConvertToGroupSection = memo(({ password, onPasswordChange }: ConvertToGroupSectionProps) => {
   const { t } = useSettings();
   const [open, setOpen] = useState(false);
+  const paperRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  // פתיחת הקטע פותחת מיד את המקלדת על שדה הקוד, והשדה נגלל מעליה
   const toggle = () => {
-    if (open) onPasswordChange('');
-    setOpen(v => !v);
+    if (open) {
+      onPasswordChange('');
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    focusWithKeyboard(paperRef.current, () => inputRef.current);
   };
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, border: '1px solid', borderColor: 'divider' }}>
+    <Paper ref={paperRef} elevation={0} sx={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', mt: 2.5, border: '1px solid', borderColor: 'divider' }}>
       <Box sx={settingsRowSx} onClick={toggle}>
         <Box component="span" sx={{ fontSize: 22 }}>👥</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -48,6 +57,7 @@ export const ConvertToGroupSection = memo(({ password, onPasswordChange }: Conve
           <TextField
             fullWidth
             value={password}
+            inputRef={inputRef}
             onChange={e => onPasswordChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
             placeholder="• • • •"
             size="small"

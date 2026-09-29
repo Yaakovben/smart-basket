@@ -7,6 +7,7 @@ import { haptic } from '../helpers';
 import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
 import { useReliableTap } from '../hooks/useReliableTap';
 import { useSettings } from '../context/SettingsContext';
+import { useKeyboardInset } from '../hooks/useKeyboardInset';
 
 interface ModalProps {
   title: string;
@@ -41,6 +42,9 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
   // את התיקון הזה - כל מודל שמשתמש בו (כולל התראות) ירש את אותה בעיה.
   const { t } = useSettings();
   const closeTap = useReliableTap(handleClose);
+  // גיליון שצמוד לתחתית עולה מעל המקלדת באייפון, כדי שהשדה שמקלידים בו יישאר גלוי
+  const keyboardInset = useKeyboardInset();
+  const liftSheet = !centered && keyboardInset > 0;
 
   return (
     <Dialog
@@ -53,7 +57,9 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
         sx: centered ? { ...centeredDialogPaperSx, maxWidth: { xs: 'calc(100% - 32px)', sm: 480 }, bgcolor: 'background.paper' } : {
           m: 0,
           borderRadius: '20px 20px 0 0',
-          maxHeight: '90vh',
+          maxHeight: liftSheet ? `calc(100% - ${keyboardInset}px - 24px)` : '90vh',
+          mb: liftSheet ? `${keyboardInset}px` : 0,
+          transition: 'margin-bottom 0.2s ease',
           maxWidth: { xs: '100%', sm: 480 },
           width: '100%',
           pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom))',
