@@ -103,6 +103,9 @@ export const HomeComponent = memo(({
 
   // מצב אישור עזיבת רשימה
   const [confirmLeaveList, setConfirmLeaveList] = useState<List | null>(null);
+  // "הפוך לרשימה פרטית" מהמסך הראשי, באותו היגיון כמו בתוך הרשימה: עם חברים
+  // מוצג הסבר (צריך להסיר אותם קודם), בלי חברים מבקשים אישור לפני ההמרה
+  const [convertPrivate, setConvertPrivate] = useState<{ list: List; blocked: boolean } | null>(null);
 
   const handleLeaveList = useCallback(async () => {
     if (!confirmLeaveList || !onLeaveList) return;
@@ -260,12 +263,8 @@ export const HomeComponent = memo(({
           onEditList({ ...editList, isGroup: true, password });
           setEditList(null);
         } : undefined}
-        onConvertToPrivate={editList.isGroup && editList.members.length === 0 ? () => {
-          if (isGroupMuted(editList.id)) {
-            updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== editList.id) });
-          }
-          onEditList({ ...editList, isGroup: false, password: null });
-          setEditList(null);
+        onConvertToPrivate={editList.isGroup ? () => {
+          setConvertPrivate({ list: editList, blocked: editList.members.length > 0 });
         } : undefined}
         canChangePassword={editList.isGroup}
       />}
@@ -280,6 +279,33 @@ export const HomeComponent = memo(({
           onCancel={() => setConfirmDeleteList(null)}
         />
       )}
+
+      {/* Convert to private */}
+      {convertPrivate && (convertPrivate.blocked ? (
+        <ConfirmModal
+          title={t('convertToPrivate')}
+          message={t('convertToPrivateMembersHint')}
+          confirmText={t('gotIt')}
+          hideCancel
+          onConfirm={() => setConvertPrivate(null)}
+          onCancel={() => setConvertPrivate(null)}
+        />
+      ) : (
+        <ConfirmModal
+          title={t('convertToPrivate')}
+          message={t('convertToPrivateConfirmMessage')}
+          onConfirm={() => {
+            const target = convertPrivate.list;
+            if (isGroupMuted(target.id)) {
+              updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== target.id) });
+            }
+            onEditList({ ...target, isGroup: false, password: null });
+            setConvertPrivate(null);
+            setEditList(null);
+          }}
+          onCancel={() => setConvertPrivate(null)}
+        />
+      ))}
 
       {/* Confirm Leave */}
       {confirmLeaveList && (
