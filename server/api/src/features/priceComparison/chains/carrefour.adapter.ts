@@ -142,6 +142,17 @@ async function downloadFile(path: string, filename: string): Promise<Buffer> {
   return Buffer.from(res.data as ArrayBuffer);
 }
 
+// מזהה הסניף לפי שם הקובץ, ולא לפי השדה שבתוכו. בסניפים 400 עד 473 השדה שבתוך
+// הקובץ הוא מספור ישן (למשל 117 בקובץ של סניף 407, "בעיר חפץ חיים" בפתח תקווה), ו-117
+// הוא סניף אחר לגמרי ("סינמה סיטי" בבאר שבע). כך נרשמו מחירים של סניף אחד על סניף
+// אחר, ו-73 סניפים נשארו בלי מחיר. המספר בשם הקובץ הוא זה שבקובץ הסניפים הרשמי.
+// נבדק מול הפורטל ב-29.9.2026.
+export function withFileStoreId<T extends { storeId?: string }>(items: T[], filename: string): T[] {
+  const storeId = extractStoreId(filename)?.storeId;
+  if (storeId) for (const it of items) it.storeId = storeId;
+  return items;
+}
+
 export const carrefourAdapter: ChainAdapter = {
   chainId: 'carrefour',
   chainName: 'Carrefour / יינות ביתן',
@@ -159,7 +170,7 @@ export const carrefourAdapter: ChainAdapter = {
       for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
         const batch = fileNames.slice(i, i + CONCURRENCY);
         const settled = await Promise.allSettled(
-          batch.map(fn => retryDownload(() => downloadFile(folderOf(files, fn, path), fn)).then(buf => parseXmlBuffer(buf, fn)))
+          batch.map(fn => retryDownload(() => downloadFile(folderOf(files, fn, path), fn)).then(buf => withFileStoreId(parseXmlBuffer(buf, fn), fn)))
         );
         for (const r of settled) {
           if (r.status === 'fulfilled') {
