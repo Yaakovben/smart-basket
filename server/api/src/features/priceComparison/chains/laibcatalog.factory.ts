@@ -17,6 +17,7 @@
 import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
+import { mergeWithCachedListing } from './portalFileCache';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -87,7 +88,12 @@ export function createLaibcatalogAdapter(opts: LaibcatalogOptions): ChainAdapter
       headers: { 'User-Agent': 'smart-basket/1.0', Accept: 'application/json' },
     });
     if (!Array.isArray(r.data)) throw new Error('laib_files_not_array');
-    return r.data;
+    // הפורטל מציג רק את קובצי היום. בלילה ובבוקר המוקדם משלימים מהרשימה השמורה
+    // (קבצים מאתמול עדיין זמינים להורדה), וכל סניף מקבל את העדכני מבין השתיים
+    return mergeWithCachedListing(chainId, r.data, f => f.fileName, f => {
+      const d = new Date(String(f.fileDate).replace(' ', 'T'));
+      return Number.isNaN(d.getTime()) ? null : d;
+    });
   }
 
   async function listBranches(): Promise<LaibBranch[]> {

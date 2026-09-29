@@ -18,6 +18,7 @@
 import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
+import { mergeWithCachedListing } from './portalFileCache';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -32,6 +33,8 @@ interface CarrefourFile {
   name: string;
   size: number;
   modified: string;
+  // תיקיית היום שבה הקובץ נמצא (לרשומות מהרשימה השמורה: תיקייה של יום קודם)
+  path?: string;
 }
 
 // מושך את דף הפורטל ומחלץ ממנו path + files שמוטמעים ב-JS.
@@ -54,8 +57,21 @@ async function fetchIndex(): Promise<{ path: string; files: CarrefourFile[] }> {
   } catch {
     throw new Error('carrefour_files_json_parse_failed');
   }
-  return { path, files };
+  // הפורטל מציג רק את תיקיית היום. בלילה ובבוקר המוקדם משלימים מהרשימה השמורה
+  // (קבצים של אתמול עדיין זמינים בתיקייה שלהם), וכל סניף מקבל את העדכני מבין השתיים
+  const withPath = files.map(f => ({ ...f, path }));
+  const merged = await mergeWithCachedListing('carrefour', withPath, f => `${f.path}/${f.name}`, f => {
+    const stamp = extractStamp(f.name);
+    if (!stamp) return null;
+    const d = new Date(`${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)}T12:00:00Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  });
+  return { path, files: merged };
 }
+
+// התיקייה של קובץ: מהרשומה עצמה, או תיקיית היום
+const folderOf = (files: CarrefourFile[], name: string, today: string): string =>
+  files.find(f => f.name === name)?.path ?? today;
 
 // מחלץ חותמת תאריך משם הקובץ. Carrefour משתמשים בכמה תבניות:
 // ישן: PriceFull...-20260501150700.gz (12 ספרות רצופות)
@@ -142,7 +158,7 @@ export const carrefourAdapter: ChainAdapter = {
       for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
         const batch = fileNames.slice(i, i + CONCURRENCY);
         const settled = await Promise.allSettled(
-          batch.map(fn => downloadFile(path, fn).then(buf => parseXmlBuffer(buf, fn)))
+          batch.map(fn => downloadFile(folderOf(files, fn, path), fn).then(buf => parseXmlBuffer(buf, fn)))
         );
         for (const r of settled) {
           if (r.status === 'fulfilled') {
@@ -168,7 +184,7 @@ export const carrefourAdapter: ChainAdapter = {
       if (!fileName) {
         return { chainId: 'carrefour', chainName: 'Carrefour / יינות ביתן', stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
       }
-      const buf = await downloadFile(path, fileName);
+      const buf = await downloadFile(folderOf(files, fileName, path), fileName);
       const stores = parseStoresXml(buf, fileName);
       return { chainId: 'carrefour', chainName: 'Carrefour / יינות ביתן', stores, fetchedFiles: 1 };
     } catch (e) {
@@ -183,7 +199,7 @@ export const carrefourAdapter: ChainAdapter = {
     return pickLatestPerStore(files, 'PromoFull').map(f => ({
       fileName: f.name,
       storeId: f.storeId,
-      download: () => downloadFile(path, f.name),
+      download: () => downloadFile(folderOf(files, f.name, path), f.name),
     }));
   },
 };
