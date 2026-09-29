@@ -9,7 +9,8 @@ export type QueuedMutation =
   | { id: string; type: 'delete'; listId: string; productId: string; timestamp: number }
   | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string; image?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number }
   | { id: string; type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending'; timestamp: number }
-  | { id: string; type: 'reset'; listId: string; timestamp: number };
+  | { id: string; type: 'reset'; listId: string; timestamp: number }
+  | { id: string; type: 'reorder'; listId: string; productIds: string[]; manual: boolean; timestamp: number };
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -70,7 +71,8 @@ type QueueInput =
   | { type: 'delete'; listId: string; productId: string }
   | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string; image?: string }; tempId: string; pendingIsPurchased?: boolean }
   | { type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending' }
-  | { type: 'reset'; listId: string };
+  | { type: 'reset'; listId: string }
+  | { type: 'reorder'; listId: string; productIds: string[]; manual: boolean };
 
 async function enqueue(mutation: QueueInput): Promise<void> {
   const db = await openDB();
@@ -137,6 +139,13 @@ export const enqueueClear = (listId: string, filter: 'all' | 'purchased' | 'pend
 
 export const enqueueReset = (listId: string) =>
   enqueue({ type: 'reset', listId });
+
+// רק הסדר האחרון של כל רשימה רלוונטי, אז סידור חדש מחליף סידור קודם שממתין
+export async function enqueueReorder(listId: string, productIds: string[], manual: boolean): Promise<void> {
+  const stale = (await getAllQueued()).filter(m => m.type === 'reorder' && m.listId === listId);
+  for (const m of stale) await removeQueued(m.id);
+  await enqueue({ type: 'reorder', listId, productIds, manual });
+}
 
 // מעדכן pendingIsPurchased על רשומת 'add' שכבר בתור (ולא רק ב-pendingTempActions
 // שבזיכרון) - מכסה טאפ על "נקנה" שקרה *אחרי* שההוספה כבר נכשלה ונשמרה בתור,

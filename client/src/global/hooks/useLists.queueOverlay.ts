@@ -16,6 +16,7 @@ export async function overlayQueuedMutations(lists: List[], userName: string): P
   let changed = false;
   const next = lists.map(list => {
     let products = list.products;
+    let manualOrder = list.productsManuallyOrdered;
     for (const m of queued) {
       if (m.listId !== list.id) continue;
       if (m.type === 'add') {
@@ -47,11 +48,28 @@ export async function overlayQueuedMutations(lists: List[], userName: string): P
         products = products.map(p => p.id === m.productId ? { ...p, ...(m.changes as Partial<Product>) } : p);
       } else if (m.type === 'delete') {
         products = products.filter(p => p.id !== m.productId);
+      } else if (m.type === 'clear') {
+        // בלי זה ניקוי שנעשה באופליין "חוזר" על המסך בכל רענון עד הסנכרון
+        products = products.filter(p =>
+          m.filter === 'purchased' ? !p.isPurchased : m.filter === 'pending' ? p.isPurchased : false
+        );
+      } else if (m.type === 'reset') {
+        products = products.map(p => p.isPurchased
+          ? { ...p, isPurchased: false, purchasedBy: null, purchasedAt: null }
+          : p);
+      } else if (m.type === 'reorder') {
+        // אותו חישוב מיקומים כמו בשרת, כדי שהסדר לא יקפוץ אחורה ברענון
+        const rank = new Map(m.productIds.map((id, i) => [id, i]));
+        const base = m.manual ? 0 : m.timestamp - m.productIds.length * 1000;
+        products = products.map(p => rank.has(p.id)
+          ? { ...p, position: base + rank.get(p.id)! * (m.manual ? 1 : 1000) }
+          : p);
+        manualOrder = m.manual;
       }
     }
-    if (products === list.products) return list;
+    if (products === list.products && manualOrder === list.productsManuallyOrdered) return list;
     changed = true;
-    return { ...list, products };
+    return { ...list, products, productsManuallyOrdered: manualOrder };
   });
   return changed ? next : lists;
 }

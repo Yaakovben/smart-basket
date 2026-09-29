@@ -3,6 +3,8 @@ import type { Product, List, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { productsApi } from '../../../services/api';
+import { isTempId } from '../helpers/list-helpers';
+import { isNetworkError, enqueueToggle, enqueueDelete, enqueueAdd, updateQueuedAddPendingPurchase, removeQueuedAdd } from '../../../services/offlineQueue';
 
 interface UseProductSelectionParams {
   list: List;
@@ -49,48 +51,73 @@ export const useProductSelection = ({ list, onUpdateProductsForList, showToast, 
     setSelectedProducts(new Set());
   }, []);
 
-  // סימון/ביטול-סימון מרוכז - עדכון אופטימיסטי + שליחה לשרת בשקט
+  // סימון/ביטול סימון מרוכז: עדכון אופטימי ושליחה לשרת. בלי קליטה כל
+  // פעולה נשמרת בתור ומסתנכרנת כשהחיבור חוזר, בדיוק כמו סימון בודד.
   const bulkSetPurchased = useCallback((isPurchased: boolean) => {
     haptic('medium');
     const ids = Array.from(selectedProducts);
     const count = ids.length;
+    const purchasedAt = isPurchased ? new Date().toISOString() : null;
     exitSelectionMode();
     onUpdateProductsForList(list.id, (current) =>
-      current.map(p => ids.includes(p.id) ? { ...p, isPurchased } : p)
+      current.map(p => ids.includes(p.id) ? { ...p, isPurchased, purchasedAt } : p)
     );
     showToast(`${count} ${t(isPurchased ? 'bulkMarkedPurchased' : 'bulkReturnedToList')}`);
     for (const id of ids) {
-      productsApi.updateProduct(list.id, id, { isPurchased }).catch(() => {});
+      // מוצר שעוד לא נשמר בשרת: מעדכנים את ההוספה שממתינה בתור
+      if (isTempId(id)) {
+        void updateQueuedAddPendingPurchase(id, isPurchased);
+        continue;
+      }
+      productsApi.updateProduct(list.id, id, { isPurchased }).catch((error) => {
+        if (isNetworkError(error)) void enqueueToggle(list.id, id, isPurchased);
+      });
     }
   }, [selectedProducts, exitSelectionMode, onUpdateProductsForList, list.id, showToast, t]);
 
-  // מחיקה מרוכזת עם אפשרות undo - שחזור המוצרים ואז הוספתם מחדש לשרת
+  // מחיקה מרוכזת עם אפשרות ביטול. בלי קליטה המחיקה נשמרת בתור, וגם
+  // השחזור נשמר בתור כדי שיסונכרן אחריה.
   const bulkDelete = useCallback(() => {
     haptic('medium');
     const ids = Array.from(selectedProducts);
     const count = ids.length;
-    const deletedProducts = list.products.filter((p: Product) => ids.includes(p.id));
+    const deletedProducts = list.products.filter((p: Product) => ids.includes(p.id) && !isTempId(p.id));
     exitSelectionMode();
     onUpdateProductsForList(list.id, (current) =>
       current.filter(p => !ids.includes(p.id))
     );
     for (const id of ids) {
-      productsApi.deleteProduct(list.id, id).catch(() => {});
+      // מוצר שעוד לא נשמר בשרת: פשוט מבטלים את ההוספה שממתינה בתור
+      if (isTempId(id)) {
+        void removeQueuedAdd(id);
+        continue;
+      }
+      productsApi.deleteProduct(list.id, id).catch((error) => {
+        if (isNetworkError(error)) void enqueueDelete(list.id, id);
+      });
     }
-    showToast(`${count} ${t('bulkDeleted')}`, 'success', async () => {
+    showToast(`${count} ${t('bulkDeleted')}`, 'success', deletedProducts.length === 0 ? undefined : async () => {
       const tempProducts = deletedProducts.map(p => ({ ...p, id: `temp-undo-${Date.now()}-${Math.random()}` }));
       onUpdateProductsForList(list.id, (current) => [...current, ...tempProducts]);
       for (let i = 0; i < deletedProducts.length; i++) {
         const p = deletedProducts[i];
         const tempId = tempProducts[i].id;
+        const productData = { name: p.name, quantity: p.quantity, unit: p.unit, category: p.category, note: p.note, image: p.image };
         try {
-          const serverProduct = await productsApi.addProduct(list.id, {
-            name: p.name, quantity: p.quantity, unit: p.unit, category: p.category,
-          });
+          const serverProduct = await productsApi.addProduct(list.id, productData);
           onUpdateProductsForList(list.id, (current) =>
             current.map(c => c.id === tempId ? { ...c, id: serverProduct.id } : c)
           );
-        } catch { /* ignore */ }
+          if (p.isPurchased) {
+            productsApi.updateProduct(list.id, serverProduct.id, { isPurchased: true }).catch(() => {});
+          }
+        } catch (error) {
+          if (isNetworkError(error)) {
+            void enqueueAdd(list.id, productData, tempId, p.isPurchased || undefined);
+          } else {
+            onUpdateProductsForList(list.id, (current) => current.filter(c => c.id !== tempId));
+          }
+        }
       }
     });
   }, [selectedProducts, list.id, list.products, exitSelectionMode, onUpdateProductsForList, showToast, t]);

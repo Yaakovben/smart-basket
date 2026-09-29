@@ -9,6 +9,13 @@ import { subscribeNetworkWeak } from '../../services/networkQuality';
 // cold start) ואף אירוע online/offline לא נורה כדי להפעיל סנכרון מחדש.
 const PERIODIC_RETRY_MS = 30_000;
 
+// סטטוסים של תקלה זמנית: הפעולה נשארת בתור לניסיון הבא
+const RETRYABLE_STATUSES = new Set([401, 408, 425, 429]);
+
+// אחרי שהקליטה חוזרת הרשת לרוב עוד לא יציבה בשניות הראשונות, ולכן
+// מנסים שוב כמה פעמים מהר במקום לחכות לבדיקה התקופתית
+const RECONNECT_RETRY_DELAYS_MS = [2_000, 6_000, 15_000];
+
 // מסנכרן את תור הפעולות הממתינות (מ-IndexedDB) עם השרת כשהקליטה חוזרת
 export function useOfflineSync(
   userId: string | undefined,
@@ -43,6 +50,10 @@ export function useOfflineSync(
             await productsApi.clearProducts(mutation.listId, mutation.filter);
           } else if (mutation.type === 'reset') {
             await productsApi.resetProducts(mutation.listId);
+          } else if (mutation.type === 'reorder') {
+            // מוצרים שנוספו באופליין עוד מחזיקים מזהה זמני שהשרת לא מכיר
+            const ids = mutation.productIds.filter(id => !id.startsWith('temp-'));
+            if (ids.length > 0) await productsApi.reorderProducts(mutation.listId, ids, mutation.manual);
           } else if (mutation.type === 'add') {
             // clientId=tempId - idempotency: אם ניסיון קודם (לפני שהתור נשמר,
             // או ריצת סנכרון קודמת שנקטעה) כבר יצר את המוצר בפועל, השרת
@@ -71,15 +82,25 @@ export function useOfflineSync(
           anySynced = true;
         } catch (err) {
           const status = (err as { response?: { status?: number } }).response?.status;
-          // שגיאת לקוח קבועה (4xx מלבד 429) — הפעולה לא תקפה (ID נמחק, קונפליקט וכו')
-          // מסירים מהתור ומודיעים למשתמש. navigator.onLine אינו אמין לבדיקת שרת
-          // (cold-start, רשת רעועה — יחזיר true גם כשהשרת לא מגיב).
-          if (status !== undefined && status >= 400 && status < 500 && status !== 429) {
+          // מחיקה של מוצר שכבר לא קיים (חבר אחר מחק אותו): המטרה הושגה
+          if (mutation.type === 'delete' && status === 404) {
+            await removeQueued(mutation.id);
+            anySynced = true;
+            continue;
+          }
+          // שגיאת לקוח קבועה: הפעולה לא תקפה (מוצר נמחק, קונפליקט וכו').
+          // מסירים מהתור ומודיעים למשתמש. 401 לא נחשב קבוע: אחרי זמן ארוך
+          // בלי קליטה הטוקן פג, וחידוש שלו יכול להיכשל רגעית בדיוק כשהקליטה
+          // חוזרת. מחיקת התור במקרה כזה איבדה את כל השינויים של המשתמש.
+          if (status !== undefined && status >= 400 && status < 500 && !RETRYABLE_STATUSES.has(status)) {
             await removeQueued(mutation.id);
             anySynced = true;
             anyPermanentlyFailed = true;
+            continue;
           }
-          // 5xx, 429, timeout, שגיאת רשת — נשמר לנסיון הבא
+          // תקלה זמנית (רשת, שרת, הרשאה): עוצרים כאן ומנסים שוב בריצה הבאה,
+          // כדי לשמור על סדר הפעולות (למשל מחיקה ואחריה שחזור של אותו מוצר)
+          break;
         }
       }
 
@@ -96,8 +117,20 @@ export function useOfflineSync(
   }, [userId, updateProductsForList, showToast, syncFailedMessage]);
 
   useEffect(() => {
-    const onOnline = () => { void runSync(); };
+    const reconnectTimers: number[] = [];
+    const onOnline = () => {
+      void runSync();
+      reconnectTimers.splice(0).forEach(id => window.clearTimeout(id));
+      for (const delay of RECONNECT_RETRY_DELAYS_MS) {
+        reconnectTimers.push(window.setTimeout(() => { void runSync(); }, delay));
+      }
+    };
     window.addEventListener('online', onOnline);
+    // חזרה לאפליקציה מהרקע: שולחים מיד את מה שממתין
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) void runSync();
+    };
+    document.addEventListener('visibilitychange', onVisible);
     // גם בטעינה ראשונית אם כבר אונליין (למשל אחרי reload בזמן אופליין)
     if (navigator.onLine) void runSync();
 
@@ -112,6 +145,8 @@ export function useOfflineSync(
 
     return () => {
       window.removeEventListener('online', onOnline);
+      document.removeEventListener('visibilitychange', onVisible);
+      reconnectTimers.forEach(id => window.clearTimeout(id));
       window.clearInterval(intervalId);
       unsubscribeWeak();
     };

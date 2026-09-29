@@ -4,6 +4,7 @@ import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
+import { isNetworkError, enqueueReorder } from '../../../services/offlineQueue';
 import { getCategoryOrder } from '../helpers/list-helpers';
 import { useDragReorder } from '../../../global/hooks/useDragReorder';
 
@@ -34,7 +35,11 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
         socketService.emitProductsReordered(listId, userName, ids, manual);
         showToast(t(manual ? 'orderSaved' : 'productOrderAuto'), 'success');
       })
-      .catch(() => showToast(t('errorOccurred'), 'error'));
+      .catch((error) => {
+        // בלי קליטה הסדר נשמר בתור ויישלח כשהחיבור יחזור
+        if (isNetworkError(error)) void enqueueReorder(listId, ids, manual);
+        else showToast(t('errorOccurred'), 'error');
+      });
   }, [listId, userName, applyLocalOrder, showToast, t]);
 
   // getter לסדר הנוכחי - נקרא רק ברגע הכניסה למצב סידור (ראו useDragReorder.getIds).
