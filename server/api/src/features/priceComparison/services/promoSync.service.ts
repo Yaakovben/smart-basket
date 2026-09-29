@@ -12,7 +12,6 @@ import { PriceSyncLogDAL } from '../dal/priceSyncLog.dal';
 import { parsePromoBuffer } from '../chains/promoXmlParser';
 import { PromoAccumulator } from './promoAggregation';
 import { validatePromoFeed } from './syncValidation';
-import { sourceLabel } from '../data/price-sources.data';
 import { logger } from '../../../config/logger';
 import type { ChainAdapter } from '../chains/types';
 
@@ -114,7 +113,7 @@ export async function syncPromotionsForChain(adapter: ChainAdapter, runId: strin
   }
 
   try {
-    const res = await PromotionDAL.replaceChainPromotions(chainId, promotions, acc.storeIds, runId, sourceLabel(chainId), startedAt);
+    const res = await PromotionDAL.replaceChainPromotions(chainId, promotions, acc.storeIds, runId, startedAt);
     const items = promotions.reduce((s, p) => s + p.items.length, 0);
     logger.info(`${tag}: ${promotions.length} promotions (${items} items) from ${filesOk}/${selected.length} files (inserted=${res.inserted}, deleted=${res.deleted}, overBudget=${itemsOverBudget})`);
     await log({ ...common, status: 'success', recordsInserted: res.inserted, recordsDeleted: res.deleted, details: { ...details, items } });

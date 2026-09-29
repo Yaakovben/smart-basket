@@ -35,10 +35,9 @@ export interface IPromotionDoc extends Document {
   items: IPromotionItem[];
   // מזהה ריצת הסנכרון שכתבה את המסמך
   syncRunId: string;
-  source: string;
+  // מתי הורדו הקבצים. אין createdAt/updatedAt/source/__v: אף קוד לא קורא אותם, והם
+  // כ-100 בתים לכל אחד מעשרות אלפי המבצעים (המקור נגזר מהרשת, ראו price-sources.data.ts)
   fetchedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const itemSchema = new Schema<IPromotionItem>(
@@ -63,11 +62,10 @@ const promotionSchema = new Schema<IPromotionDoc>(
     minPurchaseAmount: { type: Number },
     items: { type: [itemSchema], default: [] },
     syncRunId: { type: String, required: true },
-    source: { type: String, required: true },
     fetchedAt: { type: Date, required: true },
   },
   {
-    timestamps: true,
+    versionKey: false,
     collection: 'promotions',
     toJSON: {
       transform: (_, ret) => {

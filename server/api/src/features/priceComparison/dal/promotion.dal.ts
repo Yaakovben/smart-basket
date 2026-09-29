@@ -22,7 +22,6 @@ export const PromotionDAL = {
     promotions: AggregatedPromotion[],
     storeIds: string[],
     runId: string,
-    source: string,
     fetchedAt: Date,
   ): Promise<{ inserted: number; deleted: number }> {
     let inserted = 0;
@@ -38,7 +37,6 @@ export const PromotionDAL = {
         minPurchaseAmount: p.minPurchaseAmount,
         items: p.items,
         syncRunId: runId,
-        source,
         fetchedAt,
       }));
       const res = await Promotion.insertMany(batch, { ordered: false, rawResult: true });
