@@ -6,6 +6,7 @@ import { overlayQueuedMutations } from '../../../global/hooks/useLists.queueOver
 import { listsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import type { EditListForm, ConfirmState } from '../types/list-types';
+import type { EditListSaveExtra } from '../components/modals/EditListModal';
 
 interface UseListActionsParams {
   list: List;
@@ -57,12 +58,16 @@ export const useListActions = ({
     setShowEditList(true);
   }, [list.name, list.icon, list.color]);
 
-  // שם, עיצוב וקוד כניסה חדש נשלחים בעדכון אחד: שני עדכונים נפרדים יכלו
-  // להחזיר את הקוד הישן, כי השני היה נשלח עם עותק הרשימה שלפני הראשון
-  const saveListChanges = useCallback(async (newPassword?: string) => {
-    if (!editListData || (!hasListChanges && !newPassword)) return;
-    const oldData = { name: list.name, icon: list.icon, color: list.color, password: list.password };
-    const next = { ...list, ...editListData, ...(newPassword ? { password: newPassword } : {}) };
+  // שם, עיצוב, קוד כניסה חדש והמרה למשותפת נשלחים בעדכון אחד: שני עדכונים
+  // נפרדים יכלו לדרוס זה את זה, כי השני היה נשלח עם עותק הרשימה שלפני הראשון
+  const saveListChanges = useCallback(async (extra?: EditListSaveExtra) => {
+    if (!editListData || (!hasListChanges && !extra)) return;
+    const oldData = { name: list.name, icon: list.icon, color: list.color, password: list.password, isGroup: list.isGroup };
+    const next = {
+      ...list, ...editListData,
+      ...(extra ? { password: extra.password } : {}),
+      ...(extra?.makeGroup ? { isGroup: true } : {}),
+    };
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון מיידי
     setShowEditList(false);

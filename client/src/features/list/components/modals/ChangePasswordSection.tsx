@@ -27,7 +27,7 @@ export const ChangePasswordSection = memo(({ value, onChange }: ChangePasswordSe
 
   return (
     <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2, border: '1px solid', borderColor: 'divider' }}>
-      <Box sx={settingsRowSx} onClick={() => setOpen(v => !v)}>
+      <Box sx={settingsRowSx} onClick={() => { if (open) onChange(''); setOpen(v => !v); }}>
         <Box component="span" sx={{ fontSize: 22 }}>🔑</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('changePassword')}</Typography>

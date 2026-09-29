@@ -789,14 +789,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
         onUpdateData={setEditListData}
-        onConvertToGroup={!list.isGroup ? async (password: string) => {
-          try {
-            await onUpdateList({ ...list, isGroup: true, password });
-            setShowEditList(false);
-          } catch {
-            showToast(t('errorOccurred'), 'error');
-          }
-        } : undefined}
+        canConvertToGroup={!list.isGroup}
         onConvertToPrivate={list.isGroup ? () => {
           // חברים בקבוצה - לא ניתן להמיר. פופאפ מידע בלבד (בלי טקסט אזהרה
           // קבוע בתוך המסך) - חייבים להסיר את כולם קודם דרך ניהול החברים.

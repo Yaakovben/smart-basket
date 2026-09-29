@@ -27,9 +27,19 @@ export const EditListBasicFields = memo(({ editData, onUpdateData, icons }: Edit
 
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('name')}</Typography>
+        {/* בלי פוקוס אוטומטי: המקלדת הסתירה את האייקונים, הצבעים והכפתורים.
+            במקום זה המסגרת מהבהבת פעמיים, כדי להראות איפה משנים את השם. */}
         <ClearableTextField
-          autoFocus
           fullWidth
+          sx={(theme) => ({
+            // רק שלב האמצע מוגדר, כך שההבהוב חוזר לצבע הרגיל של השדה גם במצב כהה
+            '@keyframes nameFieldHint': {
+              '50%': { borderColor: theme.palette.primary.main, borderWidth: 2 },
+            },
+            '& .MuiOutlinedInput-root:not(.Mui-focused) .MuiOutlinedInput-notchedOutline': {
+              animation: 'nameFieldHint 0.9s ease-in-out 0.35s 2',
+            },
+          })}
           value={editData.name}
           onChange={e => onUpdateData({ ...editData, name: e.target.value })}
           onClear={() => onUpdateData({ ...editData, name: '' })}

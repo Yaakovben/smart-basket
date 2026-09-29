@@ -259,10 +259,7 @@ export const HomeComponent = memo(({
           if (!editList) return;
           setEditList({ ...editList, ...data });
         }}
-        onConvertToGroup={!editList.isGroup ? (password: string) => {
-          onEditList({ ...editList, isGroup: true, password });
-          setEditList(null);
-        } : undefined}
+        canConvertToGroup={!editList.isGroup}
         onConvertToPrivate={editList.isGroup ? () => {
           setConvertPrivate({ list: editList, blocked: editList.members.length > 0 });
         } : undefined}

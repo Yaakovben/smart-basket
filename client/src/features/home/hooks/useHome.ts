@@ -6,6 +6,7 @@ import { generatePassword } from '../helpers/home-helpers';
 import { haptic } from '../../../global/helpers';
 import { PlanLimitHandledError } from '../../../global/hooks/useLists.actions';
 import { loadSubscriptionStatus } from '../../subscription/subscriptionStatusStore';
+import type { EditListSaveExtra } from '../../list/components/modals/EditListModal';
 import type {
   NewListForm,
   HomeTab,
@@ -286,12 +287,16 @@ export const useHome = ({
   }, []);
 
   // ===== טיפול בעריכה/מחיקת רשימה =====
-  // קוד כניסה חדש נשמר באותו עדכון יחד עם השם והעיצוב
-  const saveEditList = useCallback(async (newPassword?: string) => {
+  // קוד כניסה חדש והמרה למשותפת נשמרים באותו עדכון יחד עם השם והעיצוב
+  const saveEditList = useCallback(async (extra?: EditListSaveExtra) => {
     if (!editList) return;
     setSavingList(true);
     try {
-      await onEditList(newPassword ? { ...editList, password: newPassword } : editList);
+      await onEditList({
+        ...editList,
+        ...(extra ? { password: extra.password } : {}),
+        ...(extra?.makeGroup ? { isGroup: true } : {}),
+      });
       setEditList(null);
       showToast(t('saved'));
     } catch {
