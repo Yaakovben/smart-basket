@@ -3,6 +3,7 @@ import { Box, type SxProps, type Theme } from '@mui/material';
 import { usePullToRefresh } from '../../features/list/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '../../features/list/components/PullToRefreshIndicator';
 import { PULL_MAX, PULL_THRESHOLD } from '../../features/list/helpers/list-helpers';
+import { SYNC_NOW_EVENT } from '../hooks/useOfflineSync';
 
 // רענון בגרירה אחיד לכל האפליקציה (רשימה, תובנות, עמודי המנהל).
 //  • התוכן עצמו זז למטה, והחיווי מופיע ברווח שנפתח מעליו, כך שהוא אף פעם
@@ -53,6 +54,8 @@ export const PullRefreshArea = ({
     if (holdTimer.current) clearTimeout(holdTimer.current);
     setRefreshing(true);
     setHolding(true);
+    // רענון בגרירה שולח גם מיד את השינויים שממתינים בתור, בכל מסך
+    window.dispatchEvent(new CustomEvent(SYNC_NOW_EVENT));
     onRefresh()
       .catch(() => false)
       .then((ok) => {

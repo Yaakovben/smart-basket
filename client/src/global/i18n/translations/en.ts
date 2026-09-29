@@ -311,6 +311,7 @@ export const en: Translations = {
   showAll: 'Show all',
   errorOccurred: 'An error occurred',
   syncItemFailed: 'One or more offline changes failed to sync to the server',
+  offlineChangesSynced: 'All changes are synced',
   stillSyncingProduct: 'This item is still saving, try again in a moment',
   connectionErrorTitle: 'Connection error',
   connectionErrorDesc: 'We couldn\'t load your data right now',

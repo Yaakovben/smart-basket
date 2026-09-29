@@ -19,8 +19,8 @@ export const ConnectionStatusIcon = () => {
   const { t, settings } = useSettings();
   const [dismissed, setDismissed] = useState(false);
 
-  // מאפסים dismissed כשחוזרים ל-online
-  if (phase === 'online' && dismissed) setDismissed(false);
+  // מאפסים dismissed כשהכל חזר לתקין ואין שינויים שממתינים
+  if (phase === 'online' && pendingCount === 0 && dismissed) setDismissed(false);
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
 
@@ -37,7 +37,11 @@ export const ConnectionStatusIcon = () => {
     return () => { ro.disconnect(); root.style.setProperty('--conn-banner-h', '0px'); };
   }, [bannerEl]);
 
-  if (phase === 'online' || phase === 'trying' || dismissed) return null;
+  // חיבור תקין עם שינויים שעוד לא נשלחו: הפס נשאר ומראה שהסנכרון מתקדם.
+  // קודם הוא נעלם ברגע שבקשה אחת הצליחה, וחזר בבקשה האיטית הבאה, בזמן
+  // שהשינויים עדיין חיכו, ולא היה ברור אם משהו בכלל קורה.
+  const isSyncing = phase === 'online' && pendingCount > 0;
+  if ((phase === 'online' && !isSyncing) || phase === 'trying' || dismissed) return null;
 
   const isOffline = phase === 'offline';
   const isWeak = phase === 'weak';
@@ -47,6 +51,7 @@ export const ConnectionStatusIcon = () => {
   const mainText = isOffline ? s.offlineTitle
     : isWeak ? s.weakTitle
     : isServerStarting ? s.connecting
+    : isSyncing ? s.syncingTitle
     : s.reconnecting;
 
   // תת-כיתוב: כשעוד אין שינויים שממתינים, הרגעה ("אפשר להמשיך כרגיל").

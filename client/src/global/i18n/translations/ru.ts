@@ -311,6 +311,7 @@ export const ru: Translations = {
   showAll: 'Показать все',
   errorOccurred: 'Произошла ошибка',
   syncItemFailed: 'Одно или несколько офлайн-изменений не удалось синхронизировать с сервером',
+  offlineChangesSynced: 'Все изменения синхронизированы',
   stillSyncingProduct: 'Товар еще сохраняется, попробуйте через мгновение',
   connectionErrorTitle: 'Ошибка подключения',
   connectionErrorDesc: 'Не удалось загрузить данные',

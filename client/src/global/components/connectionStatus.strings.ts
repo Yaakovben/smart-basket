@@ -8,6 +8,8 @@ interface ConnectionStrings {
   weakTitle: string;
   reconnecting: string;
   connecting: string;
+  // החיבור תקין ויש שינויים שעוד נשלחים לשרת
+  syncingTitle: string;
   // אין עדיין שינויים שממתינים
   offlineCalm: string;
   weakCalm: string;
@@ -22,6 +24,7 @@ const he: ConnectionStrings = {
   weakTitle: 'החיבור לא יציב כרגע',
   reconnecting: 'מתחבר מחדש…',
   connecting: 'מתחבר…',
+  syncingTitle: 'מסנכרן את השינויים…',
   offlineCalm: 'אפשר להמשיך כרגיל. כל שינוי נשמר ויסונכרן כשהחיבור יחזור.',
   weakCalm: 'השינויים נשמרים ויסונכרנו כשהחיבור יתייצב',
   offlinePending: (n) => n === 1
@@ -38,6 +41,7 @@ const en: ConnectionStrings = {
   weakTitle: 'Your connection is unstable',
   reconnecting: 'Reconnecting…',
   connecting: 'Connecting…',
+  syncingTitle: 'Syncing your changes…',
   offlineCalm: 'Keep going as usual. Every change is saved and will sync when you are back online.',
   weakCalm: 'Changes are saved and will sync once the connection stabilizes',
   offlinePending: (n) => n === 1
@@ -55,6 +59,7 @@ const ru: ConnectionStrings = {
   weakTitle: 'Соединение нестабильно',
   reconnecting: 'Переподключение…',
   connecting: 'Подключение…',
+  syncingTitle: 'Синхронизируем изменения…',
   offlineCalm: 'Можно продолжать как обычно. Все изменения сохраняются и синхронизируются, когда связь вернётся.',
   weakCalm: 'Изменения сохраняются и синхронизируются, когда соединение стабилизируется',
   offlinePending: (n) => `Сохранено изменений: ${n}. Синхронизируем, когда связь вернётся`,

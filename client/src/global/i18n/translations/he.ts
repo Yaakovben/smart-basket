@@ -311,6 +311,7 @@ export const he: Translations = {
   showAll: 'הצג הכל',
   errorOccurred: 'אירעה שגיאה',
   syncItemFailed: 'שינוי אחד או יותר שנשמרו במצב אופליין לא הצליחו להתעדכן בשרת',
+  offlineChangesSynced: 'כל השינויים סונכרנו',
   stillSyncingProduct: 'המוצר עדיין נשמר, נסו שוב בעוד רגע',
   connectionErrorTitle: 'בעיית חיבור',
   connectionErrorDesc: 'לא הצלחנו לטעון את הנתונים כרגע',

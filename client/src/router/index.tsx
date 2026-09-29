@@ -157,7 +157,7 @@ export const AppRouter = () => {
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
-  useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
+  useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'), t('offlineChangesSynced'));
 
   // התראות באפליקציה מהחנות: לחיצה על התראה פותחת את המסך שלה, ובכל כניסה
   // של משתמש מחובר הטוקן של המכשיר מתרענן מול השרת (מכשיר יכול להחליף טוקן)

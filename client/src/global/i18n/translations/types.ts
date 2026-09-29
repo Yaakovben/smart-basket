@@ -309,6 +309,7 @@ export type TranslationKeys =
   | 'showAll'
   | 'errorOccurred'
   | 'syncItemFailed'
+  | 'offlineChangesSynced'
   | 'stillSyncingProduct'
   | 'connectionErrorTitle'
   | 'connectionErrorDesc'

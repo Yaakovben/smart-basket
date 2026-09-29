@@ -2,42 +2,46 @@ import apiClient from './client';
 import { validateId } from './validate-id';
 import type { CreateProductData, UpdateProductData, ApiProductResponse } from './types/products.types';
 
+// אפשרויות לבקשה בודדת. הסנכרון ברקע שולח זמן המתנה ארוך משלו: המשתמש לא
+// מחכה לו, ובקליטה חלשה בקשה תקינה יכולה לקחת יותר מהזמן הקצר הרגיל
+export interface RequestOpts { timeout?: number }
+
 export const productsApi = {
-  async addProduct(listId: string, data: CreateProductData): Promise<ApiProductResponse> {
+  async addProduct(listId: string, data: CreateProductData, opts?: RequestOpts): Promise<ApiProductResponse> {
     validateId(listId, 'listId');
-    const response = await apiClient.post<{ data: ApiProductResponse }>(`/lists/${listId}/products`, data);
+    const response = await apiClient.post<{ data: ApiProductResponse }>(`/lists/${listId}/products`, data, opts);
     return response.data.data;
   },
 
-  async updateProduct(listId: string, productId: string, data: UpdateProductData): Promise<void> {
+  async updateProduct(listId: string, productId: string, data: UpdateProductData, opts?: RequestOpts): Promise<void> {
     validateId(listId, 'listId');
     validateId(productId, 'productId');
-    await apiClient.put(`/lists/${listId}/products/${productId}`, data);
+    await apiClient.put(`/lists/${listId}/products/${productId}`, data, opts);
   },
 
-  async clearProducts(listId: string, filter: 'all' | 'purchased' | 'pending'): Promise<number> {
+  async clearProducts(listId: string, filter: 'all' | 'purchased' | 'pending', opts?: RequestOpts): Promise<number> {
     validateId(listId, 'listId');
-    const response = await apiClient.delete<{ data: { deletedCount: number } }>(`/lists/${listId}/products/clear?filter=${filter}`);
+    const response = await apiClient.delete<{ data: { deletedCount: number } }>(`/lists/${listId}/products/clear?filter=${filter}`, opts);
     return response.data.data.deletedCount;
   },
 
-  async resetProducts(listId: string): Promise<number> {
+  async resetProducts(listId: string, opts?: RequestOpts): Promise<number> {
     validateId(listId, 'listId');
-    const response = await apiClient.post<{ data: { resetCount: number } }>(`/lists/${listId}/products/reset`);
+    const response = await apiClient.post<{ data: { resetCount: number } }>(`/lists/${listId}/products/reset`, undefined, opts);
     return response.data.data.resetCount;
   },
 
-  async deleteProduct(listId: string, productId: string): Promise<void> {
+  async deleteProduct(listId: string, productId: string, opts?: RequestOpts): Promise<void> {
     validateId(listId, 'listId');
     validateId(productId, 'productId');
-    await apiClient.delete(`/lists/${listId}/products/${productId}`);
+    await apiClient.delete(`/lists/${listId}/products/${productId}`, opts);
   },
 
   // סידור מוצרים מחדש. manual=true שומר את הסדר שנשלח כסדר ידני; manual=false
   // מחזיר את הרשימה למיון אוטומטי לפי קטגוריה (productIds = הסדר לפי קטגוריה).
-  async reorderProducts(listId: string, productIds: string[], manual = true): Promise<void> {
+  async reorderProducts(listId: string, productIds: string[], manual = true, opts?: RequestOpts): Promise<void> {
     validateId(listId, 'listId');
-    await apiClient.put(`/lists/${listId}/products/reorder`, { productIds, manual });
+    await apiClient.put(`/lists/${listId}/products/reorder`, { productIds, manual }, opts);
   },
 
   async moveProducts(sourceListId: string, targetListId: string, productIds: string[]): Promise<number> {
