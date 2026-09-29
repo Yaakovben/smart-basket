@@ -6,6 +6,7 @@ import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { geocodeAddress } from '../services/geocoder.service';
 import { coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName } from '../services/cityMatching';
+import { OFFICIAL_BRANCH_ADDRESSES } from '../data/official-branch-addresses.data';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
@@ -189,6 +190,9 @@ async function runNightlyGeocode(trigger: 'cron' | 'startup' | 'catch-up'): Prom
       invalidateBranchCache();
       logger.info(`[geocode-nightly] ${trigger}: merged ${merged} duplicate branches`);
     }
+    // כתובות מהאתר הרשמי של הרשת לסניפים שבפורטל בלי כתובת (נטו חיסכון)
+    const official = await BranchDAL.applyOfficialAddresses(OFFICIAL_BRANCH_ADDRESSES);
+    if (official > 0) logger.info(`[geocode-nightly] ${trigger}: applied ${official} official branch addresses`);
     // שדה עיר מורעל (הושלם בעבר מחיפוש הפוך של מיקום שגוי): שם סניף שהוא בדיוק שם
     // של יישוב קובע, ו"מועצה אזורית" שלא מתאימה לשם נמחקת
     const citiesFixed = await BranchDAL.repairCities(b => {

@@ -156,6 +156,14 @@ export function getSyncProgress(): SyncProgress {
   return { ...syncProgress };
 }
 
+// כתובת מקובץ הסניפים: "unknown", "0" או אתר אינטרנט אינם כתובת. ערך כזה לא נשמר,
+// כדי לא לדרוס כתובת אמיתית (למשל מהאתר הרשמי של נטו חיסכון) בכל סנכרון.
+export function addressFromStoresFile(address: string | undefined): string | undefined {
+  const t = address?.trim();
+  if (!t || /^(unknown|0+|-|\?|www\.|https?:)/i.test(t)) return undefined;
+  return t;
+}
+
 // העיר מקובץ הסניפים. רשתות רבות מפרסמות סמל יישוב של הלמ"ס (3000, 8300) ולא שם:
 // מתורגם לפי הרשימה הרשמית. קוד שלא ברשימה (או "0") לא נשמר, כדי לא לדרוס שם אמיתי.
 export function cityFromStoresFile(city: string | undefined): string | undefined {
@@ -197,7 +205,7 @@ async function syncStoresForChain(
       return {
         chainId: adapter.chainId, chainName: adapter.chainName,
         storeId: s.storeId, storeName: s.storeName,
-        address: s.address, city: cityFromStoresFile(s.city), zipCode: s.zipCode,
+        address: addressFromStoresFile(s.address), city: cityFromStoresFile(s.city), zipCode: s.zipCode,
         lat: hasRealCoords ? s.lat : undefined,
         lng: hasRealCoords ? s.lng : undefined,
         coordSource: hasRealCoords ? ('portal' as const) : ('unknown' as const),

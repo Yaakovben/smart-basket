@@ -106,6 +106,23 @@ export const BranchDAL = {
     return res.modifiedCount ?? 0;
   },
 
+  // כתובת מהאתר הרשמי של הרשת לסניף שבפורטל אין לו כתובת (data/official-branch-addresses).
+  // מיקום אוטומטי ישן מתאפס, כדי שהגיאוקודינג ימקם לפי הכתובת האמיתית. מיקום ידני או
+  // מהפורטל נשאר. מחזיר כמה סניפים עודכנו.
+  async applyOfficialAddresses(list: Array<{ chainId: string; storeId: string; address: string; city: string }>): Promise<number> {
+    let updated = 0;
+    for (const a of list) {
+      const b = await Branch.findOne({ chainId: a.chainId, storeId: normStoreId(a.storeId) }).lean();
+      if (!b || (b.address === a.address && b.city === a.city)) continue;
+      const resetCoords = b.coordSource !== 'manual' && b.coordSource !== 'portal';
+      await Branch.updateOne({ _id: b._id }, resetCoords
+        ? { $set: { address: a.address, city: a.city, coordSource: 'unknown' }, $unset: { lat: '', lng: '' } }
+        : { $set: { address: a.address, city: a.city } });
+      updated++;
+    }
+    return updated;
+  },
+
   // איחוד סניף שנשמר פעמיים (מזהה עם ובלי אפסים מובילים): נשאר מסמך אחד עם המזהה
   // האחיד, המיקום הטוב ביותר, ושאר השדות מהעדכני. מחזיר כמה עותקים נמחקו.
   async mergeDuplicateStores(): Promise<number> {
