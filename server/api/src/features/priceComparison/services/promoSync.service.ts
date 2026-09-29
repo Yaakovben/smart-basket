@@ -21,6 +21,21 @@ const MAX_PROMO_FILES = 600;
 // שני קבצים במקביל: מספיק כדי לא לחכות לרשת, בלי להכפיל את שיא הזיכרון
 const CONCURRENCY = 2;
 
+// תקלת רשת זמנית (DNS, ניתוק, timeout) בהורדת קובץ: עוד שני ניסיונות. בלי זה תקלת DNS
+// של כמה שניות הכשילה 149 מ-157 קובצי המבצעים של דור אלון ברצף
+const NETWORK_ERROR = /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up|timeout of \d+ms/i;
+async function downloadWithRetry(download: () => Promise<Buffer>, attempts = 3): Promise<Buffer> {
+  for (let i = 0; ; i++) {
+    try {
+      return await download();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (i >= attempts - 1 || !NETWORK_ERROR.test(msg)) throw err;
+      await new Promise(r => setTimeout(r, 2000 * 2 ** i));
+    }
+  }
+}
+
 export interface PromoSyncSummary {
   status: 'success' | 'failed' | 'skipped';
   promotions?: number;
@@ -56,7 +71,7 @@ export async function syncPromotionsForChain(adapter: ChainAdapter, runId: strin
   let lastError: string | undefined;
   for (let i = 0; i < selected.length; i += CONCURRENCY) {
     const batch = selected.slice(i, i + CONCURRENCY);
-    const settled = await Promise.allSettled(batch.map(async f => ({ f, parsed: parsePromoBuffer(await f.download()) })));
+    const settled = await Promise.allSettled(batch.map(async f => ({ f, parsed: parsePromoBuffer(await downloadWithRetry(f.download)) })));
     for (const r of settled) {
       if (r.status === 'fulfilled') {
         acc.addFile(r.value.parsed, r.value.f.storeId);
