@@ -1,5 +1,6 @@
 import { Box, Typography, Button } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
@@ -14,6 +15,7 @@ interface QRScannerConsentOverlayProps {
   onPickGallery: () => void;
   // 'qr' (ברירת מחדל) - הצטרפות לקבוצה. 'barcode' - ברקוד מוצר להוספה מהירה.
   mode?: 'qr' | 'barcode';
+  consentDesc?: string;
 }
 
 /**
@@ -21,16 +23,18 @@ interface QRScannerConsentOverlayProps {
  * השקיפות הזו הכרחית ל-PWA: מסביר למה צריך הרשאה לפני שהדפדפן שואל,
  * נותן למשתמש שליטה. בלעדיו - ייתכן שהמשתמש ידחה אוטומטית "כי לא ברור".
  */
-export const QRScannerConsentOverlay = ({ fileScanError, galleryConsent, onOpenCamera, onPickGallery, mode = 'qr' }: QRScannerConsentOverlayProps) => {
+export const QRScannerConsentOverlay = ({ fileScanError, galleryConsent, onOpenCamera, onPickGallery, mode = 'qr', consentDesc }: QRScannerConsentOverlayProps) => {
   const { t } = useSettings();
   return (
     <Box sx={consentOverlaySx}>
-      <QrCodeScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />
+      {mode === 'barcode'
+        ? <BarcodeScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />
+        : <QrCodeScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />}
       <Typography sx={{ fontSize: 18, fontWeight: 800 }}>
         {mode === 'barcode' ? t('scanBarcodeTitle') : t('scanQrTitle')}
       </Typography>
       <Typography sx={consentDescSx}>
-        {mode === 'barcode' ? t('scanBarcodeConsentDesc') : t('scanQrConsentDesc')}
+        {consentDesc ?? (mode === 'barcode' ? t('scanBarcodeConsentDesc') : t('scanQrConsentDesc'))}
         <br />
         <b>{t('scanNoImagesSaved')}</b> — {t('scanLocalOnlyDesc')}
       </Typography>

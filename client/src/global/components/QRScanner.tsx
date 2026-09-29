@@ -28,13 +28,15 @@ interface QRScannerProps {
   onScan: (value: string) => void;
   // 'qr' (ברירת מחדל) - הצטרפות לקבוצה. 'barcode' - ברקוד מוצר (EAN/UPC) להוספה מהירה.
   mode?: 'qr' | 'barcode';
+  // הסבר ייעודי במסך ההסכמה, כשהסורק משמש פיצ'ר אחר (למשל השוואת מחירים)
+  consentDesc?: string;
 }
 
 /**
  * סורק QR/ברקוד מובנה באפליקציה. מבוסס על @zxing/browser (קל משמעותית מ-html5-qrcode).
  * מבקש הרשאת מצלמה, ומאפשר גם לבחור תמונה מהגלריה אם הקוד התקבל כקובץ.
  */
-export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps) => {
+export const QRScanner = ({ open, onClose, onScan, mode = 'qr', consentDesc }: QRScannerProps) => {
   const { t } = useSettings();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
@@ -170,6 +172,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               onOpenCamera={() => setCameraConsent(true)}
               onPickGallery={() => { setGalleryConsent(true); fileInputRef.current?.click(); }}
               mode={mode}
+              consentDesc={consentDesc}
             />
           )}
 

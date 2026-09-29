@@ -123,16 +123,18 @@ export const PriceScanPage = () => {
         borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default',
       }}>
         <Button
-          variant="contained" fullWidth startIcon={<QrCodeScannerRoundedIcon />} onClick={scanAgain}
-          sx={{ borderRadius: '14px', py: 1.3, fontWeight: 800, textTransform: 'none', fontSize: 15 }}
+          variant="contained" fullWidth onClick={scanAgain}
+          sx={{ borderRadius: '14px', py: 1.3, gap: 1.25, fontWeight: 800, textTransform: 'none', fontSize: 15 }}
         >
+          {/* רווח קבוע בין האייקון לטקסט בכל כיוון כתיבה (startIcon נצמד לטקסט בעברית) */}
+          <QrCodeScannerRoundedIcon sx={{ fontSize: 22 }} />
           {phase === 'result' || phase === 'notFound' ? s.scanAnother : s.scan}
         </Button>
       </Box>
 
       <Suspense fallback={null}>
         {scannerOpen && (
-          <QRScanner open={scannerOpen} mode="barcode" onClose={() => setScannerOpen(false)} onScan={handleScan} />
+          <QRScanner open={scannerOpen} mode="barcode" consentDesc={s.scannerDesc} onClose={() => setScannerOpen(false)} onScan={handleScan} />
         )}
       </Suspense>
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
