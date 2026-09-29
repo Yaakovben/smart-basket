@@ -18,6 +18,7 @@ import { promoItemAppliesToStore, promoStoreIndex, promoUnitPrice, bitmapCount }
 import { priceLine, compareBaskets, type PromoOffer, type LineResult } from './basketMath';
 import { normStoreId } from './storeId';
 import { getRegisteredChains } from './priceSync.service';
+import { dedupeBranches } from './branches.service';
 import { PRICE_SOURCES } from '../data/price-sources.data';
 import { NotFoundError } from '../../../errors';
 import type { IPromotionDoc } from '../models/Promotion.model';
@@ -135,8 +136,9 @@ export async function listChains() {
 export async function listChainBranchesApi(chainId: string, subChain?: string) {
   const filter: Record<string, unknown> = { chainId };
   if (subChain) filter.subChainName = subChain;
-  const branches = await Branch.find(filter, BRANCH_FIELDS).sort({ city: 1, storeName: 1 }).lean<LeanBranch[]>();
-  return branches.map(branchDto);
+  const branches = await Branch.find(filter, { ...BRANCH_FIELDS, coordSource: 1, lastSyncedAt: 1 }).sort({ city: 1, storeName: 1 }).lean<Array<LeanBranch & { coordSource?: string; lastSyncedAt?: Date }>>();
+  // סניף שנשמר פעמיים (מזהה עם ובלי אפסים מובילים) מוצג פעם אחת
+  return dedupeBranches(branches).map(branchDto);
 }
 
 // ===== מחיר מוצר בסניף =====

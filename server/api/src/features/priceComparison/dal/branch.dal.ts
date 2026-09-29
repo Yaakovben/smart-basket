@@ -1,6 +1,7 @@
 import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
 import { createBaseDal } from '../../../dal/base.dal';
+import { normStoreId } from '../services/storeId';
 
 export interface UpsertBranchInput {
   chainId: ChainId;
@@ -22,8 +23,11 @@ export interface UpsertBranchInput {
 export const BranchDAL = {
   ...createBaseDal<IBranchDoc>(Branch),
 
-  async bulkUpsert(items: UpsertBranchInput[]) {
-    if (items.length === 0) return 0;
+  async bulkUpsert(rawItems: UpsertBranchInput[]) {
+    if (rawItems.length === 0) return 0;
+    // מזהה סניף אחיד, בלי אפסים מובילים: אותו סניף הגיע פעם כ-"022" ופעם כ-"22",
+    // ונשמר פעמיים (100 סניפים כפולים במעיין 2000, שפע וסופר ספיר)
+    const items = rawItems.map(i => ({ ...i, storeId: normStoreId(i.storeId) }));
     // שאיבת רשימת סניפים שמסומנים coordSource='manual' - לא נוגעים בהם בכלל.
     // ההגדרות הידניות הן הכי מדויקות ולא צריך לדרוס אותן בסנכרון אוטומטי.
     const keys = items.map(i => ({ chainId: i.chainId, storeId: i.storeId }));
@@ -100,6 +104,38 @@ export const BranchDAL = {
     if (ids.length === 0) return 0;
     const res = await Branch.updateMany({ _id: { $in: ids } }, { $unset: { lat: '', lng: '' }, $set: { coordSource: 'unknown' } });
     return res.modifiedCount ?? 0;
+  },
+
+  // איחוד סניף שנשמר פעמיים (מזהה עם ובלי אפסים מובילים): נשאר מסמך אחד עם המזהה
+  // האחיד, המיקום הטוב ביותר, ושאר השדות מהעדכני. מחזיר כמה עותקים נמחקו.
+  async mergeDuplicateStores(): Promise<number> {
+    const all = await Branch.find({}).lean();
+    const groups = new Map<string, typeof all>();
+    for (const b of all) {
+      const k = `${b.chainId}|${normStoreId(b.storeId)}`;
+      groups.set(k, [...(groups.get(k) ?? []), b]);
+    }
+    const rankOf = (b: (typeof all)[number]) =>
+      (typeof b.lat === 'number' ? ({ manual: 4, portal: 3, geocoded: 2 } as Record<string, number>)[b.coordSource] ?? 0 : 0);
+    const good = (v: unknown) => typeof v === 'string' && v.trim() !== '' && !/^(unknown|0)$/i.test(v.trim());
+    let removed = 0;
+    for (const [key, docs] of groups) {
+      const norm = key.slice(key.indexOf('|') + 1);
+      if (docs.length === 1 && docs[0].storeId === norm) continue;
+      const time = (d: (typeof docs)[number]) => new Date(d.lastSyncedAt ?? 0).getTime();
+      const byRecency = [...docs].sort((a, b) => time(b) - time(a));
+      const primary = [...docs].sort((a, b) => rankOf(b) - rankOf(a) || time(b) - time(a))[0];
+      const $set: Record<string, unknown> = { storeId: norm };
+      for (const f of ['storeName', 'subChainName', 'subChainId', 'storeType', 'address', 'city', 'zipCode', 'openingHours'] as const) {
+        const src = byRecency.find(d => good(d[f]));
+        if (src) $set[f] = src[f];
+      }
+      const others = docs.filter(d => String(d._id) !== String(primary._id)).map(d => d._id);
+      if (others.length) await Branch.deleteMany({ _id: { $in: others } });
+      await Branch.updateOne({ _id: primary._id }, { $set });
+      removed += others.length;
+    }
+    return removed;
   },
 
   // תיקון שדה עיר: resolve מחזיר את העיר הנכונה, null למחיקה, או undefined להשאיר

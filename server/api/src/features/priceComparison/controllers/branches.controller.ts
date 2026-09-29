@@ -6,6 +6,7 @@ import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { Branch } from '../models/Branch.model';
 import { BranchDAL } from '../dal/branch.dal';
+import { normStoreId } from '../services/storeId';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
@@ -26,12 +27,12 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
   for (const b of KNOWN_BRANCHES) {
     try {
       await Branch.updateOne(
-        { chainId: b.chainId, storeId: b.storeId },
+        { chainId: b.chainId, storeId: normStoreId(b.storeId) },
         {
           $set: {
             chainId: b.chainId,
             chainName: CHAIN_NAMES[b.chainId] || b.chainId,
-            storeId: b.storeId,
+            storeId: normStoreId(b.storeId),
             storeName: b.storeName,
             address: b.address,
             city: b.city,

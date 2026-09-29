@@ -40,18 +40,39 @@ const buildQueryVariants = (address: string | undefined, city: string | undefine
   return variants;
 };
 
+interface SearchHit {
+  lat: string;
+  lon: string;
+  class?: string;
+  type?: string;
+  place_rank?: number | string;
+  name?: string;
+  display_name?: string;
+}
+
+// תוצאה ברמת רחוב, בניין או חנות, ולא מרכז של יישוב/מועצה. בלי הבדיקה הזו התקבלו
+// מרכזי ערים כ"מיקום סניף": 279 סניפים ישבו על 103 נקודות משותפות (רמי לוי "עטרות"
+// ועוד 14 סניפים במרכז מועצה אזורית זבולון). place_rank של Nominatim: 26 ומעלה = רחוב
+// ופחות; ל-LocationIQ אין אותו, ולכן לפי class.
+export function isPreciseHit(hit: Pick<SearchHit, 'class' | 'place_rank'>): boolean {
+  if (hit.place_rank !== undefined && hit.place_rank !== null && hit.place_rank !== '') {
+    return Number(hit.place_rank) >= 26;
+  }
+  return !['place', 'boundary'].includes(String(hit.class ?? ''));
+}
+
 // Nominatim - חינמי, איטי, פחות מדויק בעברית. ניסיון ראשון.
 async function tryNominatim(q: string): Promise<GeocodeResult | null> {
   await waitForNominatimSlot();
 
   try {
-    const res = await axios.get<Array<{ lat: string; lon: string }>>(NOMINATIM_URL, {
+    const res = await axios.get<SearchHit[]>(NOMINATIM_URL, {
       params: { q, format: 'json', limit: 1, countrycodes: 'il', 'accept-language': 'he' },
       headers: { 'User-Agent': USER_AGENT },
       timeout: 15_000,
     });
     const first = res.data?.[0];
-    if (!first) return null;
+    if (!first || !isPreciseHit(first)) return null;
     const lat = parseFloat(first.lat);
     const lng = parseFloat(first.lon);
     if (!inIsraelBounds(lat, lng)) return null;
@@ -68,7 +89,7 @@ async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
   await waitForLocationIQSlot();
 
   try {
-    const res = await axios.get<Array<{ lat: string; lon: string }>>(LOCATIONIQ_URL, {
+    const res = await axios.get<SearchHit[]>(LOCATIONIQ_URL, {
       params: {
         key: env.LOCATIONIQ_API_KEY,
         q,
@@ -80,7 +101,7 @@ async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
       timeout: 15_000,
     });
     const first = res.data?.[0];
-    if (!first) return null;
+    if (!first || !isPreciseHit(first)) return null;
     const lat = parseFloat(first.lat);
     const lng = parseFloat(first.lon);
     if (!inIsraelBounds(lat, lng)) return null;
@@ -88,6 +109,47 @@ async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
   } catch (err) {
     const status = (err as { response?: { status?: number } }).response?.status;
     logger.warn(`[geocoder] locationiq failed for "${q}" (status=${status}): ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+}
+
+// מילים משם הסניף שמזהות את החנות (בלי סימונים פנימיים של הרשת כמו "ת.", "זכיין", כוכביות)
+const STORE_NAME_NOISE = /[*()"'.,\-־]|\bת\b|\bס\s*מ\b|זכיי?ן|סניף/g;
+export function storeNameTokens(storeName: string): string[] {
+  return storeName.replace(STORE_NAME_NOISE, ' ').split(/\s+/).filter(t => t.length >= 3 && !/^\d+$/.test(t));
+}
+
+// האם תוצאה היא חנות ששמה תואם את הסניף: לפחות מילה אחת משם הסניף (שאינה העיר)
+export function poiMatchesStore(hit: Pick<SearchHit, 'class' | 'name' | 'display_name'>, storeName: string, town: string): boolean {
+  if (hit.class !== 'shop') return false;
+  const hay = `${hit.name ?? ''} ${hit.display_name ?? ''}`;
+  const townWords = new Set(town.split(/\s+/));
+  return storeNameTokens(storeName).some(t => !townWords.has(t) && hay.includes(t));
+}
+
+// סניף בלי כתובת שמישה (סופר ספיר מפרסמת "unknown"): חיפוש החנות עצמה לפי שמה והיישוב.
+// מתקבלת רק תוצאה שהיא חנות, ששמה תואם את הסניף, ושלא סותרת את היישוב.
+async function tryStorePoi(storeName: string, town: string): Promise<GeocodeResult | null> {
+  const name = storeNameTokens(storeName).join(' ');
+  if (!name) return null;
+  await waitForNominatimSlot();
+  try {
+    const res = await axios.get<SearchHit[]>(NOMINATIM_URL, {
+      params: { q: `${name}, ${town}, Israel`, format: 'json', limit: 5, countrycodes: 'il', 'accept-language': 'he' },
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 15_000,
+    });
+    for (const hit of res.data ?? []) {
+      if (!poiMatchesStore(hit, storeName, town)) continue;
+      const lat = parseFloat(hit.lat);
+      const lng = parseFloat(hit.lon);
+      if (!inIsraelBounds(lat, lng)) continue;
+      if (!validateNearCity({ lat, lng }, town) || coordsConflictWithName(lat, lng, storeName)) continue;
+      return { lat, lng };
+    }
+    return null;
+  } catch (err) {
+    logger.warn(`[geocoder] store poi search failed for "${name}, ${town}": ${err instanceof Error ? err.message : 'unknown'}`);
     return null;
   }
 }
@@ -118,7 +180,10 @@ export async function geocodeAddress(
     if (extracted) effectiveCity = extracted;
   }
   const variants = buildQueryVariants(cleanAddress, effectiveCity);
-  if (variants.length === 0) return null;
+  // בלי כתובת שמישה: חיפוש החנות לפי שמה ביישוב
+  if (variants.length === 0) {
+    return storeName && effectiveCity && !isJunkCity(effectiveCity) ? tryStorePoi(storeName, effectiveCity) : null;
+  }
   // תוצאה תקינה: קרובה לעיר, לא "מרכז המדינה" (מה שחוזר לכתובת שלא נמצאה), ולא
   // סותרת את העיר בשם הסניף. בלי זה נשמרו עשרות סניפים בנקודת ברירת מחדל בנגב.
   const acceptable = (r: GeocodeResult) =>
@@ -145,5 +210,7 @@ export async function geocodeAddress(
       }
     }
   }
+  // הכתובת לא נמצאה ברמת רחוב: ניסיון אחרון לפי שם החנות ביישוב
+  if (storeName && effectiveCity && !isJunkCity(effectiveCity)) return tryStorePoi(storeName, effectiveCity);
   return null;
 }

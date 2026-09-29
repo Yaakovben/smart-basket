@@ -183,6 +183,12 @@ const GEOCODE_BATCH_LIMIT = 200;
 
 async function runNightlyGeocode(trigger: 'cron' | 'startup' | 'catch-up'): Promise<void> {
   try {
+    // סניפים כפולים (קוד ישן שעדיין רץ כותב מזהה עם אפסים מובילים): עותק אחד לכל סניף
+    const merged = await BranchDAL.mergeDuplicateStores();
+    if (merged > 0) {
+      invalidateBranchCache();
+      logger.info(`[geocode-nightly] ${trigger}: merged ${merged} duplicate branches`);
+    }
     // שדה עיר מורעל (הושלם בעבר מחיפוש הפוך של מיקום שגוי): שם סניף שהוא בדיוק שם
     // של יישוב קובע, ו"מועצה אזורית" שלא מתאימה לשם נמחקת
     const citiesFixed = await BranchDAL.repairCities(b => {

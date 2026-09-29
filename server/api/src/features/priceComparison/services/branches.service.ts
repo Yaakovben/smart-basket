@@ -75,10 +75,10 @@ async function ensureSeedLoaded(): Promise<void> {
     const now = new Date();
     const ops = KNOWN_BRANCHES.map(b => ({
       updateOne: {
-        filter: { chainId: b.chainId, storeId: b.storeId },
+        filter: { chainId: b.chainId, storeId: normStoreId(b.storeId) },
         update: { $set: {
           chainId: b.chainId, chainName: chainNames[b.chainId] || b.chainId,
-          storeId: b.storeId, storeName: b.storeName,
+          storeId: normStoreId(b.storeId), storeName: b.storeName,
           address: b.address, city: b.city,
           lat: b.lat, lng: b.lng,
           coordSource: 'portal' as const, lastSyncedAt: now,
@@ -100,10 +100,27 @@ async function getBranches(): Promise<IBranchDoc[]> {
   // שדות הכרחיים בלבד - מפחית payload מ-DB ומהירות טעינה לזיכרון
   const all = await Branch.find(
     {},
-    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1, subChainName: 1 }
+    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1, subChainName: 1, lastSyncedAt: 1 }
   ).lean();
-  cache = { branches: all as unknown as IBranchDoc[], loadedAt: Date.now() };
+  cache = { branches: dedupeBranches(all as unknown as IBranchDoc[]), loadedAt: Date.now() };
   return cache.branches;
+}
+
+// אותו סניף פעמיים ("022" ו-"22"): קוד ישן שעדיין רץ כותב מזהים עם אפסים. הלקוח
+// רואה עותק אחד: עם המיקום הטוב ביותר (ידני, פורטל, גיאוקודינג), ובשוויון העדכני
+const COORD_RANK: Record<string, number> = { manual: 4, portal: 3, geocoded: 2 };
+export function dedupeBranches<T extends { chainId: string; storeId: string; lat?: number; coordSource?: string; lastSyncedAt?: Date }>(all: T[]): T[] {
+  const best = new Map<string, T>();
+  const rank = (b: T) => (typeof b.lat === 'number' ? COORD_RANK[b.coordSource ?? ''] ?? 0 : 0);
+  for (const b of all) {
+    const key = `${b.chainId}|${normStoreId(b.storeId)}`;
+    const cur = best.get(key);
+    if (!cur || rank(b) > rank(cur)
+      || (rank(b) === rank(cur) && new Date(b.lastSyncedAt ?? 0).getTime() > new Date(cur.lastSyncedAt ?? 0).getTime())) {
+      best.set(key, b);
+    }
+  }
+  return [...best.values()];
 }
 
 export function invalidateBranchCache(): void {
