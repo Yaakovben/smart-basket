@@ -1,7 +1,9 @@
 import { memo } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, settingsCardSx, settingsIconBoxSx, SETTINGS_ACCENTS } from './listSettingsCardSx';
+
+const ACCENT = SETTINGS_ACCENTS.private;
 
 interface ConvertToPrivateSectionProps {
   onClick: () => void;
@@ -14,9 +16,9 @@ export const ConvertToPrivateSection = memo(({ onClick }: ConvertToPrivateSectio
   const { t } = useSettings();
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1, border: '1px solid', borderColor: 'divider' }}>
+    <Paper elevation={0} sx={settingsCardSx(ACCENT, false, 1)}>
       <Box sx={settingsRowSx} onClick={onClick}>
-        <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>🔒</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToPrivate')}</Typography>
           <Typography sx={rowHintSx}>{t('convertToPrivateHint')}</Typography>

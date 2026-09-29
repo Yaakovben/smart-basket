@@ -3,7 +3,11 @@ import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { focusWithKeyboard } from '../../../../global/helpers/focusWithKeyboard';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
+import {
+  settingsRowSx, rowLabelSx, rowHintSx, settingsCardSx, settingsIconBoxSx, accentPinFieldSx, accentExpandedAreaSx, SETTINGS_ACCENTS,
+} from './listSettingsCardSx';
+
+const ACCENT = SETTINGS_ACCENTS.group;
 
 interface ConvertToGroupSectionProps {
   password: string;
@@ -30,22 +34,22 @@ export const ConvertToGroupSection = memo(({ password, onPasswordChange }: Conve
   };
 
   return (
-    <Paper ref={paperRef} elevation={0} sx={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', mt: 2.5, border: '1px solid', borderColor: 'divider' }}>
+    <Paper ref={paperRef} elevation={0} sx={settingsCardSx(ACCENT, open)}>
       <Box sx={settingsRowSx} onClick={toggle}>
-        <Box component="span" sx={{ fontSize: 22 }}>👥</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>👥</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToGroup')}</Typography>
           <Typography sx={rowHintSx}>{t('convertToGroupHint')}</Typography>
         </Box>
         <ExpandMoreRoundedIcon sx={{
-          color: 'text.disabled', flexShrink: 0,
+          color: ACCENT, flexShrink: 0,
           transition: 'transform 0.25s ease',
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
         }} />
       </Box>
 
       <Collapse in={open} unmountOnExit>
-        <Box sx={expandedAreaSx}>
+        <Box sx={accentExpandedAreaSx(ACCENT)}>
           <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 1.5, lineHeight: 1.55 }}>
             {t('convertToGroupExplain')}
           </Typography>
@@ -62,7 +66,7 @@ export const ConvertToGroupSection = memo(({ password, onPasswordChange }: Conve
             placeholder="• • • •"
             size="small"
             inputProps={{ inputMode: 'numeric', maxLength: 4, 'aria-label': t('setGroupPassword'), style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
-            sx={pinFieldSx}
+            sx={accentPinFieldSx(ACCENT)}
           />
         </Box>
       </Collapse>

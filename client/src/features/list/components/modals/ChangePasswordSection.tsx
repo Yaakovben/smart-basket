@@ -3,7 +3,11 @@ import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { focusWithKeyboard } from '../../../../global/helpers/focusWithKeyboard';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
+import {
+  settingsRowSx, rowLabelSx, rowHintSx, settingsCardSx, settingsIconBoxSx, accentPinFieldSx, accentExpandedAreaSx, SETTINGS_ACCENTS,
+} from './listSettingsCardSx';
+
+const ACCENT = SETTINGS_ACCENTS.password;
 
 interface ChangePasswordSectionProps {
   value: string;
@@ -31,22 +35,22 @@ export const ChangePasswordSection = memo(({ value, onChange }: ChangePasswordSe
   };
 
   return (
-    <Paper ref={paperRef} elevation={0} sx={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2, border: '1px solid', borderColor: 'divider' }}>
+    <Paper ref={paperRef} elevation={0} sx={settingsCardSx(ACCENT, open, 2)}>
       <Box sx={settingsRowSx} onClick={toggle}>
-        <Box component="span" sx={{ fontSize: 22 }}>🔑</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>🔑</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('changePassword')}</Typography>
           <Typography sx={rowHintSx}>{t('changePasswordHint')}</Typography>
         </Box>
         <ExpandMoreRoundedIcon sx={{
-          color: 'text.disabled', flexShrink: 0,
+          color: ACCENT, flexShrink: 0,
           transition: 'transform 0.25s ease',
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
         }} />
       </Box>
 
       <Collapse in={open} unmountOnExit>
-        <Box sx={expandedAreaSx}>
+        <Box sx={accentExpandedAreaSx(ACCENT)}>
           <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1.25 }}>
             {t('newPasswordLabel')}
           </Typography>
@@ -58,7 +62,7 @@ export const ChangePasswordSection = memo(({ value, onChange }: ChangePasswordSe
             size="small"
             fullWidth
             inputProps={{ inputMode: 'numeric', maxLength: 4, 'aria-label': t('newPasswordLabel'), style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
-            sx={pinFieldSx}
+            sx={accentPinFieldSx(ACCENT)}
           />
         </Box>
       </Collapse>
