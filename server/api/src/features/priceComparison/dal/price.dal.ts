@@ -38,6 +38,14 @@ export interface UpsertPriceInput {
   storePrices?: string[];
 }
 
+// שדות מקובצי הרשתות שאף מסך ואף חישוב לא קוראים (סוג פריט, מזהה פנימי, סטטוס,
+// כשרות, כמות באריזה, תיאור יצרן חלופי ועוד). כ-85 בתים למסמך, כלומר עשרות MB במכסה
+// המשותפת. לא נשמרים יותר, ומוסרים ממסמך קיים בעדכון הבא שלו.
+const UNUSED_PRICE_FIELDS = {
+  manufacturerItemDescription: 1, qtyInPackage: 1, itemType: 1, itemId: 1,
+  allowDiscount: 1, itemStatus: 1, bikoretNo: 1,
+} as const;
+
 export const PriceDAL = {
   ...createBaseDal<IPriceDoc>(Price),
 
@@ -56,7 +64,7 @@ export const PriceDAL = {
     const ops = items.map(item => ({
       updateOne: {
         filter: { barcode: item.barcode, chainId: item.chainId },
-        update: { $set: item },
+        update: { $set: item, $unset: UNUSED_PRICE_FIELDS },
         upsert: true,
       },
     }));
