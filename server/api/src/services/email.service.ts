@@ -4,7 +4,13 @@ import { PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-// שליחת מייל דרך Gmail API על HTTPS (לא SMTP).
+// שליחת מייל בשני מסלולים, שניהם על HTTPS (לא SMTP):
+//
+// Resend (מועדף): כשמוגדר RESEND_API_KEY. השולח הוא כתובת בדומיין שלנו
+// (EMAIL_FROM), מאומת ב-SPF וב-DKIM, ולכן המיילים מגיעים ל-Inbox ולא לספאם.
+// מסלול חינמי: 100 מיילים ביום ו-3,000 בחודש.
+//
+// Gmail API (גיבוי): כשאין מפתח של Resend.
 //
 // למה לא SMTP: Render (וספקי אירוח רבים) חוסמים/מגבילים חיבורים יוצאים
 // לפורטי SMTP (25/465/587). ה-repo הזה כבר עבר את הלולאה - nodemailer/SMTP
@@ -23,6 +29,10 @@ import { logger } from '../config';
 //
 // מגבלת שליחה לחשבון Gmail רגיל: ~500 נמענים ליום (כמו SMTP).
 
+const RESEND_SEND_URL = 'https://api.resend.com/emails';
+const RESEND_BATCH_URL = 'https://api.resend.com/emails/batch';
+// Resend מקבל עד 100 מיילים בבקשת batch אחת
+const RESEND_BATCH_SIZE = 100;
 const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
 const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const FROM_NAME = 'Smart Basket';
@@ -36,23 +46,38 @@ const MAX_RECIPIENTS_PER_RUN = 300;
 // אז ~2.5 בשנייה. 4 במקביל עם round-trip של ~350ms ≈ בול בטווח.
 const SEND_CONCURRENCY = 4;
 
-// כל ארבעת משתני הסביבה הנדרשים לשליחת מייל, בשמם המדויק (name -> value).
-const REQUIRED_ENV: Record<string, string | undefined> = {
+// כל ארבעת משתני הסביבה של מסלול Gmail, בשמם המדויק (name -> value).
+const GMAIL_ENV: Record<string, string | undefined> = {
   GMAIL_USER: env.GMAIL_USER,
   GMAIL_CLIENT_ID: env.GMAIL_CLIENT_ID,
   GMAIL_CLIENT_SECRET: env.GMAIL_CLIENT_SECRET,
   GMAIL_REFRESH_TOKEN: env.GMAIL_REFRESH_TOKEN,
 };
 
+type EmailProvider = 'resend' | 'gmail';
+
+function activeProvider(): EmailProvider | null {
+  if (env.RESEND_API_KEY) return 'resend';
+  if (Object.values(GMAIL_ENV).every(Boolean)) return 'gmail';
+  return null;
+}
+
 export function isEmailEnabled(): boolean {
-  return Object.values(REQUIRED_ENV).every(Boolean);
+  return activeProvider() !== null;
 }
 
 /** מצב הגדרת המייל - כולל אילו משתנים חסרים בדיוק, לאבחון בפאנל האדמין. */
-export function emailConfigStatus(): { enabled: boolean; missing: string[] } {
-  const missing = Object.entries(REQUIRED_ENV).filter(([, v]) => !v).map(([k]) => k);
-  return { enabled: missing.length === 0, missing };
+export function emailConfigStatus(): { enabled: boolean; missing: string[]; provider: EmailProvider | null } {
+  const provider = activeProvider();
+  if (provider) return { enabled: true, missing: [], provider };
+  // חלק ממשתני Gmail מוגדרים: מראים מה חסר בו. אחרת מכוונים למסלול המועדף.
+  const gmailMissing = Object.entries(GMAIL_ENV).filter(([, v]) => !v).map(([k]) => k);
+  const missing = gmailMissing.length < Object.keys(GMAIL_ENV).length ? gmailMissing : ['RESEND_API_KEY'];
+  return { enabled: false, missing, provider: null };
 }
+
+// כתובת המנהל לדוחות שגיאה ולדיווחים
+const adminAddress = (): string => env.GMAIL_USER || env.EMAIL_REPLY_TO;
 
 export interface EmailPayload {
   subject: string;
@@ -166,7 +191,51 @@ async function buildRawMessage(to: string, subject: string, body: string, isBulk
   return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+interface ResendEmail {
+  from: string;
+  to: string[];
+  reply_to: string;
+  subject: string;
+  text: string;
+  html: string;
+  headers?: Record<string, string>;
+}
+
+function buildResendEmail(to: string, subject: string, body: string, isBulk: boolean): ResendEmail {
+  return {
+    from: `${FROM_NAME} <${env.EMAIL_FROM}>`,
+    to: [to],
+    reply_to: env.EMAIL_REPLY_TO,
+    subject,
+    text: body,
+    html: renderHtml(body, isBulk),
+    ...(isBulk ? {
+      headers: {
+        'List-Unsubscribe': `<mailto:${env.EMAIL_REPLY_TO}?subject=Unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    } : {}),
+  };
+}
+
+async function resendRequest(url: string, payload: unknown): Promise<void> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Resend ${res.status}: ${errText.slice(0, 300)}`);
+  }
+}
+
 async function sendSingle(to: string, subject: string, body: string, isBulk: boolean): Promise<void> {
+  if (activeProvider() === 'resend') {
+    await resendRequest(RESEND_SEND_URL, buildResendEmail(to, subject, body, isBulk));
+    return;
+  }
   const raw = await buildRawMessage(to, subject, body, isBulk);
   const token = await getAccessToken();
 
@@ -191,6 +260,24 @@ async function sendBatch(
   payload: EmailPayload,
 ): Promise<EmailUserStatus[]> {
   const out: EmailUserStatus[] = [];
+
+  // Resend: בקשת batch לכל 100 נמענים. המגבלה שלהם היא 2 בקשות בשנייה, ולכן
+  // מייל נפרד לכל נמען היה נחסם. batch מתקבל או נדחה בשלמותו.
+  if (activeProvider() === 'resend') {
+    for (let i = 0; i < targets.length; i += RESEND_BATCH_SIZE) {
+      const slice = targets.slice(i, i + RESEND_BATCH_SIZE);
+      let status: 'sent' | 'failed' = 'sent';
+      try {
+        await resendRequest(RESEND_BATCH_URL, slice.map(u => buildResendEmail(u.email, payload.subject, payload.body, true)));
+      } catch (err) {
+        logger.warn('Resend batch failed (%d recipients): %s', slice.length, (err as Error).message);
+        status = 'failed';
+      }
+      slice.forEach(u => out.push({ userId: u._id.toString(), name: u.name, email: u.email, status }));
+    }
+    return out;
+  }
+
   for (let i = 0; i < targets.length; i += SEND_CONCURRENCY) {
     const slice = targets.slice(i, i + SEND_CONCURRENCY);
     const settled = await Promise.allSettled(
@@ -212,9 +299,9 @@ async function sendBatch(
 export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = false): Promise<EmailBroadcastResult> {
   if (!isEmailEnabled()) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
 
-  // fail-fast: אם ה-OAuth שבור, נעצור עכשיו עם סיבה ברורה במקום לנסות
-  // לשלוח לכל הרשימה ולקבל N כשלונות זהים.
-  await getAccessToken();
+  // fail-fast: אם ה-OAuth של Gmail שבור, נעצור עכשיו עם סיבה ברורה במקום
+  // לנסות לשלוח לכל הרשימה ולקבל N כשלונות זהים.
+  if (activeProvider() === 'gmail') await getAccessToken();
 
   const users = await User.find({}, 'name email').lean();
 
@@ -266,9 +353,9 @@ export interface ErrorReportPayload {
   timestamp: string;
 }
 
-// שליחת דוח שגיאה למנהל המערכת (GMAIL_USER). no-op שקט אם המייל לא מוגדר.
+// שליחת דוח שגיאה למנהל המערכת. no-op שקט אם המייל לא מוגדר.
 export async function sendAdminErrorReport(payload: ErrorReportPayload): Promise<void> {
-  if (!isEmailEnabled() || !env.GMAIL_USER) return;
+  if (!isEmailEnabled()) return;
 
   const body = [
     `סוג שגיאה: ${payload.type}`,
@@ -281,19 +368,19 @@ export async function sendAdminErrorReport(payload: ErrorReportPayload): Promise
   ].filter(Boolean).join('\n');
 
   try {
-    await sendSingle(env.GMAIL_USER, `[Smart Basket] שגיאת לקוח: ${payload.message.slice(0, 80)}`, body, false);
+    await sendSingle(adminAddress(), `[Smart Basket] שגיאת לקוח: ${payload.message.slice(0, 80)}`, body, false);
   } catch (err) {
     // לא חוסמים - דוח שגיאה שנכשל לא צריך לגרום לעוד שגיאה
     logger.warn('sendAdminErrorReport failed: %s', (err as Error).message);
   }
 }
 
-// הודעה כללית למנהל המערכת (GMAIL_USER) - למשל דיווח תשלום מנוי שממתין לאישור.
+// הודעה כללית למנהל המערכת - למשל דיווח תשלום מנוי שממתין לאישור.
 // no-op שקט אם המייל לא מוגדר; לעולם לא זורק.
 export async function sendAdminNotice(subject: string, body: string): Promise<void> {
-  if (!isEmailEnabled() || !env.GMAIL_USER) return;
+  if (!isEmailEnabled()) return;
   try {
-    await sendSingle(env.GMAIL_USER, `[Smart Basket] ${subject}`, body, false);
+    await sendSingle(adminAddress(), `[Smart Basket] ${subject}`, body, false);
   } catch (err) {
     logger.warn('sendAdminNotice failed: %s', (err as Error).message);
   }

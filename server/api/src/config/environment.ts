@@ -113,6 +113,14 @@ const envSchema = Joi.object({
   GMAIL_CLIENT_SECRET: Joi.string().optional(),
   GMAIL_REFRESH_TOKEN: Joi.string().optional(),
 
+  // שליחת מיילים דרך Resend מהדומיין שלנו. כשהמפתח מוגדר הוא קודם ל-Gmail:
+  // השולח הוא כתובת בדומיין המאומת (SPF, DKIM), כך שהמיילים לא נופלים לספאם.
+  // הדומיין חייב להיות מאומת ב-Resend לפני השימוש, אחרת כל שליחה נדחית.
+  RESEND_API_KEY: Joi.string().optional(),
+  EMAIL_FROM: Joi.string().email().default('noreply@smart-basket.app'),
+  // לאן מגיעות תשובות של נמענים, ולאן נשלחים דוחות שגיאה ודיווחים למנהל
+  EMAIL_REPLY_TO: Joi.string().email().default('smartbasket129@gmail.com'),
+
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
@@ -218,6 +226,9 @@ export interface Environment {
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
   GMAIL_REFRESH_TOKEN?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_FROM: string;
+  EMAIL_REPLY_TO: string;
   TRIAL_MONTHS: number;
   REVENUECAT_SECRET_KEY?: string;
   REVENUECAT_WEBHOOK_AUTH?: string;
