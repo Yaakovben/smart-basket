@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://smart-basket.vercel.app/sitemap.xml
+Sitemap: https://prod-smart-basket.vercel.app/sitemap.xml

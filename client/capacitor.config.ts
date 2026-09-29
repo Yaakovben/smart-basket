@@ -5,7 +5,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // first-party, וכל עדכון באתר מגיע לאפליקציה בלי לעבור שוב סקירה בחנות.
 // אפשר לדרוס עם CAP_SERVER_URL בזמן cap sync, למשל לבנות גרסת בדיקה מול
 // סביבת non-prod.
-const SERVER_URL = process.env.CAP_SERVER_URL || 'https://smart-basket.vercel.app';
+const SERVER_URL = process.env.CAP_SERVER_URL || 'https://prod-smart-basket.vercel.app';
 
 const config: CapacitorConfig = {
   appId: 'com.smartbasket.app',
