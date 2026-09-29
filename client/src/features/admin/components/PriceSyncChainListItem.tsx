@@ -5,6 +5,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { PriceChainStatus } from '../../priceComparison';
 import { humanizeError } from '../helpers/priceSyncHelpers';
+import { formatUpdatedAt } from '../../../global/helpers';
 import { PriceSyncChainBranchesPanel } from './PriceSyncChainBranchesPanel';
 import type { ChainBranch, NewBranchForm } from '../types/priceSync-types';
 
@@ -79,14 +80,11 @@ export const PriceSyncChainListItem = ({
               </Typography>
             )}
             {c.lastSyncAt && (() => {
-              // eslint-disable-next-line react-hooks/purity -- טקסט "לפני X" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
-              const ageH = (Date.now() - new Date(c.lastSyncAt).getTime()) / 3_600_000;
-              // כמו בשרת: מעל 48 שעות = ישן (הרשתות מפרסמות פעם ביום)
-              const stale = ageH > 48;
-              const label = ageH < 1 ? 'פחות משעה' : ageH < 24 ? `${Math.round(ageH)}ש` : `${Math.round(ageH / 24)}י`;
+              // מתי בדיוק המחירים של הרשת עודכנו במאגר (שעון ישראל). מעל יומיים - אזהרה
+              const updated = formatUpdatedAt(c.lastSyncAt, 'he');
               return (
-                <Typography sx={{ fontSize: 10.5, color: stale ? '#D97706' : 'text.secondary', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                  🕒 לפני {label}
+                <Typography sx={{ fontSize: 10.5, color: updated.daysAgo >= 2 ? '#D97706' : 'text.secondary', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  🕒 עודכן {updated.text}
                 </Typography>
               );
             })()}

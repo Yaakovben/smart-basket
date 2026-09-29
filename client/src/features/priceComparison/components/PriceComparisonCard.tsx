@@ -16,7 +16,7 @@ import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } 
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { ShimmerList } from '../../../global/components';
-import { getRelativeTime } from '../../../global/helpers/dateFormatting';
+import { formatUpdatedAt } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
 import { PriceComparisonHelpModal } from './PriceComparisonHelpModal';
 import { NavigationPicker } from './NavigationPicker';
@@ -98,7 +98,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
   if (loading || !data) return null;
 
-  const freshness = data.lastUpdatedISO ? getRelativeTime(data.lastUpdatedISO, settings.language) : null;
+  // "היום 06:12" / "אתמול 22:10": מאיזה יום המחירים (לכל רשת בנפרד מופיע בכרטיס שלה)
+  const freshness = data.lastUpdatedISO ? formatUpdatedAt(data.lastUpdatedISO, settings.language).text : null;
   const hasChainData = data.chainTotals?.some(c => c.matchedCount > 0) ?? false;
   const hasAnyPendingItems = data.totalPending > 0;
 

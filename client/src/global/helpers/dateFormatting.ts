@@ -125,3 +125,28 @@ export const isActiveThisMonth = (timestamp?: string): boolean => {
   const now = new Date();
   return new Date(timestamp) >= new Date(now.getFullYear(), now.getMonth(), 1);
 };
+
+// ===== מתי עודכנו נתונים (מחירים) =====
+// "היום 06:12" / "אתמול 22:10" / "27.09 06:26", לפי שעון ישראל, כדי שהלקוח יידע בדיוק
+// מאיזה יום המחיר. daysAgo = כמה ימים קלנדריים עברו (0 = היום), לצביעת נתון ישן.
+const UPDATED_WORDS: Record<Language, { today: string; yesterday: string }> = {
+  he: { today: 'היום', yesterday: 'אתמול' },
+  en: { today: 'today', yesterday: 'yesterday' },
+  ru: { today: 'сегодня', yesterday: 'вчера' },
+};
+
+const israelDayKey = (d: Date): string =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(d);
+
+export const formatUpdatedAt = (timestamp: string, language: Language): { text: string; daysAgo: number } => {
+  const d = new Date(timestamp);
+  const now = new Date();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const daysAgo = Math.max(0, Math.round((Date.parse(israelDayKey(now)) - Date.parse(israelDayKey(d))) / dayMs));
+  const time = d.toLocaleTimeString(getLocale(language), { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
+  const words = UPDATED_WORDS[language] ?? UPDATED_WORDS.he;
+  if (daysAgo === 0) return { text: `${words.today} ${time}`, daysAgo };
+  if (daysAgo === 1) return { text: `${words.yesterday} ${time}`, daysAgo };
+  const date = d.toLocaleDateString(getLocale(language), { day: '2-digit', month: '2-digit', timeZone: 'Asia/Jerusalem' });
+  return { text: `${date} ${time}`, daysAgo };
+};

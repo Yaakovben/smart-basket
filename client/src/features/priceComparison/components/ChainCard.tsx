@@ -6,7 +6,7 @@ import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceC
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';
 import { daysSince, STALE_CHAIN_DAYS, type ProductPriceRange } from '../helpers/priceComparisonCardHelpers';
-import { haptic, formatILS } from '../../../global/helpers';
+import { haptic, formatILS, formatUpdatedAt } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 // אנימציה עדינה לכרטיס הראשון - בצבע טורקיז ניטרלי שמתאים לכל סוג מיון
@@ -40,7 +40,7 @@ interface ChainCardProps {
 }
 
 export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, onChangeBranch, onFixMatch, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -174,6 +174,18 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
                   </Typography>
                 </>
               ) : null;
+            })()}
+            {chain.hasData && chain.lastUpdatedISO && (() => {
+              // מתי המחירים של הרשת הזו עודכנו ("היום 06:12", "אתמול 22:10"), לכל רשת בנפרד
+              const updated = formatUpdatedAt(chain.lastUpdatedISO, settings.language);
+              return (
+                <>
+                  <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
+                  <Typography sx={{ fontSize: 10.5, color: updated.daysAgo >= 2 ? 'warning.main' : 'text.secondary', fontWeight: 600 }}>
+                    🕒 {updated.text}
+                  </Typography>
+                </>
+              );
             })()}
             {chain.nearestBranch ? (
               <>

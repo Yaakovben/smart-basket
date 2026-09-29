@@ -120,6 +120,7 @@ export {
   formatDateShort,
   formatTimeShort,
   getRelativeTime,
+  formatUpdatedAt,
   isToday,
   isActiveToday,
   isActiveThisMonth

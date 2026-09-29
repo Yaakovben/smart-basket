@@ -6,7 +6,7 @@ import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
-import { formatILS, formatDateShort, haptic } from '../../../../global/helpers';
+import { formatILS, formatDateShort, formatUpdatedAt, haptic } from '../../../../global/helpers';
 import type { Language } from '../../../../global/types';
 import type { LocationStatus } from '../../hooks/useUserLocation';
 import type { BarcodeScanResult, ScanNearbyBranch, ScanHere } from '../../types/priceComparison.types';
@@ -197,6 +197,16 @@ export const ScanResultView = ({
       <Box sx={{ ...scanCardSx(isDark), position: 'relative', overflow: 'hidden' } as object}>
         <Typography sx={{ fontSize: 17, fontWeight: 900, lineHeight: 1.3 }}>{result.productName}</Typography>
         <Typography dir="ltr" sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25, textAlign: 'start' }}>{result.barcode}</Typography>
+        {(() => {
+          // מאיזה יום המחירים: "היום 06:12" / "אתמול 22:10"
+          const updated = formatUpdatedAt(result.pricesAsOf, lang);
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, color: updated.daysAgo >= 2 ? 'warning.main' : 'text.secondary' }}>
+              <ScheduleRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography sx={{ fontSize: 11.5, fontWeight: 600 }}>{s.pricesUpdated(updated.text)}</Typography>
+            </Box>
+          );
+        })()}
         {(refreshing || locating) && (
           <>
             <Typography sx={{ fontSize: 11.5, color: SCAN_TEAL, fontWeight: 700, mt: 0.75 }}>{refreshing ? s.refreshing : s.locating}</Typography>
@@ -280,7 +290,13 @@ export const ScanResultView = ({
                     {c.cheapestBranch ? s.chainFromBranch(formatILS(c.minPrice, 2), c.cheapestBranch.branchName) : s.chainFromSome(formatILS(c.minPrice, 2))}
                   </Typography>
                 )}
-                {c.stale && <Typography sx={{ fontSize: 11, color: 'warning.main' }}>{s.chainStale(date(c.updatedAt))}</Typography>}
+                {(() => {
+                  // רשת שלא עודכנה היום: מתי כן. ישנה מיומיים ומעלה - בצבע אזהרה
+                  const updated = formatUpdatedAt(c.updatedAt, lang);
+                  return updated.daysAgo >= 1 ? (
+                    <Typography sx={{ fontSize: 11, color: c.stale ? 'warning.main' : 'text.disabled' }}>{s.chainUpdated(updated.text)}</Typography>
+                  ) : null;
+                })()}
                 {c.promo && <Box sx={{ mt: 0.4 }}><PromoChip s={s} promo={c.promo} someBranches={!c.promoAllBranches} /></Box>}
               </Box>
               <Typography sx={{ fontSize: 14.5, fontWeight: 900, color: i === 0 ? SCAN_TEAL : 'text.primary', flexShrink: 0 }}>{formatILS(c.typicalPrice, 2)}</Typography>
