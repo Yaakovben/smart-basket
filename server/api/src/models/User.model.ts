@@ -55,6 +55,9 @@ export interface IUser extends Document {
   // מקור ה-Pro הנוכחי: 'trial' = חודשי מתנה להרשמה, 'paid' = שולם/אושר ע"י אדמין,
   // 'store' = מנוי מתחדש שנרכש באפליקציה דרך App Store או Google Play.
   planSource?: 'trial' | 'paid' | 'store';
+  // עד מתי היה Pro במתנה או בתשלום ידני כשהמשתמש קנה בחנות. נשמר כדי שחידוש,
+  // ביטול או החזר כספי בחנות לא יקצרו ימים שכבר היו שלו לפני הרכישה.
+  planGiftUntil?: Date;
   // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
   // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
   legacyTrialGrantedAt?: Date;
@@ -161,6 +164,9 @@ const userSchema = new Schema<IUser>(
     planSource: {
       type: String,
       enum: ['trial', 'paid', 'store'],
+    },
+    planGiftUntil: {
+      type: Date,
     },
     legacyTrialGrantedAt: {
       type: Date,

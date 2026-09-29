@@ -36,9 +36,9 @@ export const getVapidPublicKey = asyncHandler(async (_req: Request, res: Respons
  */
 export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
-  const { subscription } = req.body;
+  const { subscription, explicit } = req.body as { subscription: Parameters<typeof pushService.subscribe>[1]; explicit?: boolean };
 
-  await pushService.subscribe(userId, subscription, webPushDeviceFromUserAgent(req.get('User-Agent')));
+  await pushService.subscribe(userId, subscription, webPushDeviceFromUserAgent(req.get('User-Agent')), explicit === true);
   res.json({ success: true, message: 'Subscribed to push notifications' });
 });
 

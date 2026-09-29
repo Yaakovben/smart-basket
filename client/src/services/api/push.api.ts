@@ -14,11 +14,15 @@ const getVapidPublicKey = async (): Promise<string | null> => {
   }
 };
 
-/** הרשמה להתראות push */
-const subscribeToPush = async (subscription: PushSubscription): Promise<boolean> => {
+/**
+ * הרשמה להתראות push. explicit: המשתמש לחץ "הפעל התראות" במכשיר הזה, והשרת
+ * שומר את המנוי גם אם יש לו את האפליקציה מהחנות בטלפון אחר מאותו סוג.
+ */
+const subscribeToPush = async (subscription: PushSubscription, explicit = false): Promise<boolean> => {
   try {
     await apiClient.post('/push/subscribe', {
       subscription: subscription.toJSON(),
+      explicit,
     });
     return true;
   } catch {

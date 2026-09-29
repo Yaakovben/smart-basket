@@ -13,6 +13,8 @@ const subscribeSchema = Joi.object({
       auth: Joi.string().required(),
     }).required(),
   }).required(),
+  // true כשהמשתמש לחץ "הפעל התראות", false בסנכרון האוטומטי בפתיחה
+  explicit: Joi.boolean().optional(),
 });
 
 const unsubscribeSchema = Joi.object({

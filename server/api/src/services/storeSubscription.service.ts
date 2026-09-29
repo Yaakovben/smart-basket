@@ -59,9 +59,10 @@ export interface StoreSyncResult {
  * כללים:
  *  - מנוי קבוע (Pro בלי תפוגה, שהוענק ידנית) לא נוגעים בו לעולם.
  *  - הרשאה פעילה בחנות: Pro עד תאריך התפוגה בחנות, והמקור עובר לחנות. אם
- *    יש כבר Pro פעיל עם תאריך מאוחר יותר (ניסיון/תשלום ידני), שומרים עליו.
+ *    יש כבר Pro פעיל עם תאריך מאוחר יותר (ניסיון/תשלום ידני), התאריך הזה
+ *    נשמר ב-planGiftUntil ונשמר גם בכל חידוש.
  *  - הרשאה שפגה: משנים רק משתמש שה-Pro שלו הגיע מהחנות, כדי לא לפגוע
- *    בחודשי מתנה או בתשלום ידני.
+ *    בחודשי מתנה או בתשלום ידני. אם נשארו לו ימי מתנה, חוזרים אליהם.
  */
 export async function syncStoreSubscription(userId: string, notify = false): Promise<StoreSyncResult> {
   if (!isStoreBillingConfigured()) {
@@ -99,19 +100,28 @@ export async function syncStoreSubscription(userId: string, notify = false): Pro
     if (!storeExpiry) {
       update = { plan: 'pro', planExpiresAt: null, planAutoRenew: false, planSource: 'store' };
     } else {
-      // מי שקנה בזמן חודשי מתנה או תשלום ידני לא מאבד ימים: התאריך המאוחר מבין השניים.
-      const keepLater = wasPro && user.planSource !== 'store' && user.planExpiresAt! > storeExpiry;
+      // מי שקנה בזמן חודשי מתנה או תשלום ידני לא מאבד ימים. ברכישה הראשונה
+      // התאריך הקודם נשמר, ובכל חידוש אחר כך לוקחים את המאוחר מבין השניים.
+      const giftUntil = user.planSource !== 'store'
+        ? (wasPro && user.planExpiresAt! > storeExpiry ? user.planExpiresAt! : null)
+        : user.planGiftUntil ?? null;
+      const gift = giftUntil && giftUntil > now ? giftUntil : null;
       update = {
         plan: 'pro',
-        planExpiresAt: keepLater ? user.planExpiresAt : storeExpiry,
+        planExpiresAt: gift && gift > storeExpiry ? gift : storeExpiry,
         planAutoRenew: willRenew,
         planSource: 'store',
+        planGiftUntil: gift,
       };
     }
   } else if (user.planSource === 'store') {
     // פג או הוחזר כסף. isPro כבר מתייחס לתאריך שעבר כחינמי; מעדכנים את התאריך
     // לערך מהחנות (בהחזר כספי הוא מוקדם מהמקורי) ומכבים חידוש.
-    update = { planExpiresAt: storeExpiry && storeExpiry < now ? storeExpiry : now, planAutoRenew: false };
+    // ימי מתנה שהיו לו לפני הרכישה נשארים שלו גם אחרי ביטול או החזר.
+    const gift = user.planGiftUntil && user.planGiftUntil > now ? user.planGiftUntil : null;
+    update = gift
+      ? { planExpiresAt: gift, planAutoRenew: false }
+      : { planExpiresAt: storeExpiry && storeExpiry < now ? storeExpiry : now, planAutoRenew: false };
   }
 
   if (!update) return { active, expiresAt: storeExpiry, changed: false };

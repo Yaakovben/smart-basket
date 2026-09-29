@@ -218,7 +218,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return false;
       }
 
-      const success = await pushApi.subscribeToPush(subscription);
+      const success = await pushApi.subscribeToPush(subscription, true);
 
       if (success) {
         setIsSubscribed(true);

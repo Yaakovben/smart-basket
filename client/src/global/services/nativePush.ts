@@ -48,9 +48,12 @@ async function obtainToken(): Promise<string> {
       handles.forEach(h => { void h.remove(); });
       fn();
     };
+    // הרישום של מאזין מסתיים אחרי שהוא כבר פעיל, ולכן finish יכול לרוץ לפני
+    // שהגיע ה-handle. מאזין שמגיע אחרי הסיום מוסר מיד, אחרת הוא נשאר לתמיד.
+    const keep = (h: { remove: () => Promise<void> }) => { if (done) void h.remove(); else handles.push(h); };
     const timer = setTimeout(() => finish(() => reject(new Error('REGISTRATION_TIMEOUT'))), REGISTRATION_TIMEOUT_MS);
-    void PushNotifications.addListener('registration', (t) => finish(() => resolve(t.value))).then(h => handles.push(h));
-    void PushNotifications.addListener('registrationError', (e) => finish(() => reject(new Error(e.error)))).then(h => handles.push(h));
+    void PushNotifications.addListener('registration', (t) => finish(() => resolve(t.value))).then(keep);
+    void PushNotifications.addListener('registrationError', (e) => finish(() => reject(new Error(e.error)))).then(keep);
     void PushNotifications.register().catch((err) => finish(() => reject(err)));
   });
 }

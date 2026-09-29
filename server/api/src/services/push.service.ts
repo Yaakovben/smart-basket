@@ -52,18 +52,21 @@ export function getPublicKey(): string | null {
 
 /**
  * הרשמת מכשיר למנוי Push מהאתר. מוחק מנוי קודם לאותו endpoint (רה-סאבסקרייב).
- * טלפון שכבר רשומה בו האפליקציה מהחנות מקבל התראות ממנה, ולכן מנוי מהאתר
- * באותו סוג טלפון לא נשמר: בלי זה משתמש שעבר ממסך הבית לאפליקציה, והשאיר
- * את שניהם, היה מקבל כל התראה פעמיים.
+ * טלפון שכבר רשומה בו האפליקציה מהחנות מקבל התראות ממנה, ולכן הסנכרון האוטומטי
+ * בפתיחת האתר לא שומר מנוי באותו סוג טלפון: בלי זה משתמש שעבר ממסך הבית
+ * לאפליקציה, והשאיר את שניהם, היה מקבל כל התראה פעמיים.
+ * הפעלה מפורשת (explicit) נשמרת תמיד: המשתמש לחץ "הפעל התראות" במכשיר הזה,
+ * למשל בטלפון שני שאין בו את האפליקציה מהחנות.
  */
 export async function subscribe(
   userId: string,
   subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
   device: WebPushDevice,
+  explicit = false,
 ): Promise<void> {
   // מחיקת מנוי קיים לאותו endpoint (במקרה של הרשמה מחדש)
   await PushSubscriptionDAL.deleteByEndpoint(subscription.endpoint);
-  if (device !== 'desktop' && await DeviceTokenDAL.existsForUserAndPlatform(userId, device)) return;
+  if (!explicit && device !== 'desktop' && await DeviceTokenDAL.existsForUserAndPlatform(userId, device)) return;
   await PushSubscriptionDAL.create({
     userId,
     endpoint: subscription.endpoint,
@@ -94,10 +97,12 @@ export async function hasSubscription(userId: string): Promise<boolean> {
 
 /** רישום טוקן התראות של מכשיר (אנדרואיד: FCM, iOS: APNs). */
 export async function registerDevice(userId: string, token: string, platform: 'ios' | 'android'): Promise<void> {
+  const hadAppOnPlatform = await DeviceTokenDAL.existsForUserAndPlatform(userId, platform);
   await DeviceTokenDAL.upsert(userId, token, platform);
-  // מעכשיו הטלפון מקבל התראות מהאפליקציה: מנויים מהאתר באותו סוג טלפון נמחקים,
-  // כדי שלא תגיע כל התראה פעמיים. מחשב נשאר עם ההתראות שלו.
-  await PushSubscriptionDAL.deleteByUserAndDevice(userId, platform);
+  // המכשיר הראשון מהחנות בסוג הטלפון הזה: מנויים ישנים מהאתר באותו סוג טלפון
+  // נמחקים, כדי שלא תגיע כל התראה פעמיים. רק בפעם הראשונה ולא בכל פתיחה,
+  // אחרת היה נמחק גם מנוי שהמשתמש הפעיל במפורש בטלפון שני. מחשב לא מושפע.
+  if (!hadAppOnPlatform) await PushSubscriptionDAL.deleteByUserAndDevice(userId, platform);
 }
 
 /** ביטול טוקן של מכשיר (כיבוי התראות או יציאה מהחשבון). */
