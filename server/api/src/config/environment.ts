@@ -120,6 +120,9 @@ const envSchema = Joi.object({
   EMAIL_FROM: Joi.string().email().default('noreply@smart-basket.app'),
   // לאן מגיעות תשובות של נמענים, ולאן נשלחים דוחות שגיאה ודיווחים למנהל
   EMAIL_REPLY_TO: Joi.string().email().default('smartbasket129@gmail.com'),
+  // מכסת המיילים היומית של המסלול ב-Resend (החינמי: 100). מוצגת בפאנל האדמין,
+  // ושליחה לכולם מעליה נחסמת מראש. אחרי שדרוג מעדכנים כאן בלי שינוי קוד.
+  EMAIL_DAILY_LIMIT: Joi.number().integer().min(1).default(100),
 
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
@@ -229,6 +232,7 @@ export interface Environment {
   RESEND_API_KEY?: string;
   EMAIL_FROM: string;
   EMAIL_REPLY_TO: string;
+  EMAIL_DAILY_LIMIT: number;
   TRIAL_MONTHS: number;
   REVENUECAT_SECRET_KEY?: string;
   REVENUECAT_WEBHOOK_AUTH?: string;

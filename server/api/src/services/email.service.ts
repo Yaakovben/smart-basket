@@ -66,14 +66,21 @@ export function isEmailEnabled(): boolean {
   return activeProvider() !== null;
 }
 
+// מכסה יומית לפי המסלול: ב-Resend לפי התוכנית, ב-Gmail המגבלה של חשבון רגיל
+const GMAIL_DAILY_LIMIT = 500;
+const dailyLimit = (provider: EmailProvider | null): number | null =>
+  provider === 'resend' ? env.EMAIL_DAILY_LIMIT : provider === 'gmail' ? GMAIL_DAILY_LIMIT : null;
+
 /** מצב הגדרת המייל - כולל אילו משתנים חסרים בדיוק, לאבחון בפאנל האדמין. */
-export function emailConfigStatus(): { enabled: boolean; missing: string[]; provider: EmailProvider | null } {
+export function emailConfigStatus(): {
+  enabled: boolean; missing: string[]; provider: EmailProvider | null; dailyLimit: number | null;
+} {
   const provider = activeProvider();
-  if (provider) return { enabled: true, missing: [], provider };
+  if (provider) return { enabled: true, missing: [], provider, dailyLimit: dailyLimit(provider) };
   // חלק ממשתני Gmail מוגדרים: מראים מה חסר בו. אחרת מכוונים למסלול המועדף.
   const gmailMissing = Object.entries(GMAIL_ENV).filter(([, v]) => !v).map(([k]) => k);
   const missing = gmailMissing.length < Object.keys(GMAIL_ENV).length ? gmailMissing : ['RESEND_API_KEY'];
-  return { enabled: false, missing, provider: null };
+  return { enabled: false, missing, provider: null, dailyLimit: null };
 }
 
 // כתובת המנהל לדוחות שגיאה ולדיווחים
@@ -316,6 +323,13 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
   if (targets.length > MAX_RECIPIENTS_PER_RUN) {
     throw new Error(
       `${targets.length} נמענים - מעל מגבלת ${MAX_RECIPIENTS_PER_RUN} לשליחה אחת. שלח בכמה סבבים או צמצם עם "ללא push".`,
+    );
+  }
+  // מעל המכסה היומית של Resend חלק מהמיילים היו נדחים באמצע השליחה. עוצרים
+  // מראש, לפני שמישהו מקבל מייל וחלק אחר לא.
+  if (activeProvider() === 'resend' && targets.length > env.EMAIL_DAILY_LIMIT) {
+    throw new Error(
+      `${targets.length} נמענים - מעל המכסה היומית של ${env.EMAIL_DAILY_LIMIT} מיילים. צמצם עם "ללא push", או שדרג את המסלול ב-Resend ועדכן את EMAIL_DAILY_LIMIT.`,
     );
   }
 

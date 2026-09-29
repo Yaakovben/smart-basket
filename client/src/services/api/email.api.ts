@@ -23,14 +23,17 @@ export interface SendEmailResult {
 export interface EmailConfigStatus {
   enabled: boolean;
   missing: string[]; // שמות משתני env שחסרים בשרת
+  provider: 'resend' | 'gmail' | null;
+  dailyLimit: number | null; // מכסת המיילים היומית של המסלול הפעיל
 }
 
 const getEmailStatus = async (): Promise<EmailConfigStatus> => {
   try {
     const r = await apiClient.get<{ data: EmailConfigStatus }>('/email/status');
-    return { enabled: !!r.data.data.enabled, missing: r.data.data.missing ?? [] };
+    const d = r.data.data;
+    return { enabled: !!d.enabled, missing: d.missing ?? [], provider: d.provider ?? null, dailyLimit: d.dailyLimit ?? null };
   } catch {
-    return { enabled: false, missing: [] };
+    return { enabled: false, missing: [], provider: null, dailyLimit: null };
   }
 };
 

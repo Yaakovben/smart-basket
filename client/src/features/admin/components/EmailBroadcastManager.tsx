@@ -9,7 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import { Modal } from '../../../global/components';
-import { emailApi, type BroadcastEmailResult, type SendEmailResult } from '../../../services/api';
+import { emailApi, type BroadcastEmailResult, type SendEmailResult, type EmailConfigStatus } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 
 interface EmailBroadcastManagerProps {
@@ -34,7 +34,7 @@ export const EmailBroadcastManager = ({ isDark, users, onClose }: EmailBroadcast
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<Result>(null);
   const [confirming, setConfirming] = useState(false);
-  const [emailCfg, setEmailCfg] = useState<{ enabled: boolean; missing: string[] } | null>(null);
+  const [emailCfg, setEmailCfg] = useState<EmailConfigStatus | null>(null);
   const emailEnabled = emailCfg?.enabled ?? null;
 
   useEffect(() => {
@@ -123,6 +123,7 @@ export const EmailBroadcastManager = ({ isDark, users, onClose }: EmailBroadcast
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Typography sx={{ fontSize: 12.5, color: 'text.secondary', textAlign: 'center', mt: -1 }}>
           המייל ייצא מהחשבון המוגדר בשרת
+          {emailCfg?.dailyLimit ? ` · עד ${emailCfg.dailyLimit} מיילים ביום` : ''}
         </Typography>
 
         {emailEnabled === false && (
