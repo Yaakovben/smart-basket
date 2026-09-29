@@ -86,6 +86,20 @@ const envSchema = Joi.object({
   // לא מייל אישי. אפשר לדרוס עם VAPID_EMAIL בסביבה.
   VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:smartbasket129@gmail.com'),
 
+  // ===== התראות באפליקציות מהחנות (נייטיב) =====
+  // אנדרואיד: Firebase Cloud Messaging. קובץ ה-JSON של Service Account מ-Firebase
+  // (Project settings, Service accounts, Generate new private key), כמחרוזת JSON
+  // או בקידוד base64. בלעדיו אין התראות באנדרואיד (שאר האפליקציה עובדת).
+  FCM_SERVICE_ACCOUNT: Joi.string().allow('').default(''),
+  // iOS: APNs ישירות מול אפל. מפתח .p8 מפורטל המפתחים (Keys, Apple Push
+  // Notifications service), תוכן הקובץ או base64, עם מזהה המפתח ומזהה הצוות.
+  APNS_KEY: Joi.string().allow('').default(''),
+  APNS_KEY_ID: Joi.string().allow('').default(''),
+  APNS_TEAM_ID: Joi.string().allow('').default(''),
+  APNS_BUNDLE_ID: Joi.string().default('com.smartbasket.app'),
+  // true רק לבנייה שמותקנת מ-Xcode ישירות. TestFlight וחנות: production.
+  APNS_USE_SANDBOX: Joi.boolean().default(false),
+
   // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
@@ -185,6 +199,12 @@ export interface Environment {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_EMAIL: string;
+  FCM_SERVICE_ACCOUNT: string;
+  APNS_KEY: string;
+  APNS_KEY_ID: string;
+  APNS_TEAM_ID: string;
+  APNS_BUNDLE_ID: string;
+  APNS_USE_SANDBOX: boolean;
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   CLOUDINARY_CLOUD_NAME?: string;

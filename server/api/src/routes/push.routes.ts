@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import Joi from 'joi';
-import { getVapidPublicKey, subscribe, unsubscribe, getStatus, broadcast, sendToUser } from '../controllers/push.controller';
+import { getVapidPublicKey, subscribe, unsubscribe, getStatus, broadcast, sendToUser, registerNativeDevice, unregisterNativeDevice } from '../controllers/push.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 
 const router = Router();
@@ -17,6 +17,16 @@ const subscribeSchema = Joi.object({
 
 const unsubscribeSchema = Joi.object({
   endpoint: Joi.string().uri().required(),
+});
+
+// טוקן של האפליקציה מהחנות: FCM (אנדרואיד) או APNs (iOS, 64 תווי hex)
+const nativeRegisterSchema = Joi.object({
+  token: Joi.string().trim().min(20).max(4096).required(),
+  platform: Joi.string().valid('ios', 'android').required(),
+});
+
+const nativeUnregisterSchema = Joi.object({
+  token: Joi.string().trim().min(20).max(4096).required(),
 });
 
 const broadcastSchema = Joi.object({
@@ -39,6 +49,10 @@ router.get('/vapid-public-key', getVapidPublicKey);
 router.post('/subscribe', authenticate, validate(subscribeSchema), subscribe);
 router.post('/unsubscribe', authenticate, validate(unsubscribeSchema), unsubscribe);
 router.get('/status', authenticate, getStatus);
+
+// התראות באפליקציות מהחנות
+router.post('/native/register', authenticate, validate(nativeRegisterSchema), registerNativeDevice);
+router.post('/native/unregister', authenticate, validate(nativeUnregisterSchema), unregisterNativeDevice);
 
 // שידור לכל המשתמשים - אדמין בלבד
 router.post('/broadcast', authenticate, isAdmin, validate(broadcastSchema), broadcast);

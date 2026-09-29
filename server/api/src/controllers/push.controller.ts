@@ -64,6 +64,26 @@ export const getStatus = asyncHandler(async (req: AuthRequest, res: Response): P
 });
 
 /**
+ * POST /api/push/native/register
+ * רישום טוקן התראות של האפליקציה מהחנות (אנדרואיד: FCM, iOS: APNs).
+ */
+export const registerNativeDevice = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { token, platform } = req.body as { token: string; platform: 'ios' | 'android' };
+  await pushService.registerDevice(req.user!.id, token, platform);
+  res.json({ success: true });
+});
+
+/**
+ * POST /api/push/native/unregister
+ * ביטול טוקן של מכשיר (כיבוי התראות או יציאה מהחשבון).
+ */
+export const unregisterNativeDevice = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { token } = req.body as { token: string };
+  await pushService.unregisterDevice(req.user!.id, token);
+  res.json({ success: true });
+});
+
+/**
  * POST /api/push/broadcast
  * שליחת הודעת push לכל המשתמשים הרשומים. אדמין בלבד (isAdmin ב-route).
  */

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- צבע ההדגשה של התראות (טורקיז המותג, זהה ל-ANDROID_COLOR בשרת) -->
+    <color name="notification_color">#14B8A6</color>
+</resources>

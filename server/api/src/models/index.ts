@@ -5,6 +5,7 @@ export { RefreshToken, type IRefreshToken } from './RefreshToken.model';
 export { LoginActivity, type ILoginActivity, type LoginMethod, type LoginPlatform, parseLoginPlatform } from './LoginActivity.model';
 export { Notification, type INotification as INotificationDoc, type NotificationType } from './Notification.model';
 export { PushSubscription, type IPushSubscription } from './PushSubscription.model';
+export { DeviceToken, type IDeviceToken, type DevicePlatform } from './DeviceToken.model';
 // Price model הועבר ל-features/priceComparison/models/Price.model.ts
 export { SubscriptionRequest, type ISubscriptionRequest, type SubscriptionRequestStatus, type SubscriptionPayMethod } from './SubscriptionRequest.model';
 export { Feedback, type IFeedback } from './Feedback.model';

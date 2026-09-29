@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
+import { installNativePushHandlers, resyncNativePush } from "../global/services/nativePush";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner, MaintenanceApologyNotice } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
@@ -157,6 +158,15 @@ export const AppRouter = () => {
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
+
+  // התראות באפליקציה מהחנות: לחיצה על התראה פותחת את המסך שלה, ובכל כניסה
+  // של משתמש מחובר הטוקן של המכשיר מתרענן מול השרת (מכשיר יכול להחליף טוקן)
+  useEffect(() => {
+    void installNativePushHandlers((url) => navigate(url));
+  }, [navigate]);
+  useEffect(() => {
+    if (user?.id) void resyncNativePush();
+  }, [user?.id]);
 
   // פופאפ קבלת פנים ל-Pro - פעם אחת לכל "מצב מנוי" חדש שהמשתמש עוד לא ראה
   // (מתנה/תשלום שאושר/הפעלה ידנית ע"י אדמין), בין אם זה קרה ממש עכשיו

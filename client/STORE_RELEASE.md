@@ -16,15 +16,46 @@
 |---|---|
 | רכישת Pro בחנויות (RevenueCat), שחזור רכישות, ניהול מנוי | מוכן |
 | Sign in with Apple ב-iOS (חובה כשיש כניסה עם גוגל, הנחיה 4.8) | מוכן, בשרת ובאפליקציה |
-| מחיקת חשבון מתוך האפליקציה (הנחיה 5.1.1) | קיים בהגדרות |
+| התראות באפליקציות: FCM באנדרואיד, APNs ב-iOS, לחיצה פותחת את המסך הנכון | מוכן, מחכה למפתחות |
+| מחיקת חשבון מתוך האפליקציה (הנחיה 5.1.1), בשם ברור "מחיקת החשבון" | קיים בהגדרות |
 | מסך אופליין ממותג כשנפתחים בלי חיבור (במקום מסך שגיאה ריק) | מוכן |
-| הסתרת הצעות "הוסף למסך הבית" ו-Web Push באפליקציה מהחנות | מוכן |
+| הסתרת הצעת "הוסף למסך הבית" באפליקציה מהחנות | מוכן |
 | שוליים בטוחים באנדרואיד (מסך מלא מקצה לקצה) ובאייפון | מוכן |
 | iPhone בלבד, מצב אנכי, arm64, עברית כשפת פיתוח | מוכן |
-| Privacy Manifest של אפל (`ios/App/App/PrivacyInfo.xcprivacy`) | מוכן |
+| Privacy Manifest של אפל, entitlements ל-Apple Sign In ולהתראות | מוכן |
+| אייקון התראה לבן ואחיד באנדרואיד, וערוץ התראות | מוכן |
 | הסברי הרשאות (מיקום, מצלמה, תמונות) בעברית | קיימים ב-Info.plist |
 | מדיניות פרטיות ותנאי שימוש מעודכנים, כולל סעיף מנוי מתחדש | `/privacy`, `/terms` |
 | קישורי תנאים ופרטיות ליד כפתור הרכישה | קיימים |
+
+---
+
+## שלב 0: מיזוג ל-main (חובה לפני בנייה לחנות)
+
+האפליקציה מהחנות טוענת את **האתר של הפרודקשן**, שנבנה מענף `main`. כל העבודה
+על החנויות (Apple Sign In, התראות, מסך אופליין, מדיניות פרטיות) נמצאת כרגע
+ב-`non-prod` בלבד. בלי מיזוג, האפליקציה בחנות תיטען בלי כל אלה, ואפל תדחה אותה.
+
+- [ ] למזג `non-prod` ל-`main` ולפרוס את השרת והאתר של הפרודקשן.
+- [ ] **החלטה שצריך לקבל לפני המיזוג:** מנוי Pro והמכסות היומיות (Freemium) נמצאים
+      היום רק ב-non-prod. רכישה בחנות דורשת אותם, אז במיזוג הזה הם עולים גם לפרודקשן.
+- בדיקה על non-prod לפני המיזוג: אפשר לבנות אפליקציה שמצביעה על אתר ה-non-prod עם
+  `CAP_SERVER_URL=<כתובת האתר של non-prod> npx cap sync`. **לא להעלות בנייה כזו לחנות.**
+
+## האם צריך להחליף כתובות (URL)?
+
+| איפה | הכתובת היום | צריך לשנות? |
+|---|---|---|
+| האתר שהאפליקציה טוענת (`capacitor.config.ts`) | `https://smart-basket.vercel.app` | לא. רק אם עוברים לדומיין משלכם, ואז גם בנייה חדשה לחנות |
+| מסך האופליין (`public/offline.html`, `APP_URL`) | `https://smart-basket.vercel.app/` | לא. אם מחליפים דומיין, לשנות גם כאן |
+| Webhook של RevenueCat | `https://smart-basket-api-prod.onrender.com/api/store-billing/webhook` | לא. זה שרת הפרודקשן (לפי ה-proxy ב-main) |
+| מדיניות פרטיות ותנאי שימוש בחנויות | `https://smart-basket.vercel.app/privacy`, `/terms` | לא |
+| Google OAuth, client מסוג Web (Authorized origins) | כפי שמוגדר היום לאתר | לא. באפליקציה עובדים client מסוג Android ו-iOS (שלב 5) |
+| `VITE_APP_STORE_URL`, `VITE_PLAY_STORE_URL` ב-Vercel | לא מוגדרים | כן, אחרי שהאפליקציות פורסמו (שלב 6) |
+
+אם בעתיד עוברים לדומיין משלכם (למשל `app.smartbasket.co.il`): לשנות ב-`capacitor.config.ts`
+וב-`public/offline.html`, להוסיף את הדומיין ל-Authorized origins של Google, לבנות גרסה
+חדשה לשתי החנויות, ולעדכן את כתובות המדיניות בחנויות.
 
 ---
 
@@ -33,18 +64,22 @@
 - [ ] **Apple Developer Program**: 99$ לשנה. אישור לוקח בדרך כלל יום עד יומיים.
 - [ ] **Google Play Console**: 25$ חד פעמי. חשבון חדש של אדם פרטי צריך
       **בדיקה סגורה של 12 בודקים במשך 14 יום** לפני שמותר לפרסם לכולם.
-      כדאי להתחיל את זה כמה שיותר מוקדם (ראו שלב 7).
+      כדאי להתחיל את זה כמה שיותר מוקדם (ראו שלב 8).
 - [ ] ב-App Store Connect: לחתום על **Paid Apps Agreement** ולמלא פרטי בנק ומס.
       בלי זה מוצרי המנוי לא נטענים באפליקציה.
 - [ ] ב-Play Console: להגדיר **פרופיל תשלומים** (Payments profile).
+- [ ] **Firebase** (חינמי): פרויקט חדש ב-console.firebase.google.com, להתראות באנדרואיד.
 
-## שלב 2: יצירת האפליקציות בחנויות
+## שלב 2: יצירת האפליקציות
 
 - [ ] App Store Connect: אפליקציה חדשה, Bundle ID `com.smartbasket.app`, שם `Smart Basket`,
       שפה ראשית עברית.
-- [ ] בפורטל המפתחים של אפל (Identifiers): להפעיל ל-`com.smartbasket.app` את
-      **Sign In with Apple** ואת **In-App Purchase**.
+- [ ] בפורטל המפתחים של אפל (Identifiers, `com.smartbasket.app`): להפעיל
+      **Sign In with Apple**, **In-App Purchase** ו-**Push Notifications**.
 - [ ] Play Console: אפליקציה חדשה, package `com.smartbasket.app`, שפת ברירת מחדל עברית.
+- [ ] Firebase: Add app, Android, package `com.smartbasket.app`. להוריד את
+      `google-services.json` ולשים ב-`client/android/app/google-services.json`.
+      **בלעדיו בניית release נעצרת בכוונה**, כי האפליקציה הייתה קורסת בהפעלת התראות.
 
 ## שלב 3: מוצרי מנוי
 
@@ -71,28 +106,39 @@
 - [ ] ב-Xcode, Info, URL Types: להוסיף URL Scheme עם ה-iOS client ID ההפוך
       (`com.googleusercontent.apps.XXXX`).
 
-## שלב 6: משתני סביבה
+## שלב 6: מפתחות התראות ומשתני סביבה
 
-שרת (Render):
+מפתחות להתראות:
+- [ ] **אנדרואיד:** Firebase, Project settings, Service accounts, Generate new private key.
+      מתקבל קובץ JSON.
+- [ ] **iOS:** developer.apple.com, Keys, +, לסמן Apple Push Notifications service.
+      להוריד את קובץ ה-`.p8` (אפשר להוריד **פעם אחת בלבד**), ולרשום את Key ID
+      ואת Team ID (מופיע בפינה של פורטל המפתחים).
+
+שרת הפרודקשן (Render), ואחר כך Redeploy:
 - [ ] `REVENUECAT_SECRET_KEY` המפתח הסודי `sk_...`
 - [ ] `REVENUECAT_WEBHOOK_AUTH` אותו ערך שהוגדר ב-webhook
-- `APPLE_CLIENT_IDS` לא צריך: ברירת המחדל היא `com.smartbasket.app`
+- [ ] `FCM_SERVICE_ACCOUNT` כל תוכן קובץ ה-JSON מ-Firebase (או base64 שלו)
+- [ ] `APNS_KEY` תוכן קובץ ה-`.p8` (או base64 שלו)
+- [ ] `APNS_KEY_ID` ו-`APNS_TEAM_ID`
+- לא צריך: `APPLE_CLIENT_IDS`, `APNS_BUNDLE_ID` (ברירות המחדל נכונות), ו-`APNS_USE_SANDBOX`
+  (נשאר false, מתאים ל-TestFlight ולחנות)
 
-לקוח (Vercel), ואחר כך Redeploy:
+האתר (Vercel), ואחר כך Redeploy:
 - [ ] `VITE_REVENUECAT_IOS_KEY` המפתח הציבורי `appl_...`
 - [ ] `VITE_REVENUECAT_ANDROID_KEY` המפתח הציבורי `goog_...`
 - [ ] `VITE_GOOGLE_IOS_CLIENT_ID` ה-client ID מסוג iOS
 - [ ] אחרי הפרסום: `VITE_APP_STORE_URL` ו-`VITE_PLAY_STORE_URL`. עד אז עמוד המנוי
       באתר כותב "האפליקציה תהיה זמינה בחנויות בקרוב".
 
-## שלב 7: בנייה והעלאה
+## שלב 7: בנייה
 
 ### Android (אפשר מ-Windows)
 - [ ] מפתח חתימה, פעם אחת בלבד:
   ```
   keytool -genkey -v -keystore android/app/release.jks -alias smartbasket -keyalg RSA -keysize 2048 -validity 10000
   ```
-  ולצור `android/keystore.properties` (לא נכנס ל-git):
+  וליצור `android/keystore.properties` (לא נכנס ל-git):
   ```
   storeFile=release.jks
   storePassword=...
@@ -101,22 +147,33 @@
   ```
   **לגבות את הקובץ והסיסמאות במקום בטוח. בלעדיהם אי אפשר לעדכן את האפליקציה לעולם.**
 - [ ] `npm run cap:android`, ובאנדרואיד סטודיו: Build, Generate Signed Bundle (AAB).
-- [ ] להעלות ל-**Closed testing**, להוסיף 12 בודקים (אימיילים של גוגל), ולהשאיר
-      אותם פעילים 14 יום. אחר כך להגיש ל-Production.
+- [ ] לפני כל גרסה חדשה לחנות: להעלות את `versionCode` ב-`android/app/build.gradle`.
 
 ### iOS (דורש Mac)
-- [ ] `npm run cap:ios`. ב-Xcode, Signing & Capabilities: לבחור את הצוות, ולוודא שמופיעים
-      **Sign In with Apple** (מגיע מהקובץ `App.entitlements`) ו-**In-App Purchase** (להוסיף).
+- [ ] על ה-Mac: `npm install` ואז `npm run cap:ios`. זה גם מייצר מחדש את
+      `ios/App/CapApp-SPM/Package.swift` עם הנתיבים הנכונים ל-Mac.
+- [ ] ב-Xcode, Signing & Capabilities: לבחור את הצוות, ולוודא שמופיעים
+      **Sign In with Apple** ו-**Push Notifications** (מגיעים מ-`App.entitlements`),
+      ולהוסיף **In-App Purchase**.
 - [ ] Product, Archive, ואז Distribute App ל-App Store Connect.
-- [ ] לבדוק ב-TestFlight לפני ההגשה: כניסה עם גוגל, עם Apple ועם אימייל, רכישת מנוי
-      ב-Sandbox, שחזור רכישות, ופתיחה במצב טיסה (אמור להופיע מסך האופליין).
+- [ ] לפני כל גרסה חדשה: להעלות את Build (`CURRENT_PROJECT_VERSION`).
 - אין Mac? אפשר לבנות בענן עם Codemagic או Ionic Appflow.
 
-## שלב 8: חשבון לבודקים
+## שלב 8: בדיקה והגשה
 
-- [ ] לצור משתמש קבוע עם אימייל וסיסמה, לדוגמה `review@...`, עם כמה רשימות ומוצרים,
-      וקבוצה אחת משותפת, כדי שהבודק יראה את האפליקציה בפעולה.
-- [ ] לא לתת לחשבון הזה Pro קבוע: הבודקים של אפל צריכים לראות ולבדוק את מסך הרכישה.
+- [ ] **Android:** להעלות ל-Closed testing, להוסיף 12 בודקים (אימיילים של גוגל),
+      ולהשאיר אותם פעילים 14 יום. אחר כך להגיש ל-Production.
+- [ ] **iOS:** לבדוק ב-TestFlight לפני ההגשה.
+- [ ] רשימת בדיקה בשתי המערכות:
+  - כניסה עם גוגל, עם Apple (iOS) ועם אימייל
+  - הגדרות, התראות, הפעלת התראות, ואז שינוי ברשימה משותפת ממכשיר אחר: מגיעה התראה,
+    ולחיצה עליה פותחת את הרשימה
+  - רכישת מנוי ב-Sandbox, ושחזור רכישות
+  - פתיחה במצב טיסה: מופיע מסך האופליין, וכשהחיבור חוזר האפליקציה נטענת לבד
+  - סריקת ברקוד (מצלמה), וסניפים קרובים (מיקום)
+  - מחיקת חשבון
+- [ ] חשבון לבודקים: משתמש קבוע עם אימייל וסיסמה, עם כמה רשימות ומוצרים וקבוצה
+      משותפת. לא לתת לו Pro קבוע: הבודקים צריכים לראות את מסך הרכישה.
 
 ---
 
@@ -137,6 +194,7 @@ Smart Basket הופכת את הקניות המשותפות לפשוטות.
 • עוזר AI שמציע מוצרים, מסדר את הרשימה ועונה על שאלות
 • השוואת מחירים בין רשתות וסניפים קרובים אליך
 • סידור אוטומטי לפי מחלקות בסופר, או בסדר שלך
+• התראות כשמישהו מעדכן רשימה משותפת
 • עובדת גם בקליטה חלשה: השינויים נשמרים ומסונכרנים כשהחיבור חוזר
 • תובנות על הרגלי הקנייה וההוצאות שלך
 
@@ -158,6 +216,7 @@ Smart Basket makes shared shopping simple.
 • AI assistant that suggests products, organizes your list and answers questions
 • Price comparison across chains and nearby stores
 • Automatic sorting by store aisle, or your own order
+• Notifications when someone updates a shared list
 • Works on a weak connection: changes are saved and synced when you are back online
 • Insights into your shopping habits and spending
 
@@ -190,10 +249,12 @@ Password: <review account password>
 
 Smart Basket is a shared shopping-list app. Lists sync in real time between
 members of a group. Pro is an auto-renewing subscription purchased with In-App
-Purchase (Settings > Manage subscription). Sign in with Apple and Google are
+Purchase (Settings > Manage Subscription). Sign in with Apple and Google are
 available on the login screen. Account deletion: Settings > Delete Account.
-Location is optional and used only to show nearby store branches for price
-comparison. Camera is used to scan barcodes and photos of shopping lists.
+Notifications are optional (Settings > Notifications) and are sent when a
+shared list changes. Location is optional and used only to show nearby store
+branches for price comparison. Camera is used to scan barcodes and photos of
+shopping lists.
 ```
 
 ---
@@ -217,6 +278,7 @@ comparison. Camera is used to scan barcodes and photos of shopping lists.
 - App activity: App interactions, Other user-generated content. מטרה: App functionality, Analytics.
 - Financial info: Purchase history. מטרה: App functionality.
 - App info and performance: Crash logs, Diagnostics. מטרה: App functionality.
+- Device or other IDs: לא (טוקן ההתראות משמש רק לשליחת התראות, לא לזיהוי).
 - מיקום: לא נאסף (עיבוד בזמן אמת בלבד, לא נשמר).
 - Data shared with third parties: לא (ספקי תשתית שפועלים מטעמנו לא נחשבים שיתוף).
 
@@ -235,7 +297,6 @@ comparison. Camera is used to scan barcodes and photos of shopping lists.
 
 ## אחרי ההשקה (לא חוסם אישור)
 
-- **התראות נייטיב** (Firebase Cloud Messaging ו-APNs): היום התראות Push עובדות
-  באתר ובאפליקציה שהותקנה ממנו, אבל לא באפליקציה מהחנות. בינתיים הן מוסתרות שם.
 - **ביטול אסימון Apple במחיקת חשבון**: אפל ממליצה לבטל את הרשאת Sign in with Apple
-  דרך ה-REST API שלה כשמשתמש מוחק חשבון. דורש מפתח `.p8` מפורטל המפתחים.
+  דרך ה-REST API שלה כשמשתמש מוחק חשבון. דורש מפתח `.p8` נוסף מפורטל המפתחים.
+- **מונה על אייקון האפליקציה** (badge) לפי מספר ההתראות שלא נקראו.

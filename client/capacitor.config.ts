@@ -34,6 +34,10 @@ const config: CapacitorConfig = {
       launchShowDuration: 0,
       backgroundColor: '#14B8A6',
     },
+    // התראה שמגיעה כשהאפליקציה פתוחה מוצגת גם ב-iOS (ברירת המחדל: לא מוצגת)
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
     // טקסט לבן בשורת הסטטוס, מעל הכותרות הצבעוניות (כמו באתר המותקן)
     StatusBar: {
       style: 'DARK',

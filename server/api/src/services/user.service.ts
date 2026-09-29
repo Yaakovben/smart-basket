@@ -5,7 +5,7 @@
  */
 
 import mongoose from 'mongoose';
-import { UserDAL, ListDAL, ProductDAL, NotificationDAL, PushSubscriptionDAL } from '../dal';
+import { UserDAL, ListDAL, ProductDAL, NotificationDAL, PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
 import { invalidateAllUserTokens } from './token.service';
@@ -192,8 +192,9 @@ export async function deleteAccount(userId: string): Promise<void> {
       // 3. הסרה מרשימות קבוצתיות שהמשתמש חבר בהן
       await ListDAL.removeUserFromAllLists(userId, session);
 
-      // 4. Push subscriptions
+      // 4. Push subscriptions: דפדפן, ומכשירים של האפליקציות מהחנות
       await PushSubscriptionDAL.deleteByUserId(userId, session);
+      await DeviceTokenDAL.deleteByUserId(userId, session);
 
       // 5. התראות
       await NotificationDAL.deleteByUserId(userId, session);

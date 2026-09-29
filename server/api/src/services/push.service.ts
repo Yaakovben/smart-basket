@@ -8,10 +8,13 @@
  */
 
 import webPush from 'web-push';
-import { PushSubscriptionDAL } from '../dal';
-import { User } from '../models';
+import { PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
+import { User, type IDeviceToken } from '../models';
 import { env } from '../config/environment';
 import { logger } from '../config';
+import { sendFcm, isFcmEnabled, type SendOutcome } from './nativePush/fcm.sender';
+import { sendApns, isApnsEnabled } from './nativePush/apns.sender';
+import type { NativePushMessage } from './nativePush/nativePushPayload';
 
 // אתחול web-push עם מפתחות VAPID. אם חסרים - הלוגיקה בהמשך תדלג על שליחות.
 // (VAPID_EMAIL תמיד קיים - ברירת מחדל ל-env, ראה environment.ts.)
@@ -69,10 +72,46 @@ export async function unsubscribe(userId: string, endpoint?: string): Promise<vo
   }
 }
 
-/** האם למשתמש יש מנוי Push פעיל. */
+/** האם למשתמש יש מנוי Push פעיל (דפדפן או אפליקציה מהחנות). */
 export async function hasSubscription(userId: string): Promise<boolean> {
-  const count = await PushSubscriptionDAL.countByUserId(userId);
-  return count > 0;
+  const [web, native] = await Promise.all([
+    PushSubscriptionDAL.countByUserId(userId),
+    DeviceTokenDAL.countByUserId(userId),
+  ]);
+  return web + native > 0;
+}
+
+// ============== מכשירים נייטיב (האפליקציות מהחנות) ==============
+
+/** רישום טוקן התראות של מכשיר (אנדרואיד: FCM, iOS: APNs). */
+export async function registerDevice(userId: string, token: string, platform: 'ios' | 'android'): Promise<void> {
+  await DeviceTokenDAL.upsert(userId, token, platform);
+}
+
+/** ביטול טוקן של מכשיר (כיבוי התראות או יציאה מהחשבון). */
+export async function unregisterDevice(userId: string, token: string): Promise<void> {
+  await DeviceTokenDAL.deleteByUserAndToken(userId, token);
+}
+
+const toNativeMessage = (payload: PushPayload): NativePushMessage => ({
+  title: payload.title,
+  body: payload.body,
+  url: payload.data?.url,
+  data: { listId: payload.data?.listId, type: payload.data?.type, notificationId: payload.data?.notificationId },
+});
+
+// שליחה למכשיר נייטיב אחד, עם מחיקה של טוקן מת (אפליקציה שהוסרה וכו').
+// שירות שלא הוגדר (בלי מפתחות) נחשב כישלון שקט, לא טוקן מת.
+async function sendToDevice(device: IDeviceToken, msg: NativePushMessage): Promise<boolean> {
+  const outcome: SendOutcome = device.platform === 'ios'
+    ? (isApnsEnabled() ? await sendApns(device.token, msg) : 'error')
+    : (isFcmEnabled() ? await sendFcm(device.token, msg) : 'error');
+  if (outcome === 'dead') {
+    try { await DeviceTokenDAL.deleteByToken(device.token); } catch (err) {
+      logger.warn('Failed to delete dead device token: %s', (err as Error).message);
+    }
+  }
+  return outcome === 'ok';
 }
 
 // ============== שליחה ==============
@@ -116,25 +155,38 @@ export interface SendResult {
 
 /** שליחת push לכל המכשירים של משתמש יחיד. מחזיר סטטוס מסירה מפורט. */
 export async function sendToUser(userId: string, payload: PushPayload): Promise<SendResult> {
-  const subscriptions = await PushSubscriptionDAL.findByUserId(userId);
-  if (subscriptions.length === 0) return { hasSubscription: false, delivered: 0, failed: 0 };
-  if (!isEnabled()) return { hasSubscription: true, delivered: 0, failed: subscriptions.length };
+  const [subscriptions, devices] = await Promise.all([
+    PushSubscriptionDAL.findByUserId(userId),
+    DeviceTokenDAL.findByUserId(userId),
+  ]);
+  if (subscriptions.length === 0 && devices.length === 0) return { hasSubscription: false, delivered: 0, failed: 0 };
 
   const payloadStr = JSON.stringify(payload);
-  const results = await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  const msg = toNativeMessage(payload);
+  const results = await Promise.all([
+    ...subscriptions.map(sub => (isEnabled() ? sendToSubscription(sub, payloadStr) : Promise.resolve(false))),
+    ...devices.map(d => sendToDevice(d, msg)),
+  ]);
   const delivered = results.filter(Boolean).length;
   return { hasSubscription: true, delivered, failed: results.length - delivered };
 }
 
-/** שליחת push לכמה משתמשים במקביל (שאילתה אחת למנויים + שליחה מקבילה). */
+/** שליחת push לכמה משתמשים במקביל, לכל המכשירים (דפדפן ואפליקציה). */
 export async function sendToUsers(userIds: string[], payload: PushPayload): Promise<void> {
-  if (!isEnabled() || userIds.length === 0) return;
+  if (userIds.length === 0) return;
 
-  const subscriptions = await PushSubscriptionDAL.findByUserIds(userIds);
-  if (subscriptions.length === 0) return;
+  const [subscriptions, devices] = await Promise.all([
+    isEnabled() ? PushSubscriptionDAL.findByUserIds(userIds) : Promise.resolve([]),
+    DeviceTokenDAL.findByUserIds(userIds),
+  ]);
+  if (subscriptions.length === 0 && devices.length === 0) return;
 
   const payloadStr = JSON.stringify(payload);
-  await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  const msg = toNativeMessage(payload);
+  await Promise.all([
+    ...subscriptions.map(sub => sendToSubscription(sub, payloadStr)),
+    ...devices.map(d => sendToDevice(d, msg)),
+  ]);
 }
 
 export interface UserDeliveryStatus {
@@ -163,8 +215,11 @@ export interface BroadcastResult {
  * לא הפעיל push (לא ניתן היה לשלוח אליו כלל).
  */
 export async function sendToAll(payload: PushPayload): Promise<BroadcastResult> {
-  const users = await User.find({}, 'name').lean();
-  const subscriptions = await PushSubscriptionDAL.find({});
+  const [users, subscriptions, devices] = await Promise.all([
+    User.find({}, 'name').lean(),
+    PushSubscriptionDAL.find({}),
+    DeviceTokenDAL.findAll(),
+  ]);
 
   const subsByUser = new Map<string, typeof subscriptions>();
   for (const sub of subscriptions) {
@@ -172,20 +227,27 @@ export async function sendToAll(payload: PushPayload): Promise<BroadcastResult> 
     const userSubs = subsByUser.get(key);
     if (userSubs) userSubs.push(sub); else subsByUser.set(key, [sub]);
   }
+  const devicesByUser = new Map<string, IDeviceToken[]>();
+  for (const d of devices) {
+    const key = d.userId.toString();
+    const list = devicesByUser.get(key);
+    if (list) list.push(d); else devicesByUser.set(key, [d]);
+  }
 
-  const enabled = isEnabled();
-  const payloadStr = enabled ? JSON.stringify(payload) : null;
+  const payloadStr = isEnabled() ? JSON.stringify(payload) : null;
+  const msg = toNativeMessage(payload);
 
   const perUser: UserDeliveryStatus[] = await Promise.all(users.map(async (u): Promise<UserDeliveryStatus> => {
     const userId = u._id.toString();
     const subs = subsByUser.get(userId) || [];
-    if (subs.length === 0) {
+    const userDevices = devicesByUser.get(userId) || [];
+    if (subs.length === 0 && userDevices.length === 0) {
       return { userId, name: u.name, status: 'no_subscription', delivered: 0, failed: 0 };
     }
-    if (!payloadStr) {
-      return { userId, name: u.name, status: 'failed', delivered: 0, failed: subs.length };
-    }
-    const results = await Promise.all(subs.map(sub => sendToSubscription(sub, payloadStr)));
+    const results = await Promise.all([
+      ...subs.map(sub => (payloadStr ? sendToSubscription(sub, payloadStr) : Promise.resolve(false))),
+      ...userDevices.map(d => sendToDevice(d, msg)),
+    ]);
     const delivered = results.filter(Boolean).length;
     return { userId, name: u.name, status: delivered > 0 ? 'delivered' : 'failed', delivered, failed: results.length - delivered };
   }));

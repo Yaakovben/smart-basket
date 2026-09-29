@@ -7,6 +7,7 @@ import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 import { diagLog } from "../helpers/crashLog";
 import { countAppOpen } from "../helpers/appOpenCount";
 import { clearOfflineQueue } from "../../services/offlineQueue";
+import { isNativePushAvailable, disableNativePush } from "../services/nativePush";
 import { INSIGHTS_CACHE_KEY } from "../../features/insights/helpers/insightsCache";
 import { clearSubscriptionStatus } from "../../features/subscription/subscriptionStatusStore";
 
@@ -271,6 +272,9 @@ export function useAuth() {
     } catch {
       // ממשיכים בהתנתקות גם אם ביטול ההתראות נכשל
     }
+    // באפליקציה מהחנות: הטוקן של המכשיר הזה, כדי שהתראות של החשבון לא ימשיכו
+    // להגיע לטלפון אחרי היציאה (חייב לפני logout, כשעוד יש הרשאה בשרת)
+    if (isNativePushAvailable()) await disableNativePush().catch(() => {});
     try {
       await authApi.logout();
     } catch {

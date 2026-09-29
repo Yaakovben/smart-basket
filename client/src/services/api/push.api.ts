@@ -90,6 +90,15 @@ const sendPushToUser = async (userId: string, title: string, body: string, url?:
   return response.data.data;
 };
 
+// ===== התראות באפליקציה מהחנות (FCM באנדרואיד, APNs ב-iOS) =====
+const registerNativeDevice = async (token: string, platform: 'ios' | 'android'): Promise<void> => {
+  await apiClient.post('/push/native/register', { token, platform });
+};
+
+const unregisterNativeDevice = async (token: string): Promise<void> => {
+  await apiClient.post('/push/native/unregister', { token });
+};
+
 export const pushApi = {
   getVapidPublicKey,
   subscribeToPush,
@@ -97,4 +106,6 @@ export const pushApi = {
   unsubscribeAllPush,
   broadcastPush,
   sendPushToUser,
+  registerNativeDevice,
+  unregisterNativeDevice,
 };

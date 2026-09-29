@@ -18,7 +18,7 @@ import mongoose from 'mongoose';
 import type { AuthRequest } from '../types';
 import { asyncHandler, israelDayStart, israelMonthStart } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
-import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
+import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { listAdminRequests, approveRequest, rejectRequest, countLegacyTrialEligible, grantLegacyTrialToExistingUsers } from '../services/subscription.service';
 import { listFeedback } from '../services/feedback.service';
@@ -36,13 +36,15 @@ export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) =>
   const userIds = users.map(u => String(u._id));
   // שאילתה יחידה בשביל כל המשתמשים (לא N+1) - מזהה מי יש לו מנוי push פעיל,
   // כדי שפאנל השליחה יוכל להראות את זה מיד עם בחירת משתמש, לפני שליחה בפועל.
-  const [loginStats, pushSubscribedIds] = await Promise.all([
+  // push פעיל = בדפדפן או באפליקציה מהחנות
+  const [loginStats, pushSubscribedIds, nativePushIds] = await Promise.all([
     LoginActivityDAL.getStatsByUser(userIds),
     PushSubscriptionDAL.distinctUserIds(),
+    DeviceTokenDAL.distinctUserIds(),
   ]);
 
   const statsMap = new Map(loginStats.map(s => [s.userId, s]));
-  const pushSubscribedSet = new Set(pushSubscribedIds.map(String));
+  const pushSubscribedSet = new Set([...pushSubscribedIds, ...nativePushIds].map(String));
 
   // מיזוג סטטיסטיקות + הסרת שדות פנימיים (_id, __v, password)
   const usersWithStats = users.map(user => {

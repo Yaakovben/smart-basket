@@ -65,6 +65,15 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// בנייה לחנות בלי google-services.json הייתה עוברת, אבל האפליקציה קורסת ברגע
+// שמשתמש מפעיל התראות (Firebase לא מאותחל). עוצרים את הבנייה עם הסבר ברור.
+gradle.taskGraph.whenReady { graph ->
+    def releaseBuild = graph.allTasks.any { it.name.toLowerCase().contains('release') }
+    if (releaseBuild && !file('google-services.json').exists()) {
+        throw new GradleException("חסר android/app/google-services.json (Firebase > Project settings > Android app). בלעדיו האפליקציה קורסת בהפעלת התראות.")
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {

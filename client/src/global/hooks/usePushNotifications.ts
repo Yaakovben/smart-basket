@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { pushApi } from '../../services/api';
+import {
+  isNativePushAvailable, getNativePermission, isNativePushEnabled, enableNativePush, disableNativePush,
+} from '../services/nativePush';
 
 interface UsePushNotificationsReturn {
   isSupported: boolean;
@@ -68,6 +71,20 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // בדיקת תמיכה בהתראות push
   useEffect(() => {
     const checkSupport = async () => {
+      // באפליקציה מהחנות: התראות המכשיר (FCM / APNs), תמיד "מותקנת"
+      if (isNativePushAvailable()) {
+        setIsSupported(true);
+        setIsPwaInstalled(true);
+        try {
+          setPermission(await getNativePermission());
+          const enabled = await isNativePushEnabled();
+          setIsSubscribed(enabled);
+          notifySubscriptionChange(enabled);
+        } catch { /* הפלאגין לא זמין: נשאר כבוי */ }
+        setLoading(false);
+        return;
+      }
+
       const supported = 'serviceWorker' in navigator &&
                        'PushManager' in window &&
                        'Notification' in window;
@@ -110,9 +127,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // בדיקה מחדש של הרשאת התראות כשהמשתמש חוזר לאפליקציה (ייתכן ששינה בהגדרות)
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && 'Notification' in window) {
-        setPermission(Notification.permission);
+      if (document.visibilityState !== 'visible') return;
+      if (isNativePushAvailable()) {
+        // חזרה מהגדרות המכשיר: ייתכן שהמשתמש אישר או חסם התראות שם
+        getNativePermission().then(setPermission).catch(() => {});
+        return;
       }
+      if ('Notification' in window) setPermission(Notification.permission);
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
@@ -123,6 +144,21 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     if (!isSupported) {
       setError('NOT_SUPPORTED');
       return false;
+    }
+
+    if (isNativePushAvailable()) {
+      setLoading(true);
+      setError(null);
+      const result = await enableNativePush().catch(() => 'failed' as const);
+      setPermission(await getNativePermission().catch(() => 'default' as NotificationPermission));
+      if (result === 'enabled') {
+        setIsSubscribed(true);
+        notifySubscriptionChange(true);
+      } else {
+        setError(result === 'denied' ? 'PERMISSION_DENIED' : 'SUBSCRIBE_FAILED');
+      }
+      setLoading(false);
+      return result === 'enabled';
     }
 
     if (!checkPwaInstalled()) {
@@ -208,6 +244,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
     setLoading(true);
     setError(null);
+
+    if (isNativePushAvailable()) {
+      await disableNativePush();
+      setIsSubscribed(false);
+      notifySubscriptionChange(false);
+      setLoading(false);
+      return true;
+    }
 
     try {
       const registration = await Promise.race([

@@ -1,6 +1,6 @@
 import MailComposer from 'nodemailer/lib/mail-composer';
 import { User } from '../models';
-import { PushSubscriptionDAL } from '../dal';
+import { PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
@@ -220,8 +220,9 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
 
   let userIdsWithPush = new Set<string>();
   if (onlyWithoutPush) {
-    const subs = await PushSubscriptionDAL.find({});
-    userIdsWithPush = new Set(subs.map(s => s.userId.toString()));
+    // גם מי שהתראות פועלות לו באפליקציה מהחנות נחשב "עם push"
+    const [subs, nativeUserIds] = await Promise.all([PushSubscriptionDAL.find({}), DeviceTokenDAL.distinctUserIds()]);
+    userIdsWithPush = new Set([...subs.map(s => s.userId.toString()), ...nativeUserIds]);
   }
 
   const targets = users.filter(u => !(onlyWithoutPush && userIdsWithPush.has(u._id.toString())));

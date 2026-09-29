@@ -12,6 +12,7 @@ import { useHome } from '../hooks/useHome';
 import { useListReorder } from '../hooks/useListReorder';
 import { useHomeNotifications } from '../hooks/useHomeNotifications';
 import { useHomePushPrompt } from '../hooks/useHomePushPrompt';
+import { nativePushBlockedHint } from '../../../global/helpers/pushBlockedHint';
 import { useFeedbackPopup } from '../hooks/useFeedbackPopup';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
@@ -346,7 +347,7 @@ export const HomeComponent = memo(({
               {pushPromptError ? t('pushNotifBlocked') : t('enableNotifications')}
             </Typography>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-              {pushPromptError ? t('pushNotifBlockedDesc') : t('pushNotifBenefits')}
+              {pushPromptError ? (nativePushBlockedHint(settings.language) ?? t('pushNotifBlockedDesc')) : t('pushNotifBenefits')}
             </Typography>
             {!pushPromptError && (
               <Button
