@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Typography, Paper, Collapse, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -41,9 +41,33 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
   // המצב האמיתי: Pro שתוקפו עבר מוצג כחינמי
   const proKind = localPlan === 'pro' ? proKindOf({ ...user, plan: 'pro' }) : null;
 
-  const toggleExpand = useCallback(() => {
-    setIsExpanded(prev => !prev);
+  const paperRef = useRef<HTMLDivElement | null>(null);
+
+  // כרטיס שנפתח בתחתית המסך נפתח מתחת לקצה הנראה, ונראה כאילו לא קרה
+  // כלום. אחרי אנימציית הפתיחה גוללים כך שהתוכן יהיה גלוי. כרטיס גבוה
+  // מהמסך מיושר לראשו, כדי שהשם והפרטים הראשונים לא ייחתכו למעלה.
+  const revealCard = useCallback(() => {
+    window.setTimeout(() => {
+      const el = paperRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewH = window.visualViewport?.height || window.innerHeight;
+      if (rect.top >= 0 && rect.bottom <= viewH) return;
+      el.scrollIntoView({ behavior: 'smooth', block: rect.height > viewH * 0.85 ? 'start' : 'nearest' });
+    }, 260);
   }, []);
+
+  const toggleExpand = useCallback(() => {
+    setIsExpanded(prev => {
+      if (!prev) revealCard();
+      return !prev;
+    });
+  }, [revealCard]);
+
+  // "פרטים נוספים" נפתח רק אחרי שהרשימות נטענו, ואז גוללים אליו
+  useEffect(() => {
+    if (showDetails && !detailsLoading) revealCard();
+  }, [showDetails, detailsLoading, revealCard]);
 
   const handlePlanChanged = useCallback((userId: string, plan: 'free' | 'pro') => {
     setLocalPlan(plan);
@@ -55,7 +79,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
     : user.lastAppOpenAt || user.lastLoginAt;
 
   return (
-    <Paper sx={userRowPaperSx(isOnline, isDark, isRtl)}>
+    <Paper ref={paperRef} sx={userRowPaperSx(isOnline, isDark, isRtl)}>
       {/* שורה ראשית */}
       <Box onClick={toggleExpand} sx={userRowMainSx(isDark)}>
         {/* אווטאר עם נקודת אונליין */}

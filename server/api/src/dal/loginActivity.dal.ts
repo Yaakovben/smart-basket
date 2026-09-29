@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { LoginActivity, type ILoginActivity, type LoginMethod, type LoginPlatform } from '../models';
+import { LoginActivity, User, type ILoginActivity, type LoginMethod, type LoginPlatform } from '../models';
 import { createBaseDal } from './base.dal';
 
 type UserLoginStats = {
@@ -200,27 +200,34 @@ export const LoginActivityDAL = {
     return withLatest(data, userIds, startedAt);
   },
 
-  // ספירת כניסות מתאריך מסוים (כולל ייחודיים)
+  // ספירת כניסות מתאריך מסוים (כולל ייחודיים). נספרים רק משתמשים שעדיין
+  // קיימים: רשומות כניסה של חשבונות שנמחקו נשארות במאגר, ובלעדי הסינון
+  // "פעילים החודש" הראה יותר משתמשים מסך כל המשתמשים.
   async getStatsSince(since: Date): Promise<{
     totalLogins: number;
     uniqueUsers: number;
   }> {
     const result = await LoginActivity.aggregate([
       { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: '$user', logins: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          pipeline: [{ $project: { _id: 1 } }],
+          as: 'existing',
+        },
+      },
+      { $match: { 'existing.0': { $exists: true } } },
       {
         $group: {
           _id: null,
-          totalLogins: { $sum: 1 },
-          uniqueUsers: { $addToSet: '$user' },
+          totalLogins: { $sum: '$logins' },
+          uniqueUsers: { $sum: 1 },
         },
       },
-      {
-        $project: {
-          _id: 0,
-          totalLogins: 1,
-          uniqueUsers: { $size: '$uniqueUsers' },
-        },
-      },
+      { $project: { _id: 0, totalLogins: 1, uniqueUsers: 1 } },
     ]);
     return result[0] || { totalLogins: 0, uniqueUsers: 0 };
   },
