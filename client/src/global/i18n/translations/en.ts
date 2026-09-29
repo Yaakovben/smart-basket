@@ -21,7 +21,7 @@ export const en: Translations = {
   language: 'Language',
   helpSupport: 'Help & Support',
   about: 'About',
-  deleteAllData: 'Delete All Data',
+  deleteAllData: 'Delete Account',
   notificationSettings: 'Notification Settings',
   enableNotifications: 'Enable Notifications',
   groupNotifications: 'List Notifications',

@@ -20,7 +20,7 @@ export const he: Translations = {
   language: 'שפה',
   helpSupport: 'עזרה ותמיכה',
   about: 'אודות',
-  deleteAllData: 'מחק את כל הנתונים',
+  deleteAllData: 'מחיקת החשבון',
   notificationSettings: 'הגדרות התראות',
   enableNotifications: 'הפעל התראות',
   groupNotifications: 'התראות רשימות',

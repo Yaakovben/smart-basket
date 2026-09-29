@@ -21,7 +21,7 @@ export const ru: Translations = {
   language: 'Язык',
   helpSupport: 'Помощь и поддержка',
   about: 'О приложении',
-  deleteAllData: 'Удалить все данные',
+  deleteAllData: 'Удалить аккаунт',
   notificationSettings: 'Настройки уведомлений',
   enableNotifications: 'Включить уведомления',
   groupNotifications: 'Уведомления списка',
