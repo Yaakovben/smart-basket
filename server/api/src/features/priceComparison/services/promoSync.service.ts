@@ -12,6 +12,7 @@ import { PriceSyncLogDAL } from '../dal/priceSyncLog.dal';
 import { parsePromoBuffer } from '../chains/promoXmlParser';
 import { PromoAccumulator } from './promoAggregation';
 import { validatePromoFeed } from './syncValidation';
+import { storageAllowsWrite, MAX_CLUSTER_USAGE_MB } from './storageGuard';
 import { logger } from '../../../config/logger';
 import type { ChainAdapter } from '../chains/types';
 
@@ -52,6 +53,16 @@ export async function syncPromotionsForChain(adapter: ChainAdapter, runId: strin
   if (!adapter.listPromoFullFiles) {
     await log({ chainId, type: 'promo-full', runId, startedAt, status: 'skipped', error: 'adapter_has_no_promo_support' });
     return { status: 'skipped', error: 'adapter_has_no_promo_support' };
+  }
+
+  // אותו שומר מכסה כמו במחירים: ריצה חדשה נכתבת לפני שהישנה נמחקת, ולכן
+  // לרגע נפח המבצעים של הרשת כפול. מעל המכסה Atlas חוסם כתיבות גם בפרודקשן.
+  const storage = await storageAllowsWrite();
+  if (!storage.ok) {
+    const error = `storage_quota_guard:${storage.usageMb?.toFixed(0)}MB`;
+    logger.warn(`${tag}: cluster at ${storage.usageMb?.toFixed(0)}MB (limit ${MAX_CLUSTER_USAGE_MB}MB), skipping to protect the shared quota`);
+    await log({ chainId, type: 'promo-full', runId, startedAt, status: 'failed', error });
+    return { status: 'failed', error };
   }
 
   let files;

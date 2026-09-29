@@ -86,7 +86,9 @@ export async function syncStoreSubscription(userId: string, notify = false): Pro
   const sub = ent ? subscriber.subscriptions?.[ent.product_identifier] : undefined;
   const willRenew = !!sub && !sub.unsubscribe_detected_at;
 
-  const isPermanentPro = user.plan === 'pro' && !user.planExpiresAt;
+  // רכישה לכל החיים בחנות נשמרת גם היא בלי תפוגה, אבל היא לא הענקה ידנית:
+  // בהחזר כספי החנות צריכה להוריד אותה, ולכן היא לא נחשבת קבועה כאן.
+  const isPermanentPro = user.plan === 'pro' && !user.planExpiresAt && user.planSource !== 'store';
   if (isPermanentPro) return { active, expiresAt: storeExpiry, changed: false };
 
   const wasPro = user.plan === 'pro' && !!user.planExpiresAt && user.planExpiresAt > now;

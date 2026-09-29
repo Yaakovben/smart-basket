@@ -286,7 +286,9 @@ export async function getBranchesWithin(user: UserLocation, radiusKm: number): P
       subChainName: b.subChainName,
     });
   }
-  return result.sort((x, y) => x.distanceKm - y.distanceKm);
+  // לפי המטרים ולא לפי הקילומטרים המעוגלים: 60 ו-140 מטר הם שניהם 0.1 ק"מ,
+  // והסריקה בוחרת את הראשון כסניף "אתה נמצא כאן"
+  return result.sort((x, y) => x.distanceM - y.distanceM);
 }
 
 // ולידציה של קואורדינטות שהגיעו מהמשתמש.

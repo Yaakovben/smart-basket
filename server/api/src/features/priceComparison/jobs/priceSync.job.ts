@@ -11,6 +11,7 @@ import { OFFICIAL_BRANCH_ADDRESSES } from '../data/official-branch-addresses.dat
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
+import { israelDayStart } from '../../../utils/israelTime';
 
 // כל chain adapter מזריק httpsAgent ייעודי (rejectUnauthorized: false) לבקשות
 // שצריכות זאת - ראו chains/insecureAgent.ts. אין יותר ביטול TLS גלובלי על
@@ -75,10 +76,8 @@ async function runSync(trigger: 'cron' | 'startup' | 'manual' | 'catch-up', chai
 // רשתות שלא היה להן היום (שעון ישראל) סנכרון מחירים מוצלח, לפי לוג הסנכרון השמור
 async function chainsWithoutSuccessToday(): Promise<string[]> {
   try {
-    const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
-    // תחילת היום בשעון ישראל, בקירוב של שעתיים לכיוון המוקדם (בלי תלות בשעון קיץ)
-    const since = new Date(`${today}T00:00:00Z`);
-    since.setUTCHours(since.getUTCHours() - 3);
+    // חצות בשעון ישראל, מדויק גם בחורף וגם בקיץ
+    const since = israelDayStart();
     const ok = await PriceSyncLog.distinct('chainId', { type: 'price-full', status: 'success', startedAt: { $gte: since } });
     const done = new Set<string>(ok);
     return getRegisteredChains().map(c => c.chainId).filter(id => !done.has(id));

@@ -32,6 +32,7 @@ import { collectPriceFeedStats, countDuplicateRows, validatePriceFeed, validateS
 import { PriceSyncLogDAL, type SyncLogFields } from '../dal/priceSyncLog.dal';
 import { Price } from '../models/Price.model';
 import { Branch } from '../models/Branch.model';
+import { pricesDb } from '../models/pricesDb';
 import { randomUUID } from 'crypto';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
@@ -190,7 +191,9 @@ async function syncStoresForChain(
       logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${res.error}`);
       return fail(res.error);
     }
-    const previous = await Branch.countDocuments({ chainId: adapter.chainId });
+    // רק סניפים שהגיעו מקובץ הסניפים. סניפים מ-OSM (osm-...) לא מופיעים בפיד,
+    // וספירתם הייתה מנפחת את "הקודם" ודוחה פיד תקין כ"ירידה חדה".
+    const previous = await Branch.countDocuments({ chainId: adapter.chainId, storeId: { $not: /^osm-/ } });
     const validation = validateStoresFeed(res.stores.length, previous);
     if (!validation.ok) {
       logger.warn(`[price-sync] ${adapter.chainId}: stores validation failed (${validation.reason}), keeping existing branches`);
@@ -319,10 +322,52 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
     return [];
   }
 
-  const results: SyncResult[] = [];
-  const selected = chainIds ? adapters.filter(a => chainIds.includes(a.chainId)) : adapters;
   // מזהה ריצה משותף לכל הרשתות והשלבים: מקשר בין רשומות הלוג ומסמן את גרסאות המבצעים
   const runId = randomUUID();
+  // המנעול שלמעלה מגן רק בתוך השרת הזה. prod ו-non-prod כותבים לאותו מסד מחירים
+  // ומריצים את אותו cron באותה שעה, וריצות מקבילות היו מוחקות זו לזו מבצעים.
+  if (!(await acquireSharedSyncLock(runId))) {
+    logger.warn('[price-sync] another server holds the shared sync lock - skipping');
+    return [];
+  }
+  try {
+    return await runAllChains(chainIds, runId);
+  } finally {
+    await releaseSharedSyncLock(runId);
+  }
+}
+
+// מנעול משותף במסד המחירים. _id קבוע מבטיח שרק שרת אחד מחזיק אותו: הוספה
+// כשמנעול בתוקף נכשלת על מפתח כפול. מנעול שפג (שרת שקרס באמצע) נלקח מחדש.
+const SYNC_LOCK_ID = 'price-sync';
+const SYNC_LOCK_TTL_MS = 4 * 60 * 60 * 1000;
+type SyncLockDoc = { _id: string; owner: string; expiresAt: Date };
+const syncLocks = () => pricesDb.collection<SyncLockDoc>('sync_locks');
+
+async function acquireSharedSyncLock(owner: string): Promise<boolean> {
+  const now = new Date();
+  try {
+    await syncLocks().updateOne(
+      { _id: SYNC_LOCK_ID, expiresAt: { $lt: now } },
+      { $set: { owner, expiresAt: new Date(now.getTime() + SYNC_LOCK_TTL_MS) } },
+      { upsert: true },
+    );
+    return true;
+  } catch (err) {
+    if ((err as { code?: number }).code === 11000) return false;
+    logger.error(`[price-sync] shared lock unavailable: ${err instanceof Error ? err.message : 'unknown'}`);
+    return false;
+  }
+}
+
+async function releaseSharedSyncLock(owner: string): Promise<void> {
+  await syncLocks().deleteOne({ _id: SYNC_LOCK_ID, owner })
+    .catch(err => logger.warn(`[price-sync] shared lock release failed: ${err instanceof Error ? err.message : 'unknown'}`));
+}
+
+async function runAllChains(chainIds: string[] | undefined, runId: string): Promise<SyncResult[]> {
+  const results: SyncResult[] = [];
+  const selected = chainIds ? adapters.filter(a => chainIds.includes(a.chainId)) : adapters;
 
   syncProgress = {
     active: true, currentIndex: 0, currentChainName: '',
