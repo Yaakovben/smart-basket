@@ -25,6 +25,7 @@ export interface ConfirmState {
   onConfirm: () => void;
   confirmText?: string;
   hideCancel?: boolean;
+  confirmColor?: 'primary' | 'error' | 'warning';
 }
 
 // ===== מיקום FAB =====

@@ -284,6 +284,7 @@ export const HomeComponent = memo(({
           message={t('convertToPrivateMembersHint')}
           confirmText={t('gotIt')}
           hideCancel
+          confirmColor="warning"
           onConfirm={() => setConvertPrivate(null)}
           onCancel={() => setConvertPrivate(null)}
         />

@@ -14,6 +14,8 @@ interface ConfirmModalProps {
   // popup מידע בלבד (אין פעולה הרסנית לאשר) - מסתיר את כפתור הביטול
   // ומציג את כפתור האישור היחיד בצבע ניטרלי (לא אדום).
   hideCancel?: boolean;
+  // צבע כפתור האישור. warning (צהוב) להודעה שמסבירה למה אי אפשר לבצע משהו עכשיו
+  confirmColor?: 'primary' | 'error' | 'warning';
 }
 
 const Transition = forwardRef(function Transition(
@@ -23,7 +25,7 @@ const Transition = forwardRef(function Transition(
   return <Zoom ref={ref} {...props} />;
 });
 
-export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText, hideCancel = false }: ConfirmModalProps) => {
+export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText, hideCancel = false, confirmColor }: ConfirmModalProps) => {
   const { t } = useSettings();
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -120,7 +122,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText,
         <Button
           onClick={handleConfirm}
           variant="contained"
-          color={hideCancel ? 'primary' : 'error'}
+          color={confirmColor ?? (hideCancel ? 'primary' : 'error')}
           fullWidth
           disabled={isClosing || loading}
         >
