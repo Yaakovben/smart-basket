@@ -128,6 +128,15 @@
 - לא צריך: `APPLE_CLIENT_IDS`, `APNS_BUNDLE_ID` (ברירות המחדל נכונות), ו-`APNS_USE_SANDBOX`
   (נשאר false, מתאים ל-TestFlight ולחנות)
 
+### כניסה עם Apple גם באתר (רשות)
+באפליקציית iOS הכפתור מופיע בלי שום הגדרה. באתר, בדפדפן ובמסך הבית, הוא מופיע רק אחרי:
+- [ ] developer.apple.com, Identifiers, +, **Services IDs**. מזהה לדוגמה: `com.smartbasket.web`.
+      לסמן **Sign In with Apple**, Configure, לבחור את ה-App ID הראשי, ולהוסיף:
+      Domains: `smart-basket.vercel.app` (ואת דומיין ה-non-prod אם רוצים לבדוק שם),
+      Return URLs: `https://smart-basket.vercel.app/` (עם הלוכסן בסוף)
+- [ ] בשרת: `APPLE_CLIENT_IDS=com.smartbasket.app,com.smartbasket.web`
+- [ ] באתר (Vercel): `VITE_APPLE_WEB_CLIENT_ID=com.smartbasket.web`, ואז Redeploy
+
 האתר (Vercel), ואחר כך Redeploy:
 - [ ] `VITE_REVENUECAT_IOS_KEY` המפתח הציבורי `appl_...`
 - [ ] `VITE_REVENUECAT_ANDROID_KEY` המפתח הציבורי `goog_...`

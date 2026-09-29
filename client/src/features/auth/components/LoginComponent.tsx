@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { useGoogleLogin } from '@react-oauth/google';
 import type { User } from '../../../global/types';
@@ -10,6 +10,7 @@ import { GoogleSignInButton } from './GoogleSignInButton';
 import { isNativeApp } from '../../../global/services/storeBilling';
 import { nativeGoogleLogin, nativeAppleLogin, isAppleSignInAvailable } from '../../../global/services/nativeSocialAuth';
 import { AppleSignInButton } from './AppleSignInButton';
+import { isWebAppleSignInAvailable, preloadWebAppleSignIn, webAppleLogin } from '../../../global/services/webAppleAuth';
 import { LoginErrorAlert } from './LoginErrorAlert';
 import { EmailLoginToggle } from './EmailLoginToggle';
 import { EmailLoginForm } from './EmailLoginForm';
@@ -29,7 +30,10 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
 
   const auth = useAuth({ onLogin });
   const { error, googleLoading, appleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, handleAppleSuccess, toggleEmailForm } = auth;
-  const showApple = isAppleSignInAvailable();
+  // באפליקציית iOS דרך המכשיר, ובאתר דרך אפל בחלון קופץ (כשהוגדר מזהה אתר)
+  const nativeApple = isAppleSignInAvailable();
+  const showApple = nativeApple || isWebAppleSignInAvailable();
+  useEffect(() => { if (!nativeApple) preloadWebAppleSignIn(); }, [nativeApple]);
 
   const webGoogleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
@@ -44,9 +48,9 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
       .catch(() => handleGoogleError());
   };
 
-  // Sign in with Apple, רק באפליקציית iOS. ביטול של המשתמש לא מציג שגיאה.
+  // Sign in with Apple. ביטול של המשתמש לא מציג שגיאה.
   const appleLogin = () => {
-    nativeAppleLogin()
+    (nativeApple ? nativeAppleLogin() : webAppleLogin())
       .then((res) => { if ('idToken' in res) void handleAppleSuccess(res.idToken, res.name); })
       .catch(() => handleGoogleError());
   };
