@@ -1,4 +1,5 @@
-import { Schema, model, type Document, Types } from 'mongoose';
+import { pricesDb } from './pricesDb';
+import { Schema, type Document, Types } from 'mongoose';
 
 export type ChainId =
   | 'osher_ad'
@@ -125,4 +126,4 @@ priceSchema.index({ itemNameNormalized: 'text' });
 // ברירת המחדל אבל מציינים מפורשות לבטיחות.
 priceSchema.index({ updatedAt: 1 }, { background: true });
 
-export const Price = model<IPriceDoc>('Price', priceSchema);
+export const Price = pricesDb.model<IPriceDoc>('Price', priceSchema);

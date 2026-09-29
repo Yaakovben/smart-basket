@@ -1,4 +1,5 @@
-import { Schema, model, type Document, Types } from 'mongoose';
+import { pricesDb } from './pricesDb';
+import { Schema, type Document, Types } from 'mongoose';
 
 /**
  * PriceSyncLog - רשומה לכל שלב סנכרון של רשת (סניפים, מחירים, מבצעים).
@@ -57,4 +58,4 @@ const schema = new Schema<IPriceSyncLogDoc>(
 schema.index({ startedAt: 1 }, { expireAfterSeconds: LOG_RETENTION_SECONDS });
 schema.index({ chainId: 1, type: 1, startedAt: -1 });
 
-export const PriceSyncLog = model<IPriceSyncLogDoc>('PriceSyncLog', schema);
+export const PriceSyncLog = pricesDb.model<IPriceSyncLogDoc>('PriceSyncLog', schema);

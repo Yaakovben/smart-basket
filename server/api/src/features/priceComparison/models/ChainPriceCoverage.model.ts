@@ -1,4 +1,5 @@
-import { Schema, model, type Document, Types } from 'mongoose';
+import { pricesDb } from './pricesDb';
+import { Schema, type Document, Types } from 'mongoose';
 
 /**
  * ChainPriceCoverage - אילו סניפים של רשת הופיעו בפיד המחירים האחרון.
@@ -35,4 +36,4 @@ const schema = new Schema<IChainPriceCoverageDoc>(
   { collection: 'chain_price_coverage' }
 );
 
-export const ChainPriceCoverage = model<IChainPriceCoverageDoc>('ChainPriceCoverage', schema);
+export const ChainPriceCoverage = pricesDb.model<IChainPriceCoverageDoc>('ChainPriceCoverage', schema);

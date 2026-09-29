@@ -1,4 +1,5 @@
-import { Schema, model, type Document, Types } from 'mongoose';
+import { pricesDb } from './pricesDb';
+import { Schema, type Document, Types } from 'mongoose';
 import type { ChainId } from './Price.model';
 
 /**
@@ -73,4 +74,4 @@ branchSchema.index({ chainId: 1, storeId: 1 }, { unique: true });
 // חיפוש מהיר לפי מיקום - מאפשר לעתיד גם geoWithin במונגו (2dsphere)
 branchSchema.index({ chainId: 1, lat: 1, lng: 1 });
 
-export const Branch = model<IBranchDoc>('Branch', branchSchema);
+export const Branch = pricesDb.model<IBranchDoc>('Branch', branchSchema);

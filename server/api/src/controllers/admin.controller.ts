@@ -204,8 +204,12 @@ export const updateUserPlan = asyncHandler(async (req: AuthRequest, res: Respons
 
 /**
  * GET /api/admin/db-health
- * מחזיר נתוני שימוש ב-MongoDB: גודל כולל, פר-קולקציה, אחוז שימוש מול הסף
- * (ברירת מחדל 512MB של Atlas M0). שימושי לאדמין שצריך לדעת מתי להעביר plan.
+ * שימוש ב-MongoDB מול המכסה (ברירת מחדל 512MB של Atlas M0).
+ *
+ * המכסה היא של כל האשכול: prod ו-dev (ומסד נתוני המחירים המשותף) נספרים יחד,
+ * לפי הגודל הלוגי (dataSize + indexSize), לא הדחוס (storageSize). מעל המכסה Atlas
+ * חוסם כתיבות בכל האשכול. בעבר נמדד רק המסד של הסביבה הנוכחית ולפי הגודל
+ * הדחוס, ולכן ב-non-prod העמוד הראה 18% כשהאשכול היה ב-65%.
  */
 export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const conn = mongoose.connection;
@@ -217,32 +221,55 @@ export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response)
   // ENV variable מאפשר להגדיר סף שונה (M2=2GB, M5=5GB)
   const limitMB = Number(process.env.MONGO_LIMIT_MB) || 512;
   const limitBytes = limitMB * 1024 * 1024;
+  const client = conn.getClient();
+  const currentDb = conn.db.databaseName;
 
-  const stats = await conn.db.stats();
-  const dataSize = stats.dataSize as number;
-  const storageSize = stats.storageSize as number;
-  const indexSize = stats.indexSize as number;
-  const totalSize = (storageSize + indexSize);
+  // כל מסדי האפליקציה באשכול. מסדי המערכת של Atlas לא נספרים ואין הרשאה אליהם
+  let dbNames: string[] = [currentDb];
+  try {
+    const { databases } = await client.db().admin().listDatabases({ nameOnly: true });
+    dbNames = databases.map(d => d.name).filter(n => !['admin', 'local', 'config'].includes(n));
+  } catch {
+    // בלי הרשאת listDatabases: רק המסד הנוכחי
+  }
 
-  // פירוט פר-קולקציה
-  const collections = await conn.db.listCollections().toArray();
-  const perCollection: Array<{ name: string; documents: number; size: number; storageSize: number; indexSize: number }> = [];
-  for (const c of collections) {
-    try {
-      const collStats = await conn.db.command({ collStats: c.name });
-      perCollection.push({
-        name: c.name,
-        documents: collStats.count || 0,
-        size: collStats.size || 0,
-        storageSize: collStats.storageSize || 0,
-        indexSize: collStats.totalIndexSize || 0,
-      });
-    } catch {
-      // קולקציה ייתכן ולא קיימת או שלא ניתן להריץ collStats
+  let dataSize = 0;
+  let storageSize = 0;
+  let indexSize = 0;
+  const databases: Array<{ name: string; current: boolean; dataSize: number; indexSize: number; storageSize: number }> = [];
+  const perCollection: Array<{ name: string; database: string; documents: number; size: number; storageSize: number; compressedSize: number; indexSize: number }> = [];
+  for (const name of dbNames) {
+    const db = client.db(name);
+    const st = await db.stats();
+    dataSize += st.dataSize;
+    storageSize += st.storageSize;
+    indexSize += st.indexSize;
+    databases.push({ name, current: name === currentDb, dataSize: st.dataSize, indexSize: st.indexSize, storageSize: st.storageSize });
+    for (const c of await db.listCollections().toArray()) {
+      try {
+        const collStats = await db.command({ collStats: c.name });
+        perCollection.push({
+          // שם המסד בתחילת השם, כי אותו אוסף (prices) קיים בכמה מסדים
+          name: dbNames.length > 1 ? `${name.replace(/^smartbasket_/, '')} · ${c.name}` : c.name,
+          database: name,
+          documents: collStats.count || 0,
+          size: collStats.size || 0,
+          // storageSize = הגודל הלוגי, כי זה מה שהעמוד מציג ומה שנספר במכסה.
+          // הגודל הדחוס בשדה נפרד, לעיון בלבד
+          storageSize: collStats.size || 0,
+          compressedSize: collStats.storageSize || 0,
+          indexSize: collStats.totalIndexSize || 0,
+        });
+      } catch {
+        // קולקציה ייתכן ולא קיימת או שלא ניתן להריץ collStats
+      }
     }
   }
-  perCollection.sort((a, b) => (b.storageSize + b.indexSize) - (a.storageSize + a.indexSize));
+  // מיון לפי הגודל שנספר במכסה
+  perCollection.sort((a, b) => (b.size + b.indexSize) - (a.size + a.indexSize));
 
+  // הגודל שנספר במכסה: לוגי, נתונים ואינדקסים
+  const totalSize = dataSize + indexSize;
   const usedPct = (totalSize / limitBytes) * 100;
   const status: 'ok' | 'warning' | 'critical' =
     usedPct < 70 ? 'ok' : usedPct < 90 ? 'warning' : 'critical';
@@ -251,11 +278,14 @@ export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response)
     success: true,
     data: {
       limitMB,
-      dataSize, storageSize, indexSize, totalSize,
+      // storageSize = לוגי (ראו הערה בפירוט האוספים), compressedSize = דחוס
+      dataSize, storageSize: dataSize, compressedSize: storageSize, indexSize, totalSize,
       usedPct: Math.round(usedPct * 10) / 10,
       status,
-      collectionCount: collections.length,
+      collectionCount: perCollection.length,
       collections: perCollection,
+      databases,
+      currentDatabase: currentDb,
     },
   });
 });

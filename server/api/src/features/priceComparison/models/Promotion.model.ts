@@ -1,4 +1,5 @@
-import { Schema, model, type Document, Types } from 'mongoose';
+import { pricesDb } from './pricesDb';
+import { Schema, type Document, Types } from 'mongoose';
 import type { ChainId } from './Price.model';
 
 /**
@@ -83,4 +84,4 @@ promotionSchema.index({ chainId: 1, syncRunId: 1, variantKey: 1 }, { unique: tru
 // מבצעים לפי ברקוד (השוואת מוצר וסל)
 promotionSchema.index({ 'items.barcode': 1 });
 
-export const Promotion = model<IPromotionDoc>('Promotion', promotionSchema);
+export const Promotion = pricesDb.model<IPromotionDoc>('Promotion', promotionSchema);
