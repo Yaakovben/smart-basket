@@ -275,12 +275,19 @@ export function startPriceSyncJob(): void {
   // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (72 שעות+) ואחרי 30 דקות
   //    כדי לא להפריע ללקוחות שנכנסים בזמן ה-boot. אם המשתמש שמעיר את השרת
   //    כבר סיים, הסנכרון לא משפיע על אף אחד.
+  // הבדיקה אילו רשתות ישנות נעשית כשהסנכרון מתחיל ולא בעלייה: אם בחצי השעה הזו
+  // הרשתות סונכרנו (סבב אחר, הרצה ידנית), לא טוענים אותן שוב לחינם
   void staleChainsAtStartup().then(stale => {
-    if (stale.length > 0) {
-      logger.info(`[price-sync-job] Startup: scheduling sync of ${stale.length} chains in ${STARTUP_DELAY_MS / 60000} minutes`);
-      // אחרי הסנכרון: מיקום לסניפים החדשים, כדי שיופיעו ב"קרוב אליך" בלי לחכות ללילה
-      setTimeout(() => { void runSync('startup', stale).then(() => runNightlyGeocode('startup')); }, STARTUP_DELAY_MS);
-    }
+    if (stale.length === 0) return;
+    logger.info(`[price-sync-job] Startup: ${stale.length} chains stale, checking again in ${STARTUP_DELAY_MS / 60000} minutes`);
+    setTimeout(() => {
+      void staleChainsAtStartup().then(async current => {
+        if (current.length === 0) return;
+        await runSync('startup', current);
+        // מיקום לסניפים החדשים, כדי שיופיעו ב"קרוב אליך" בלי לחכות ללילה
+        await runNightlyGeocode('startup');
+      });
+    }, STARTUP_DELAY_MS);
   });
 
   // 2. seed של סניפים מיידית (מהיר, לא מעמיס).
