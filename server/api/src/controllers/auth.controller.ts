@@ -7,6 +7,7 @@
  * רוב הנתיבים כאן פתוחים (לא דורשים אימות) - רק logAppOpen דורש משתמש מחובר.
  */
 
+import crypto from 'crypto';
 import type { Request, Response } from 'express';
 import type { AuthRequest } from '../types';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput, AppleAuthInput } from '../validators';
@@ -114,6 +115,56 @@ export const appleAuth = asyncHandler(async (req: Request, res: Response) => {
   setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });
+
+/**
+ * POST /api/auth/apple/callback
+ * חזרה מדף ההתחברות של אפל (באתר ובאפליקציית אנדרואיד). אפל שולחת טופס
+ * (form_post) עם id_token ו-state. ה-state נבדק מול cookie שהאתר קבע רגע לפני
+ * המעבר לאפל, כדי שאתר זר לא יוכל להכניס משתמש לחשבון של מישהו אחר.
+ * בהצלחה נקבע ה-refresh cookie והדפדפן חוזר למסך הכניסה, שמשלים את ההתחברות.
+ * אחרי ה-state מגיעה גם הפלטפורמה ("<אקראי>.<פלטפורמה>"), כי לבקשה מאפל
+ * אין את הכותרת X-App-Platform.
+ */
+export const APPLE_STATE_COOKIE = 'sb_apple_state';
+const APPLE_STATE_COOKIE_PATH = '/api/auth/apple';
+
+export const appleCallback = async (req: Request, res: Response): Promise<void> => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+  const state = str(body.state);
+  const cookieState = str((req.cookies as Record<string, unknown> | undefined)?.[APPLE_STATE_COOKIE]);
+  res.clearCookie(APPLE_STATE_COOKIE, { path: APPLE_STATE_COOKIE_PATH, secure: true, sameSite: 'none' });
+  const finish = (result: 'ok' | 'cancelled' | 'failed') => res.redirect(303, `/login?appleAuth=${result}`);
+
+  if (str(body.error)) { finish('cancelled'); return; }
+
+  const stateOk = state.length >= 16 && state.length <= 200 && state.length === cookieState.length &&
+    crypto.timingSafeEqual(Buffer.from(state), Buffer.from(cookieState));
+  const idToken = str(body.id_token);
+  if (!stateOk || !idToken || idToken.length > 5000) {
+    logger.warn('[auth] apple callback rejected', { stateOk, hasToken: !!idToken });
+    finish('failed');
+    return;
+  }
+
+  // השם נשלח מאפל רק בכניסה הראשונה, כ-JSON בשדה user
+  let name: string | undefined;
+  try {
+    const user = JSON.parse(str(body.user) || 'null') as { name?: { firstName?: string; lastName?: string } } | null;
+    name = [user?.name?.firstName, user?.name?.lastName].filter(Boolean).join(' ').trim().slice(0, 50) || undefined;
+  } catch { /* בלי שם - לא קריטי */ }
+
+  try {
+    const { ipAddress, userAgent } = getClientInfo(req);
+    const platform = parseLoginPlatform(state.split('.')[1]);
+    const result = await authService.appleAuth({ idToken, ...(name ? { name } : {}) }, ipAddress, userAgent, platform);
+    setRefreshCookie(res, result.tokens.refreshToken);
+    finish('ok');
+  } catch (err) {
+    logger.warn('[auth] apple callback login failed', { error: (err as Error).message });
+    finish('failed');
+  }
+};
 
 /**
  * POST /api/auth/refresh

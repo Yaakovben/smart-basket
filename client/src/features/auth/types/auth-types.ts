@@ -40,6 +40,7 @@ export interface UseAuthReturn {
   handleGoogleSuccess: (tokenResponse: { access_token: string } | { id_token: string }) => Promise<void>;
   handleGoogleError: () => void;
   handleAppleSuccess: (idToken: string, name?: string) => Promise<void>;
+  completeAppleRedirect: () => Promise<void>;
   toggleEmailForm: () => void;
   applySuggestion: () => void;
   isValidEmail: (email: string) => boolean;

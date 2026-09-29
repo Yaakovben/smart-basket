@@ -10,7 +10,7 @@ import { GoogleSignInButton } from './GoogleSignInButton';
 import { isNativeApp } from '../../../global/services/storeBilling';
 import { nativeGoogleLogin, nativeAppleLogin, isAppleSignInAvailable } from '../../../global/services/nativeSocialAuth';
 import { AppleSignInButton } from './AppleSignInButton';
-import { isWebAppleSignInAvailable, preloadWebAppleSignIn, webAppleLogin } from '../../../global/services/webAppleAuth';
+import { isWebAppleSignInAvailable, startWebAppleLogin, consumeAppleRedirectResult } from '../../../global/services/webAppleAuth';
 import { LoginErrorAlert } from './LoginErrorAlert';
 import { EmailLoginToggle } from './EmailLoginToggle';
 import { EmailLoginForm } from './EmailLoginForm';
@@ -29,11 +29,17 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
   const { clearing, handleClearCache } = useClearCache();
 
   const auth = useAuth({ onLogin });
-  const { error, googleLoading, appleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, handleAppleSuccess, toggleEmailForm } = auth;
+  const { error, googleLoading, appleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, handleAppleSuccess, completeAppleRedirect, toggleEmailForm } = auth;
   // באפליקציית iOS דרך המכשיר, ובאתר דרך אפל בחלון קופץ (כשהוגדר מזהה אתר)
   const nativeApple = isAppleSignInAvailable();
   const showApple = nativeApple || isWebAppleSignInAvailable();
-  useEffect(() => { if (!nativeApple) preloadWebAppleSignIn(); }, [nativeApple]);
+  // חזרה מדף ההתחברות של אפל: משלימים את הכניסה, או מציגים שגיאה אם נכשלה.
+  // ביטול של המשתמש לא מציג שגיאה.
+  useEffect(() => {
+    const result = consumeAppleRedirectResult();
+    if (result === 'ok') void completeAppleRedirect();
+    else if (result === 'failed') handleGoogleError();
+  }, [completeAppleRedirect, handleGoogleError]);
 
   const webGoogleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
@@ -50,7 +56,8 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
 
   // Sign in with Apple. ביטול של המשתמש לא מציג שגיאה.
   const appleLogin = () => {
-    (nativeApple ? nativeAppleLogin() : webAppleLogin())
+    if (!nativeApple) { startWebAppleLogin(); return; }
+    nativeAppleLogin()
       .then((res) => { if ('idToken' in res) void handleAppleSuccess(res.idToken, res.name); })
       .catch(() => handleGoogleError());
   };

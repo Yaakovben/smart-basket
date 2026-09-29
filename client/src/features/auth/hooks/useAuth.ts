@@ -238,6 +238,10 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleAppleSuccess = useCallback((idToken: string, name?: string) =>
     runSocialLogin(() => authApi.appleAuth(idToken, name), 'apple', setAppleLoading), [runSocialLogin]);
 
+  // חזרה מדף ההתחברות של אפל (אתר ואנדרואיד): השרת כבר אימת וקבע cookie
+  const completeAppleRedirect = useCallback(() =>
+    runSocialLogin(() => authApi.completeAppleRedirectLogin(), 'apple', setAppleLoading), [runSocialLogin]);
+
   const handleGoogleError = useCallback(() => {
     haptic('heavy');
     setError(t('networkError'));
@@ -289,6 +293,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleGoogleSuccess,
     handleGoogleError,
     handleAppleSuccess,
+    completeAppleRedirect,
     toggleEmailForm,
     applySuggestion,
     isValidEmail,

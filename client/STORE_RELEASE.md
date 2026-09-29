@@ -15,7 +15,7 @@
 | נושא | מצב |
 |---|---|
 | רכישת Pro בחנויות (RevenueCat), שחזור רכישות, ניהול מנוי | מוכן |
-| Sign in with Apple ב-iOS (חובה כשיש כניסה עם גוגל, הנחיה 4.8) | מוכן, בשרת ובאפליקציה |
+| Sign in with Apple ב-iOS (חובה כשיש כניסה עם גוגל, הנחיה 4.8), וגם באתר ובאנדרואיד | מוכן. באתר ובאנדרואיד אחרי רישום האתר אצל אפל (ראו למטה) |
 | התראות באפליקציות: FCM באנדרואיד, APNs ב-iOS, לחיצה פותחת את המסך הנכון | מוכן, מחכה למפתחות |
 | מחיקת חשבון מתוך האפליקציה (הנחיה 5.1.1), בשם ברור "מחיקת החשבון" | קיים בהגדרות |
 | מסך אופליין ממותג כשנפתחים בלי חיבור (במקום מסך שגיאה ריק) | מוכן |
@@ -128,14 +128,17 @@
 - לא צריך: `APPLE_CLIENT_IDS`, `APNS_BUNDLE_ID` (ברירות המחדל נכונות), ו-`APNS_USE_SANDBOX`
   (נשאר false, מתאים ל-TestFlight ולחנות)
 
-### כניסה עם Apple גם באתר (רשות)
-באפליקציית iOS הכפתור מופיע בלי שום הגדרה. באתר, בדפדפן ובמסך הבית, הוא מופיע רק אחרי:
-- [ ] developer.apple.com, Identifiers, +, **Services IDs**. מזהה לדוגמה: `com.smartbasket.web`.
+### כניסה עם Apple באתר ובאנדרואיד (מומלץ)
+באייפון הכפתור עובד בלי שום הגדרה. כדי שמי שנרשם עם Apple יוכל להתחבר גם מהמחשב, ממסך
+הבית ומאנדרואיד, צריך לרשום את האתר אצל אפל פעם אחת. עד אז הכפתור מוסתר שם.
+- [ ] developer.apple.com, Identifiers, +, **Services IDs**. מזהה: `com.smartbasket.web`.
       לסמן **Sign In with Apple**, Configure, לבחור את ה-App ID הראשי, ולהוסיף:
-      Domains: `smart-basket.vercel.app` (ואת דומיין ה-non-prod אם רוצים לבדוק שם),
-      Return URLs: `https://smart-basket.vercel.app/` (עם הלוכסן בסוף)
-- [ ] בשרת: `APPLE_CLIENT_IDS=com.smartbasket.app,com.smartbasket.web`
+      Domains: `prod-smart-basket.vercel.app`
+      Return URLs: `https://prod-smart-basket.vercel.app/api/auth/apple/callback`
+      (לבדיקה ב-non-prod: להוסיף גם את הדומיין שלו ואת אותו נתיב עליו)
+- [ ] בשרת (Render): `APPLE_CLIENT_IDS=com.smartbasket.app,com.smartbasket.web`
 - [ ] באתר (Vercel): `VITE_APPLE_WEB_CLIENT_ID=com.smartbasket.web`, ואז Redeploy
+- אנדרואיד: לא צריך שום דבר נוסף. דף ההתחברות של אפל נפתח בתוך האפליקציה
 
 האתר (Vercel), ואחר כך Redeploy:
 - [ ] `VITE_REVENUECAT_IOS_KEY` המפתח הציבורי `appl_...`

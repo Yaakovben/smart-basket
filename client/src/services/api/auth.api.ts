@@ -81,6 +81,22 @@ export const authApi = {
     }
   },
 
+  // השלמת כניסה עם Apple אחרי החזרה מדף ההתחברות של אפל: השרת כבר קבע את
+  // ה-refresh cookie, ומכאן מקבלים access token ואת פרטי המשתמש
+  async completeAppleRedirectLogin(): Promise<AuthResponse> {
+    setAuthInProgress(true);
+    try {
+      const response = await apiClient.post<{ data: { accessToken: string } }>('/auth/refresh', {});
+      const accessToken = response.data?.data?.accessToken;
+      if (!accessToken) throw new Error('Invalid server response');
+      saveAndVerifyTokens(accessToken);
+      const user = await authApi.getProfile();
+      return { user, tokens: { accessToken } };
+    } finally {
+      setTimeout(() => setAuthInProgress(false), 100);
+    }
+  },
+
   async logout(): Promise<void> {
     try {
       // השרת קורא את ה-refresh token מה-httpOnly cookie ומבטל אותו

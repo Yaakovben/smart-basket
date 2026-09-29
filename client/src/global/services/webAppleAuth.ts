@@ -1,78 +1,52 @@
-// ===== Sign in with Apple באתר (דפדפן ומסך הבית) =====
+// ===== Sign in with Apple באתר ובאפליקציית אנדרואיד =====
 // באפליקציית iOS ההתחברות עוברת דרך החלון המובנה של המכשיר (nativeSocialAuth).
-// באתר משתמשים בספריית ה-JS הרשמית של אפל בחלון קופץ: היא מחזירה id token
-// ישירות לדף, והשרת מאמת אותו בדיוק כמו באפליקציה (אותו endpoint).
+// בכל מקום אחר (דפדפן, מסך הבית, אנדרואיד) עוברים לדף ההתחברות של אפל וחוזרים:
+// אפל שולחת את התוצאה לשרת (/api/auth/apple/callback), השרת מאמת, קובע את
+// ה-refresh cookie ומחזיר למסך הכניסה, שמשלים את ההתחברות. חלון קופץ היה
+// נכשל במסך הבית של iOS ובאפליקציית אנדרואיד, ולכן מעבר מלא ולא חלון.
 //
 // מוצג רק כשהוגדר VITE_APPLE_WEB_CLIENT_ID (מזהה Services ID מ-developer.apple.com).
 // את המזהה הזה צריך להוסיף גם ל-APPLE_CLIENT_IDS בשרת, אחרת האימות ייכשל.
-import { isNativeShell } from '../helpers/appPlatform';
+import { detectAppPlatform } from '../helpers/appPlatform';
+import { nativePlatform } from './storeBilling';
 
-const APPLE_JS_URL = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+const APPLE_AUTHORIZE_URL = 'https://appleid.apple.com/auth/authorize';
 const WEB_CLIENT_ID = (import.meta.env.VITE_APPLE_WEB_CLIENT_ID as string | undefined)?.trim() || '';
-// כתובת החזרה חייבת להיות רשומה אצל אפל בדיוק כך. ברירת המחדל היא שורש האתר.
+// חייבת להיות רשומה אצל אפל בדיוק כך (Return URLs). ברירת מחדל: נקודת החזרה בשרת
+// דרך הפרוקסי של האתר הנוכחי.
 const REDIRECT_URI = (import.meta.env.VITE_APPLE_WEB_REDIRECT_URI as string | undefined)?.trim() || '';
 
-interface AppleSignInResponse {
-  authorization?: { id_token?: string };
-  user?: { name?: { firstName?: string; lastName?: string } };
-}
+// שם ה-cookie ונתיבו חייבים להתאים לשרת (appleCallback ב-auth.controller.ts)
+const STATE_COOKIE = 'sb_apple_state';
+const STATE_COOKIE_PATH = '/api/auth/apple';
 
-interface AppleIDGlobal {
-  auth: {
-    init: (config: { clientId: string; scope: string; redirectURI: string; usePopup: boolean }) => void;
-    signIn: () => Promise<AppleSignInResponse>;
-  };
-}
+export const isWebAppleSignInAvailable = (): boolean => !!WEB_CLIENT_ID && nativePlatform() !== 'ios';
 
-export type WebAppleResult = { idToken: string; name?: string } | { cancelled: true };
-
-export const isWebAppleSignInAvailable = (): boolean => !!WEB_CLIENT_ID && !isNativeShell();
-
-let scriptPromise: Promise<AppleIDGlobal> | null = null;
-
-function loadAppleScript(): Promise<AppleIDGlobal> {
-  const existing = (window as unknown as { AppleID?: AppleIDGlobal }).AppleID;
-  if (existing) return Promise.resolve(existing);
-  if (scriptPromise) return scriptPromise;
-  scriptPromise = new Promise<AppleIDGlobal>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = APPLE_JS_URL;
-    script.async = true;
-    script.onload = () => {
-      const apple = (window as unknown as { AppleID?: AppleIDGlobal }).AppleID;
-      if (apple) resolve(apple); else reject(new Error('APPLE_JS_MISSING'));
-    };
-    script.onerror = () => { scriptPromise = null; reject(new Error('APPLE_JS_LOAD_FAILED')); };
-    document.head.appendChild(script);
-  });
-  return scriptPromise;
-}
-
-// טעינה מוקדמת כשמסך ההתחברות מוצג, כדי שהחלון ייפתח מיד בלחיצה
-// (דפדפנים חוסמים חלון קופץ שנפתח אחרי המתנה ארוכה מהלחיצה)
-export function preloadWebAppleSignIn(): void {
-  if (isWebAppleSignInAvailable()) void loadAppleScript().catch(() => {});
-}
-
-export async function webAppleLogin(): Promise<WebAppleResult> {
+export function startWebAppleLogin(): void {
   if (!isWebAppleSignInAvailable()) throw new Error('APPLE_NOT_AVAILABLE');
-  const apple = await loadAppleScript();
-  apple.auth.init({
-    clientId: WEB_CLIENT_ID,
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const random = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  // הפלטפורמה מצורפת ל-state, כי לבקשה שאפל שולחת לשרת אין את כותרת הפלטפורמה
+  const state = `${random}.${detectAppPlatform()}`;
+  // SameSite=None: הטופס שאפל שולחת בחזרה הוא בקשה מאתר אחר, ובלי זה ה-cookie לא היה נשלח
+  document.cookie = `${STATE_COOKIE}=${state}; Path=${STATE_COOKIE_PATH}; Max-Age=600; Secure; SameSite=None`;
+  const params = new URLSearchParams({
+    client_id: WEB_CLIENT_ID,
+    redirect_uri: REDIRECT_URI || `${window.location.origin}/api/auth/apple/callback`,
+    response_type: 'code id_token',
+    response_mode: 'form_post',
     scope: 'name email',
-    redirectURI: REDIRECT_URI || `${window.location.origin}/`,
-    usePopup: true,
+    state,
   });
-  try {
-    const res = await apple.auth.signIn();
-    const idToken = res.authorization?.id_token;
-    if (!idToken) throw new Error('NO_ID_TOKEN');
-    // השם מגיע רק בכניסה הראשונה, ואז נשמר אצלנו
-    const name = [res.user?.name?.firstName, res.user?.name?.lastName].filter(Boolean).join(' ').trim();
-    return { idToken, ...(name ? { name } : {}) };
-  } catch (err) {
-    const code = (err as { error?: string } | null)?.error;
-    if (code === 'popup_closed_by_user' || code === 'user_cancelled_authorize') return { cancelled: true };
-    throw err;
-  }
+  window.location.assign(`${APPLE_AUTHORIZE_URL}?${params.toString()}`);
+}
+
+// תוצאת החזרה מאפל, מתוך כתובת מסך הכניסה. נקרא פעם אחת ומנקה את הכתובת.
+export function consumeAppleRedirectResult(): 'ok' | 'cancelled' | 'failed' | null {
+  const url = new URL(window.location.href);
+  const result = url.searchParams.get('appleAuth');
+  if (!result) return null;
+  url.searchParams.delete('appleAuth');
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  return result === 'ok' || result === 'cancelled' ? result : 'failed';
 }

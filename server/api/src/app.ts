@@ -7,7 +7,8 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import routes from './routes';
-import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
+import { errorHandler, notFoundHandler, apiLimiter, authLimiter } from './middleware';
+import { appleCallback } from './controllers/auth.controller';
 import { env, morganStream } from './config';
 import { ForbiddenError } from './errors';
 
@@ -31,6 +32,16 @@ const allowedOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
 if (env.NODE_ENV === 'production' && allowedOrigins.includes('*')) {
   throw new Error('CORS_ORIGIN="*" is not allowed in production (credentials:true would allow any site to send authenticated requests)');
 }
+// חזרה מדף ההתחברות של אפל: טופס שנשלח מהמקור של אפל ולא מהאתר שלנו, ולכן
+// נרשם לפני ה-CORS (שהיה חוסם אותו). מוגן ב-state שנבדק מול cookie, ובהגבלת קצב.
+app.post(
+  '/api/auth/apple/callback',
+  authLimiter,
+  cookieParser(),
+  express.urlencoded({ extended: false, limit: '20kb' }),
+  appleCallback,
+);
+
 app.use(cors({
   origin: (origin, callback) => {
     // אפשר בקשות ללא origin (אפליקציות מובייל, Postman וכו')
