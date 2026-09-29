@@ -26,6 +26,12 @@ export const PushSubscriptionDAL = {
     return result.deletedCount;
   },
 
+  /** מחיקת מנויי האתר של המשתמש מסוג מכשיר מסוים (טלפון שהותקנה בו האפליקציה). */
+  async deleteByUserAndDevice(userId: string, device: 'ios' | 'android'): Promise<number> {
+    const result = await PushSubscription.deleteMany({ userId, device });
+    return result.deletedCount;
+  },
+
   async countByUserId(userId: string): Promise<number> {
     return PushSubscription.countDocuments({ userId });
   },

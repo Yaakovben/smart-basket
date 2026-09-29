@@ -9,6 +9,7 @@ import type { Request, Response } from 'express';
 import type { AuthRequest } from '../types';
 import { asyncHandler } from '../utils';
 import * as pushService from '../services/push.service';
+import { webPushDeviceFromUserAgent } from '../services/pushDevice';
 
 /**
  * GET /api/push/vapid-public-key
@@ -37,7 +38,7 @@ export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): P
   const userId = req.user!.id;
   const { subscription } = req.body;
 
-  await pushService.subscribe(userId, subscription);
+  await pushService.subscribe(userId, subscription, webPushDeviceFromUserAgent(req.get('User-Agent')));
   res.json({ success: true, message: 'Subscribed to push notifications' });
 });
 

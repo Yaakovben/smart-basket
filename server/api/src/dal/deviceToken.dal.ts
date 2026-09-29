@@ -37,6 +37,10 @@ export const DeviceTokenDAL = {
     return result.deletedCount;
   },
 
+  async existsForUserAndPlatform(userId: string, platform: DevicePlatform): Promise<boolean> {
+    return !!(await DeviceToken.exists({ userId, platform }));
+  },
+
   async countByUserId(userId: string): Promise<number> {
     return DeviceToken.countDocuments({ userId });
   },

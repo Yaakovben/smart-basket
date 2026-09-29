@@ -7,6 +7,8 @@ export interface IPushSubscription extends Document {
     p256dh: string;
     auth: string;
   };
+  // סוג המכשיר לפי ה-User-Agent בזמן ההרשמה (ברשומות ישנות חסר עד הפתיחה הבאה)
+  device?: 'ios' | 'android' | 'desktop';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +34,10 @@ const pushSubscriptionSchema = new Schema<IPushSubscription>(
         type: String,
         required: true,
       },
+    },
+    device: {
+      type: String,
+      enum: ['ios', 'android', 'desktop'],
     },
   },
   {

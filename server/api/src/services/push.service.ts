@@ -10,6 +10,7 @@
 import webPush from 'web-push';
 import { PushSubscriptionDAL, DeviceTokenDAL } from '../dal';
 import { User, type IDeviceToken } from '../models';
+import { type WebPushDevice } from './pushDevice';
 import { env } from '../config/environment';
 import { logger } from '../config';
 import { sendFcm, isFcmEnabled, type SendOutcome } from './nativePush/fcm.sender';
@@ -49,17 +50,25 @@ export function getPublicKey(): string | null {
 
 // ============== מנויים ==============
 
-/** הרשמת מכשיר למנוי Push. מוחק מנוי קודם לאותו endpoint (רה-סאבסקרייב). */
+/**
+ * הרשמת מכשיר למנוי Push מהאתר. מוחק מנוי קודם לאותו endpoint (רה-סאבסקרייב).
+ * טלפון שכבר רשומה בו האפליקציה מהחנות מקבל התראות ממנה, ולכן מנוי מהאתר
+ * באותו סוג טלפון לא נשמר: בלי זה משתמש שעבר ממסך הבית לאפליקציה, והשאיר
+ * את שניהם, היה מקבל כל התראה פעמיים.
+ */
 export async function subscribe(
   userId: string,
-  subscription: { endpoint: string; keys: { p256dh: string; auth: string } }
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+  device: WebPushDevice,
 ): Promise<void> {
   // מחיקת מנוי קיים לאותו endpoint (במקרה של הרשמה מחדש)
   await PushSubscriptionDAL.deleteByEndpoint(subscription.endpoint);
+  if (device !== 'desktop' && await DeviceTokenDAL.existsForUserAndPlatform(userId, device)) return;
   await PushSubscriptionDAL.create({
     userId,
     endpoint: subscription.endpoint,
     keys: subscription.keys,
+    device,
   } as Record<string, unknown>);
 }
 
@@ -86,6 +95,9 @@ export async function hasSubscription(userId: string): Promise<boolean> {
 /** רישום טוקן התראות של מכשיר (אנדרואיד: FCM, iOS: APNs). */
 export async function registerDevice(userId: string, token: string, platform: 'ios' | 'android'): Promise<void> {
   await DeviceTokenDAL.upsert(userId, token, platform);
+  // מעכשיו הטלפון מקבל התראות מהאפליקציה: מנויים מהאתר באותו סוג טלפון נמחקים,
+  // כדי שלא תגיע כל התראה פעמיים. מחשב נשאר עם ההתראות שלו.
+  await PushSubscriptionDAL.deleteByUserAndDevice(userId, platform);
 }
 
 /** ביטול טוקן של מכשיר (כיבוי התראות או יציאה מהחשבון). */
