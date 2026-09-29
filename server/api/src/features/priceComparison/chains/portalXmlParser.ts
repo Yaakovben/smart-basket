@@ -57,10 +57,24 @@ export function decodeText(buf: Buffer): string {
   return buf.toString('utf-8');
 }
 
-interface PriceFullXml {
-  Root?: { Items?: { Item?: RawItem[] | RawItem }; StoreID?: string | number; STOREID?: string | number };
-  root?: { Items?: { Item?: RawItem[] | RawItem }; StoreID?: string | number; STOREID?: string | number };
+interface PriceFullRoot {
+  Items?: { Item?: RawItem[] | RawItem };
+  StoreID?: string | number;
+  StoreId?: string | number;
+  STOREID?: string | number;
 }
+
+interface PriceFullXml {
+  Root?: PriceFullRoot;
+  root?: PriceFullRoot;
+}
+
+// מזהה הסניף מתוך שם הקובץ: PriceFull<רשת>-<תת רשת>-<סניף>-<תאריך>-<שעה>,
+// או בתבנית הקצרה של קשת PriceFull<רשת>-<סניף>-<תאריך ושעה>
+const STORE_IN_FILENAME = /^(?:.*\/)?Price(?:Full)?\d+-\d+-(\d+)-\d{8}/i;
+const STORE_IN_SHORT_FILENAME = /^(?:.*\/)?Price(?:Full)?\d+-(\d+)-\d{12}\./i;
+export const storeIdFromFilename = (filename: string): string | undefined =>
+  filename.match(STORE_IN_FILENAME)?.[1] ?? filename.match(STORE_IN_SHORT_FILENAME)?.[1];
 
 interface RawItem {
   ItemCode?: string;
@@ -72,7 +86,7 @@ interface RawItem {
   StoreId?: string;
 }
 
-export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[] {
+export function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
   const xml = decompressBuffer(buf);
 
   const parser = new XMLParser({
@@ -87,8 +101,11 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
   const priceItems = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
   // ב-publishedprices.co.il כל קובץ PriceFull הוא של סניף בודד - מזהה
   // הסניף מופיע פעם אחת בראש הקובץ (Root/StoreID), לא בכל פריט בנפרד.
-  // נשתמש בו כ-fallback כשלפריט עצמו אין StoreId/storeId.
-  const fileLevelStoreId = String(parsed.Root?.StoreID ?? parsed.Root?.STOREID ?? parsed.root?.StoreID ?? parsed.root?.STOREID ?? '').trim() || undefined;
+  // נשתמש בו כ-fallback כשלפריט עצמו אין StoreId/storeId. פוליצר כותבת StoreId,
+  // ובלי שם השדה הזה 93 אלף שורות נשמרו בלי סניף. אם אין בכלל, לפי שם הקובץ.
+  const root = parsed.Root ?? parsed.root;
+  const fileLevelStoreId = String(root?.StoreID ?? root?.StoreId ?? root?.STOREID ?? '').trim()
+    || storeIdFromFilename(filename);
 
   const results: ChainPriceItem[] = [];
   for (const it of priceItems) {

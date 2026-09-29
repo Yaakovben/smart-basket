@@ -25,3 +25,17 @@ test('שדות היצרן ותאריך העדכון בשמות הרשמיים נ
   assert.equal(item.unitOfMeasurePrice, 4.73);
   assert.equal(item.quantity, 400);
 });
+
+test('מזהה הסניף בשדה StoreId (פוליצר), ואם חסר, לפי שם הקובץ', () => {
+  const politzer = XML.replace('<StoreID>219</StoreID>', '<StoreId>002</StoreId>');
+  assert.equal(parseXmlBuffer(Buffer.from(politzer), 'x.xml')[0].storeId, '002');
+  const none = XML.replace('<StoreID>219</StoreID>', '');
+  assert.equal(parseXmlBuffer(Buffer.from(none), 'PriceFull7291059100008-001-011-20260929-001012.gz')[0].storeId, '011');
+  assert.equal(parseXmlBuffer(Buffer.from(none), '2026-09-29/Price7291059100008-001-005-20260929-001001.gz')[0].storeId, '005');
+  assert.equal(parseXmlBuffer(Buffer.from(none), 'prices.xml')[0].storeId, undefined);
+});
+
+test('תבנית השם הקצרה של קשת: מזהה הסניף בלי תת-רשת', () => {
+  const none = XML.replace('<StoreID>219</StoreID>', '');
+  assert.equal(parseXmlBuffer(Buffer.from(none), 'PriceFull7290785400000-020-202609290011.gz')[0].storeId, '020');
+});

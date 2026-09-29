@@ -32,10 +32,19 @@ export const findKnownCityIn = (text: string | undefined): string | null => {
   return null;
 };
 
+// שם עיר בלי הבדלי רווחים ומקפים. קובצי הסניפים כותבים "תל אביב - יפו", והטבלה
+// "תל אביב-יפו": בלי ההשוואה הזו לא נמצא מרכז עיר, כל תוצאה התקבלה, ו-15 סניפים
+// מתל אביב נשמרו בנקודה אחת בשומרון.
+const cityKey = (s: string) => s.replace(/[\s\-־–]+/g, ' ').trim();
+const CITY_BY_KEY = new Map<string, string>([
+  ...Object.keys(FALLBACK_CITY_COORDS).map(c => [cityKey(c), c] as [string, string]),
+  ...Object.entries(CITY_ALIASES).map(([alias, c]) => [cityKey(alias), c] as [string, string]),
+]);
+
 const normalizeCity = (city: string | undefined): string => {
   if (!city) return '';
   const trimmed = city.trim();
-  return CITY_ALIASES[trimmed] ?? trimmed;
+  return CITY_ALIASES[trimmed] ?? (FALLBACK_CITY_COORDS[trimmed] ? trimmed : CITY_BY_KEY.get(cityKey(trimmed)) ?? trimmed);
 };
 
 function cityFallbackCoords(city: string | undefined): GeocodeResult | null {

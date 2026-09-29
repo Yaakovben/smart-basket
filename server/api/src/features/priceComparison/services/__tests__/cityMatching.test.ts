@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coordsConflictWithName, findKnownCitiesAsWords, isCountryCentroid, exactCityFromStoreName, findCbsLocalityIn, isArtifactCity } from '../cityMatching';
+import { coordsConflictWithName, findKnownCitiesAsWords, isCountryCentroid, exactCityFromStoreName, findCbsLocalityIn, isArtifactCity, validateNearCity } from '../cityMatching';
 
 test('עיר בשם הסניף כמילה שלמה בלבד', () => {
   assert.deepEqual(findKnownCitiesAsWords('שלי ת"א- בן יהודה').includes('יהוד'), false);
@@ -48,4 +48,10 @@ test('יישוב קטן מהרשימה הרשמית בשם הסניף', () => {
 test('עיר שהושלמה מחיפוש הפוך של מיקום שגוי', () => {
   assert.equal(isArtifactCity('מועצה אזורית רמת נגב'), true);
   assert.equal(isArtifactCity('באר שבע'), false);
+});
+
+test('עיר בכתיב עם רווחים ומקף מזוהה, ותוצאה בשומרון נדחית', () => {
+  // התוצאה שהתקבלה ל"יהודה מכבי 81, תל אביב - יפו"
+  assert.equal(validateNearCity({ lat: 32.1997, lng: 35.2129 }, 'תל אביב - יפו'), false);
+  assert.equal(validateNearCity({ lat: 32.0921, lng: 34.7895 }, 'תל אביב - יפו'), true);
 });

@@ -17,6 +17,7 @@
 import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
+import { retryDownload } from './downloadRetry';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef, ChainPriceItem,
 } from './types';
@@ -118,7 +119,7 @@ export const haziHinamAdapter: ChainAdapter = {
       let fetched = 0;
       for (let i = 0; i < files.length; i += CONCURRENCY) {
         const batch = files.slice(i, i + CONCURRENCY);
-        const settled = await Promise.allSettled(batch.map(f => download(f.url).then(buf => parseXmlBuffer(buf, f.name))));
+        const settled = await Promise.allSettled(batch.map(f => retryDownload(() => download(f.url)).then(buf => parseXmlBuffer(buf, f.name))));
         for (const r of settled) {
           if (r.status === 'fulfilled') {
             allItems.push(...r.value);

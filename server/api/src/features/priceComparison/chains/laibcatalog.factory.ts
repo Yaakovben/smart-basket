@@ -18,6 +18,7 @@ import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { mergeWithCachedListing } from './portalFileCache';
+import { retryDownload } from './downloadRetry';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -135,7 +136,7 @@ export function createLaibcatalogAdapter(opts: LaibcatalogOptions): ChainAdapter
         for (let i = 0; i < priceFiles.length; i += CONCURRENCY) {
           const batch = priceFiles.slice(i, i + CONCURRENCY);
           const settled = await Promise.allSettled(
-            batch.map(f => downloadFile(f.fileName).then(buf => parseXmlBuffer(buf, f.fileName)))
+            batch.map(f => retryDownload(() => downloadFile(f.fileName)).then(buf => parseXmlBuffer(buf, f.fileName)))
           );
           for (const r of settled) {
             if (r.status === 'fulfilled') {

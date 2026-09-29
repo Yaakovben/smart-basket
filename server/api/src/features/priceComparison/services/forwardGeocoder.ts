@@ -54,11 +54,16 @@ interface SearchHit {
 // מרכזי ערים כ"מיקום סניף": 279 סניפים ישבו על 103 נקודות משותפות (רמי לוי "עטרות"
 // ועוד 14 סניפים במרכז מועצה אזורית זבולון). place_rank של Nominatim: 26 ומעלה = רחוב
 // ופחות; ל-LocationIQ אין אותו, ולכן לפי class.
-export function isPreciseHit(hit: Pick<SearchHit, 'class' | 'place_rank'>): boolean {
+// LocationIQ מחזיר לכתובת שלא מצא את מרכז העיר בלי class בכלל ("Jerusalem, Jerusalem,
+// Israel"): 9 סניפים מירושלים ו-5 מרחובות ישבו כך בנקודה אחת. לכן בלי דרגה ובלי class
+// = לא מדויק, ו-place מתקבל רק כשהוא בית מסוים.
+export function isPreciseHit(hit: Pick<SearchHit, 'class' | 'type' | 'place_rank'>): boolean {
   if (hit.place_rank !== undefined && hit.place_rank !== null && hit.place_rank !== '') {
     return Number(hit.place_rank) >= 26;
   }
-  return !['place', 'boundary'].includes(String(hit.class ?? ''));
+  if (!hit.class) return false;
+  if (hit.class === 'place') return hit.type === 'house';
+  return hit.class !== 'boundary';
 }
 
 // Nominatim - חינמי, איטי, פחות מדויק בעברית. ניסיון ראשון.

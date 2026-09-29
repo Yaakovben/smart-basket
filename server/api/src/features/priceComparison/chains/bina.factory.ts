@@ -23,6 +23,7 @@ import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { extractDateStamp, extractStoreIdFromName } from './binaFileNames';
+import { retryDownload } from './downloadRetry';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -161,7 +162,7 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
         for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
           const batch = fileNames.slice(i, i + CONCURRENCY);
           const settled = await Promise.allSettled(
-            batch.map(fn => resolveAndDownload(baseUrl, fn).then(buf => parseXmlBuffer(buf, fn)))
+            batch.map(fn => retryDownload(() => resolveAndDownload(baseUrl, fn)).then(buf => parseXmlBuffer(buf, fn)))
           );
           for (const r of settled) {
             if (r.status === 'fulfilled') {

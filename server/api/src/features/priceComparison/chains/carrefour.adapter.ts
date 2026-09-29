@@ -19,6 +19,7 @@ import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { mergeWithCachedListing } from './portalFileCache';
+import { retryDownload } from './downloadRetry';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -158,7 +159,7 @@ export const carrefourAdapter: ChainAdapter = {
       for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
         const batch = fileNames.slice(i, i + CONCURRENCY);
         const settled = await Promise.allSettled(
-          batch.map(fn => downloadFile(folderOf(files, fn, path), fn).then(buf => parseXmlBuffer(buf, fn)))
+          batch.map(fn => retryDownload(() => downloadFile(folderOf(files, fn, path), fn)).then(buf => parseXmlBuffer(buf, fn)))
         );
         for (const r of settled) {
           if (r.status === 'fulfilled') {

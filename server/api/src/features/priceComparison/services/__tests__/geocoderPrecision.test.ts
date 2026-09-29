@@ -11,6 +11,10 @@ test('רק תוצאה ברמת רחוב או בניין, לא מרכז יישו�
   assert.equal(isPreciseHit({ class: 'place' }), false);
   assert.equal(isPreciseHit({ class: 'boundary' }), false);
   assert.equal(isPreciseHit({ class: 'highway' }), true);
+  // LocationIQ: מרכז עיר בלי class, ובית מסוים עם class=place
+  assert.equal(isPreciseHit({}), false);
+  assert.equal(isPreciseHit({ class: 'place', type: 'house' }), true);
+  assert.equal(isPreciseHit({ class: 'place', type: 'city' }), false);
 });
 
 test('חיפוש חנות לפי שם: חייבת להיות חנות ששמה תואם את הסניף', () => {

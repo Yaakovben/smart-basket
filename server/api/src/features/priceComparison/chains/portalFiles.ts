@@ -9,7 +9,7 @@ import type { AxiosInstance } from 'axios';
 import { logger } from '../../../config/logger';
 import { PORTAL_BASE } from './portalAuth';
 
-interface FileEntry {
+export interface FileEntry {
   name?: string;
   fname?: string;
   DT_RowId?: string;
@@ -87,25 +87,35 @@ export async function listLatestMatchingFile(
 // אחד לכל הרשת) - גם ברשתות גדולות כמו רמי לוי (מאות קבצים). לכן לא מספיק לקחת את
 // הקובץ "האחרון" לפי מיון lexicographic (זה נותן סניף אחד בלבד, אקראי למעשה) -
 // צריך את הקובץ העדכני ביותר *לכל סניף בנפרד*, ולהוריד את כולם.
+// קשת מפרסמת את רוב הסניפים גם בתבנית בלי תת-רשת: <Prefix><ChainID>-<StoreID>-<YYYYMMDDHHMM>.gz.
+// בלי התבנית הזו נקלטו רק 2 מתוך 27 סניפים שלה.
 const perStorePattern = (prefix: string) => new RegExp(`^${prefix}(\\d+)-(\\d+)-(\\d+)-(\\d{8})-(\\d{6})\\.(gz|xml)$`, 'i');
+const perStoreShortPattern = (prefix: string) => new RegExp(`^${prefix}(\\d+)-(\\d+)-(\\d{12})\\.(gz|xml)$`, 'i');
 
 export interface StoreFileName {
   path: string;
   storeId: string;
 }
 
-// ממפה רשימת קבצים לקובץ העדכני ביותר של כל סניף (מפתח: chainId-subChainId-storeId).
-function pickLatestPerStore(files: FileEntry[], prefix: string, pathPrefix = ''): StoreFileName[] {
-  const pattern = perStorePattern(prefix);
+// פירוק שם קובץ סניף לשתי התבניות: מפתח סניף, חותמת זמן להשוואה ומזהה סניף
+export function parseStoreFileName(name: string, prefix: string): { storeKey: string; stamp: string; storeId: string } | null {
+  const m = name.match(perStorePattern(prefix));
+  if (m) return { storeKey: `${m[1]}-${Number(m[3])}`, stamp: `${m[4]}${m[5]}`, storeId: m[3] };
+  const s = name.match(perStoreShortPattern(prefix));
+  if (s) return { storeKey: `${s[1]}-${Number(s[2])}`, stamp: `${s[3]}00`, storeId: s[2] };
+  return null;
+}
+
+// ממפה רשימת קבצים לקובץ העדכני ביותר של כל סניף (מפתח: רשת וסניף, בלי אפסים
+// מובילים, כך שסניף שמופיע בשתי התבניות נספר פעם אחת)
+export function pickLatestPerStore(files: FileEntry[], prefix: string, pathPrefix = ''): StoreFileName[] {
   const byStore = new Map<string, { name: string; stamp: string; storeId: string }>();
   for (const f of files) {
     const name = f.fname || f.name || f.DT_RowId || '';
-    const m = name.match(pattern);
-    if (!m) continue;
-    const storeKey = `${m[1]}-${m[2]}-${m[3]}`;
-    const stamp = `${m[4]}${m[5]}`;
-    const existing = byStore.get(storeKey);
-    if (!existing || stamp > existing.stamp) byStore.set(storeKey, { name: `${pathPrefix}${name}`, stamp, storeId: m[3] });
+    const parsed = parseStoreFileName(name, prefix);
+    if (!parsed) continue;
+    const existing = byStore.get(parsed.storeKey);
+    if (!existing || parsed.stamp > existing.stamp) byStore.set(parsed.storeKey, { name: `${pathPrefix}${name}`, stamp: parsed.stamp, storeId: parsed.storeId });
   }
   return [...byStore.values()].map(v => ({ path: v.name, storeId: v.storeId }));
 }

@@ -15,6 +15,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseStoresXml } from './portalXmlParser';
+import { retryDownload } from './downloadRetry';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoresFetchResult, ChainFileRef,
@@ -272,7 +273,7 @@ export const shufersalAdapter: ChainAdapter = {
       for (let i = 0; i < subset.length; i += BATCH) {
         const batch = subset.slice(i, i + BATCH);
         const results = await Promise.allSettled(batch.map(async (url) => {
-          const { buf, isGzipped } = await downloadBuffer(url);
+          const { buf, isGzipped } = await retryDownload(() => downloadBuffer(url));
           return parseXmlBuffer(buf, isGzipped);
         }));
         for (const r of results) {
