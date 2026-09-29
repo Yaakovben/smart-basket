@@ -16,7 +16,7 @@ import { parseStorePrices, resolveBranchPrice } from './branchPricing';
 import { getBranchesWithin, getBranchLabel, getChainBranches, type UserLocation } from './branches.service';
 import { promoItemAppliesToStore, promoStoreIndex, promoUnitPrice } from './promoAggregation';
 import { brandOfBranch, SUB_BRANDS } from './scanBrands';
-import { pickCheapest, isAtStore, modalPrice, isStale, type CheapestCandidate } from './scanPricing';
+import { pickCheapest, isAtStore, modalPrice, isStale, isVatFreeZone, type CheapestCandidate } from './scanPricing';
 import { normStoreId } from './storeId';
 
 // קודם מחפשים ממש קרוב; אם אין שם אף סניף עם המוצר, מרחיבים פעם אחת.
@@ -218,16 +218,29 @@ async function loadProduct(barcode: string): Promise<PreparedProduct | null> {
   for (const d of docs) {
     const data = byChain.get(d.chainId)!;
     const typical = d.modalPrice ?? d.price;
-    const label = d.cheapestStoreId ? await getBranchLabel(d.chainId, d.cheapestStoreId).catch(() => null) : null;
     const chainPromo = bestPromo(data.promos, barcode, 'any');
+
+    // הסניפים הזולים מהמחיר ברוב הרשת, עם שם, בלי אזור אילת (פטור ממע"מ, ראו isVatFreeZone)
+    const cheaper = [...data.exceptions.entries()].filter(([, p]) => p < typical).sort((a, b) => a[1] - b[1]);
+    if (cheaper.length === 0 && d.price < typical && d.cheapestStoreId) cheaper.push([normStoreId(d.cheapestStoreId), d.price]);
+    const cheaperBranches: Array<{ storeId: string; price: number; branchName: string; city: string; chainName: string }> = [];
+    for (const [storeId, price] of cheaper) {
+      if (cheaperBranches.length >= CHEAPEST_EXCEPTIONS_PER_CHAIN) break;
+      const l = await getBranchLabel(d.chainId, storeId).catch(() => null);
+      if (!l || isVatFreeZone(l)) continue;
+      const brand = brandOfBranch(d.chainId, { subChainName: l.subChainName, storeName: l.branchName });
+      cheaperBranches.push({ storeId, price, branchName: l.branchName, city: l.city, chainName: brand?.name ?? d.chainName });
+    }
+    const lowest = cheaperBranches[0];
     chains.push({
       key: d.chainId,
       chainId: d.chainId,
       chainName: d.chainName,
       isBrand: false,
       typicalPrice: typical,
-      minPrice: d.price,
-      cheapestBranch: label && d.cheapestStoreId ? { storeId: d.cheapestStoreId, branchName: label.branchName, city: label.city } : null,
+      // הזול ברשת מחוץ לאזור אילת. בלי סניף זול מזוהה - המחיר ברוב הרשת
+      minPrice: lowest?.price ?? typical,
+      cheapestBranch: lowest ? { storeId: lowest.storeId, branchName: lowest.branchName, city: lowest.city } : null,
       branchesWithProduct: d.storesWithPrice ?? null,
       promo: chainPromo?.promo ?? null,
       promoAllBranches: chainPromo?.allBranches ?? false,
@@ -238,15 +251,10 @@ async function loadProduct(barcode: string): Promise<PreparedProduct | null> {
     // מועמדים ל"הכי זול בכל הארץ": המחיר ברוב הסניפים, וכמה מהסניפים הזולים ממנו
     // שאפשר לזהות. מחיר בלי סניף מזוהה לא נכנס, כי אי אפשר להגיד ללקוח איפה הוא.
     candidates.push({ chainId: d.chainId, chainName: d.chainName, price: typical, branch: null, chainTypicalPrice: typical, branchCount: d.storesWithPrice ?? 1 });
-    const cheaper = [...data.exceptions.entries()].filter(([, p]) => p < typical).sort((a, b) => a[1] - b[1]);
-    if (cheaper.length === 0 && d.price < typical && d.cheapestStoreId) cheaper.push([normStoreId(d.cheapestStoreId), d.price]);
-    for (const [storeId, price] of cheaper.slice(0, CHEAPEST_EXCEPTIONS_PER_CHAIN)) {
-      const l = await getBranchLabel(d.chainId, storeId).catch(() => null);
-      if (!l) continue;
-      const brand = brandOfBranch(d.chainId, { subChainName: l.subChainName, storeName: l.branchName });
+    for (const c of cheaperBranches) {
       candidates.push({
-        chainId: d.chainId, chainName: brand?.name ?? d.chainName, price,
-        branch: { storeId, branchName: l.branchName, city: l.city }, chainTypicalPrice: typical, branchCount: 1,
+        chainId: d.chainId, chainName: c.chainName, price: c.price,
+        branch: { storeId: c.storeId, branchName: c.branchName, city: c.city }, chainTypicalPrice: typical, branchCount: 1,
       });
     }
   }

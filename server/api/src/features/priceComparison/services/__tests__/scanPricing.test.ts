@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pickCheapest, isAtStore, modalPrice, isStale, type CheapestCandidate } from '../scanPricing';
+import { pickCheapest, isAtStore, modalPrice, isStale, isVatFreeZone, type CheapestCandidate } from '../scanPricing';
 import { brandOfBranch } from '../scanBrands';
 
 const chain = (chainId: string, price: number, count = 20): CheapestCandidate =>
@@ -60,4 +60,13 @@ test('מותג לפי תת-רשת, ובלי תת-רשת לפי שם הסניף',
   assert.equal(brandOfBranch('shufersal', { storeName: 'שלי באר יעקב' }), undefined);
   // שם מותג של רשת אחרת לא נתפס
   assert.equal(brandOfBranch('rami_levy', { storeName: 'נטו חיסכון' }), undefined);
+});
+
+test('אזור אילת (פטור ממע"מ) מזוהה לפי העיר, ושם רחוב לא מטעה', () => {
+  assert.equal(isVatFreeZone({ branchName: 'אילות', city: '' }), true);
+  assert.equal(isVatFreeZone({ branchName: 'קרפור מעלה אילת (1252)', city: 'אילת' }), true);
+  assert.equal(isVatFreeZone({ branchName: 'שלי קרית חיים-אח"י אילת', city: 'קרית חיים' }), false);
+  assert.equal(isVatFreeZone({ branchName: 'שלי קרית חיים-אח"י אילת' }), false);
+  assert.equal(isVatFreeZone({ branchName: 'אילת', city: '2600' }), true);
+  assert.equal(isVatFreeZone({ branchName: 'נתניה', city: 'נתניה' }), false);
 });

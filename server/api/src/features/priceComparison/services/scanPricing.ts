@@ -39,6 +39,17 @@ export function pickCheapest(candidates: CheapestCandidate[]): CheapestPick | nu
   return { ...best, singleBranchDeal };
 }
 
+// אילת ואזור אילות פטורים ממע"מ, והמחירים שם נמוכים בכ-15%. מחיר כזה כ"הכי זול בכל
+// הארץ" מטעה כל מי שלא גר שם (נמצא: דור אלון "אילות" ₪1.50 מול ₪1.78 בשאר הארץ).
+// ללקוח שנמצא באילת המחירים שם מוצגים כרגיל ב"קרוב אליך".
+// העיר קובעת כשהיא ידועה; שם הסניף רק כשאין עיר (ובלי שם רחוב כמו "אח"י אילת" בחיפה)
+const VAT_FREE = /(^|[^א-ת])(אילת|אילות)(?![א-ת])/;
+export const isVatFreeZone = (branch: { branchName?: string; city?: string }): boolean => {
+  const city = branch.city?.trim();
+  if (city && !/^\d+$/.test(city)) return VAT_FREE.test(city);
+  return VAT_FREE.test((branch.branchName ?? '').replace(/אח["״]י אילת/g, ''));
+};
+
 // מתחת למרחק הזה מהסניף הקרוב, המשתמש כנראה בתוכו (גודל סופר ממוצע + סטיית מיקום)
 export const AT_STORE_BASE_M = 120;
 // דיוק מיקום גרוע מזה לא מספיק כדי לקבוע באיזה סניף המשתמש נמצא
