@@ -57,16 +57,19 @@ export const useListActions = ({
     setShowEditList(true);
   }, [list.name, list.icon, list.color]);
 
-  const saveListChanges = useCallback(async () => {
-    if (!editListData || !hasListChanges) return;
-    const oldData = { name: list.name, icon: list.icon, color: list.color };
+  // שם, עיצוב וקוד כניסה חדש נשלחים בעדכון אחד: שני עדכונים נפרדים יכלו
+  // להחזיר את הקוד הישן, כי השני היה נשלח עם עותק הרשימה שלפני הראשון
+  const saveListChanges = useCallback(async (newPassword?: string) => {
+    if (!editListData || (!hasListChanges && !newPassword)) return;
+    const oldData = { name: list.name, icon: list.icon, color: list.color, password: list.password };
+    const next = { ...list, ...editListData, ...(newPassword ? { password: newPassword } : {}) };
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון מיידי
     setShowEditList(false);
-    onUpdateListLocal({ ...list, ...editListData });
+    onUpdateListLocal(next);
 
     try {
-      await onUpdateList({ ...list, ...editListData });
+      await onUpdateList(next);
       showToast(t('saved'));
     } catch {
       // שחזור במקרה של שגיאה

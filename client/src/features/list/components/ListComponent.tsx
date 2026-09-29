@@ -830,14 +830,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             },
           });
         } : undefined}
-        onChangePassword={list.isGroup ? async (password: string) => {
-          try {
-            await onUpdateList({ ...list, password });
-            showToast(t('saved'));
-          } catch {
-            showToast(t('errorOccurred'), 'error');
-          }
-        } : undefined}
+        canChangePassword={list.isGroup}
       />
 
       {/* Confirm Modals */}

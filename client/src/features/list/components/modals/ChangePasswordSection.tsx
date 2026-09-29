@@ -1,20 +1,19 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper } from '@mui/material';
+import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import type { List } from '../../../../global/types';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx, actionBtnSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
 
 interface ChangePasswordSectionProps {
-  list: List;
-  onChangePassword: (password: string) => void | Promise<void>;
+  value: string;
+  onChange: (password: string) => void;
 }
 
-export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePasswordSectionProps) => {
+// הקוד החדש נשמר יחד עם שאר השינויים בכפתור "שמור שינויים" של המודאל.
+// כפתור שמירה נפרד כאן בלבל: שני כפתורי שמירה באותו מסך.
+export const ChangePasswordSection = memo(({ value, onChange }: ChangePasswordSectionProps) => {
   const { t } = useSettings();
   const [open, setOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [saving, setSaving] = useState(false);
   const expandedRef = useRef<HTMLDivElement | null>(null);
 
   // גולל את השדה לתצוגה אחרי שאנימציית הפתיחה מסתיימת
@@ -46,34 +45,15 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
           <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1.25 }}>
             {t('newPasswordLabel')}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <TextField
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="• • • •"
-              size="small"
-              fullWidth
-              inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
-              sx={pinFieldSx}
-            />
-            <Button
-              variant="contained"
-              disabled={newPassword.length !== 4 || newPassword === (list.password || '') || saving}
-              onClick={async () => {
-                setSaving(true);
-                try {
-                  await onChangePassword(newPassword);
-                  setNewPassword('');
-                  setOpen(false);
-                } finally {
-                  setSaving(false);
-                }
-              }}
-              sx={actionBtnSx}
-            >
-              {saving ? <CircularProgress size={17} sx={{ color: 'white' }} /> : t('save')}
-            </Button>
-          </Box>
+          <TextField
+            value={value}
+            onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="• • • •"
+            size="small"
+            fullWidth
+            inputProps={{ inputMode: 'numeric', maxLength: 4, 'aria-label': t('newPasswordLabel'), style: { textAlign: 'center', fontSize: 22, fontWeight: 700, letterSpacing: 8 } }}
+            sx={pinFieldSx}
+          />
         </Box>
       </Collapse>
     </Paper>

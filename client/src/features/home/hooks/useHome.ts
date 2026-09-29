@@ -286,11 +286,12 @@ export const useHome = ({
   }, []);
 
   // ===== טיפול בעריכה/מחיקת רשימה =====
-  const saveEditList = useCallback(async () => {
+  // קוד כניסה חדש נשמר באותו עדכון יחד עם השם והעיצוב
+  const saveEditList = useCallback(async (newPassword?: string) => {
     if (!editList) return;
     setSavingList(true);
     try {
-      await onEditList(editList);
+      await onEditList(newPassword ? { ...editList, password: newPassword } : editList);
       setEditList(null);
       showToast(t('saved'));
     } catch {
