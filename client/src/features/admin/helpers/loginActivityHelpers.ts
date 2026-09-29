@@ -12,7 +12,10 @@ const PLATFORM_LABEL: Record<Platform, string> = {
 };
 
 export const methodColor = (method: string) =>
-  method === 'google' ? EVENT_COLORS.google : method === 'app_open' ? EVENT_COLORS.app_open : EVENT_COLORS.login;
+  method === 'google' ? EVENT_COLORS.google
+    : method === 'apple' ? EVENT_COLORS.apple
+    : method === 'app_open' ? EVENT_COLORS.app_open
+    : EVENT_COLORS.login;
 
 // תווית אחת לכל רישום: שיטת הכניסה, ומאיפה (אם ידוע).
 // פתיחה: "פתיחה · מסך הבית". כניסה: "Google · דפדפן".
@@ -23,6 +26,6 @@ export const activityLabel = (
 ): string => {
   const where = platform ? PLATFORM_LABEL[platform] : null;
   if (method === 'app_open') return where ? `פתיחה · ${where}` : names.app;
-  const how = method === 'google' ? names.google : names.email;
+  const how = method === 'google' ? names.google : method === 'apple' ? 'Apple' : names.email;
   return where ? `${how} · ${where}` : how;
 };

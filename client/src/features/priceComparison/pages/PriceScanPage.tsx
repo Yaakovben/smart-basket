@@ -64,7 +64,7 @@ export const PriceScanPage = () => {
     }}>
       <Box sx={{
         background: COMMON_STYLES.gradients.header,
-        p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
+        p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 20px', sm: '48px 20px 20px' },
         flexShrink: 0,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -119,7 +119,7 @@ export const PriceScanPage = () => {
 
       {/* כפתור הסריקה קבוע בתחתית, זמין תמיד בלי לגלול */}
       <Box sx={{
-        flexShrink: 0, px: 2, pt: 1.25, pb: 'calc(12px + env(safe-area-inset-bottom))',
+        flexShrink: 0, px: 2, pt: 1.25, pb: 'calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
         borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default',
       }}>
         <Button

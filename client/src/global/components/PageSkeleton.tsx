@@ -22,11 +22,11 @@ export const PageSkeleton = () => {
     mx: 'auto',
   }}>
     {/* Header skeleton - padding/מבנה זהים בכוונה ל-HomeHeader (כולל
-        env(safe-area-inset-top)), אחרת השלד נמוך מהעמוד האמיתי בטלפון עם
+        var(--safe-area-inset-top, env(safe-area-inset-top))), אחרת השלד נמוך מהעמוד האמיתי בטלפון עם
         notch/Dynamic Island וגורם לקפיצת גובה ברגע שהנתונים מגיעים. */}
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-      p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
+      p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 20px', sm: '48px 20px 20px' },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
     }}>
@@ -89,7 +89,7 @@ export const PageSkeleton = () => {
         האמיתי, כדי שלא תהיה "קפיצה" ברגע שהעמוד האמיתי עולה מתחתיו. */}
     <Box sx={{
       position: 'fixed',
-      bottom: 'max(88px, calc(env(safe-area-inset-bottom) + 78px))',
+      bottom: 'max(88px, calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 78px))',
       left: 16,
       zIndex: 1090,
     }}>
@@ -128,7 +128,7 @@ export const PageSkeleton = () => {
     </Box>
     <Box sx={{
       position: 'fixed',
-      bottom: 'max(32px, env(safe-area-inset-bottom))',
+      bottom: 'max(32px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
       left: 0, right: 0,
       display: 'flex', justifyContent: 'center',
       zIndex: 1100,

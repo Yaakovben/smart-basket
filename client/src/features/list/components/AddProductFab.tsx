@@ -88,7 +88,7 @@ export const AddProductFab = memo(({
             top: fabPosition.y - 28,
             left: fabPosition.x - 28,
           } : {
-            bottom: 'calc(var(--nav-bottom, 0px) + 24px + env(safe-area-inset-bottom))',
+            bottom: 'calc(var(--nav-bottom, 0px) + 24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
@@ -131,7 +131,7 @@ export const AddProductFab = memo(({
   return (
     <Box sx={{
       position: 'fixed',
-      bottom: 'calc(var(--nav-bottom, 0px) + 20px + env(safe-area-inset-bottom))',
+      bottom: 'calc(var(--nav-bottom, 0px) + 20px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
       left: 0,
       right: 0,
       display: 'flex',

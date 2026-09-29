@@ -1,5 +1,5 @@
 export { commonSchemas } from './common.validator';
-export { authValidator, type RegisterInput, type LoginInput, type CheckEmailInput, type GoogleAuthInput, type RefreshTokenInput } from './auth.validator';
+export { authValidator, type RegisterInput, type LoginInput, type CheckEmailInput, type GoogleAuthInput, type AppleAuthInput, type RefreshTokenInput } from './auth.validator';
 export { listValidator, type CreateListInput, type UpdateListInput, type JoinGroupInput } from './list.validator';
 export { productValidator, type CreateProductInput, type UpdateProductInput, type ReorderProductsInput, type MoveProductsInput } from './product.validator';
 export type { ProductUnit, ProductCategory } from '../constants';

@@ -11,6 +11,7 @@ import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
 import { createTokens } from './token.service';
 import { newUserTrialFields } from './subscription.service';
+import { verifyAppleIdentityToken } from './appleToken.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
@@ -29,7 +30,7 @@ interface GoogleUserInfo {
 // יצירת טוקנים + רישום פעילות כניסה ב-log
 async function createTokensAndLog(
   userId: string, email: string, name: string, tokenVersion: number,
-  loginMethod: 'email' | 'google', ipAddress?: string, userAgent?: string, platform?: LoginPlatform
+  loginMethod: 'email' | 'google' | 'apple', ipAddress?: string, userAgent?: string, platform?: LoginPlatform
 ): Promise<AuthTokens> {
   const tokens = await createTokens(userId, email, name, tokenVersion);
   await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, platform, ipAddress, userAgent });
@@ -209,7 +210,9 @@ async function completeGoogleAuth(
 
   // מציאת או יצירת משתמש
   let user = await UserDAL.findByGoogleId(googleUser.sub);
-  if (!user) user = await UserDAL.findByEmail(googleUser.email);
+  // עם הסיסמה (select:false כברירת מחדל): בלי זה hadPassword למטה תמיד false,
+  // והסיסמה הישנה לא בוטלה בקישור. toJSON מסיר אותה מהתגובה.
+  if (!user) user = await UserDAL.findByEmailWithPassword(googleUser.email);
 
   const isAdmin = matchesAdminEmail(googleUser.email);
 
@@ -243,5 +246,60 @@ async function completeGoogleAuth(
   }
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent, platform);
+  return { user: user.toJSON() as unknown as IUserResponse, tokens };
+}
+
+/**
+ * כניסה/הרשמה עם Sign in with Apple (אפליקציית iOS).
+ * אפל חייבת אפשרות כזו בכל אפליקציה שמציעה כניסה עם גוגל (הנחיה 4.8).
+ *
+ * הזרימה, כמו בגוגל:
+ *  1. אימות ה-identity token מול המפתחות של אפל (appleToken.service)
+ *  2. חיפוש לפי appleId, ואז לפי מייל מאומת
+ *  3. משתמש חדש: השם מגיע מהאפליקציה (אפל שולחת אותו רק בכניסה הראשונה),
+ *     ובלעדיו החלק הראשון של המייל. מייל יכול להיות כתובת ממסר של אפל
+ *     (Hide My Email), והוא עובד כרגיל.
+ *  4. חשבון מייל קיים בלי appleId: קישור, באותה הגנה כמו בגוגל
+ */
+export async function appleAuth(
+  data: { idToken: string; name?: string },
+  ipAddress?: string,
+  userAgent?: string,
+  platform?: LoginPlatform
+): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
+  const apple = await verifyAppleIdentityToken(data.idToken);
+
+  let user = await UserDAL.findByAppleId(apple.sub);
+  // קישור לפי מייל רק כשאפל אישרה שהמייל שייך למשתמש
+  // עם הסיסמה, כדי שבדיקת hadPassword למטה תעבוד (ראו completeGoogleAuth)
+  if (!user && apple.email && apple.emailVerified) user = await UserDAL.findByEmailWithPassword(apple.email);
+
+  if (!user) {
+    // משתמש חדש חייב מייל. אפל שולחת אותו בכניסה הראשונה (גם אם מוסתר).
+    if (!apple.email) throw AuthError.appleAuthFailed();
+    const providedName = sanitizeText((data.name ?? '').trim()).slice(0, 50);
+    user = await UserDAL.create({
+      name: providedName.length >= 2 ? providedName : apple.email.split('@')[0],
+      email: apple.email,
+      appleId: apple.sub,
+      avatarColor: '#111827',
+      isAdmin: matchesAdminEmail(apple.email),
+      ...newUserTrialFields(),
+    });
+  } else if (!user.appleId) {
+    // אותה הגנה כמו בקישור גוגל: מי שנרשם קודם עם המייל הזה בסיסמה בלבד לא
+    // ימשיך להתחבר איתה אחרי שהבעלים האמיתי (שאפל אימתה) קישר את החשבון.
+    const update: Record<string, unknown> = { appleId: apple.sub };
+    const hadPassword = !!user.password;
+    if (hadPassword) {
+      update.$unset = { password: '' };
+      update.$inc = { tokenVersion: 1 };
+    }
+    await UserDAL.updateById(user._id.toString(), update);
+    user.appleId = apple.sub;
+    if (hadPassword) user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+  }
+
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'apple', ipAddress, userAgent, platform);
   return { user: user.toJSON() as unknown as IUserResponse, tokens };
 }

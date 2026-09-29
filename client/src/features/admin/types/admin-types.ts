@@ -4,7 +4,7 @@ export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'act
 
 export interface UserWithLastLogin extends User {
   lastLoginAt?: string;
-  lastLoginMethod?: 'email' | 'google' | 'app_open';
+  lastLoginMethod?: 'email' | 'google' | 'apple' | 'app_open';
   lastAppOpenAt?: string;
   lastAppOpenPlatform?: 'browser' | 'pwa' | 'ios' | 'android';
   registrationMethod: 'google' | 'email';

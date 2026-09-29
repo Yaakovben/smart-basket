@@ -51,7 +51,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
     }}>
       <Box sx={{
         background: isDark ? SUBSCRIPTION_HEADER_GRADIENT.dark : SUBSCRIPTION_HEADER_GRADIENT.light,
-        p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' },
+        p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 24px', sm: '48px 20px 24px' },
         flexShrink: 0,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -64,7 +64,7 @@ export const SubscriptionPage = ({ showToast }: Props) => {
 
       <Box sx={{
         flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-        p: { xs: 2, sm: 2.5 }, pb: 'calc(28px + env(safe-area-inset-bottom))',
+        p: { xs: 2, sm: 2.5 }, pb: 'calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
       }}>
         {loading && !status ? (
           <SubscriptionSkeleton />

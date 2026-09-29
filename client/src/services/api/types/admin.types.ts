@@ -18,7 +18,7 @@ export interface AdminUser {
   // סטטיסטיקות התחברות מהשרת (aggregation)
   totalLogins: number;
   lastLoginAt: string | null;
-  lastLoginMethod: 'email' | 'google' | 'app_open' | null;
+  lastLoginMethod: 'email' | 'google' | 'apple' | 'app_open' | null;
   lastAppOpenAt: string | null;
   lastAppOpenPlatform?: 'browser' | 'pwa' | 'ios' | 'android' | null;
   hasPushSubscription: boolean;
@@ -29,7 +29,7 @@ export interface AdminLoginActivity {
   user: string;
   userName: string;
   userEmail: string;
-  loginMethod: 'email' | 'google' | 'app_open';
+  loginMethod: 'email' | 'google' | 'apple' | 'app_open';
   // מאיפה: דפדפן / מסך הבית / אפליקציה מהחנות. חסר ברשומות ישנות.
   platform?: 'browser' | 'pwa' | 'ios' | 'android';
   ipAddress?: string;

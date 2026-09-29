@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
+import AppleIcon from '@mui/icons-material/Apple';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import AddToHomeScreenIcon from '@mui/icons-material/AddToHomeScreen';
@@ -16,6 +17,7 @@ export const ActivityIcon = ({ method, platform, size, color }: {
 }) => {
   const sx = { fontSize: size, color };
   if (method === 'google') return <GoogleIcon sx={sx} />;
+  if (method === 'apple') return <AppleIcon sx={sx} />;
   if (method === 'email') return <EmailIcon sx={sx} />;
   if (platform === 'browser') return <LanguageIcon sx={sx} />;
   if (platform === 'pwa') return <AddToHomeScreenIcon sx={sx} />;

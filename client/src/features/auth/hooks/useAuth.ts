@@ -25,6 +25,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   // true אם emailLoading נמשך יותר מכמה שניות - מבדיל בין "עומד לענות תכף"
   // ל"תקוע/שרת קר", כדי שהמשתמש לא ירגיש שהכפתור לא הגיב לו.
@@ -173,21 +174,23 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleEmailSubmit();
   }, [handleEmailSubmit]);
 
-  // ===== טיפול בהתחברות Google =====
-  const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string } | { id_token: string }) => {
-    const token = 'id_token' in tokenResponse
-      ? { idToken: tokenResponse.id_token }
-      : { accessToken: tokenResponse.access_token };
-    setGoogleLoading(true);
+  // ===== התחברות חברתית (Google / Apple) =====
+  // זרימה אחת לשתיהן: ניסיון + ניסיון חוזר אחד בשגיאת רשת, ואותן הודעות שגיאה.
+  const runSocialLogin = useCallback(async (
+    call: () => Promise<{ user: User }>,
+    method: 'google' | 'apple',
+    setLoading: (v: boolean) => void,
+  ) => {
+    setLoading(true);
     try {
       // ניסיון ראשון + retry אחד במקרה של שגיאת רשת
       let lastError: unknown;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const { user } = await authApi.googleAuth(token);
+          const { user } = await call();
           haptic('medium');
-          trackEvent('user_logged_in', { method: 'google' });
-          onLogin(user, 'google');
+          trackEvent('user_logged_in', { method });
+          onLogin(user, method);
           return;
         } catch (error: unknown) {
           lastError = error;
@@ -220,9 +223,20 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setError(t('networkError'));
       }
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   }, [onLogin, t]);
+
+  const handleGoogleSuccess = useCallback((tokenResponse: { access_token: string } | { id_token: string }) => {
+    const token = 'id_token' in tokenResponse
+      ? { idToken: tokenResponse.id_token }
+      : { accessToken: tokenResponse.access_token };
+    return runSocialLogin(() => authApi.googleAuth(token), 'google', setGoogleLoading);
+  }, [runSocialLogin]);
+
+  // Sign in with Apple (אפליקציית iOS). השם מגיע מאפל רק בכניסה הראשונה.
+  const handleAppleSuccess = useCallback((idToken: string, name?: string) =>
+    runSocialLogin(() => authApi.appleAuth(idToken, name), 'apple', setAppleLoading), [runSocialLogin]);
 
   const handleGoogleError = useCallback(() => {
     haptic('heavy');
@@ -252,6 +266,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     password,
     error,
     googleLoading,
+    appleLoading,
     emailLoading,
     slowSubmit,
     isNewUser,
@@ -273,6 +288,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleSubmit,
     handleGoogleSuccess,
     handleGoogleError,
+    handleAppleSuccess,
     toggleEmailForm,
     applySuggestion,
     isValidEmail,

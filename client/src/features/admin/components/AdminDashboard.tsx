@@ -62,7 +62,7 @@ export const AdminDashboard = () => {
   // שנפתח מעליו, מתחת לחריץ המצלמה. כך הוא לא מכסה כפתורים או כרטיסים.
   return (
     <Box sx={{ height: 'var(--app-height, 100dvh)', display: 'flex', flexDirection: 'column', bgcolor: isDark ? '#0F1419' : '#F8FAFB' }}>
-    <PullRefreshArea onRefresh={refreshData} safeTop sx={{ pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+    <PullRefreshArea onRefresh={refreshData} safeTop sx={{ pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' }}>
       <AdminDashboardHeader
         isDark={isDark}
         isRtl={isRtl}

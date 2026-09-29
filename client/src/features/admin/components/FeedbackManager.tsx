@@ -66,7 +66,7 @@ export const FeedbackManager = ({ isDark, onClose }: Props) => {
           : undefined}
       />
 
-      <PullRefreshArea onRefresh={load} sx={{ p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+      <PullRefreshArea onRefresh={load} sx={{ p: 2, pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' }}>
         <AdminPushToggle
           kind="pushOnFeedback"
           label="התראת פוש על משוב חדש"

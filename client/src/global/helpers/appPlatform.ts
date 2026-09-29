@@ -6,6 +6,13 @@
 // כך שהקוד הזה לא מגדיל את החבילה שנטענת בפתיחה.
 export type AppPlatform = 'browser' | 'pwa' | 'ios' | 'android';
 
+// האם רצים בתוך האפליקציה מהחנות (ולא בדפדפן או כ-PWA). באפליקציה אין
+// "התקנה למסך הבית" ואין Web Push, ולכן הצעות כאלה לא מוצגות בה בכלל.
+export const isNativeShell = (): boolean => {
+  const p = detectAppPlatform();
+  return p === 'ios' || p === 'android';
+};
+
 export function detectAppPlatform(): AppPlatform {
   if (typeof window === 'undefined') return 'browser';
   const native = (window as unknown as { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.();

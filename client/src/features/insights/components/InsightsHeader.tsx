@@ -16,7 +16,7 @@ export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHead
   return (
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-      p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
+      p: { xs: 'max(50px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 20px) 16px 16px', sm: '54px 20px 18px' },
       borderRadius: '0 0 24px 24px',
       position: 'relative', overflow: 'hidden',
       mb,

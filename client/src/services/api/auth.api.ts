@@ -64,6 +64,23 @@ export const authApi = {
     }
   },
 
+  // Sign in with Apple (אפליקציית iOS): ה-identity token מאפל, והשם שאפל
+  // מוסרת לאפליקציה רק בכניסה הראשונה
+  async appleAuth(idToken: string, name?: string): Promise<AuthResponse> {
+    setAuthInProgress(true);
+    try {
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/apple', { idToken, ...(name ? { name } : {}) });
+      const responseData = response.data?.data;
+      if (!responseData?.user || !responseData?.tokens) {
+        throw new Error('Invalid server response');
+      }
+      saveAndVerifyTokens(responseData.tokens.accessToken);
+      return { user: responseData.user, tokens: responseData.tokens };
+    } finally {
+      setTimeout(() => setAuthInProgress(false), 100);
+    }
+  },
+
   async logout(): Promise<void> {
     try {
       // השרת קורא את ה-refresh token מה-httpOnly cookie ומבטל אותו

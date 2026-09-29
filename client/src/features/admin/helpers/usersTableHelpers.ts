@@ -4,4 +4,5 @@ export const EVENT_COLORS = {
   app_open: '#3B82F6',
   registration: '#8B5CF6',
   google: '#4285F4',
+  apple: '#111827',
 } as const;

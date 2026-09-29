@@ -3,6 +3,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NotificationSettings } from '../../../global/types';
+import { isNativeShell } from '../../../global/helpers/appPlatform';
 import {
   settingRowSx, subSettingRowSx, lastSubSettingRowSx, switchSx, smallSwitchSx, rowLabelSx, subRowLabelSx,
   sectionHeaderRowSx, sectionHeaderRowWithMtSx, sectionLabelSx, sectionCountBadgeSx, sectionDividerSx,
@@ -45,6 +46,7 @@ export const NotificationsSettingsSection = ({
   onMainToggle, onPushToggle,
 }: NotificationsSettingsSectionProps) => {
   const { t } = useSettings();
+  const native = isNativeShell();
 
   return (
     <>
@@ -62,7 +64,10 @@ export const NotificationsSettingsSection = ({
 
       <Collapse in={notifications.enabled && notificationsExpanded}>
         <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
-          {/* Push Notifications Section */}
+          {/* Push Notifications Section - רק באתר ובאפליקציה שהותקנה ממנו (Web Push).
+              באפליקציה מהחנות אין Web Push, וההסבר "הוסף למסך הבית" שם מטעה
+              ונחשב אצל אפל להפניה להתקנת אתר, סיבה נפוצה לדחייה. */}
+          {!native && (<>
           <Box sx={sectionHeaderRowSx} onClick={togglePushExpanded}>
             <Box sx={sectionIconBadgeSx(isDark, '#FEF3C7', 'rgba(245,158,11,0.15)')}>📲</Box>
             <Typography sx={sectionLabelSx}>
@@ -137,9 +142,11 @@ export const NotificationsSettingsSection = ({
             </Box>
           </Collapse>
 
-          {/* List Notifications Section */}
           <Box sx={sectionDividerSx} />
-          <Box sx={sectionHeaderRowWithMtSx} onClick={toggleGroupExpanded}>
+          </>)}
+
+          {/* List Notifications Section - באפליקציה מהחנות זה החלק הראשון, בלי רווח עליון */}
+          <Box sx={native ? sectionHeaderRowSx : sectionHeaderRowWithMtSx} onClick={toggleGroupExpanded}>
             <Box sx={sectionIconBadgeSx(isDark, '#E0E7FF', 'rgba(99,102,241,0.15)')}>👥</Box>
             <Typography sx={sectionLabelSx}>{t('groupNotifications')}</Typography>
             <Typography sx={sectionCountBadgeSx}>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Smart Basket</title>
+  <!--
+    מסך שהאפליקציה מהחנות מציגה כשהיא נפתחת בלי חיבור לאינטרנט (server.errorPath
+    ב-capacitor.config.ts). האפליקציה טוענת את האתר החי, ובלי חיבור היא הייתה
+    נפתחת על מסך שגיאה ריק. הקובץ עומד בפני עצמו: בלי סקריפטים חיצוניים, בלי
+    גופנים מהרשת, כי אין רשת. כשהחיבור חוזר, חוזרים לאפליקציה לבד.
+  -->
+  <style>
+    :root {
+      --bg: #F0FDFA; --card: #FFFFFF; --text: #0F172A; --muted: #475569;
+      --brand: #14B8A6; --brand-dark: #0D9488; --ring: rgba(20,184,166,0.18);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0B1220; --card: #111A2E; --text: #E2E8F0; --muted: #94A3B8; --ring: rgba(20,184,166,0.25); }
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Heebo", Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card {
+      width: 100%; max-width: 380px; text-align: center;
+      background: var(--card); border-radius: 24px; padding: 36px 24px 28px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+    }
+    .icon {
+      width: 76px; height: 76px; margin: 0 auto 20px; border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #14B8A6, #0D9488);
+      box-shadow: 0 0 0 8px var(--ring);
+    }
+    h1 { font-size: 21px; font-weight: 800; margin-bottom: 10px; }
+    p { font-size: 15px; line-height: 1.6; color: var(--muted); }
+    button {
+      margin-top: 26px; width: 100%; border: 0; border-radius: 14px;
+      padding: 15px; font-size: 16px; font-weight: 800; font-family: inherit;
+      color: #fff; background: var(--brand); cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    button:active { transform: scale(0.98); background: var(--brand-dark); }
+    .status { margin-top: 14px; font-size: 13px; color: var(--muted); min-height: 18px; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <div class="icon" aria-hidden="true">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 8.8a15 15 0 0 1 4.3-2.6"/><path d="M5 12.6a10 10 0 0 1 2.6-1.6"/><path d="M10.7 5.1A15 15 0 0 1 22 8.8"/>
+        <path d="M16.9 10.9a10 10 0 0 1 2.1 1.7"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><line x1="12" y1="20" x2="12.01" y2="20"/><line x1="2" y1="2" x2="22" y2="22"/>
+      </svg>
+    </div>
+    <h1 id="title">אין חיבור לאינטרנט</h1>
+    <p id="body">Smart Basket צריכה חיבור כדי להיפתח. ברגע שהחיבור יחזור, האפליקציה תיטען מעצמה.</p>
+    <button id="retry" type="button">נסו שוב</button>
+    <div class="status" id="status" aria-live="polite"></div>
+  </main>
+  <script>
+    (function () {
+      // כתובת האפליקציה. אם הגענו לכאן אחרי ניסיון טעינה, הדפדפן מכיר אותה.
+      var APP_URL = 'https://smart-basket.vercel.app/';
+
+      var lang = (navigator.language || 'he').slice(0, 2);
+      var T = {
+        he: { title: 'אין חיבור לאינטרנט', body: 'Smart Basket צריכה חיבור כדי להיפתח. ברגע שהחיבור יחזור, האפליקציה תיטען מעצמה.', retry: 'נסו שוב', trying: 'מתחברים…', still: 'עדיין אין חיבור. ננסה שוב אוטומטית.' },
+        en: { title: 'No internet connection', body: 'Smart Basket needs a connection to open. As soon as you are back online, it will load on its own.', retry: 'Try again', trying: 'Connecting…', still: 'Still offline. We will keep trying automatically.' },
+        ru: { title: 'Нет подключения к интернету', body: 'Smart Basket нужно подключение, чтобы открыться. Как только связь вернётся, приложение загрузится само.', retry: 'Повторить', trying: 'Подключение…', still: 'Всё ещё нет связи. Попробуем снова автоматически.' }
+      };
+      var t = T[lang] || T.he;
+      if (lang !== 'he') { document.documentElement.lang = lang; document.documentElement.dir = 'ltr'; }
+      document.getElementById('title').textContent = t.title;
+      document.getElementById('body').textContent = t.body;
+      var btn = document.getElementById('retry');
+      var status = document.getElementById('status');
+      btn.textContent = t.retry;
+
+      function go() { window.location.replace(APP_URL); }
+
+      function retry() {
+        status.textContent = t.trying;
+        if (navigator.onLine === false) {
+          setTimeout(function () { status.textContent = t.still; }, 600);
+          return;
+        }
+        go();
+      }
+
+      btn.addEventListener('click', retry);
+      // החיבור חזר: חוזרים לאפליקציה בלי שהמשתמש יצטרך ללחוץ
+      window.addEventListener('online', go);
+      // גיבוי למכשירים שלא יורים אירוע online: בדיקה כל 8 שניות
+      setInterval(function () { if (navigator.onLine !== false) go(); }, 8000);
+    })();
+  </script>
+</body>
+</html>

@@ -78,7 +78,7 @@ export const TopProgressBar = ({ active, color = '#14B8A6', label }: Props) => {
       // עטיפת ה-pill בכרטיס משלו - מבודד ויזואלית מהתוכן מתחת,
       // כדי שלא ייראה כאילו הוא צמוד לבורר הרשימות / שורת הסינון.
       position: 'fixed',
-      top: 'calc(env(safe-area-inset-top, 0px) + 14px)',
+      top: 'calc(var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) + 14px)',
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 10000,

@@ -30,6 +30,8 @@ export interface IUser extends Document {
   avatarColor: string;
   avatarEmoji: string;
   googleId?: string;
+  // מזהה Sign in with Apple (sub הקבוע של אפל למשתמש באפליקציה שלנו)
+  appleId?: string;
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
   listOrder: string[];
@@ -112,6 +114,11 @@ const userSchema = new Schema<IUser>(
       default: '',
     },
     googleId: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    appleId: {
       type: String,
       sparse: true,
       unique: true,

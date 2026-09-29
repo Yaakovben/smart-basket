@@ -59,7 +59,7 @@ export const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => stri
       />
       <Box sx={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300,
-        pb: 'max(16px, env(safe-area-inset-bottom))',
+        pb: 'max(16px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
         px: 2, pt: 0,
         animation: 'pwaSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
         '@keyframes pwaSlideUp': {

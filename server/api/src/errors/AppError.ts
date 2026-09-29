@@ -86,6 +86,10 @@ export class AuthError extends AppError {
   static googleAuthFailed(): AuthError {
     return new AuthError('Google authentication failed', 'GOOGLE_AUTH_FAILED');
   }
+
+  static appleAuthFailed(): AuthError {
+    return new AuthError('Apple authentication failed', 'APPLE_AUTH_FAILED');
+  }
 }
 
 // שגיאת הרשאה (403)

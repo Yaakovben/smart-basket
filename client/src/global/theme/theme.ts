@@ -245,7 +245,7 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
           root: {
             height: 'auto',
             padding: '4px 0',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            paddingBottom: 'max(12px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
             borderTop: `1px solid ${colors.divider}`,
             boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.2)' : '0 -2px 10px rgba(0,0,0,0.05)',
             backgroundColor: colors.paper

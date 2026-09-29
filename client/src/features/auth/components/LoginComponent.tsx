@@ -8,7 +8,8 @@ import { useClearCache } from '../hooks/useClearCache';
 import { AppLogo } from './LoginLogos';
 import { GoogleSignInButton } from './GoogleSignInButton';
 import { isNativeApp } from '../../../global/services/storeBilling';
-import { nativeGoogleLogin } from '../../../global/services/nativeGoogleAuth';
+import { nativeGoogleLogin, nativeAppleLogin, isAppleSignInAvailable } from '../../../global/services/nativeSocialAuth';
+import { AppleSignInButton } from './AppleSignInButton';
 import { LoginErrorAlert } from './LoginErrorAlert';
 import { EmailLoginToggle } from './EmailLoginToggle';
 import { EmailLoginForm } from './EmailLoginForm';
@@ -27,7 +28,8 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
   const { clearing, handleClearCache } = useClearCache();
 
   const auth = useAuth({ onLogin });
-  const { error, googleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, toggleEmailForm } = auth;
+  const { error, googleLoading, appleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, handleAppleSuccess, toggleEmailForm } = auth;
+  const showApple = isAppleSignInAvailable();
 
   const webGoogleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
@@ -42,6 +44,13 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
       .catch(() => handleGoogleError());
   };
 
+  // Sign in with Apple, רק באפליקציית iOS. ביטול של המשתמש לא מציג שגיאה.
+  const appleLogin = () => {
+    nativeAppleLogin()
+      .then((res) => { if ('idToken' in res) void handleAppleSuccess(res.idToken, res.name); })
+      .catch(() => handleGoogleError());
+  };
+
   return (
     <Box sx={{
       height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' },
@@ -52,8 +61,8 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
         ? 'linear-gradient(135deg, #0F1419 0%, #1A2332 100%)'
         : 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
       p: { xs: 2, sm: 2.5 },
-      pt: 'max(20px, env(safe-area-inset-top))',
-      pb: 'max(20px, env(safe-area-inset-bottom))',
+      pt: 'max(20px, var(--safe-area-inset-top, env(safe-area-inset-top)))',
+      pb: 'max(20px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
       overflow: 'auto',
       WebkitOverflowScrolling: 'touch'
     }}>
@@ -101,6 +110,9 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
         <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
           {/* Google Login Button */}
           <GoogleSignInButton loading={googleLoading} onClick={() => googleLogin()} t={t} />
+          {showApple && (
+            <AppleSignInButton loading={appleLoading} onClick={appleLogin} language={settings.language} isDark={isDark} />
+          )}
 
           {error && !showEmailForm && (
             <LoginErrorAlert error={error} clearing={clearing} onClearCache={handleClearCache} onDismiss={() => auth.setError('')} t={t} fontSize={13} />

@@ -39,7 +39,7 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
       {/* הדר זהה לסגנון InsightsHeader */}
       <Box sx={{
         background: dark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-        pt: 'max(env(safe-area-inset-top) + 12px, 48px)',
+        pt: 'max(var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px, 48px)',
         pb: '16px',
         px: 2,
         borderRadius: '0 0 24px 24px',

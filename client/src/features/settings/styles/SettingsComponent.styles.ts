@@ -73,7 +73,7 @@ export const subRowLabelSx: SxProps<Theme> = { flex: 1, fontSize: 14 };
 
 export const headerSx = (isDark: boolean): SxProps<Theme> => ({
   background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-  p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' },
+  p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 24px', sm: '48px 20px 24px' },
   flexShrink: 0,
 });
 

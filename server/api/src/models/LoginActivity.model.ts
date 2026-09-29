@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
-export type LoginMethod = 'email' | 'google' | 'app_open';
+export type LoginMethod = 'email' | 'google' | 'apple' | 'app_open';
 
 // מאיפה נפתחה האפליקציה: דפדפן רגיל, אייקון שהוסף למסך הבית (PWA),
 // או האפליקציה מהחנות. נשלח מהלקוח בכותרת X-App-Platform. רשומות ישנות בלעדיו.
@@ -38,7 +38,7 @@ const loginActivitySchema = new Schema<ILoginActivity>(
     },
     loginMethod: {
       type: String,
-      enum: ['email', 'google', 'app_open'],
+      enum: ['email', 'google', 'apple', 'app_open'],
       required: true,
     },
     platform: {

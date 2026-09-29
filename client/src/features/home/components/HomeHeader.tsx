@@ -49,7 +49,7 @@ export const HomeHeader = ({
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
       p: {
-        xs: `max(48px, env(safe-area-inset-top) + 12px) 16px ${isEmpty ? 32 : 20}px`,
+        xs: `max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px ${isEmpty ? 32 : 20}px`,
         sm: `48px 20px ${isEmpty ? 32 : 20}px`,
       },
       borderRadius: '0 0 24px 24px',
@@ -57,12 +57,12 @@ export const HomeHeader = ({
       boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(20, 184, 166, 0.15)',
       // מסך זעיר (Qin F21 Pro) - padding מצומצם
       '@media (max-width: 360px)': {
-        p: 'max(36px, env(safe-area-inset-top) + 8px) 12px 14px',
+        p: 'max(36px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 8px) 12px 14px',
         borderRadius: '0 0 18px 18px',
       },
       // מסך זעיר במיוחד ≤320px - דחיסה אגרסיבית גם ב-portrait
       '@media (max-width: 320px)': {
-        p: 'max(28px, env(safe-area-inset-top) + 6px) 10px 10px',
+        p: 'max(28px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 6px) 10px 10px',
         borderRadius: '0 0 14px 14px',
         '& .MuiAvatar-root': { width: '36px !important', height: '36px !important', fontSize: '14px !important' },
         '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
@@ -73,7 +73,7 @@ export const HomeHeader = ({
       },
       // Landscape - דחיסה מקסימלית
       '@media (orientation: landscape) and (max-height: 500px)': {
-        p: 'max(2px, env(safe-area-inset-top) + 2px) 12px 4px',
+        p: 'max(2px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 2px) 12px 4px',
         borderRadius: '0 0 8px 8px',
         '& .MuiAvatar-root': { width: '26px !important', height: '26px !important', fontSize: '12px !important' },
         '& > .MuiBox-root': { marginBottom: '3px !important' },

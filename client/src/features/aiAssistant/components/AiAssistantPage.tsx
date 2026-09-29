@@ -58,7 +58,7 @@ export const AiAssistantPage = memo(() => {
       <Box sx={{
         position: 'relative',
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-        p: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px',
+        p: 'max(50px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 20px) 16px 16px',
         borderRadius: '0 0 24px 24px',
         boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.35)' : '0 6px 20px rgba(15,118,110,0.18)',
         flexShrink: 0,
@@ -198,7 +198,7 @@ export const AiAssistantPage = memo(() => {
       {/* שורת קלט */}
       <Box sx={{
         display: 'flex', gap: 1, alignItems: 'flex-end',
-        p: 1.5, pb: 'max(12px, env(safe-area-inset-bottom))',
+        p: 1.5, pb: 'max(12px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
         borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
         bgcolor: 'background.paper',
         flexShrink: 0,

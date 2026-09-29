@@ -6,6 +6,6 @@ export const adminPageSx = (isDark: boolean): SxProps<Theme> => ({
   height: 'var(--app-height, 100dvh)',
   bgcolor: isDark ? '#0F172A' : '#F8FAFC',
   display: 'flex', flexDirection: 'column',
-  pt: 'env(safe-area-inset-top)',
+  pt: 'var(--safe-area-inset-top, env(safe-area-inset-top))',
   maxWidth: { xs: '100%', sm: 600 }, mx: 'auto',
 });

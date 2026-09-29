@@ -189,7 +189,7 @@ export const HomeBottomNav = ({ contentRef, onOpenMenu, t }: HomeBottomNavProps)
           // יבטיח שה-FAB יהיה מעל ה-indicator ולא יחפוף.
           // על Android safe-area=0 → max(32, 0) = 32 → FAB מתואם בדיוק לבר.
           position: 'fixed',
-          bottom: 'calc(var(--nav-bottom, 0px) + max(32px, env(safe-area-inset-bottom)))',
+          bottom: 'calc(var(--nav-bottom, 0px) + max(32px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom))))',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,

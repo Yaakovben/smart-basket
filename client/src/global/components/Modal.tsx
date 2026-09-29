@@ -56,7 +56,7 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
           maxHeight: '90vh',
           maxWidth: { xs: '100%', sm: 480 },
           width: '100%',
-          pb: 'env(safe-area-inset-bottom)',
+          pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom))',
           bgcolor: 'background.paper',
           // מסכים זעירים - radius קטן יותר
           '@media (max-width: 360px)': { borderRadius: '16px 16px 0 0' },

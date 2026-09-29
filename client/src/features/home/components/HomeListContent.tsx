@@ -100,7 +100,7 @@ export const HomeListContent = ({
   }, [reorderMode, orderedDisplay, onDragHandleStart]);
 
   return (
-    <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
+    <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))', sm: 'calc(70px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' }, WebkitOverflowScrolling: 'touch' }}>
       {/* מצב "אין רשימות + הבקשה נכשלה". הקוד מנסה שוב אוטומטית כל 4 שניות
           (useLists effect) - ברגע שהחיבור חוזר הרשימות מופיעות מעצמן, אין
           צורך בלחיצה ידנית. הכרטיס מנוסח רגוע ולא מבהיל, ומבדיל בין מכשיר

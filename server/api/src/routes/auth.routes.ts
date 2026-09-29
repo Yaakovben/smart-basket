@@ -14,6 +14,7 @@ import {
   register,
   login,
   googleAuth,
+  appleAuth,
   refreshToken,
   logout,
   logAppOpen,
@@ -38,6 +39,9 @@ router.post('/login', authLimiter, loginLimiter, validate(authValidator.login), 
 
 // POST /api/auth/google - כניסה/הרשמה עם Google OAuth
 router.post('/google', authLimiter, loginLimiter, validate(authValidator.googleAuth), googleAuth);
+
+// POST /api/auth/apple - כניסה/הרשמה עם Sign in with Apple (אפליקציית iOS)
+router.post('/apple', authLimiter, loginLimiter, validate(authValidator.appleAuth), appleAuth);
 
 // POST /api/auth/refresh - רענון access token. ללא rate limit - דורש refresh token
 // תקף בכל מקרה (self-protected), וסירוב רענון מנתק את המשתמש שלא בצדק.

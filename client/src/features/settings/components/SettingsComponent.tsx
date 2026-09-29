@@ -89,7 +89,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', WebkitOverflowScrolling: 'touch' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))', WebkitOverflowScrolling: 'touch' }}>
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
           <NotificationsSettingsSection
             isDark={isDark}

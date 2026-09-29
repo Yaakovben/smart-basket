@@ -62,7 +62,7 @@ export const reloadingSubtitleSx: SxProps<Theme> = {
 
 export const reloadingProgressTrackSx: SxProps<Theme> = {
   position: 'absolute',
-  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+  bottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 24px)',
   left: '50%',
   transform: 'translateX(-50%)',
   width: 'min(60%, 240px)',

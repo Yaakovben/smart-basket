@@ -42,7 +42,7 @@ export const HomeMenuSheet = ({ closing, onClose, onSelectOption, t }: HomeMenuS
           position: 'fixed', bottom: 0, left: 0, right: 0,
           bgcolor: 'background.paper',
           borderRadius: '24px 24px 0 0',
-          p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))',
+          p: 2, pb: 'calc(16px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
           zIndex: 999,
           maxWidth: { xs: '100%', sm: 400 },
           mx: 'auto',

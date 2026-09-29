@@ -87,7 +87,7 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshError, onRefre
     <Box sx={adminPageSx(isDark)}>
       <AdminAiStatusHeader data={data} onClose={onClose} />
 
-      <PullRefreshArea onRefresh={onRefresh} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <PullRefreshArea onRefresh={onRefresh} sx={{ p: 2, pb: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 24px)' }}>
         {refreshError && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,

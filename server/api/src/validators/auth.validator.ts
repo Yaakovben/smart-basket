@@ -27,6 +27,13 @@ export const authValidator = {
     'object.xor': 'Send either accessToken or idToken',
   }),
 
+  // Sign in with Apple: ה-identity token מאפל, והשם (אפל שולחת אותו לאפליקציה
+  // רק בכניסה הראשונה, לא בטוקן עצמו)
+  appleAuth: Joi.object({
+    idToken: Joi.string().min(1).max(5000).required(),
+    name: Joi.string().trim().max(50).allow('').optional(),
+  }),
+
   // ה-refresh token מגיע בעיקר מ-cookie httpOnly; הגוף אופציונלי (תאימות אחורה).
   // הקונטרולר מחזיר 401 אם אין טוקן לא ב-cookie ולא בגוף.
   refreshToken: Joi.object({
@@ -53,6 +60,11 @@ export type CheckEmailInput = {
 export type GoogleAuthInput = {
   accessToken?: string;
   idToken?: string;
+};
+
+export type AppleAuthInput = {
+  idToken: string;
+  name?: string;
 };
 
 export type RefreshTokenInput = {

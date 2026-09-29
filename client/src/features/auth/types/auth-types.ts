@@ -17,6 +17,7 @@ export interface UseAuthReturn {
   password: string;
   error: string;
   googleLoading: boolean;
+  appleLoading: boolean;
   emailLoading: boolean;
   slowSubmit: boolean;
   isNewUser: boolean;
@@ -38,6 +39,7 @@ export interface UseAuthReturn {
   handleSubmit: (e: React.FormEvent) => void;
   handleGoogleSuccess: (tokenResponse: { access_token: string } | { id_token: string }) => Promise<void>;
   handleGoogleError: () => void;
+  handleAppleSuccess: (idToken: string, name?: string) => Promise<void>;
   toggleEmailForm: () => void;
   applySuggestion: () => void;
   isValidEmail: (email: string) => boolean;

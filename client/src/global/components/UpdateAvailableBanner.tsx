@@ -24,7 +24,7 @@ export const UpdateAvailableBanner = ({ open, onReload, onDismiss }: Props) => {
   return (
     <Box sx={{
       position: 'fixed', zIndex: 2100,
-      bottom: 'max(16px, calc(env(safe-area-inset-bottom) + 12px))',
+      bottom: 'max(16px, calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 12px))',
       left: '50%', transform: 'translateX(-50%)',
       width: 'calc(100vw - 32px)', maxWidth: 380,
       display: 'flex', alignItems: 'center', gap: 1,

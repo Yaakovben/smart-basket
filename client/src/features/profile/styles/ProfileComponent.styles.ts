@@ -15,14 +15,14 @@ export const labelSx: SxProps<Theme> = {
 export const headerSx = (editing: boolean, isDark: boolean): SxProps<Theme> => ({
   background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
   p: editing
-    ? { xs: 'max(16px, env(safe-area-inset-top)) 16px', sm: '16px 20px' }
-    : { xs: 'max(32px, env(safe-area-inset-top) + 12px) 16px 32px', sm: '32px 20px 32px' },
+    ? { xs: 'max(16px, var(--safe-area-inset-top, env(safe-area-inset-top))) 16px', sm: '16px 20px' }
+    : { xs: 'max(32px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 32px', sm: '32px 20px 32px' },
   textAlign: 'center',
   flexShrink: 0,
 });
 
 export const contentAreaSx = (editing: boolean): SxProps<Theme> => ({
-  flex: 1, overflowY: 'auto', p: 2, pt: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
+  flex: 1, overflowY: 'auto', p: 2, pt: 2, pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
   mt: editing ? 0 : -3,
   WebkitOverflowScrolling: 'touch',
 });

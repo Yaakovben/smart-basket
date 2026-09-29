@@ -375,7 +375,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
 
       {/* כפתור המשך */}
       {done && (
-        <Box sx={{ px: 2, py: 1.5, pb: 'max(16px, env(safe-area-inset-bottom))', borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
+        <Box sx={{ px: 2, py: 1.5, pb: 'max(16px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))', borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
           <Button
             fullWidth
             variant="outlined"

@@ -9,7 +9,7 @@
 
 import type { Request, Response } from 'express';
 import type { AuthRequest } from '../types';
-import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
+import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput, AppleAuthInput } from '../validators';
 import { asyncHandler } from '../utils';
 import { AuthError, ConflictError } from '../errors';
 import { logger } from '../config';
@@ -99,6 +99,18 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   const googleAuthInput = req.body as GoogleAuthInput;
   const { ipAddress, userAgent, platform } = getClientInfo(req);
   const result = await authService.googleAuth(googleAuthInput, ipAddress, userAgent, platform);
+  setRefreshCookie(res, result.tokens.refreshToken);
+  res.json({ success: true, data: result });
+});
+
+/**
+ * POST /api/auth/apple
+ * כניסה/הרשמה עם Sign in with Apple (אפליקציית iOS).
+ */
+export const appleAuth = asyncHandler(async (req: Request, res: Response) => {
+  const appleAuthInput = req.body as AppleAuthInput;
+  const { ipAddress, userAgent, platform } = getClientInfo(req);
+  const result = await authService.appleAuth(appleAuthInput, ipAddress, userAgent, platform);
   setRefreshCookie(res, result.tokens.refreshToken);
   res.json({ success: true, data: result });
 });

@@ -73,7 +73,7 @@ async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> 
         // התחברות אחרונה (email/google) ישירות עם $max
         lastLoginAt: {
           $max: {
-            $cond: [{ $in: ['$loginMethod', ['email', 'google']] }, '$createdAt', null],
+            $cond: [{ $in: ['$loginMethod', ['email', 'google', 'apple']] }, '$createdAt', null],
           },
         },
         // פתיחת אפליקציה אחרונה
@@ -86,7 +86,7 @@ async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> 
         _lastLoginEntry: {
           $max: {
             $cond: [
-              { $in: ['$loginMethod', ['email', 'google']] },
+              { $in: ['$loginMethod', ['email', 'google', 'apple']] },
               { $concat: [{ $dateToString: { format: '%Y%m%d%H%M%S', date: '$createdAt' } }, ':', '$loginMethod'] },
               null,
             ],

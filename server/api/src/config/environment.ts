@@ -59,6 +59,9 @@ const envSchema = Joi.object({
   // iOS/אנדרואיד), מופרדים בפסיקים. בדרך כלל ריק: הפלאגין הנייטיב מבקש את
   // הטוקן בשם ה-client של האתר (GOOGLE_CLIENT_ID), ואז אין צורך בערך כאן.
   GOOGLE_NATIVE_CLIENT_IDS: Joi.string().allow('').default(''),
+  // Sign in with Apple: הקהל (aud) המותר בטוקן של אפל. באפליקציית iOS זה
+  // ה-Bundle ID. מופרדים בפסיקים אם יתווסף Services ID לכניסה מהאתר.
+  APPLE_CLIENT_IDS: Joi.string().default('com.smartbasket.app'),
 
   // CORS - רשימת origins מופרדת בפסיקים
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
@@ -174,6 +177,7 @@ export interface Environment {
   JWT_REFRESH_EXPIRES_IN: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_NATIVE_CLIENT_IDS: string;
+  APPLE_CLIENT_IDS: string;
   CORS_ORIGIN: string;
   ADMIN_EMAIL: string;
   SENTRY_DSN?: string;

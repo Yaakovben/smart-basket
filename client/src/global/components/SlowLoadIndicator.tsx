@@ -101,7 +101,7 @@ export const SlowLoadIndicator = ({
       <Box sx={{
         position: 'fixed',
         ...(isToast ? {
-          bottom: 'calc(env(safe-area-inset-bottom) + 96px)',
+          bottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 96px)',
           left: '50%',
           transform: 'translateX(-50%)',
         } : {

@@ -146,15 +146,15 @@ export const ListHeader = memo(({
   return (
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-      p: { xs: 'max(40px, env(safe-area-inset-top) + 8px) 14px 10px', sm: '44px 20px 16px' },
+      p: { xs: 'max(40px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 8px) 14px 10px', sm: '44px 20px 16px' },
       borderRadius: { xs: '0 0 20px 20px', sm: '0 0 24px 24px' },
       flexShrink: 0,
       boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(13,148,136,0.15)',
       '@media (max-width: 360px)': {
-        p: 'max(30px, env(safe-area-inset-top) + 6px) 10px 8px',
+        p: 'max(30px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 6px) 10px 8px',
       },
       '@media (max-width: 320px)': {
-        p: 'max(22px, env(safe-area-inset-top) + 4px) 8px 6px',
+        p: 'max(22px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 4px) 8px 6px',
         borderRadius: '0 0 14px 14px',
         '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
         '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '4px !important' },
@@ -163,7 +163,7 @@ export const ListHeader = memo(({
       },
       '@media (orientation: landscape) and (max-height: 500px)': {
         position: 'relative',
-        p: 'max(2px, env(safe-area-inset-top) + 2px) 40px 4px',
+        p: 'max(2px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 2px) 40px 4px',
         borderRadius: '0 0 8px 8px',
         '& > * + *': { marginTop: '2px !important' },
         '& > .MuiBox-root': { marginBottom: '2px !important' },

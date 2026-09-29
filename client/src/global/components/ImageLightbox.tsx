@@ -223,7 +223,7 @@ export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightb
         onClick={(e) => { e.stopPropagation(); close(); }}
         aria-label={t('closePhotoAria')}
         sx={{
-          position: 'absolute', top: 'calc(env(safe-area-inset-top) + 8px)', insetInlineEnd: 8,
+          position: 'absolute', top: 'calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 8px)', insetInlineEnd: 8,
           zIndex: 1,
           bgcolor: 'rgba(255,255,255,0.14)', color: '#fff',
           width: 44, height: 44,

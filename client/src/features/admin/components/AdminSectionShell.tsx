@@ -19,7 +19,7 @@ const contentSx = {
   display: 'flex', flexDirection: 'column',
   // ילדים לא מתכווצים לגובה המסך: בלי זה תוכן ארוך נחתך ומוסתר במקום להיגלל
   '& > *': { flexShrink: 0 },
-  p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
+  p: 2, pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
 } as const;
 
 export const AdminSectionShell = ({ title, onBack, isDark, icon, onRefresh, children }: Props) => (

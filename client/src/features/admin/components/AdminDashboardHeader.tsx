@@ -41,7 +41,7 @@ export const AdminDashboardHeader = ({
       background: isDark
         ? 'linear-gradient(135deg, #064E3B 0%, #065F46 50%, #047857 100%)'
         : 'linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #2DD4BF 100%)',
-      pt: 'max(env(safe-area-inset-top), 16px)',
+      pt: 'max(var(--safe-area-inset-top, env(safe-area-inset-top)), 16px)',
       pb: 8,
       px: 2,
       position: 'relative',

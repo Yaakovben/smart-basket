@@ -169,7 +169,7 @@ export const SubscriptionAdminManager = ({ isDark, onClose, onChanged }: Props) 
       />
 
       <PullRefreshArea onRefresh={refresh} sx={{
-        p: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
+        p: 2, pb: 'calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
         display: 'flex', flexDirection: 'column', gap: 1.5, '& > *': { flexShrink: 0 },
       }}>
         {/* מתג ההתראות תמיד ראשון, כמו במסך המשוב. mb:0 כי המרווח מגיע מה-gap */}

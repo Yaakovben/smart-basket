@@ -21,6 +21,10 @@ export const UserDAL = {
     return User.findOne({ googleId });
   },
 
+  async findByAppleId(appleId: string): Promise<IUser | null> {
+    return User.findOne({ appleId });
+  },
+
   async findByIdWithPassword(id: string): Promise<IUser | null> {
     return User.findById(id).select('+password');
   },

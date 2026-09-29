@@ -103,8 +103,8 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       // אמין עכשיו כי קופסת הרשימות עצמה גובהה קבוע (גלילה אופקית בשורה
       // אחת, לא flexWrap) - לא גדל עם כמות הרשימות/אורך השמות כמו קודם.
       pb: showSavedLists
-        ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)'
-        : 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+        ? 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 96px)'
+        : 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 24px)',
     }}>
       {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב.
           מוקטנת כשמוצגות רשימות קבועות כדי לפנות מקום להצעה. */}

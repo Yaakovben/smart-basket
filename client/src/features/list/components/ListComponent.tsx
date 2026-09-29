@@ -503,7 +503,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           '&::-webkit-scrollbar-thumb': { background: 'rgba(120,120,120,0.35)', borderRadius: '3px' },
           '&::-webkit-scrollbar-track': { background: 'transparent' },
           p: { xs: 1.5, sm: 2.5 },
-          pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
+          pb: { xs: 'calc(80px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))', sm: 'calc(90px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' },
           willChange: 'scroll-position',
         }}
       >

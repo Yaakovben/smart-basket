@@ -102,7 +102,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
       </Box>
 
       {/* רענון בגרירה אחיד לכל עמודי המנהל (ראו PullRefreshArea) */}
-      <PullRefreshArea onRefresh={() => active.load()} sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <PullRefreshArea onRefresh={() => active.load()} sx={{ p: 2, pb: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 24px)' }}>
         {tab === 'mongo' && (
           <>
             {mongo.loading && !mongo.data && (

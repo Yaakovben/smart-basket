@@ -33,7 +33,7 @@ export const PrivacyPolicy = memo(() => {
       {/* Header */}
       <Box sx={{
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-        p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
+        p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 20px', sm: '48px 20px 20px' },
         borderRadius: '0 0 24px 24px',
         flexShrink: 0
       }}>
@@ -52,12 +52,12 @@ export const PrivacyPolicy = memo(() => {
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 'calc(32px + env(safe-area-inset-bottom))', maxWidth: 600, mx: 'auto', width: '100%' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 'calc(32px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))', maxWidth: 600, mx: 'auto', width: '100%' }}>
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
           {language === 'he' ? (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                עדכון אחרון: אוגוסט 2026
+                עדכון אחרון: ספטמבר 2026
               </Typography>
 
               <SectionText>
@@ -98,6 +98,11 @@ export const PrivacyPolicy = memo(() => {
                 Smart Basket רשאית להשעות או לסיים חשבונות בכל עת ולפי שיקול דעתה הבלעדי, ללא הודעה מוקדמת. המשתמש רשאי למחוק את חשבונו בכל עת דרך ההגדרות.
               </SectionText>
 
+              <SectionTitle>6א. מנוי Pro</SectionTitle>
+              <SectionText>
+                מנוי Pro נרכש באפליקציה דרך App Store או Google Play, והתשלום מחויב בחשבון החנות של המשתמש עם אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה, אלא אם בוטל לפחות 24 שעות לפני סוף התקופה הנוכחית. ניהול וביטול המנוי נעשים בהגדרות חשבון החנות. אנו לא מקבלים ולא שומרים פרטי אמצעי תשלום.
+              </SectionText>
+
               <SectionDivider />
 
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
@@ -111,7 +116,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. שימוש ושיתוף</SectionTitle>
               <SectionText>
-                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google (Google OAuth), שירות ניתוח שימוש אנונימי לשיפור השירות (PostHog), שירות דיווח על תקלות (Sentry) ושירות זיהוי טקסט בתמונות (OCR.space, רק בעת שימוש בסריקת רשימה מתמונה). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
+                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google או Apple, אחסון תמונות מוצרים (Cloudinary), ניתוח שימוש לשיפור השירות (PostHog, מקושר למזהה החשבון, כולל הקלטת מסכים שבה כל שדות ההקלדה מוסתרים), דיווח על תקלות (Sentry), עוזר ה-AI (Groq, רק תוכן הבקשה ופריטי הרשימות הרלוונטיים), ניהול מנויים שנרכשו בחנויות (RevenueCat) וזיהוי טקסט בתמונות (OCR.space, רק בעת סריקת רשימה מתמונה). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
               </SectionText>
 
               <SectionTitle>9. מיקום</SectionTitle>
@@ -149,7 +154,7 @@ export const PrivacyPolicy = memo(() => {
           ) : language === 'ru' ? (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                Последнее обновление: август 2026
+                Последнее обновление: сентябрь 2026
               </Typography>
 
               <SectionText>
@@ -190,6 +195,11 @@ export const PrivacyPolicy = memo(() => {
                 Smart Basket вправе приостановить или удалить аккаунты в любое время по своему усмотрению без предварительного уведомления. Пользователь может удалить свой аккаунт в настройках.
               </SectionText>
 
+              <SectionTitle>6а. Подписка Pro</SectionTitle>
+              <SectionText>
+                Подписка Pro оформляется в приложении через App Store или Google Play, оплата списывается с аккаунта магазина при подтверждении покупки. Подписка продлевается автоматически в конце каждого периода, если не отменить её минимум за 24 часа до окончания текущего периода. Управление и отмена подписки выполняются в настройках аккаунта магазина. Мы не получаем и не храним платёжные данные.
+              </SectionText>
+
               <SectionDivider />
 
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
@@ -203,7 +213,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Использование и передача</SectionTitle>
               <SectionText>
-                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google (Google OAuth), анонимную аналитику использования (PostHog), сервис отчётов об ошибках (Sentry) и сервис распознавания текста на изображениях (OCR.space, только при сканировании списка по фото). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
+                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google или Apple, хранение фото товаров (Cloudinary), аналитику использования для улучшения сервиса (PostHog, связана с идентификатором аккаунта, включая запись экрана со скрытыми полями ввода), отчёты об ошибках (Sentry), AI-помощник (Groq, только текст запроса и нужные позиции списков), управление подписками из магазинов (RevenueCat) и распознавание текста на изображениях (OCR.space, только при сканировании списка по фото). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
               </SectionText>
 
               <SectionTitle>9. Геолокация</SectionTitle>
@@ -241,7 +251,7 @@ export const PrivacyPolicy = memo(() => {
           ) : (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                Last updated: August 2026
+                Last updated: September 2026
               </Typography>
 
               <SectionText>
@@ -282,6 +292,11 @@ export const PrivacyPolicy = memo(() => {
                 Smart Basket may suspend or terminate accounts at any time at its sole discretion without prior notice. Users may delete their account at any time via settings.
               </SectionText>
 
+              <SectionTitle>6a. Pro Subscription</SectionTitle>
+              <SectionText>
+                Pro is purchased in the app through the App Store or Google Play, and payment is charged to the user's store account at confirmation of purchase. The subscription renews automatically at the end of each period unless cancelled at least 24 hours before the end of the current period. Subscriptions are managed and cancelled in the store account settings. We do not receive or store payment details.
+              </SectionText>
+
               <SectionDivider />
 
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
@@ -295,7 +310,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Use & Sharing</SectionTitle>
               <SectionText>
-                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via Google account (Google OAuth), anonymized usage analytics (PostHog), error-reporting (Sentry), and image text-recognition (OCR.space, only when scanning a list from a photo). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
+                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via a Google or Apple account, product image storage (Cloudinary), usage analytics to improve the service (PostHog, linked to the account identifier, including screen recordings with all input fields masked), error reporting (Sentry), the AI assistant (Groq, only the request text and relevant list items), management of store-purchased subscriptions (RevenueCat), and image text recognition (OCR.space, only when scanning a list from a photo). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
               </SectionText>
 
               <SectionTitle>9. Location</SectionTitle>

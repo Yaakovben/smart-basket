@@ -77,7 +77,7 @@ export const ConnectionStatusIcon = () => {
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: `2px solid ${accent}`,
-        pt: 'calc(env(safe-area-inset-top) + 7px)',
+        pt: 'calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 7px)',
         pb: '7px',
         px: 1.75,
         display: 'flex',

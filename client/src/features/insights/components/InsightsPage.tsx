@@ -118,7 +118,7 @@ export const InsightsPage = memo(() => {
       <PullRefreshArea
         onRefresh={handlePageRefresh}
         scrollAttrs={{ 'data-insights-scroll-root': true }}
-        sx={{ pb: 'calc(80px + env(safe-area-inset-bottom))' }}
+        sx={{ pb: 'calc(80px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' }}
       >
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}

@@ -64,7 +64,7 @@ export const AiAssistantFab = () => {
         <Box
           sx={{
             position: 'fixed',
-            bottom: 'max(96px, calc(env(safe-area-inset-bottom) + 86px))',
+            bottom: 'max(96px, calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 86px))',
             left: 70,
             zIndex: 1089,
             bgcolor: isDark ? '#1E293B' : '#ffffff',
@@ -111,7 +111,7 @@ export const AiAssistantFab = () => {
         sx={{
           position: 'fixed',
           // מעל בר הניווט התחתון (60px) + מרווח נוח מה-FAB המרכזי.
-          bottom: 'max(88px, calc(env(safe-area-inset-bottom) + 78px))',
+          bottom: 'max(88px, calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 78px))',
           left: 16,
           zIndex: 1090,
           width: 48, height: 48, borderRadius: '50%',

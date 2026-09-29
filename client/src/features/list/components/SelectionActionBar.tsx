@@ -34,7 +34,7 @@ export const SelectionActionBar = memo(({
   return (
     <Box sx={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200,
-      pb: 'max(16px, env(safe-area-inset-bottom))',
+      pb: 'max(16px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
       px: 2, pt: 1.5,
       bgcolor: 'background.paper',
       boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',

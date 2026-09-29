@@ -69,14 +69,14 @@ export const PullRefreshArea = ({
 
   const pull = Math.min(pullDistance, PULL_MAX);
   // עם חריץ: מוסיפים את גובה החריץ בהדרגה לפי התקדמות המשיכה, בלי קפיצה
-  const safe = (fraction: number) => (safeTop ? ` + env(safe-area-inset-top) * ${fraction.toFixed(3)}` : '');
+  const safe = (fraction: number) => (safeTop ? ` + var(--safe-area-inset-top, env(safe-area-inset-top)) * ${fraction.toFixed(3)}` : '');
   const offset = pull > 0
     ? `calc(${pull}px${safe(Math.min(1, pull / PULL_THRESHOLD))})`
     : holding ? `calc(${SETTLED_GAP}px${safe(1)})` : null;
 
   return (
     <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-      <Box sx={{ position: 'absolute', left: 0, right: 0, top: safeTop ? 'env(safe-area-inset-top)' : 0, zIndex: 5 }}>
+      <Box sx={{ position: 'absolute', left: 0, right: 0, top: safeTop ? 'var(--safe-area-inset-top, env(safe-area-inset-top))' : 0, zIndex: 5 }}>
         <PullToRefreshIndicator
           pullDistance={pullDistance}
           refreshing={refreshing}
