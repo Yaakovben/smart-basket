@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coordsConflictWithName, findKnownCitiesAsWords, isCountryCentroid } from '../cityMatching';
+import { coordsConflictWithName, findKnownCitiesAsWords, isCountryCentroid, exactCityFromStoreName, findCbsLocalityIn, isArtifactCity } from '../cityMatching';
 
 test('עיר בשם הסניף כמילה שלמה בלבד', () => {
   assert.deepEqual(findKnownCitiesAsWords('שלי ת"א- בן יהודה').includes('יהוד'), false);
@@ -28,4 +28,24 @@ test('שם בלי עיר מוכרת, או עיר שהיא גם שם רחוב: א
 test('נקודת ברירת המחדל של הגיאוקודר', () => {
   assert.equal(isCountryCentroid(30.8952, 34.8752), true);
   assert.equal(isCountryCentroid(31.2518, 34.7915), false);
+});
+
+test('שם סניף שהוא בדיוק שם יישוב', () => {
+  assert.equal(exactCityFromStoreName('עכו'), 'עכו');
+  assert.equal(exactCityFromStoreName('כפר סבא'), 'כפר סבא');
+  assert.equal(exactCityFromStoreName('אלפי מנשה'), 'אלפי מנשה');
+  // שם שמכיל עיר אבל אינו רק העיר: לא נחשב (כאן "אילת" היא הרחוב)
+  assert.equal(exactCityFromStoreName('שלי קרית חיים-אח"י אילת'), null);
+  assert.equal(exactCityFromStoreName(undefined), null);
+});
+
+test('יישוב קטן מהרשימה הרשמית בשם הסניף', () => {
+  assert.equal(findCbsLocalityIn('סופר ספיר אלפי מנשה* ת.'), 'אלפי מנשה');
+  assert.equal(findCbsLocalityIn('סופר ספיר כוכב יעקב* ת.'), 'כוכב יעקב');
+  assert.equal(findCbsLocalityIn('AM:PM'), null);
+});
+
+test('עיר שהושלמה מחיפוש הפוך של מיקום שגוי', () => {
+  assert.equal(isArtifactCity('מועצה אזורית רמת נגב'), true);
+  assert.equal(isArtifactCity('באר שבע'), false);
 });

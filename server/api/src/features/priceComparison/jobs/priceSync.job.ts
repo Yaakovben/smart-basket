@@ -5,7 +5,7 @@ import { PriceSyncLog } from '../models/PriceSyncLog.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { geocodeAddress } from '../services/geocoder.service';
-import { coordsConflictWithName, isCountryCentroid } from '../services/cityMatching';
+import { coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName } from '../services/cityMatching';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
@@ -183,6 +183,14 @@ const GEOCODE_BATCH_LIMIT = 200;
 
 async function runNightlyGeocode(trigger: 'cron' | 'startup' | 'catch-up'): Promise<void> {
   try {
+    // שדה עיר מורעל (הושלם בעבר מחיפוש הפוך של מיקום שגוי): שם סניף שהוא בדיוק שם
+    // של יישוב קובע, ו"מועצה אזורית" שלא מתאימה לשם נמחקת
+    const citiesFixed = await BranchDAL.repairCities(b => {
+      const exact = exactCityFromStoreName(b.storeName);
+      if (exact) return exact;
+      return isArtifactCity(b.city) ? null : undefined;
+    });
+    if (citiesFixed > 0) logger.info(`[geocode-nightly] ${trigger}: fixed ${citiesFixed} branch city fields`);
     // קודם מאפסים מיקומים שגויים שנשמרו בעבר, כדי שייכנסו לגיאוקודינג מחדש
     const reset = await BranchDAL.resetInvalidGeocodedCoords(b => isCountryCentroid(b.lat, b.lng) || coordsConflictWithName(b.lat, b.lng, b.storeName));
     if (reset > 0) {

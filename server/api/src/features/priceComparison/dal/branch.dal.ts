@@ -102,6 +102,18 @@ export const BranchDAL = {
     return res.modifiedCount ?? 0;
   },
 
+  // תיקון שדה עיר: resolve מחזיר את העיר הנכונה, null למחיקה, או undefined להשאיר
+  async repairCities(resolve: (b: { storeName: string; city?: string }) => string | null | undefined): Promise<number> {
+    let fixed = 0;
+    for (const b of await Branch.find({}, { storeName: 1, city: 1 }).lean()) {
+      const next = resolve({ storeName: b.storeName, city: b.city });
+      if (next === undefined || next === b.city) continue;
+      await Branch.updateOne({ _id: b._id }, next === null ? { $unset: { city: '' } } : { $set: { city: next } });
+      fixed++;
+    }
+    return fixed;
+  },
+
   async updateCoords(id: string, lat: number, lng: number, source: 'portal' | 'geocoded' | 'manual' | 'unknown') {
     return Branch.updateOne({ _id: id }, { $set: { lat, lng, coordSource: source } });
   },

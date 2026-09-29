@@ -8,7 +8,7 @@ import axios from 'axios';
 import { logger } from '../../../config/logger';
 import { env } from '../../../config/environment';
 import { NOMINATIM_URL, LOCATIONIQ_URL, USER_AGENT, waitForNominatimSlot, waitForLocationIQSlot, inIsraelBounds, type GeocodeResult } from './geocoderShared';
-import { isJunkCity, findKnownCityIn, validateNearCity, coordsConflictWithName, isCountryCentroid } from './cityMatching';
+import { isJunkCity, findKnownCityIn, validateNearCity, coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName, findCbsLocalityIn } from './cityMatching';
 
 // וריאציות של הכתובת - אם הכתובת המלאה נכשלת, מנסים גרסאות פשוטות יותר.
 // משפר משמעותית את אחוז ההצלחה, במיוחד עם קיצורים ("ת״א" → "תל אביב").
@@ -104,14 +104,20 @@ export async function geocodeAddress(
   // אם השדה city מכיל זבל (מיקוד/אפס/ריק) - נסה לחלץ שם עיר מהכתובת
   // ומשם הסניף. הרבה רשתות שמות שם פוסטל קוד או store ID בשדה city.
   // שם הסניף הוא רמז חזק (לדוגמה: storeName='עפולה' עם city='7700').
-  let effectiveCity = city;
-  if (isJunkCity(city)) {
-    const extracted = findKnownCityIn([address, storeName].filter(Boolean).join(' '));
-    if (extracted) {
-      effectiveCity = extracted;
-    }
+  // כתובת שהיא לא כתובת ("unknown", "0", אתר אינטרנט): לא שולחים לגיאוקודר
+  const cleanAddress = address && !/^\s*(unknown|0+|-|\?|www\.|https?:)/i.test(address) ? address : undefined;
+  let effectiveCity = isArtifactCity(city) ? undefined : city;
+  // שם הסניף הוא בדיוק שם של יישוב: הוא הקובע, גם אם שדה העיר אחר (בעבר הושלם
+  // שדה העיר מחיפוש הפוך של מיקום שגוי, למשל סניף "עכו" עם העיר ראשון לציון)
+  const exact = exactCityFromStoreName(storeName);
+  if (exact) {
+    effectiveCity = exact;
+  } else if (isJunkCity(effectiveCity)) {
+    const text = [cleanAddress, storeName].filter(Boolean).join(' ');
+    const extracted = findKnownCityIn(text) ?? findCbsLocalityIn(text);
+    if (extracted) effectiveCity = extracted;
   }
-  const variants = buildQueryVariants(address, effectiveCity);
+  const variants = buildQueryVariants(cleanAddress, effectiveCity);
   if (variants.length === 0) return null;
   // תוצאה תקינה: קרובה לעיר, לא "מרכז המדינה" (מה שחוזר לכתובת שלא נמצאה), ולא
   // סותרת את העיר בשם הסניף. בלי זה נשמרו עשרות סניפים בנקודת ברירת מחדל בנגב.

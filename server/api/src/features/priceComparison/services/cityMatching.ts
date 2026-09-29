@@ -4,6 +4,7 @@
  */
 
 import { FALLBACK_CITY_COORDS, CITY_ALIASES } from '../data/cityCoords.data';
+import { CBS_LOCALITY_NAMES } from '../data/cbsLocalities.data';
 import type { GeocodeResult } from './geocoderShared';
 
 // זיהוי שדה city ממולא בזבל (מספר מיקוד, '0', '?', או ריק)
@@ -91,6 +92,38 @@ export const coordsConflictWithName = (lat: number, lng: number, storeName: stri
 const COUNTRY_CENTROID = { lat: 30.8952, lng: 34.8752 };
 export const isCountryCentroid = (lat: number, lng: number): boolean =>
   haversineKm(lat, lng, COUNTRY_CENTROID.lat, COUNTRY_CENTROID.lng) < 1;
+
+// "מועצה אזורית רמת נגב" ודומיו: שדה עיר שהושלם בעבר מחיפוש הפוך של מיקום שגוי
+// (נקודת ברירת המחדל של הגיאוקודר נמצאת במועצה הזו). לא עיר של סניף.
+export const isArtifactCity = (city: string | undefined): boolean => !!city && /^מועצה אזורית/.test(city.trim());
+
+// שמות כל היישובים לפי הרשימה הרשמית, מהארוך לקצר
+const CBS_NAMES = [...new Set(Object.values(CBS_LOCALITY_NAMES))].sort((a, b) => b.length - a.length);
+const normalizeForMatch = (s: string) => s.replace(/[\s\-־]+/g, ' ').trim();
+
+// שם הסניף הוא בדיוק שם של יישוב ("עכו", "כפר סבא"): כך אושר עד ורמי לוי קוראות לסניפים
+export function exactCityFromStoreName(storeName: string | undefined): string | null {
+  if (!storeName) return null;
+  const name = normalizeForMatch(storeName);
+  for (const c of [...Object.keys(FALLBACK_CITY_COORDS), ...CBS_NAMES]) {
+    if (normalizeForMatch(c) === name) return CITY_ALIASES[c] ?? c;
+  }
+  return null;
+}
+
+// יישוב מהרשימה הרשמית שמופיע בטקסט כמילה שלמה (גם יישובים קטנים שאין בטבלת הערים)
+export function findCbsLocalityIn(text: string | undefined): string | null {
+  if (!text) return null;
+  for (const name of CBS_NAMES) {
+    if (AMBIGUOUS_CITY_WORDS.has(name) || name.length < 3) continue;
+    const i = text.indexOf(name);
+    if (i === -1) continue;
+    const before = i > 0 ? text[i - 1] : '';
+    const after = text[i + name.length] ?? '';
+    if (!HEBREW_LETTER.test(before) && !HEBREW_LETTER.test(after)) return name;
+  }
+  return null;
+}
 
 // שמות ערים שהם גם שמות רחובות נפוצים ("שדרות האמוראים", "עלי הכהן")
 const AMBIGUOUS_CITY_WORDS = new Set(['שדרות', 'עלי']);
