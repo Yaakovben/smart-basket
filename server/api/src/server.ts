@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
 import { startPriceSyncJob } from './features/priceComparison';
+import { startTrialReminderJob } from './services/trialReminder.service';
 import { warmGroqModel } from './services/aiAssistant.service';
 import { isImageUploadConfigured } from './services/imageUpload.service';
 
@@ -39,6 +40,8 @@ const startServer = async () => {
     // ב-development מומלץ להריץ ידנית `npm run refresh-prices` או דרך פאנל האדמין.
     if (env.NODE_ENV !== 'development') {
       startPriceSyncJob();
+      // תזכורות לסיום ה-Pro במתנה, פעם ביום
+      startTrialReminderJob();
     } else {
       logger.info('[price-sync-job] Skipped in local development environment');
     }

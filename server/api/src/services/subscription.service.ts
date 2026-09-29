@@ -76,7 +76,11 @@ export async function grantLegacyTrialToExistingUsers(): Promise<LegacyTrialResu
   );
   const granted = await User.updateMany(
     { _id: { $in: grantedIds } },
-    { $set: { plan: 'pro', planExpiresAt: targetExpiry, planAutoRenew: false, planSource: 'trial', legacyTrialGrantedAt: now } },
+    {
+      $set: { plan: 'pro', planExpiresAt: targetExpiry, planAutoRenew: false, planSource: 'trial', legacyTrialGrantedAt: now },
+      // תקופת מתנה חדשה: התזכורות לסיומה יישלחו שוב
+      $unset: { trialReminderSentAt: 1, trialEndNotifiedAt: 1 },
+    },
   );
 
   if (grantedIds.length > 0) {

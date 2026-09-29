@@ -61,6 +61,10 @@ export interface IUser extends Document {
   // מסמן שהמשתמש כבר עבר את מענק ה-Pro החד-פעמי למשתמשים ותיקים (grantLegacyTrial)
   // - מונע הענקה כפולה בהרצה חוזרת של הסקריפט/כפתור האדמין.
   legacyTrialGrantedAt?: Date;
+  // תזכורות סיום ה-Pro במתנה (trialReminder.service): מתי נשלחה התזכורת
+  // שלפני הסוף ומתי ההודעה על הסיום, כדי שכל אחת תישלח פעם אחת בלבד
+  trialReminderSentAt?: Date;
+  trialEndNotifiedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -169,6 +173,12 @@ const userSchema = new Schema<IUser>(
       type: Date,
     },
     legacyTrialGrantedAt: {
+      type: Date,
+    },
+    trialReminderSentAt: {
+      type: Date,
+    },
+    trialEndNotifiedAt: {
       type: Date,
     },
   },
