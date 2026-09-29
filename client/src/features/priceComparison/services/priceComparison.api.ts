@@ -105,6 +105,11 @@ export const priceComparisonApi = {
   // "איפה הכי זול" למוצר שנסרק. null = הברקוד לא נמצא במאגר המחירים.
   // שגיאות (כולל 402 מגבלת מנוי) נזרקות, כדי שהעמוד יטפל בהן.
   // accuracy (מטרים) מאפשר לשרת לזהות "אתה נמצא בסניף". signal = ביטול מהמשתמש
+  // חימום השרת לסריקה. לא מחכים לו ולא מציגים שגיאה: זה רק מקצר את הסריקה הראשונה
+  warmScan(): void {
+    apiClient.get('/price-comparison/scan-warmup').catch(() => undefined);
+  },
+
   async scanProduct(
     barcode: string,
     location?: (UserLocation & { accuracy?: number }) | null,

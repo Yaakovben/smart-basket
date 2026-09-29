@@ -68,7 +68,9 @@ const he = {
   staleBanner: (date: string) => `המחירים עודכנו לאחרונה ב-${date}. ייתכן שחלקם השתנו מאז.`,
   refreshing: 'מעדכנים לפי המיקום המדויק שלך...',
   // טעינה
-  loadingTitle: 'בודקים מחירים בכל הרשתות...',
+  loadingSteps: ['מזהים את המוצר...', 'בודקים מחירים בכל הרשתות...', 'מחפשים סניפים קרובים...', 'משווים מחירים ומבצעים...'],
+  loadingSlowTitle: 'עוד רגע...',
+  lowestFound: 'הכי זול בארץ',
   loadingSlow: 'לוקח יותר זמן מהרגיל. אפשר לחכות או לבטל.',
   cancel: 'ביטול',
 };
@@ -137,7 +139,9 @@ const en: PriceScanStrings = {
   chainUpdated: (when: string) => `Updated ${when}`,
   staleBanner: (date: string) => `Prices were last updated on ${date}. Some may have changed since.`,
   refreshing: 'Updating for your exact location...',
-  loadingTitle: 'Checking prices in all chains...',
+  loadingSteps: ['Identifying the product...', 'Checking prices in all chains...', 'Finding nearby branches...', 'Comparing prices and deals...'],
+  loadingSlowTitle: 'Almost there...',
+  lowestFound: 'Lowest in Israel',
   loadingSlow: 'This is taking longer than usual. You can wait or cancel.',
   cancel: 'Cancel',
 };
@@ -204,7 +208,9 @@ const ru: PriceScanStrings = {
   chainUpdated: (when: string) => `Обновлено ${when}`,
   staleBanner: (date: string) => `Цены последний раз обновлялись ${date}. Некоторые могли измениться.`,
   refreshing: 'Обновляем по вашему точному местоположению...',
-  loadingTitle: 'Проверяем цены во всех сетях...',
+  loadingSteps: ['Определяем товар...', 'Проверяем цены во всех сетях...', 'Ищем ближайшие магазины...', 'Сравниваем цены и акции...'],
+  loadingSlowTitle: 'Ещё немного...',
+  lowestFound: 'Дешевле всего',
   loadingSlow: 'Это занимает больше времени, чем обычно. Можно подождать или отменить.',
   cancel: 'Отмена',
 };

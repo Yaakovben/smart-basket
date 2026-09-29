@@ -4,6 +4,7 @@ import { Price } from '../models/Price.model';
 import { PriceSyncLog } from '../models/PriceSyncLog.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
+import { warmScanCaches } from '../services/barcodeScan.service';
 import { geocodeAddress } from '../services/geocoder.service';
 import { coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName } from '../services/cityMatching';
 import { OFFICIAL_BRANCH_ADDRESSES } from '../data/official-branch-addresses.data';
@@ -256,6 +257,9 @@ export function startPriceSyncJob(): void {
     logger.error(`[price-sync-job] Invalid cron expression: ${CRON_EXPRESSION}`);
     return;
   }
+
+  // הסריקה הראשונה אחרי הפעלה לא מחכה לטעינת הסניפים והכיסוי
+  warmScanCaches().catch(err => logger.warn(`[price-sync-job] scan warmup failed: ${err instanceof Error ? err.message : 'unknown'}`));
 
   // cron של מחירים + seeds + סנכרון סניפים מ-OSM (פעם ביום ב-04:00 בלבד).
   // הסדר: מחירים → seed branches (תקין-תמיד) → OSM (העשרה).

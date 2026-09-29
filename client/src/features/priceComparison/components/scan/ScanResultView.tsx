@@ -129,9 +129,11 @@ export const ScanResultView = ({
         </Box>
       )}
       <Button
-        fullWidth startIcon={<NavigationRoundedIcon />} onClick={() => { haptic('light'); onNavigate(best); }}
-        sx={{ mt: 1.5, borderRadius: '12px', textTransform: 'none', fontWeight: 800, bgcolor: '#fff', color: SCAN_TEAL, '&:hover': { bgcolor: '#F0FDFA' } }}
+        fullWidth onClick={() => { haptic('light'); onNavigate(best); }}
+        sx={{ mt: 1.5, py: 1, gap: 1, borderRadius: '12px', textTransform: 'none', fontWeight: 800, fontSize: 15, bgcolor: '#fff', color: SCAN_TEAL, '&:hover': { bgcolor: '#F0FDFA' } }}
       >
+        {/* רווח קבוע בין האייקון לטקסט (startIcon נצמד לטקסט בעברית) */}
+        <NavigationRoundedIcon sx={{ fontSize: 20 }} />
         {s.navigate}
       </Button>
     </Box>
@@ -195,8 +197,22 @@ export const ScanResultView = ({
       )}
 
       <Box sx={{ ...scanCardSx(isDark), position: 'relative', overflow: 'hidden' } as object}>
-        <Typography sx={{ fontSize: 17, fontWeight: 900, lineHeight: 1.3 }}>{result.productName}</Typography>
-        <Typography dir="ltr" sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25, textAlign: 'start' }}>{result.barcode}</Typography>
+        {/* התשובה במבט אחד: שם המוצר, ולצדו המחיר הזול ביותר שנמצא */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 17, fontWeight: 900, lineHeight: 1.3 }}>{result.productName}</Typography>
+            <Typography dir="ltr" sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25, textAlign: 'start' }}>{result.barcode}</Typography>
+          </Box>
+          <Box sx={{
+            flexShrink: 0, textAlign: 'center', px: 1.25, py: 0.75, borderRadius: '14px',
+            bgcolor: isDark ? 'rgba(20,184,166,0.16)' : 'rgba(20,184,166,0.09)',
+          }}>
+            <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: SCAN_TEAL }}>{s.lowestFound}</Typography>
+            <Typography sx={{ fontSize: 20, fontWeight: 900, lineHeight: 1.15, color: SCAN_TEAL }}>
+              {formatILS(result.cheapest.price, 2)}
+            </Typography>
+          </Box>
+        </Box>
         {(() => {
           // מאיזה יום המחירים: "היום 06:12" / "אתמול 22:10"
           const updated = formatUpdatedAt(result.pricesAsOf, lang);
@@ -224,10 +240,11 @@ export const ScanResultView = ({
           <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: blocked ? 0 : 1.25 }}>{blocked ? s.locationBlocked : s.locationPrompt}</Typography>
           {!blocked && (
             <Button
-              variant="outlined" fullWidth startIcon={<MyLocationRoundedIcon />}
+              variant="outlined" fullWidth
               disabled={locationStatus === 'requesting'} onClick={onEnableLocation}
-              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: SCAN_TEAL, borderColor: SCAN_TEAL }}
+              sx={{ gap: 1, borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: SCAN_TEAL, borderColor: SCAN_TEAL }}
             >
+              <MyLocationRoundedIcon sx={{ fontSize: 20 }} />
               {s.enableLocation}
             </Button>
           )}

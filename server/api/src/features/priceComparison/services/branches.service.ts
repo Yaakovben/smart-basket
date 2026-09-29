@@ -94,8 +94,7 @@ async function ensureSeedLoaded(): Promise<void> {
   }
 }
 
-async function getBranches(): Promise<IBranchDoc[]> {
-  if (cache && Date.now() - cache.loadedAt < CACHE_TTL_MS) return cache.branches;
+async function loadBranches(): Promise<IBranchDoc[]> {
   await ensureSeedLoaded();
   // שדות הכרחיים בלבד - מפחית payload מ-DB ומהירות טעינה לזיכרון
   const all = await Branch.find(
@@ -103,6 +102,23 @@ async function getBranches(): Promise<IBranchDoc[]> {
     { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1, subChainName: 1, lastSyncedAt: 1 }
   ).lean();
   cache = { branches: dedupeBranches(all as unknown as IBranchDoc[]), loadedAt: Date.now() };
+  return cache.branches;
+}
+
+// טעינה אחת בכל רגע, גם כשכמה בקשות מגיעות יחד
+let loading: Promise<IBranchDoc[]> | null = null;
+const reload = (): Promise<IBranchDoc[]> => {
+  loading ??= loadBranches().finally(() => { loading = null; });
+  return loading;
+};
+
+// עותק שפג תוקפו מוחזר מיד ומתרענן ברקע: טעינת כל הסניפים לוקחת כשנייה, ובלי זה
+// סריקה אחת בכל שתי דקות חיכתה לה. רק כשאין עותק בכלל מחכים לטעינה.
+async function getBranches(): Promise<IBranchDoc[]> {
+  if (!cache) return reload();
+  if (Date.now() - cache.loadedAt >= CACHE_TTL_MS) {
+    reload().catch(err => logger.warn(`[branches] background reload failed: ${err instanceof Error ? err.message : 'unknown'}`));
+  }
   return cache.branches;
 }
 
@@ -122,6 +138,9 @@ export function dedupeBranches<T extends { chainId: string; storeId: string; lat
   }
   return [...best.values()];
 }
+
+// טעינה מוקדמת של הסניפים (בהפעלת השרת ובכניסה למסך הסריקה)
+export const warmBranchCache = async (): Promise<void> => { await getBranches(); };
 
 export function invalidateBranchCache(): void {
   cache = null;

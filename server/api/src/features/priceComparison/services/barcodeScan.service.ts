@@ -13,11 +13,12 @@ import type { IPromotionDoc } from '../models/Promotion.model';
 import { BranchPriceDAL } from '../dal/branchPrice.dal';
 import { PromotionDAL } from '../dal/promotion.dal';
 import { parseStorePrices, resolveBranchPrice } from './branchPricing';
-import { getBranchesWithin, getBranchLabel, getChainBranches, type UserLocation } from './branches.service';
+import { getBranchesWithin, getBranchLabel, getChainBranches, warmBranchCache, type UserLocation } from './branches.service';
 import { promoItemAppliesToStore, promoStoreIndex, promoUnitPrice } from './promoAggregation';
 import { brandOfBranch, SUB_BRANDS } from './scanBrands';
 import { pickCheapest, isAtStore, modalPrice, isStale, isVatFreeZone, type CheapestCandidate } from './scanPricing';
 import { normStoreId } from './storeId';
+import { CHAIN_NAMES } from '../data/chain-names.data';
 
 // קודם מחפשים ממש קרוב; אם אין שם אף סניף עם המוצר, מרחיבים פעם אחת.
 const NEARBY_RADII_KM = [10, 25];
@@ -136,6 +137,18 @@ interface PreparedProduct {
 }
 
 const productCache = new Map<string, { at: number; value: PreparedProduct | null }>();
+
+// מה שהסריקה הראשונה טוענת (כל הסניפים וכיסוי המחירים והמבצעים של כל רשת): כ-4
+// שניות בסריקה ראשונה, ואחר כך פחות משנייה. נטען מראש בהפעלת השרת, ושוב כשנכנסים
+// למסך הסריקה (בזמן שהמשתמש מכוון את המצלמה, והשרת החינמי אולי מתעורר).
+export async function warmScanCaches(): Promise<void> {
+  const chainIds = Object.keys(CHAIN_NAMES) as ChainId[];
+  await Promise.all([
+    warmBranchCache(),
+    ...chainIds.map(c => BranchPriceDAL.storeIdsWithPrices(c)),
+    ...chainIds.map(c => BranchPriceDAL.promoCoverage(c)),
+  ]);
+}
 
 async function prepareProduct(barcode: string): Promise<PreparedProduct | null> {
   const hit = productCache.get(barcode);

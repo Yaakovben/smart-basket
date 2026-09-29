@@ -7,7 +7,8 @@ import { PlanLimitError } from '../../../errors';
 import { PLAN_LIMITS, isPro } from '../../../constants';
 import { planUsage } from '../../../services/plan-usage.service';
 import { parseUserLocation } from '../services/branches.service';
-import { scanBarcodePrices } from '../services/barcodeScan.service';
+import { scanBarcodePrices, warmScanCaches } from '../services/barcodeScan.service';
+import { logger } from '../../../config/logger';
 
 const BARCODE_PATTERN = /^\d{6,14}$/;
 
@@ -41,6 +42,13 @@ export const lookupBarcode = asyncHandler(async (req: AuthRequest, res: Response
 // שנסרק: הסניף שהמשתמש נמצא בו, הסניפים הזולים קרוב אליו, הזול בכל הארץ, ומחיר לכל רשת.
 // למשתמש חינמי נספר כהשוואת מחיר אחת (אותה מכסה יומית כמו השוואת רשימה),
 // ורק כשהמוצר נמצא, כדי לא לשרוף מכסה על ברקוד שאין עליו נתונים.
+// GET /api/price-comparison/scan-warmup - נקרא כשנכנסים למסך הסריקה. עונה מיד,
+// והטעינה ממשיכה ברקע, כך שהסריקה עצמה לא מחכה לה.
+export const warmScan = (_req: AuthRequest, res: Response): void => {
+  warmScanCaches().catch(err => logger.warn(`[scan] warmup failed: ${err instanceof Error ? err.message : 'unknown'}`));
+  res.status(204).end();
+};
+
 export const scanBarcode = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { barcode } = req.params;
   if (!BARCODE_PATTERN.test(barcode)) {

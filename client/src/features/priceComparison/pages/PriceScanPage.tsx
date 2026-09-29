@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -16,6 +16,7 @@ import { ScanResultSkeleton } from '../components/scan/ScanResultSkeleton';
 import { scanCardSx, SCAN_TEAL } from '../components/scan/scanStyles';
 import type { NearestBranch, ScanNearbyBranch, ScanHere } from '../types/priceComparison.types';
 import { getPriceScanStrings } from '../priceScan.strings';
+import { priceComparisonApi } from '../services/priceComparison.api';
 
 // טעינה עצלה: @zxing נטען רק כשפותחים את הסורק (ונטען מראש מכפתור הכניסה)
 const QRScanner = lazy(() => import('../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
@@ -37,6 +38,10 @@ export const PriceScanPage = () => {
   const { barcode, phase, result, slow, timedOut, refreshing, recent, check, cancel, clearRecent } = usePriceScan(location);
 
   const [scannerOpen, setScannerOpen] = useState(true);
+
+  // מעירים את השרת וטוענים מראש את נתוני הסריקה בזמן שהמשתמש מכוון את המצלמה,
+  // כך שהתשובה לסריקה הראשונה לא מחכה להם
+  useEffect(() => { priceComparisonApi.warmScan(); }, []);
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
 
   const enableLocation = () => {
@@ -77,7 +82,7 @@ export const PriceScanPage = () => {
 
       <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {phase === 'loading' && <ScanResultSkeleton s={s} slow={slow} onCancel={cancelCheck} />}
+          {phase === 'loading' && <ScanResultSkeleton s={s} isDark={isDark} barcode={barcode} slow={slow} onCancel={cancelCheck} />}
 
           {phase === 'notFound' && (
             <Box sx={{ ...scanCardSx(isDark), textAlign: 'center', py: 2.5 } as object}>
