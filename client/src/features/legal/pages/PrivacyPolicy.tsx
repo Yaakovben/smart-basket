@@ -111,12 +111,12 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>7. מידע שנאסף</SectionTitle>
               <SectionText>
-                נאסף מידע הנדרש לתפעול השירות: פרטי חשבון (שם, דוא"ל, סיסמה מוצפנת), תוכן המשתמש (רשימות ופריטים), העדפות ונתוני התחברות בסיסיים.
+                נאסף מידע הנדרש לתפעול השירות: פרטי חשבון (שם, דוא"ל, סיסמה מוצפנת), תוכן המשתמש (רשימות ופריטים), העדפות, נתוני התחברות בסיסיים, ואם המשתמש אישר התראות, מזהה מכשיר לשליחתן.
               </SectionText>
 
               <SectionTitle>8. שימוש ושיתוף</SectionTitle>
               <SectionText>
-                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google או Apple, אחסון תמונות מוצרים (Cloudinary), ניתוח שימוש לשיפור השירות (PostHog, מקושר למזהה החשבון, כולל הקלטת מסכים שבה כל שדות ההקלדה מוסתרים), דיווח על תקלות (Sentry), עוזר ה-AI (Groq, רק תוכן הבקשה ופריטי הרשימות הרלוונטיים), ניהול מנויים שנרכשו בחנויות (RevenueCat) וזיהוי טקסט בתמונות (OCR.space, רק בעת סריקת רשימה מתמונה). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
+                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google או Apple, אחסון תמונות מוצרים (Cloudinary), ניתוח שימוש לשיפור השירות (PostHog, מקושר למזהה החשבון, כולל הקלטת מסכים שבה כל שדות ההקלדה מוסתרים), דיווח על תקלות (Sentry), עוזר ה-AI (Groq, רק תוכן הבקשה ופריטי הרשימות הרלוונטיים), ניהול מנויים שנרכשו בחנויות (RevenueCat), זיהוי טקסט בתמונות (OCR.space, רק בעת סריקת רשימה מתמונה) ושליחת התראות לאפליקציה (Firebase Cloud Messaging של Google ו-Apple Push Notification service, מזהה המכשיר בלבד). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
               </SectionText>
 
               <SectionTitle>9. מיקום</SectionTitle>
@@ -208,12 +208,12 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>7. Собираемая информация</SectionTitle>
               <SectionText>
-                Собирается информация, необходимая для работы сервиса: данные аккаунта (имя, email, зашифрованный пароль), контент пользователя (списки и товары), настройки и базовые данные входа.
+                Собирается информация, необходимая для работы сервиса: данные аккаунта (имя, email, зашифрованный пароль), контент пользователя (списки и товары), настройки, базовые данные входа, а если пользователь разрешил уведомления, идентификатор устройства для их отправки.
               </SectionText>
 
               <SectionTitle>8. Использование и передача</SectionTitle>
               <SectionText>
-                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google или Apple, хранение фото товаров (Cloudinary), аналитику использования для улучшения сервиса (PostHog, связана с идентификатором аккаунта, включая запись экрана со скрытыми полями ввода), отчёты об ошибках (Sentry), AI-помощник (Groq, только текст запроса и нужные позиции списков), управление подписками из магазинов (RevenueCat) и распознавание текста на изображениях (OCR.space, только при сканировании списка по фото). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
+                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google или Apple, хранение фото товаров (Cloudinary), аналитику использования для улучшения сервиса (PostHog, связана с идентификатором аккаунта, включая запись экрана со скрытыми полями ввода), отчёты об ошибках (Sentry), AI-помощник (Groq, только текст запроса и нужные позиции списков), управление подписками из магазинов (RevenueCat), распознавание текста на изображениях (OCR.space, только при сканировании списка по фото) и отправка уведомлений в приложение (Firebase Cloud Messaging от Google и Apple Push Notification service, только идентификатор устройства). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
               </SectionText>
 
               <SectionTitle>9. Геолокация</SectionTitle>
@@ -305,12 +305,12 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>7. Information Collected</SectionTitle>
               <SectionText>
-                Information necessary for service operation is collected: account details (name, email, encrypted password), user content (lists and items), preferences, and basic login data.
+                Information necessary for service operation is collected: account details (name, email, encrypted password), user content (lists and items), preferences, basic login data, and, if the user allowed notifications, a device identifier used to send them.
               </SectionText>
 
               <SectionTitle>8. Use & Sharing</SectionTitle>
               <SectionText>
-                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via a Google or Apple account, product image storage (Cloudinary), usage analytics to improve the service (PostHog, linked to the account identifier, including screen recordings with all input fields masked), error reporting (Sentry), the AI assistant (Groq, only the request text and relevant list items), management of store-purchased subscriptions (RevenueCat), and image text recognition (OCR.space, only when scanning a list from a photo). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
+                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via a Google or Apple account, product image storage (Cloudinary), usage analytics to improve the service (PostHog, linked to the account identifier, including screen recordings with all input fields masked), error reporting (Sentry), the AI assistant (Groq, only the request text and relevant list items), management of store-purchased subscriptions (RevenueCat), image text recognition (OCR.space, only when scanning a list from a photo), and delivering app notifications (Google Firebase Cloud Messaging and Apple Push Notification service, device identifier only). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
               </SectionText>
 
               <SectionTitle>9. Location</SectionTitle>
