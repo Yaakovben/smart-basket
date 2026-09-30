@@ -16,6 +16,15 @@ import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded';
 import HttpRoundedIcon from '@mui/icons-material/HttpRounded';
+import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
+import MapRoundedIcon from '@mui/icons-material/MapRounded';
+import FolderZipRoundedIcon from '@mui/icons-material/FolderZipRounded';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import SmartphoneRoundedIcon from '@mui/icons-material/SmartphoneRounded';
+import ChatBubbleRoundedIcon from '@mui/icons-material/ChatBubbleRounded';
+import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
 
 // לכל קולקציה: שם ידידותי (he), תיאור קצר של מה היא שומרת (desc), אייקון
 // וצבע. השם *האמיתי* של הקולקציה מוצג ע"י הקומפוננטה מתוך c.name.
@@ -36,9 +45,28 @@ const COLLECTION_META: Record<string, CollectionMeta> = {
   dailyfaiths: { he: 'חיזוק יומי', desc: 'תוכן החיזוק היומי', icon: MenuBookIcon, color: '#EC4899' },
   refreshtokens: { he: 'טוקני רענון', desc: 'טוקני התחברות פעילים (TTL)', icon: VpnKeyIcon, color: '#64748B' },
   pushsubscriptions: { he: 'הרשמות פוש', desc: 'מנויי דחיפת התראות למכשירים', icon: PhoneIphoneIcon, color: '#EF4444' },
+  promotions: { he: 'מבצעים', desc: 'מבצעי הרשתות לפי סניף', icon: LocalOfferRoundedIcon, color: '#F97316' },
+  chain_price_coverage: { he: 'כיסוי סניפים', desc: 'לאילו סניפים יש מחירים בכל רשת', icon: MapRoundedIcon, color: '#10B981' },
+  price_sync_logs: { he: 'לוג סנכרון', desc: 'תוצאות סנכרון המחירים והמבצעים', icon: SyncRoundedIcon, color: '#0EA5E9' },
+  portal_file_cache: { he: 'מטמון קבצים', desc: 'קבצים שכבר הורדו מפורטלי הרשתות', icon: FolderZipRoundedIcon, color: '#78716C' },
+  price_match_overrides: { he: 'תיקוני התאמה', desc: 'התאמות ידניות בין מוצר לברקוד', icon: LinkRoundedIcon, color: '#D946EF' },
+  devicetokens: { he: 'מכשירי אפליקציה', desc: 'טוקני התראות של האפליקציות מהחנות', icon: SmartphoneRoundedIcon, color: '#F43F5E' },
+  feedbacks: { he: 'משובים', desc: 'דירוגים ומשובים של משתמשים', icon: ChatBubbleRoundedIcon, color: '#EAB308' },
+  subscriptionrequests: { he: 'בקשות מנוי', desc: 'בקשות תשלום ידניות ישנות', icon: WorkspacePremiumRoundedIcon, color: '#8B5CF6' },
+  admin_settings: { he: 'הגדרות מנהל', desc: 'הגדרות של דף הניהול', icon: TuneRoundedIcon, color: '#64748B' },
+  sync_locks: { he: 'נעילת סנכרון', desc: 'מונע משני שרתים לסנכרן באותו זמן', icon: LockRoundedIcon, color: '#64748B' },
 };
-export const collectionMeta = (name: string): CollectionMeta =>
-  COLLECTION_META[name] || { he: name, desc: 'קולקציה במסד', icon: DescriptionIcon, color: '#94A3B8' };
+
+// השרת שולח "מסד · קולקציה" כשהמדידה כוללת כמה מסדים (prod ו-dev באותו אשכול)
+export const splitCollectionName = (name: string): { db: string | null; coll: string } => {
+  const i = name.indexOf(' · ');
+  return i === -1 ? { db: null, coll: name } : { db: name.slice(0, i), coll: name.slice(i + 3) };
+};
+
+export const collectionMeta = (name: string): CollectionMeta => {
+  const { coll } = splitCollectionName(name);
+  return COLLECTION_META[coll] || { he: coll, desc: 'קולקציה במסד', icon: DescriptionIcon, color: '#94A3B8' };
+};
 
 // מטא-דאטה לכל מדד Cloudinary - אותה שפה עיצובית כמו CollectionMeta למעלה
 // (שורה בסגנון "קולקשן"): שם *אמיתי* (en, בדיוק כמו ש-Cloudinary עצמו קורא

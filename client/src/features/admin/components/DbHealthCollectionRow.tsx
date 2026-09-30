@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { DbHealthCollection } from '../../../services/api/admin.api';
-import { collectionMeta, formatMB } from '../helpers/dbHealthHelpers';
+import { collectionMeta, splitCollectionName, formatMB } from '../helpers/dbHealthHelpers';
 
 interface DbHealthCollectionRowProps {
   collection: DbHealthCollection;
@@ -17,6 +17,7 @@ interface DbHealthCollectionRowProps {
 export const DbHealthCollectionRow = ({ collection: c, totalSize, isDark }: DbHealthCollectionRowProps) => {
   const [expanded, setExpanded] = useState(false);
   const meta = collectionMeta(c.name);
+  const { db, coll } = splitCollectionName(c.name);
   const Icon = meta.icon;
   const collTotal = c.storageSize + c.indexSize;
   const collPct = totalSize > 0 ? (collTotal / totalSize) * 100 : 0;
@@ -52,8 +53,17 @@ export const DbHealthCollectionRow = ({ collection: c, totalSize, isDark }: DbHe
               fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
             }}>
-              {c.name}
+              {coll}
             </Typography>
+            {db && (
+              <Box component="span" sx={{
+                flexShrink: 0, px: 0.75, borderRadius: '999px', fontSize: 9.5, fontWeight: 800, lineHeight: 1.6,
+                bgcolor: db === 'prod' ? 'rgba(20,184,166,0.12)' : 'rgba(245,158,11,0.14)',
+                color: db === 'prod' ? '#0D9488' : '#B45309',
+              }}>
+                {db}
+              </Box>
+            )}
             <ExpandMoreRoundedIcon sx={{
               fontSize: 15, color: 'text.disabled', flexShrink: 0,
               transition: 'transform 0.15s ease',

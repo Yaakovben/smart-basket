@@ -4,7 +4,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
-import { PRO_SOFT, PRO_LILAC, PRO_PURPLE } from '../subscription.styles';
+import { PRO_LILAC, PRO_PURPLE } from '../subscription.styles';
 
 interface Props {
   status: SubscriptionStatus;
@@ -15,7 +15,7 @@ interface Props {
 
 const DAY_MS = 86_400_000;
 
-// תגית סגלגלה אחידה לכל המידע הקטן בכרטיס (ימים שנותרו, מקור המנוי)
+// תגית סגלגלה אחידה לכל המידע הקטן בכרטיס (מקור המנוי)
 const pillSx = {
   px: 1.25, py: 0.4, borderRadius: '999px', border: '1px solid',
   fontSize: 12, fontWeight: 700, lineHeight: 1.4, color: '#fff',
@@ -40,6 +40,47 @@ const useCountUp = (target: number | null, ms = 900): number | null => {
   return target === null ? null : value;
 };
 
+// טבעת ספירה לאחור: המספר הגדול במרכז, והקשת הזהובה מתקצרת ככל שהימים יורדים.
+// היחס הוא מתוך תקופת המתנה המלאה (בניסיון) או מתוך חודש (בכל מנוי אחר).
+const RING_SIZE = 84;
+const RING_STROKE = 6;
+const CountdownRing = ({ days, shown, total, caption }: { days: number; shown: number; total: number; caption: string }) => {
+  const r = (RING_SIZE - RING_STROKE) / 2;
+  const c = 2 * Math.PI * r;
+  const ratio = total > 0 ? Math.min(1, Math.max(0, days / total)) : 0;
+  const mid = RING_SIZE / 2;
+  return (
+    <Box sx={{ position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+      <Box sx={{ position: 'relative', width: RING_SIZE, height: RING_SIZE }}>
+        <Box component="svg" viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} sx={{ width: RING_SIZE, height: RING_SIZE, transform: 'rotate(-90deg)' }} aria-hidden>
+          <defs>
+            <linearGradient id="sbRingGold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FDE68A" />
+              <stop offset="100%" stopColor="#F59E0B" />
+            </linearGradient>
+          </defs>
+          <circle cx={mid} cy={mid} r={r} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" strokeWidth={RING_STROKE} />
+          <circle
+            cx={mid} cy={mid} r={r} fill="none" stroke="url(#sbRingGold)" strokeWidth={RING_STROKE} strokeLinecap="round"
+            strokeDasharray={c} strokeDashoffset={c * (1 - ratio)}
+            style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)' }}
+          />
+        </Box>
+        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={{
+            fontSize: shown >= 100 ? 24 : 30, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+            background: 'linear-gradient(180deg, #FFFFFF, #FDE68A)', WebkitBackgroundClip: 'text', backgroundClip: 'text',
+            color: 'transparent',
+          }}>
+            {shown}
+          </Typography>
+        </Box>
+      </Box>
+      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.82)', whiteSpace: 'nowrap' }}>{caption}</Typography>
+    </Box>
+  );
+};
+
 // כרטיס המצב בראש העמוד: Pro פעיל (עם ספירה לאחור אמיתית מהשרת / קבוע) או
 // הצעת Pro למשתמש חינמי. גובה קבוע יחסית כדי שהעמוד לא "יקפוץ" בין מצבים.
 export const PlanHero = ({ status, s, isDark, locale }: Props) => {
@@ -59,70 +100,80 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
   const expiryLabel = expires
     ? expires.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
+  const showRing = isPro && daysLeft !== null && !autoRenews;
+  const ringTotal = isTrial && status.trialMonths > 0 ? status.trialMonths * 30 : Math.max(30, daysLeft ?? 0);
+  const ringCaption = daysLeft === 0 ? s.expiresToday : daysLeft === 1 ? s.dayLeft : s.daysLeft;
 
   return (
     <Box sx={{
-      position: 'relative', overflow: 'hidden', borderRadius: '22px',
-      minHeight: 148, p: 2.5,
-      display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0.75,
+      position: 'relative', overflow: 'hidden', borderRadius: '24px',
+      minHeight: 156, p: 2.5,
+      display: 'flex', alignItems: 'center', gap: 2,
       background: isDark
-        ? 'linear-gradient(135deg, #4C1D95, #5B21B6)'
-        : 'linear-gradient(135deg, #5B21B6, #7C3AED)',
-      boxShadow: '0 10px 26px rgba(91,33,182,0.28)',
+        ? 'radial-gradient(120% 90% at 100% 0%, rgba(236,72,153,0.28) 0%, transparent 55%), radial-gradient(90% 80% at 0% 100%, rgba(250,204,21,0.10) 0%, transparent 60%), linear-gradient(145deg, #2E1065 0%, #4C1D95 55%, #6D28D9 100%)'
+        : 'radial-gradient(120% 90% at 100% 0%, rgba(244,114,182,0.38) 0%, transparent 55%), radial-gradient(90% 80% at 0% 100%, rgba(250,204,21,0.16) 0%, transparent 60%), linear-gradient(145deg, #3B0F7A 0%, #5B21B6 50%, #8B5CF6 100%)',
+      boxShadow: '0 14px 34px rgba(76,29,149,0.35), inset 0 1px 0 rgba(255,255,255,0.18)',
+      border: '1px solid rgba(255,255,255,0.14)',
       color: '#fff',
     }}>
-      <Box aria-hidden sx={{ position: 'absolute', top: -40, insetInlineEnd: -30, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-      <Box aria-hidden sx={{ position: 'absolute', bottom: -34, insetInlineStart: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+      {/* הברקה אלכסונית עדינה וקבועה, בלי תנועה */}
+      <Box aria-hidden sx={{
+        position: 'absolute', top: 0, bottom: 0, insetInlineStart: '38%', width: 70,
+        background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.09), transparent)',
+        transform: 'skewX(-18deg)', pointerEvents: 'none',
+      }} />
+      <Box aria-hidden sx={{ position: 'absolute', top: -46, insetInlineEnd: -36, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, position: 'relative' }}>
-        <Box sx={{
-          width: 44, height: 44, borderRadius: '14px', flexShrink: 0,
-          background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.22)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {isPro
-            ? <StarRoundedIcon sx={{ fontSize: 26, color: '#fff' }} />
-            : <AutoAwesomeRoundedIcon sx={{ fontSize: 24, color: PRO_LILAC }} />}
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Box sx={{
-            display: 'inline-block', px: 1, py: '1px', borderRadius: '999px', mb: 0.4,
-            bgcolor: isPro ? '#fff' : 'rgba(255,255,255,0.18)',
-            color: isPro ? PRO_PURPLE : '#fff',
-            fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
+            width: 44, height: 44, borderRadius: '14px', flexShrink: 0,
+            background: isPro ? 'linear-gradient(135deg, #FDE68A, #F59E0B)' : 'rgba(255,255,255,0.16)',
+            border: isPro ? 'none' : '1px solid rgba(255,255,255,0.22)',
+            boxShadow: isPro ? '0 6px 16px rgba(245,158,11,0.35), inset 0 1px 0 rgba(255,255,255,0.6)' : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            {isTrial ? `🎁 ${s.trialBadge}` : isPro ? `✦ ${s.proBadge}` : trialEnded ? s.trialEndedBadge : s.freeBadge}
+            {isPro
+              ? <StarRoundedIcon sx={{ fontSize: 26, color: '#4C1D95' }} />
+              : <AutoAwesomeRoundedIcon sx={{ fontSize: 24, color: PRO_LILAC }} />}
           </Box>
-          <Typography sx={{ fontSize: 19, fontWeight: 800, lineHeight: 1.2 }}>
-            {isTrial ? s.trialTitle : isPro ? s.heroProTitle : trialEnded ? s.trialEndedTitle : s.heroFreeTitle}
-          </Typography>
-        </Box>
-      </Box>
-
-      <Typography sx={{ position: 'relative', fontSize: 13.5, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5 }}>
-        {!isPro && (trialEnded ? s.trialEndedSub : s.heroFreeSub)}
-        {isPro && !expires && s.heroPermanentSub}
-        {isPro && expires && `${autoRenews ? s.heroRenewsOn : isTrial ? s.trialSub : s.heroActiveUntil} ${expiryLabel}`}
-      </Typography>
-
-      {(sourceLabel || (isPro && daysLeft !== null && !autoRenews)) && (
-        <Box sx={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
-          {isPro && daysLeft !== null && !autoRenews && (
-            <Box sx={{ ...pillSx, bgcolor: expiringSoon ? 'rgba(251,191,36,0.22)' : 'rgba(255,255,255,0.16)', borderColor: expiringSoon ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.22)' }}>
-              {daysLeft === 0 ? s.expiresToday : daysLeft === 1 ? s.dayLeft : `${shownDays ?? daysLeft} ${s.daysLeft}`}
+          <Box sx={{ minWidth: 0 }}>
+            <Box sx={{
+              display: 'inline-block', px: 1, py: '1px', borderRadius: '999px', mb: 0.4,
+              bgcolor: isPro ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.18)',
+              color: isPro ? PRO_PURPLE : '#fff',
+              fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
+            }}>
+              {isTrial ? `🎁 ${s.trialBadge}` : isPro ? `✦ ${s.proBadge}` : trialEnded ? s.trialEndedBadge : s.freeBadge}
             </Box>
-          )}
-          {sourceLabel && (
+            <Typography sx={{ fontSize: 20, fontWeight: 900, lineHeight: 1.2, letterSpacing: -0.2 }}>
+              {isTrial ? s.trialTitle : isPro ? s.heroProTitle : trialEnded ? s.trialEndedTitle : s.heroFreeTitle}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Typography sx={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+          {!isPro && (trialEnded ? s.trialEndedSub : s.heroFreeSub)}
+          {isPro && !expires && s.heroPermanentSub}
+          {isPro && expires && `${autoRenews ? s.heroRenewsOn : isTrial ? s.trialSub : s.heroActiveUntil} ${expiryLabel}`}
+        </Typography>
+
+        {sourceLabel && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.25 }}>
             <Box sx={{ ...pillSx, bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.28)', color: 'rgba(255,255,255,0.88)', fontWeight: 600 }}>
               {sourceLabel}
             </Box>
-          )}
-        </Box>
-      )}
-      {isPro && expiringSoon && (
-        <Typography sx={{ position: 'relative', fontSize: 12, color: PRO_SOFT, fontWeight: 700 }}>
-          {s.expiringSoon}
-        </Typography>
+          </Box>
+        )}
+        {isPro && expiringSoon && (
+          <Typography sx={{ fontSize: 12, color: '#FDE68A', fontWeight: 800 }}>
+            {s.expiringSoon}
+          </Typography>
+        )}
+      </Box>
+
+      {showRing && daysLeft !== null && (
+        <CountdownRing days={daysLeft} shown={shownDays ?? daysLeft} total={ringTotal} caption={ringCaption} />
       )}
     </Box>
   );
