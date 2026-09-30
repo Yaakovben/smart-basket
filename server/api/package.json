@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node --max-old-space-size=320 dist/server.js",
     "lint": "eslint src/**/*.ts",
     "get-gmail-token": "ts-node-dev --transpile-only src/scripts/get-gmail-token.ts",
     "test": "npm run build && node scripts/run-tests.js",

@@ -25,10 +25,14 @@ export interface ChainPriceItem {
   unitOfMeasurePrice?: number;       // מחיר ליחידה ("X ש"ח ל-100 גרם") - מאפשר השוואה לפי כמות
 }
 
+// שורות המחיר של הרשת: מערך רגיל, או PriceRows החסכוני בזיכרון (ראו priceRows.ts).
+// עוברים עליהן רק בלולאה ובאורך, בלי filter/map שיוצרים עותק של כל השורות.
+export type PriceItems = Iterable<ChainPriceItem> & { readonly length: number };
+
 export interface ChainFetchResult {
   chainId: ChainId;
   chainName: string;
-  items: ChainPriceItem[];
+  items: PriceItems;
   fetchedFiles: number;
   error?: string;
 }

@@ -20,6 +20,7 @@ import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { mergeWithCachedListing } from './portalFileCache';
 import { retryDownload } from './downloadRetry';
+import { PriceRows } from './priceRows';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -164,8 +165,10 @@ export const carrefourAdapter: ChainAdapter = {
       if (fileNames.length === 0) {
         return { chainId: 'carrefour', chainName: 'Carrefour / יינות ביתן', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
       }
-      const allItems = [];
-      const CONCURRENCY = 6;
+      const allItems = new PriceRows();
+      // שני קבצים במקביל: כל קובץ מפוענח תופס עשרות MB, ובשרת עם 512MB שישה במקביל
+      // יחד עם 1.2 מיליון השורות של קרפור הפילו את השרת (30.9.2026)
+      const CONCURRENCY = 2;
       let fetched = 0;
       for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
         const batch = fileNames.slice(i, i + CONCURRENCY);
@@ -174,7 +177,7 @@ export const carrefourAdapter: ChainAdapter = {
         );
         for (const r of settled) {
           if (r.status === 'fulfilled') {
-            allItems.push(...r.value);
+            allItems.add(r.value);
             fetched++;
           } else {
             logger.warn(`[chain:carrefour] file fetch failed: ${r.reason}`);

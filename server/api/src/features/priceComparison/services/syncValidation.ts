@@ -8,7 +8,7 @@
  * לוגיקה טהורה (בלי DB) כדי שאפשר לבדוק אותה.
  */
 
-import type { ChainPriceItem } from '../chains/types';
+import type { PriceItems } from '../chains/types';
 
 export interface ValidationResult {
   ok: boolean;
@@ -35,7 +35,7 @@ export interface PriceFeedStats {
 
 const isValidPrice = (p: unknown): boolean => typeof p === 'number' && Number.isFinite(p) && p > 0 && p <= 10_000;
 
-export function collectPriceFeedStats(items: ChainPriceItem[]): PriceFeedStats {
+export function collectPriceFeedStats(items: PriceItems): PriceFeedStats {
   const stats: PriceFeedStats = {
     total: items.length, valid: 0, missingBarcode: 0, invalidPrice: 0,
     missingStore: 0, distinctBarcodes: 0, invalidUpdateDate: 0,

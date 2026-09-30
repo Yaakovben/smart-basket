@@ -19,6 +19,7 @@ import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { mergeWithCachedListing } from './portalFileCache';
 import { retryDownload } from './downloadRetry';
+import { PriceRows } from './priceRows';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -130,7 +131,7 @@ export function createLaibcatalogAdapter(opts: LaibcatalogOptions): ChainAdapter
         if (priceFiles.length === 0) {
           return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
         }
-        const allItems = [];
+        const allItems = new PriceRows();
         const CONCURRENCY = 6;
         let fetched = 0;
         for (let i = 0; i < priceFiles.length; i += CONCURRENCY) {
@@ -140,7 +141,7 @@ export function createLaibcatalogAdapter(opts: LaibcatalogOptions): ChainAdapter
           );
           for (const r of settled) {
             if (r.status === 'fulfilled') {
-              allItems.push(...r.value);
+              allItems.add(r.value);
               fetched++;
             } else {
               logger.warn(`${tag} file fetch failed: ${r.reason}`);

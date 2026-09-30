@@ -46,7 +46,8 @@ async function main() {
   const stats = collectPriceFeedStats(prices.items);
   const priceOk = validatePriceFeed(stats);
   if (!priceOk.ok) fail(`price validation: ${priceOk.reason}`);
-  const valid = prices.items.filter(it => it.storeId && it.price > 0 && it.price <= 10_000 && it.blockedItem !== true);
+  // סקריפט בדיקה: עותק של כל השורות מותר כאן
+  const valid = [...prices.items].filter(it => it.storeId && it.price > 0 && it.price <= 10_000 && it.blockedItem !== true);
   const feedStores = new Set(valid.map(it => normStoreId(it.storeId!)));
   const barcodeStats = buildBarcodeStats(valid.map(it => ({ storeId: normStoreId(it.storeId!), barcode: it.barcode, price: it.price })), feedStores.size);
   console.log(`✓ PriceFull: ${prices.fetchedFiles} files, ${stats.total} rows, ${stats.distinctBarcodes} barcodes, ${feedStores.size} branches, ${((Date.now() - t0) / 1000).toFixed(0)}s`);

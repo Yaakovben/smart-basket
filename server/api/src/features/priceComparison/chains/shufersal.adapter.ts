@@ -16,6 +16,7 @@ import { gunzipSync } from 'zlib';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseStoresXml } from './portalXmlParser';
 import { retryDownload } from './downloadRetry';
+import { PriceRows } from './priceRows';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoresFetchResult, ChainFileRef,
@@ -266,7 +267,7 @@ export const shufersalAdapter: ChainAdapter = {
       const MAX_STORES = 100;
       const BATCH = 6;
       const subset = spreadAcrossSubChains(files, MAX_STORES).map(f => f.url);
-      const allItems: ChainPriceItem[] = [];
+      const allItems = new PriceRows();
       let fetched = 0;
       let lastError: string | undefined;
 
@@ -287,9 +288,7 @@ export const shufersalAdapter: ChainAdapter = {
           // אמיתי בין הסניפים שנדגמו. dedup פר-ברקוד כאן היה משאיר רק את
           // הסניף הראשון שנטען לכל מוצר - "המחיר הזול ביותר" היה בפועל
           // "מחיר הסניף הראשון", בלי שגיאה גלויה לאף אחד.
-          for (const item of r.value) {
-            allItems.push(item);
-          }
+          allItems.add(r.value);
         }
       }
 

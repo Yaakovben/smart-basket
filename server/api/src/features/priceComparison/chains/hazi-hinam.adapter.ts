@@ -18,8 +18,9 @@ import { logger } from '../../../config/logger';
 import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { retryDownload } from './downloadRetry';
+import { PriceRows } from './priceRows';
 import type {
-  ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef, ChainPriceItem,
+  ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
 
 const CHAIN_ID = 'hazi_hinam' as const;
@@ -114,7 +115,7 @@ export const haziHinamAdapter: ChainAdapter = {
       if (files.length === 0) {
         return { chainId: CHAIN_ID, chainName: CHAIN_NAME, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
       }
-      const allItems: ChainPriceItem[] = [];
+      const allItems = new PriceRows();
       const CONCURRENCY = 4;
       let fetched = 0;
       for (let i = 0; i < files.length; i += CONCURRENCY) {
@@ -122,7 +123,7 @@ export const haziHinamAdapter: ChainAdapter = {
         const settled = await Promise.allSettled(batch.map(f => retryDownload(() => download(f.url)).then(buf => parseXmlBuffer(buf, f.name))));
         for (const r of settled) {
           if (r.status === 'fulfilled') {
-            allItems.push(...r.value);
+            allItems.add(r.value);
             fetched++;
           } else {
             logger.warn(`[chain:${CHAIN_ID}] file fetch failed: ${r.reason}`);

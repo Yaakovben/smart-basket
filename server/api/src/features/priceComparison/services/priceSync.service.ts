@@ -333,17 +333,24 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
     logger.warn('[price-sync] another server holds the shared sync lock - skipping');
     return [];
   }
+  // חידוש המנעול כל עוד הסנכרון חי: שרת שנפל באמצע משחרר אותו תוך רבע שעה
+  const heartbeat = setInterval(() => { void renewSharedSyncLock(runId); }, SYNC_LOCK_RENEW_MS);
+  heartbeat.unref();
   try {
     return await runAllChains(chainIds, runId);
   } finally {
+    clearInterval(heartbeat);
     await releaseSharedSyncLock(runId);
   }
 }
 
 // מנעול משותף במסד המחירים. _id קבוע מבטיח שרק שרת אחד מחזיק אותו: הוספה
 // כשמנעול בתוקף נכשלת על מפתח כפול. מנעול שפג (שרת שקרס באמצע) נלקח מחדש.
+// תוקף קצר שמתחדש כל 5 דקות: בעבר התוקף היה 4 שעות, ושרת שנפל באמצע סנכרון
+// (30.9.2026, חוסר זיכרון) חסם כל סנכרון אחר עד שפג.
 const SYNC_LOCK_ID = 'price-sync';
-const SYNC_LOCK_TTL_MS = 4 * 60 * 60 * 1000;
+const SYNC_LOCK_TTL_MS = 15 * 60 * 1000;
+const SYNC_LOCK_RENEW_MS = 5 * 60 * 1000;
 type SyncLockDoc = { _id: string; owner: string; expiresAt: Date };
 const syncLocks = () => pricesDb.collection<SyncLockDoc>('sync_locks');
 
@@ -361,6 +368,11 @@ async function acquireSharedSyncLock(owner: string): Promise<boolean> {
     logger.error(`[price-sync] shared lock unavailable: ${err instanceof Error ? err.message : 'unknown'}`);
     return false;
   }
+}
+
+async function renewSharedSyncLock(owner: string): Promise<void> {
+  await syncLocks().updateOne({ _id: SYNC_LOCK_ID, owner }, { $set: { expiresAt: new Date(Date.now() + SYNC_LOCK_TTL_MS) } })
+    .catch(err => logger.warn(`[price-sync] shared lock renew failed: ${err instanceof Error ? err.message : 'unknown'}`));
 }
 
 async function releaseSharedSyncLock(owner: string): Promise<void> {
@@ -409,21 +421,31 @@ async function runAllChains(chainIds: string[] | undefined, runId: string): Prom
 // אגרגציה ושמירה של פריטים שהוחזרו מ-adapter בודד.
 async function processChainItems(
   adapter: ChainAdapter,
-  result: { items: import('../chains/types').ChainPriceItem[] },
+  result: { items: import('../chains/types').PriceItems },
   t0: number,
   ctx: PriceSyncContext,
 ): Promise<SyncResult> {
   const syncStart = new Date();
   // פריטים תקינים: אותם כללי סינון לכל האגרגציות. מוצר חסום (אין במלאי) ומחירים
   // אבסורדיים (0 או חריג גבוה) לא מוצגים ללקוח.
-  const validItems = result.items.filter(it => it.blockedItem !== true && it.price > 0 && it.price <= 10_000);
+  // גנרטור ולא filter: עותק של כל השורות (מעל מיליון ברשת גדולה) הפיל את הסנכרון
+  // על חוסר זיכרון. כל מעבר עובר על השורות מחדש, בלי לשמור אותן.
+  function* validItems() {
+    for (const it of result.items) {
+      if (it.blockedItem !== true && it.price > 0 && it.price <= 10_000) yield it;
+    }
+  }
   // מזהי סניף מנורמלים (בלי אפסים מובילים) - כך הם מתאימים לקובץ הסניפים
   const feedStoreIds = new Set<string>();
-  for (const it of validItems) if (it.storeId) feedStoreIds.add(normStoreId(it.storeId));
+  let validCount = 0;
+  for (const it of validItems()) {
+    validCount++;
+    if (it.storeId) feedStoreIds.add(normStoreId(it.storeId));
+  }
   // גנרטור ולא filter+map: מערך ביניים של כל שורות הפיד (מיליונים ברשת גדולה)
   // היה מכפיל את צריכת הזיכרון בסנכרון
   function* feedRows() {
-    for (const it of validItems) {
+    for (const it of validItems()) {
       if (it.storeId) yield { storeId: normStoreId(it.storeId), barcode: it.barcode, price: it.price };
     }
   }
@@ -435,7 +457,7 @@ async function processChainItems(
   // ראו services/branchPricing.ts.
   const exceptionsByBarcode = new Map<string, string[]>();
   let exceptionCount = 0;
-  for (const it of validItems) {
+  for (const it of validItems()) {
     if (!it.storeId) continue;
     if (!isPriceException(it.price, barcodeStats.get(it.barcode))) continue;
     const list = exceptionsByBarcode.get(it.barcode) ?? [];
@@ -456,7 +478,7 @@ async function processChainItems(
   // ה-XML מהפורטל מכיל שורת מחיר לכל (סניף, מוצר). מקבצים לפי (chainId, barcode),
   // בוחרים את המחיר הזול כמייצג, ושומרים גם min/max/count + cheapestStoreId.
   const agg = new Map<string, {
-    first: typeof result.items[number];
+    first: import('../chains/types').ChainPriceItem;
     minPrice: number; maxPrice: number;
     cheapestStoreId?: string;
     count: number;
@@ -539,13 +561,13 @@ async function processChainItems(
   } else {
     await BranchPriceDAL.clearCoverage(adapter.chainId);
   }
-  logger.info(`[price-sync] ${adapter.chainId}: branch price exceptions=${exceptionCount}${overBudget ? ' (over budget, not stored)' : ''} of ${validItems.length} items, stores=${feedStoreIds.size}`);
+  logger.info(`[price-sync] ${adapter.chainId}: branch price exceptions=${exceptionCount}${overBudget ? ' (over budget, not stored)' : ''} of ${validCount} items, stores=${feedStoreIds.size}`);
 
   const elapsedMs = Date.now() - t0;
   logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
 
   let rowsWithStore = 0;
-  for (const it of validItems) if (it.storeId) rowsWithStore++;
+  for (const it of validItems()) if (it.storeId) rowsWithStore++;
   await PriceSyncLogDAL.record({
     chainId: adapter.chainId, type: 'price-full', runId: ctx.runId, startedAt: ctx.startedAt, status: 'success',
     filesDownloaded: ctx.fetchedFiles,

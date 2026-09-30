@@ -24,6 +24,7 @@ import { axiosGetWithTlsFallback } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import { extractDateStamp, extractStoreIdFromName } from './binaFileNames';
 import { retryDownload } from './downloadRetry';
+import { PriceRows } from './priceRows';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult, ChainFileRef,
 } from './types';
@@ -156,7 +157,7 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
           return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
         }
         // הורדה במקביל בקבוצות של 6 - לא להציף את הפורטל ולא להאריך זמן ריצה.
-        const allItems = [];
+        const allItems = new PriceRows();
         const CONCURRENCY = 6;
         let fetched = 0;
         for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
@@ -166,7 +167,7 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
           );
           for (const r of settled) {
             if (r.status === 'fulfilled') {
-              allItems.push(...r.value);
+              allItems.add(r.value);
               fetched++;
             } else {
               logger.warn(`[bina:${chainId}] file fetch failed: ${r.reason}`);
