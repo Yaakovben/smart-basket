@@ -73,6 +73,16 @@ const he = {
   lowestFound: 'הכי זול בארץ',
   loadingSlow: 'לוקח יותר זמן מהרגיל. אפשר לחכות או לבטל.',
   cancel: 'ביטול',
+  // תוצאה: הכי זול בארץ, ואז המומלץ קרוב אליך
+  saveVsPriciest: (amount: string, chain: string) => `חוסכים ${amount} לעומת ${chain}`,
+  recommendedTitle: 'מומלץ קרוב אליך',
+  recommendedWhy: 'הכי זול בסניפים הקרובים',
+  sameAsNation: 'זה המחיר הזול בארץ, ממש קרוב אליך',
+  aboveNation: (diff: string) => `רק ${diff} יותר מהזול בארץ`,
+  otherNearbyTitle: 'עוד סניפים קרובים',
+  cheapestBadge: 'הכי זול',
+  promoPerUnit: (unit: string) => `${unit} ליחידה`,
+  loadingTitle: 'מחפשים לכם את המחיר הכי טוב',
 };
 
 type PriceScanStrings = typeof he;
@@ -144,6 +154,15 @@ const en: PriceScanStrings = {
   lowestFound: 'Lowest in Israel',
   loadingSlow: 'This is taking longer than usual. You can wait or cancel.',
   cancel: 'Cancel',
+  saveVsPriciest: (amount: string, chain: string) => `Save ${amount} compared to ${chain}`,
+  recommendedTitle: 'Recommended near you',
+  recommendedWhy: 'Cheapest at the stores near you',
+  sameAsNation: 'The lowest price in the country, right near you',
+  aboveNation: (diff: string) => `Only ${diff} more than the lowest in the country`,
+  otherNearbyTitle: 'More stores near you',
+  cheapestBadge: 'Cheapest',
+  promoPerUnit: (unit: string) => `${unit} per unit`,
+  loadingTitle: 'Finding you the best price',
 };
 
 const ru: PriceScanStrings = {
@@ -213,6 +232,15 @@ const ru: PriceScanStrings = {
   lowestFound: 'Дешевле всего',
   loadingSlow: 'Это занимает больше времени, чем обычно. Можно подождать или отменить.',
   cancel: 'Отмена',
+  saveVsPriciest: (amount: string, chain: string) => `Экономия ${amount} по сравнению с ${chain}`,
+  recommendedTitle: 'Рекомендуем рядом с вами',
+  recommendedWhy: 'Дешевле всего в магазинах рядом',
+  sameAsNation: 'Самая низкая цена в стране, совсем рядом',
+  aboveNation: (diff: string) => `Всего на ${diff} дороже самой низкой цены в стране`,
+  otherNearbyTitle: 'Другие магазины рядом',
+  cheapestBadge: 'Дешевле всего',
+  promoPerUnit: (unit: string) => `${unit} за штуку`,
+  loadingTitle: 'Ищем для вас лучшую цену',
 };
 
 const DICTS: Record<Language, PriceScanStrings> = { he, en, ru };

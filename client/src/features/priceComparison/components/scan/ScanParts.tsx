@@ -6,19 +6,24 @@ import type { PriceScanStrings } from '../../priceScan.strings';
 
 export const PROMO_COLOR = '#DB2777';
 
-// תווית מבצע: "3 ב-₪10", ולמועדון או לחלק מהסניפים עם הסבר קצר
+// תווית מבצע: "3 ב-₪10 · ₪3.33 ליחידה", ולמועדון או לחלק מהסניפים עם הסבר קצר
 export const PromoChip = ({ s, promo, someBranches = false, onDark = false }: {
   s: PriceScanStrings;
   promo: ScanPromo;
   someBranches?: boolean;
   onDark?: boolean;
 }) => {
-  const extra = [promo.clubOnly ? s.promoClub : null, someBranches ? s.promoSomeBranches : null].filter(Boolean).join(' · ');
+  const unit = promo.unitPrice > 0 ? promo.unitPrice : promo.price / Math.max(1, promo.minQty);
+  const extra = [
+    promo.minQty > 1 ? s.promoPerUnit(formatILS(unit, 2)) : null,
+    promo.clubOnly ? s.promoClub : null,
+    someBranches ? s.promoSomeBranches : null,
+  ].filter(Boolean).join(' · ');
   return (
     <Box
       title={promo.description}
       sx={{
-        display: 'inline-flex', alignItems: 'center', gap: 0.4, px: 0.9, py: 0.25, borderRadius: '8px', maxWidth: '100%',
+        display: 'inline-flex', alignItems: 'center', gap: 0.4, px: 0.9, py: 0.3, borderRadius: '8px', maxWidth: '100%',
         bgcolor: onDark ? 'rgba(255,255,255,0.2)' : 'rgba(219,39,119,0.1)',
         color: onDark ? '#fff' : PROMO_COLOR,
       }}

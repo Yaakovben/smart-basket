@@ -68,8 +68,11 @@ export const PriceScanPage = () => {
       bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden',
     }}>
       <Box sx={{
-        background: COMMON_STYLES.gradients.header,
+        // header הוא אובייקט עם גרסה בהירה וכהה. העברה שלו כמו שהוא לא צבעה כלום,
+        // והכותרת הלבנה נראתה חיוורת על רקע לבן
+        background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: { xs: 'max(48px, var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 20px', sm: '48px 20px 20px' },
+        borderRadius: '0 0 24px 24px',
         flexShrink: 0,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
