@@ -17,6 +17,8 @@ interface ConnectionStrings {
   offlinePending: (n: number) => string;
   weakPending: (n: number) => string;
   syncingPending: (n: number) => string;
+  // מתחבר או מתחבר מחדש, בלי שינויים שממתינים: הרגעה שהכל ממשיך לעבוד
+  reconnectCalm: string;
 }
 
 const he: ConnectionStrings = {
@@ -34,6 +36,7 @@ const he: ConnectionStrings = {
     ? 'שינוי אחד שמור ויסונכרן ברגע שהחיבור יתייצב'
     : `${n} שינויים שמורים ויסונכרנו ברגע שהחיבור יתייצב`,
   syncingPending: (n) => n === 1 ? 'שינוי אחד ממתין לסנכרון' : `${n} שינויים ממתינים לסנכרון`,
+  reconnectCalm: 'אפשר להמשיך כרגיל. כל שינוי נשמר ויסונכרן כשהחיבור יתייצב.',
 };
 
 const en: ConnectionStrings = {
@@ -51,6 +54,7 @@ const en: ConnectionStrings = {
     ? '1 change saved, it will sync as soon as the connection stabilizes'
     : `${n} changes saved, they will sync as soon as the connection stabilizes`,
   syncingPending: (n) => n === 1 ? '1 change waiting to sync' : `${n} changes waiting to sync`,
+  reconnectCalm: 'Keep going as usual. Every change is saved and will sync once the connection stabilizes.',
 };
 
 // ברוסית צורת הרבים תלויה במספר, לכן המספר מופיע בסוף ("Сохранено изменений: 3")
@@ -65,6 +69,7 @@ const ru: ConnectionStrings = {
   offlinePending: (n) => `Сохранено изменений: ${n}. Синхронизируем, когда связь вернётся`,
   weakPending: (n) => `Сохранено изменений: ${n}. Синхронизируем, как только соединение стабилизируется`,
   syncingPending: (n) => `Ожидают синхронизации: ${n}`,
+  reconnectCalm: 'Можно продолжать как обычно. Все изменения сохраняются и синхронизируются, когда связь стабилизируется.',
 };
 
 const DICTS: Record<Language, ConnectionStrings> = { he, en, ru };

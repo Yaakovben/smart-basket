@@ -19,7 +19,9 @@ import { clearCacheAndReload } from '../helpers/clearCacheAndReload';
 export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting' | 'server-starting' | 'weak';
 
 const OFFLINE_CONFIRM_MS = 3000;
-const SOCKET_GRACE_MS = 4000;
+// ניתוק קצר של החיבור לזמן אמת (חזרה מהרקע, מעבר בין רשתות) מתחבר מחדש לבד
+// תוך שניות. הפס מופיע רק אם זה נמשך, כדי לא להקפיץ אותו לחינם.
+const SOCKET_GRACE_MS = 7000;
 
 interface ConnectionState {
   phase: ConnectionPhase;

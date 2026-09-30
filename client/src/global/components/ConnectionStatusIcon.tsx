@@ -60,7 +60,7 @@ export const ConnectionStatusIcon = () => {
     ? (pendingCount > 0 ? s.offlinePending(pendingCount) : s.offlineCalm)
     : isWeak
       ? (pendingCount > 0 ? s.weakPending(pendingCount) : s.weakCalm)
-      : pendingCount > 0 ? s.syncingPending(pendingCount) : null;
+      : pendingCount > 0 ? s.syncingPending(pendingCount) : isSyncing ? null : s.reconnectCalm;
 
   const bg = isOffline
     ? 'linear-gradient(135deg, rgba(146,138,132,0.97), rgba(87,83,78,0.97))'

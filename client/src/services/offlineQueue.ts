@@ -194,15 +194,17 @@ export async function updateQueuedAddData(tempId: string, changes: Partial<Queue
   return true;
 }
 
-// בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם.
-// 502/503/504 (עם response אמיתי) נחשבים כאן כמו שגיאת רשת ולא כישלון קבוע -
-// אלו שגיאות cold-start אופייניות (Render free tier), שקורות בדיוק כש-
-// navigator.onLine/הסוקט עדיין מראים "מחובר" - בלי זה המשתמש רואה טוסט שגיאה
-// באמצע חיווי "מחובר" תקין.
+// האם לשמור את הפעולה בתור ולשלוח שוב אחר כך, במקום לבטל אותה ולהציג שגיאה.
+// כל תקלה זמנית נכנסת לתור: רשת, זמן המתנה, שגיאת שרת (5xx), ו-401 (ההתחברות
+// מתחדשת, בדרך כלל רגע אחרי שהקליטה חוזרת). קודם רק שגיאת רשת נשמרה, ומוצר
+// שנוסף בזמן תקלה כזו נמחק מהמסך עם "אירעה שגיאה". כל הפעולות בתור בטוחות
+// לשליחה חוזרת (בהוספה יש מזהה שמונע כפילות). שגיאה קבועה (403, 404, 400,
+// מגבלת מנוי 402) לא נכנסת לתור: אין טעם לנסות אותה שוב.
 export function isNetworkError(error: unknown): boolean {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return true;
   const e = error as { response?: { status?: number }; code?: string; message?: string } | null;
   if (!e) return false;
-  if (!e.response) return e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.message === 'Network Error';
-  return e.response.status === 502 || e.response.status === 503 || e.response.status === 504;
+  if (!e.response) return e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT' || e.message === 'Network Error';
+  const status = e.response.status ?? 0;
+  return status === 401 || status === 408 || status >= 500;
 }
