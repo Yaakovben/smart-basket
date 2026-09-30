@@ -58,7 +58,8 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
           // את כל הסניפים (לא רק אחד שנבחר כמעט באקראי), בלי להעמיס יתר
           // על הפורטל/הזיכרון כשיש מאות סניפים (כמו רמי לוי).
           const allItems = new PriceRows();
-          const DOWNLOAD_CONCURRENCY = 4;
+          // שני קבצים במקביל: פחות זיכרון זמני בשרת של 512MB (טיב טעם הגיעה ל-305MB בהורדה בלבד)
+          const DOWNLOAD_CONCURRENCY = 2;
           for (let i = 0; i < filenames.length; i += DOWNLOAD_CONCURRENCY) {
             const batch = filenames.slice(i, i + DOWNLOAD_CONCURRENCY);
             const parsedBatches = await Promise.all(

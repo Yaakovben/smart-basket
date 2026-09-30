@@ -1,4 +1,5 @@
 import express from 'express';
+import v8 from 'v8';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -90,7 +91,14 @@ app.use('/api', (_req, res, next) => {
 app.get('/health', (_req, res) => {
   const dbConnected = mongoose.connection.readyState === 1;
   const status = dbConnected ? 'ok' : 'degraded';
-  res.status(dbConnected ? 200 : 503).json({ status, db: dbConnected, timestamp: new Date().toISOString() });
+  // זיכרון: המגבלה בפועל ומה שבשימוש. בשרת של 512MB סנכרון מחירים גדול נפל על חוסר
+  // זיכרון (30.9.2026); כך רואים מבחוץ אם מגבלת ההפעלה חלה
+  const mem = process.memoryUsage();
+  const mb = (n: number) => Math.round(n / 1048576);
+  res.status(dbConnected ? 200 : 503).json({
+    status, db: dbConnected, timestamp: new Date().toISOString(),
+    memory: { rssMb: mb(mem.rss), heapUsedMb: mb(mem.heapUsed), heapLimitMb: mb(v8.getHeapStatistics().heap_size_limit) },
+  });
 });
 
 app.use('/api', routes);

@@ -156,9 +156,9 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
         if (fileNames.length === 0) {
           return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
         }
-        // הורדה במקביל בקבוצות של 6 - לא להציף את הפורטל ולא להאריך זמן ריצה.
+        // הורדה במקביל בקבוצות של 3: לא להציף את הפורטל, ופחות זיכרון זמני בשרת של 512MB
         const allItems = new PriceRows();
-        const CONCURRENCY = 6;
+        const CONCURRENCY = 3;
         let fetched = 0;
         for (let i = 0; i < fileNames.length; i += CONCURRENCY) {
           const batch = fileNames.slice(i, i + CONCURRENCY);

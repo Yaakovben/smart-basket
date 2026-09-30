@@ -132,7 +132,7 @@ export function createLaibcatalogAdapter(opts: LaibcatalogOptions): ChainAdapter
           return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
         }
         const allItems = new PriceRows();
-        const CONCURRENCY = 6;
+        const CONCURRENCY = 3;
         let fetched = 0;
         for (let i = 0; i < priceFiles.length; i += CONCURRENCY) {
           const batch = priceFiles.slice(i, i + CONCURRENCY);

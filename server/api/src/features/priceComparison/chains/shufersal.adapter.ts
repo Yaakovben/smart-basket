@@ -293,7 +293,7 @@ export const shufersalAdapter: ChainAdapter = {
       // תקרת סניפים בגלל זיכרון השרת (512MB): כל סניף כ-6,000 שורות, ו-100 סניפים
       // הם כ-600 אלף שורות, פחות מרמי לוי (כמיליון שורות מ-98 סניפים).
       const MAX_STORES = 100;
-      const BATCH = 6;
+      const BATCH = 3;
       const subset = spreadAcrossSubChains(files, MAX_STORES).map(storeKey);
       const download = freshLinks(CAT_PRICE_FULL, 'PriceFull', files);
       const allItems = new PriceRows();

@@ -116,7 +116,7 @@ export const haziHinamAdapter: ChainAdapter = {
         return { chainId: CHAIN_ID, chainName: CHAIN_NAME, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
       }
       const allItems = new PriceRows();
-      const CONCURRENCY = 4;
+      const CONCURRENCY = 2;
       let fetched = 0;
       for (let i = 0; i < files.length; i += CONCURRENCY) {
         const batch = files.slice(i, i + CONCURRENCY);
