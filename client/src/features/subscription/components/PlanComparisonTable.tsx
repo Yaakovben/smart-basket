@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import { Box, Typography, LinearProgress } from '@mui/material';
-import AllInclusiveRoundedIcon from '@mui/icons-material/AllInclusiveRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ListAltRoundedIcon from '@mui/icons-material/ListAltRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
@@ -21,7 +21,7 @@ const PRO_COL = 96;
 
 const meterColor = (ratio: number) => (ratio >= 1 ? '#EF4444' : ratio >= 0.8 ? '#F59E0B' : PRO_PURPLE);
 
-// שורה אחת: אייקון ותווית, ערך החינמי בתגית, ו"ללא הגבלה" בגרדיאנט של Pro.
+// שורה אחת: אייקון ותווית, ערך החינמי בתגית, ווי עם "ללא הגבלה" בגרדיאנט של Pro.
 // used מוצג רק לשורות עם שימוש יומי אמיתי (AI/השוואות מחיר) ורק למשתמש
 // חינמי: פס התקדמות דק מתחת לשורה.
 const Row = ({ label, Icon, freeValue, used, isDark, unlimitedLabel }: {
@@ -62,7 +62,7 @@ const Row = ({ label, Icon, freeValue, used, isDark, unlimitedLabel }: {
           borderRadius: '999px', background: PRO_GRADIENT,
           boxShadow: '0 3px 10px rgba(124,58,237,0.25)',
         }}>
-          <AllInclusiveRoundedIcon sx={{ fontSize: 14, color: '#fff', flexShrink: 0 }} />
+          <CheckRoundedIcon sx={{ fontSize: 14, color: '#fff', flexShrink: 0 }} />
           <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>{unlimitedLabel}</Typography>
         </Box>
       </Box>
