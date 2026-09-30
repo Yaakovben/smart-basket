@@ -303,6 +303,20 @@ shopping lists.
 
 ---
 
+## אייקונים ומסכי פתיחה
+
+כל האייקונים ומסכי הפתיחה נוצרים מאותו עיצוב של `public/favicon.svg` (כולל ה-Y המוסתר),
+בסקריפט אחד: `cd client && npx -y -p sharp@0.33 node resources/generate-app-assets.mjs`
+
+| מה | איפה | מצב |
+|---|---|---|
+| אייקון iOS, ‏1024x1024 בלי שקיפות ובלי פינות מעוגלות (אפל מעגלת לבד) | `ios/App/App/Assets.xcassets/AppIcon.appiconset` | מוכן |
+| אייקון אנדרואיד מתאים: רקע טורקיז מלא ושכבה קדמית עם הסל בלבד | `android/app/src/main/res/mipmap-*` | מוכן |
+| מסכי פתיחה: רקע טורקיז וסל במרכז, בכל הגדלים | iOS: `Splash.imageset`, אנדרואיד: `drawable-*` | מוכן |
+| אייקון להעלאה ל-App Store Connect (1024) | `resources/store/app-store-icon-1024.png` | מוכן |
+| אייקון להעלאה ל-Play Console (512) | `resources/store/play-store-icon-512.png` | מוכן |
+| גרפיקה ראשית ל-Google Play (1024x500) | | **חסר**, צריך לעצב |
+
 ## צילומי מסך
 
 - iPhone: חובה בגודל **6.9 אינץ'** (1320×2868). אפל מקטינה אוטומטית לשאר הגדלים.
