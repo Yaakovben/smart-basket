@@ -333,6 +333,7 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
     logger.warn('[price-sync] another server holds the shared sync lock - skipping');
     return [];
   }
+  heldLockOwner = runId;
   // חידוש המנעול כל עוד הסנכרון חי: שרת שנפל באמצע משחרר אותו תוך רבע שעה
   const heartbeat = setInterval(() => { void renewSharedSyncLock(runId); }, SYNC_LOCK_RENEW_MS);
   heartbeat.unref();
@@ -340,6 +341,7 @@ export async function syncAllChains(chainIds?: string[]): Promise<SyncResult[]> 
     return await runAllChains(chainIds, runId);
   } finally {
     clearInterval(heartbeat);
+    heldLockOwner = null;
     await releaseSharedSyncLock(runId);
   }
 }
@@ -368,6 +370,21 @@ async function acquireSharedSyncLock(owner: string): Promise<boolean> {
     logger.error(`[price-sync] shared lock unavailable: ${err instanceof Error ? err.message : 'unknown'}`);
     return false;
   }
+}
+
+// המנעול שהשרת הזה מחזיק עכשיו (null = לא מחזיק)
+let heldLockOwner: string | null = null;
+
+// כיבוי מסודר (פריסה מחדש ב-Render שולחת SIGTERM): משחררים את המנעול מיד, כדי
+// שהשרת החדש ימשיך לסנכרן בלי לחכות שיפוג. ב-30.9.2026 פריסה עצרה סנכרון באמצע.
+export async function releaseHeldSyncLock(): Promise<void> {
+  if (heldLockOwner) await releaseSharedSyncLock(heldLockOwner);
+}
+
+// האם שרת כלשהו מחזיק עכשיו את מנעול הסנכרון המשותף (בתוקף)
+export async function isSharedSyncLockHeld(): Promise<boolean> {
+  const lock = await syncLocks().findOne({ _id: SYNC_LOCK_ID });
+  return !!lock && lock.expiresAt.getTime() > Date.now();
 }
 
 async function renewSharedSyncLock(owner: string): Promise<void> {

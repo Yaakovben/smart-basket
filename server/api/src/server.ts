@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
 import { startPriceSyncJob } from './features/priceComparison';
+import { releaseHeldSyncLock } from './features/priceComparison/services/priceSync.service';
 import { startTrialReminderJob } from './services/trialReminder.service';
 import { warmGroqModel } from './services/aiAssistant.service';
 import { isImageUploadConfigured } from './services/imageUpload.service';
@@ -55,6 +56,8 @@ const startServer = async () => {
 // כיבוי מסודר
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
+  // סנכרון מחירים שנקטע: השרת הבא ימשיך מיד, בלי לחכות שהמנעול יפוג
+  await releaseHeldSyncLock().catch(() => undefined);
 
   if (server) {
     server.close(async () => {

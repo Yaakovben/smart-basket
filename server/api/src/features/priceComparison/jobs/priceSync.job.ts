@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { syncAllChains, syncBranchesFromOsm, getRegisteredChains, type SyncResult } from '../services/priceSync.service';
+import { syncAllChains, syncBranchesFromOsm, getRegisteredChains, isSharedSyncLockHeld, type SyncResult } from '../services/priceSync.service';
 import { Price } from '../models/Price.model';
 import { PriceSyncLog } from '../models/PriceSyncLog.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
@@ -262,6 +262,8 @@ const TICK_FROM_HOUR = 4;
 // או כשהכל עדכני, לא עושה כלום, ולכן אין צורך בסיסמה.
 export async function runSyncTick(): Promise<{ started: boolean; pending: string[]; reason?: string }> {
   if (syncInProgress) return { started: false, pending: [], reason: 'in_progress' };
+  // שרת אחר (או תהליך שנפל ועוד לא פג המנעול שלו) באמצע סנכרון
+  if (await isSharedSyncLockHeld()) return { started: false, pending: [], reason: 'locked_elsewhere' };
   if (israelHour() < TICK_FROM_HOUR) return { started: false, pending: [], reason: 'too_early' };
   const pending = await chainsWithoutSuccessToday();
   if (pending.length === 0) return { started: false, pending, reason: 'up_to_date' };
