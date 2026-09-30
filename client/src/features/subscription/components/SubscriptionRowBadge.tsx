@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
+import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
+import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { User } from '../../../global/types';
 import { getSubscriptionStrings } from '../subscription.strings';
-import { PRO_GRADIENT, PRO_GOLD } from '../subscription.styles';
+import { proSoftPillSx } from '../subscription.styles';
 import { peekSubscriptionStatus, loadSubscriptionStatus, subscribeSubscriptionStatus } from '../subscriptionStatusStore';
 
 const DAY_MS = 86_400_000;
@@ -47,20 +49,20 @@ export const SubscriptionRowBadge = ({ user }: { user: User }) => {
   const days = snap.planExpiresAt
     ? Math.max(0, Math.ceil((new Date(snap.planExpiresAt).getTime() - Date.now()) / DAY_MS))
     : null;
-  const mark = snap.isTrial ? '🎁' : '✦';
+  const Mark = snap.isTrial ? CardGiftcardRoundedIcon : WorkspacePremiumRoundedIcon;
   const label = isPro
-    ? ` Pro${days !== null ? ` · ${days} ${s.daysLeft}` : ''}`
+    ? `Pro${days !== null ? ` · ${days} ${s.daysLeft}` : ''}`
     : s.trialEndedBadge;
 
   return (
     <Box component="span" sx={{
-      px: 1.1, py: '3px', borderRadius: '999px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap',
-      background: isPro ? PRO_GRADIENT : undefined,
-      bgcolor: isPro ? undefined : 'action.selected',
-      color: isPro ? '#fff' : 'text.secondary',
-      boxShadow: isPro ? '0 1px 5px rgba(91,33,182,0.3)' : 'none',
+      display: 'inline-flex', alignItems: 'center', gap: 0.4,
+      px: 1, py: '2px', borderRadius: '999px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap',
+      ...(isPro
+        ? proSoftPillSx(settings.theme === 'dark')
+        : { bgcolor: 'action.selected', color: 'text.secondary', border: '1px solid transparent' }),
     }}>
-      {isPro && <Box component="span" sx={{ color: PRO_GOLD }}>{mark}</Box>}
+      {isPro && <Mark sx={{ fontSize: 13 }} />}
       {label}
     </Box>
   );

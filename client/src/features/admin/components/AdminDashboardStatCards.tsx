@@ -7,7 +7,7 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
 import { cardSx, infoCardSx, pulse } from '../styles/AdminDashboard.styles';
-import { PRO_GRADIENT, PRO_GOLD, PRO_GOLD_GRADIENT } from '../../subscription/subscription.styles';
+import { PRO_GRADIENT, PRO_TEXT } from '../../subscription/subscription.styles';
 
 interface AdminDashboardStatCardsProps {
   userFilter: UserFilter;
@@ -120,12 +120,12 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
           ...infoCardSx(userFilter === 'pro'),
           background: PRO_GRADIENT,
           borderColor: userFilter === 'pro' ? '#fff' : 'rgba(255,255,255,0.35)',
-          boxShadow: userFilter === 'pro' ? '0 6px 18px rgba(109,40,217,0.45)' : '0 4px 12px rgba(124,58,237,0.3)',
+          boxShadow: userFilter === 'pro' ? '0 6px 18px rgba(67,56,202,0.4)' : '0 4px 12px rgba(67,56,202,0.22)',
         }}
         onClick={() => onFilterClick('pro')}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-          <WorkspacePremiumIcon sx={{ fontSize: 14, color: PRO_GOLD }} />
+          <WorkspacePremiumIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.85)' }} />
           {loading
             ? <StatSkeleton />
             : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{proCount}</Typography>
@@ -133,7 +133,7 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
         </Box>
         <Box component="span" sx={{
           display: 'inline-block', mt: 0.4, px: 0.9, py: '1px', borderRadius: '999px',
-          background: PRO_GOLD_GRADIENT, color: '#4C1D95', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
+          bgcolor: 'rgba(255,255,255,0.95)', color: PRO_TEXT, fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
         }}>
           PRO
         </Box>

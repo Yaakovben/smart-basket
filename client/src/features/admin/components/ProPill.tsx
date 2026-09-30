@@ -1,14 +1,15 @@
+import type { ComponentType } from 'react';
 import { Box } from '@mui/material';
-import { PRO_GRADIENT, PRO_GOLD } from '../../subscription/subscription.styles';
+import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
+import AllInclusiveRoundedIcon from '@mui/icons-material/AllInclusiveRounded';
+import { proSoftPillSx } from '../../subscription/subscription.styles';
 import type { ProKind } from '../helpers/adminDashboardHelpers';
 
-// תגית Pro אחידה לכל דף המנהל: סגלגלה, בגרדיאנט הסגול עם הכוכב הזהוב של המנוי.
-// kind מוסיף רמז קטן לסוג המנוי (מתנה, חנות, קבוע) באותה תגית, בלי תגית נוספת.
-const KIND_MARK: Record<ProKind, string> = {
-  store: '✦ ',
-  granted: '✦ ',
-  trial: '🎁 ',
-  permanent: '∞ ',
+// תגית Pro אחידה לכל דף המנהל: קומפקטית ונקייה, רקע סגול רך וטקסט כהה.
+// kind מוסיף אייקון קטן לסוג המנוי (מתנה, קבוע) באותה תגית, בלי תגית נוספת.
+const KIND_ICON: Partial<Record<ProKind, ComponentType<{ sx?: object }>>> = {
+  trial: CardGiftcardRoundedIcon,
+  permanent: AllInclusiveRoundedIcon,
 };
 
 interface Props {
@@ -23,20 +24,18 @@ export const ProPill = ({ kind, showFree = false, isDark = false, size = 'sm' }:
   const isPro = !!kind;
   if (!isPro && !showFree) return null;
   const sm = size === 'sm';
+  const Icon = kind ? KIND_ICON[kind] : undefined;
   return (
     <Box component="span" sx={{
-      display: 'inline-flex', alignItems: 'center', flexShrink: 0,
-      height: sm ? 18 : 22, px: sm ? 0.9 : 1.2, borderRadius: '999px',
-      fontSize: sm ? 10 : 11.5, fontWeight: 800, letterSpacing: 0.3, lineHeight: 1, whiteSpace: 'nowrap',
-      background: isPro ? PRO_GRADIENT : undefined,
-      bgcolor: isPro ? undefined : (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6'),
-      color: isPro ? '#fff' : (isDark ? '#9CA3AF' : '#6B7280'),
-      boxShadow: isPro ? '0 1px 5px rgba(91,33,182,0.35)' : 'none',
+      display: 'inline-flex', alignItems: 'center', gap: 0.35, flexShrink: 0,
+      height: sm ? 18 : 22, px: sm ? 0.75 : 1, borderRadius: '999px',
+      fontSize: sm ? 9.5 : 11, fontWeight: 800, letterSpacing: 0.5, lineHeight: 1, whiteSpace: 'nowrap',
+      ...(isPro
+        ? proSoftPillSx(isDark)
+        : { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6', color: isDark ? '#9CA3AF' : '#6B7280', border: '1px solid transparent' }),
     }}>
-      {isPro
-        ? <><Box component="span" sx={{ color: PRO_GOLD }}>{KIND_MARK[kind!]}</Box>PRO</>
-        : 'Free'}
+      {Icon && <Icon sx={{ fontSize: sm ? 11 : 13 }} />}
+      {isPro ? 'PRO' : 'Free'}
     </Box>
   );
 };
-

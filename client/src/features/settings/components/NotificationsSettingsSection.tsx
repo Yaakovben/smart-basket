@@ -4,6 +4,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NotificationSettings } from '../../../global/types';
 import { nativePushBlockedHint } from '../../../global/helpers/pushBlockedHint';
+import { SettingIcon } from './SettingIcon';
 import {
   settingRowSx, subSettingRowSx, lastSubSettingRowSx, switchSx, smallSwitchSx, rowLabelSx, subRowLabelSx,
   sectionHeaderRowSx, sectionHeaderRowWithMtSx, sectionLabelSx, sectionCountBadgeSx, sectionDividerSx,
@@ -54,7 +55,7 @@ export const NotificationsSettingsSection = ({
     <>
       {/* Notifications Toggle */}
       <Box sx={settingRowSx} onClick={() => notifications.enabled && toggleNotificationsExpanded()}>
-        <Box component="span" sx={{ fontSize: 22 }}>🔔</Box>
+        <SettingIcon name="notifications" />
         <Typography sx={rowLabelSx}>{t('notifications')}</Typography>
         {notifications.enabled && (
           <Box onClick={(e) => { e.stopPropagation(); toggleNotificationsExpanded(); }} sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', p: 0.5, mr: 0.5 }}>

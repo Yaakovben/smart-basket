@@ -14,6 +14,7 @@ import type { TransitionProps } from '@mui/material/transitions';
 import { useSettings } from '../context/SettingsContext';
 import type { PlanLimitFeature } from './UpgradeModalContext';
 import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
+import { PRO_GRADIENT, PRO_TEXT, primaryCtaSx } from '../../features/subscription/subscription.styles';
 
 interface UpgradeModalProps {
   open: boolean;
@@ -62,8 +63,8 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
       {/* כותרת - זהה במבנה לכותרת עמוד המנוי (גרדיאנט סגול חי, עיגולי קישוט, אייקון בתוך אריח) */}
       <Box sx={{
         background: isDark
-          ? 'linear-gradient(135deg, #4C1D95, #5B21B6)'
-          : 'linear-gradient(135deg, #5B21B6, #7C3AED)',
+          ? 'linear-gradient(135deg, #4C1D95, #312E81)'
+          : PRO_GRADIENT,
         px: 3, pt: 3, pb: 3.5, position: 'relative', overflow: 'hidden',
       }}>
         <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
@@ -104,9 +105,9 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           </Box>
 
           <Chip
-            label="✦ Pro"
+            label="Pro"
             size="small"
-            sx={{ fontWeight: 800, fontSize: 12, bgcolor: '#fff', color: '#7C3AED', border: 'none' }}
+            sx={{ fontWeight: 800, fontSize: 12, letterSpacing: 0.4, bgcolor: 'rgba(255,255,255,0.95)', color: PRO_TEXT, border: 'none' }}
           />
 
           <Typography sx={{ color: 'white', fontWeight: 800, fontSize: 21, mt: 0.5, textAlign: 'center' }}>
@@ -154,13 +155,8 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           fullWidth
           onClick={() => { onClose(); navigate('/subscription'); }}
           sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
-            mt: 2, borderRadius: '14px', fontWeight: 800, fontSize: 15.5, py: 1.35,
-            textTransform: 'none',
-            background: '#7C3AED',
-            boxShadow: 'none',
-            '&:hover': { background: '#6D28D9', boxShadow: 'none' },
-            '&:active': { transform: 'scale(0.98)' },
+            ...primaryCtaSx,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25, mt: 2,
           }}
         >
           <StarRoundedIcon sx={{ fontSize: 19 }} />

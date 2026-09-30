@@ -7,7 +7,7 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
-import { cardSx, sectionLabelSx, PRO_PURPLE, PRO_SOFT } from '../subscription.styles';
+import { cardSx, sectionLabelSx, PRO_PURPLE, PRO_SOFT, PRO_TEXT, PRO_GRADIENT, proSoftPillSx } from '../subscription.styles';
 
 interface Props {
   status: SubscriptionStatus;
@@ -15,13 +15,13 @@ interface Props {
   isDark: boolean;
 }
 
-const PRO_GRADIENT = 'linear-gradient(135deg, #6D28D9, #A855F7)';
 const FREE_COL = 56;
 const PRO_COL = 96;
 
 const meterColor = (ratio: number) => (ratio >= 1 ? '#EF4444' : ratio >= 0.8 ? '#F59E0B' : PRO_PURPLE);
 
-// שורה אחת: אייקון ותווית, ערך החינמי בתגית, ווי עם "ללא הגבלה" בגרדיאנט של Pro.
+// שורה אחת: אייקון ותווית, ערך החינמי בתגית אפורה, ווי עם "ללא הגבלה" בתגית
+// סגולה רכה. הרכות שומרת על היררכיה: הכותרת והכרטיס העליון הם המודגשים.
 // used מוצג רק לשורות עם שימוש יומי אמיתי (AI/השוואות מחיר) ורק למשתמש
 // חינמי: פס התקדמות דק מתחת לשורה.
 const Row = ({ label, Icon, freeValue, used, isDark, unlimitedLabel }: {
@@ -58,12 +58,11 @@ const Row = ({ label, Icon, freeValue, used, isDark, unlimitedLabel }: {
           </Box>
         </Box>
         <Box sx={{
-          width: PRO_COL, flexShrink: 0, py: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
-          borderRadius: '999px', background: PRO_GRADIENT,
-          boxShadow: '0 3px 10px rgba(124,58,237,0.25)',
+          width: PRO_COL, flexShrink: 0, py: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
+          borderRadius: '999px', ...proSoftPillSx(isDark),
         }}>
-          <CheckRoundedIcon sx={{ fontSize: 14, color: '#fff', flexShrink: 0 }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>{unlimitedLabel}</Typography>
+          <CheckRoundedIcon sx={{ fontSize: 14, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'inherit', whiteSpace: 'nowrap' }}>{unlimitedLabel}</Typography>
         </Box>
       </Box>
       {ratio !== null && (
@@ -104,10 +103,9 @@ export const PlanComparisonTable = ({ status, s, isDark }: Props) => {
           {s.compareFree}
         </Typography>
         <Typography sx={{
-          width: PRO_COL, textAlign: 'center', fontSize: 11.5, fontWeight: 900, flexShrink: 0,
-          background: PRO_GRADIENT, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+          width: PRO_COL, textAlign: 'center', fontSize: 11.5, fontWeight: 900, flexShrink: 0, color: PRO_TEXT,
         }}>
-          ✦ {s.comparePro}
+          {s.comparePro}
         </Typography>
       </Box>
       {rows.map(r => <Row key={r.label} label={r.label} Icon={r.Icon} freeValue={r.value} used={r.used} isDark={isDark} unlimitedLabel={s.compareUnlimited} />)}

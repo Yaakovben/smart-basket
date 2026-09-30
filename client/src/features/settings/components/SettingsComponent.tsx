@@ -14,6 +14,7 @@ import { NotificationsSettingsSection } from './NotificationsSettingsSection';
 import { LanguageModal } from './LanguageModal';
 import { AboutModal } from './AboutModal';
 import { HelpModal } from './HelpModal';
+import { SettingIcon } from './SettingIcon';
 import {
   glassButtonSx, settingRowSx, lastSettingRowSx, dangerSettingRowSx, switchSx, rowLabelSx, headerSx,
   updateCardSx, updateCardIconSx,
@@ -118,13 +119,13 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           />
 
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={toggleDarkMode} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDarkMode(); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>🌙</Box>
+            <SettingIcon name="darkMode" />
             <Typography sx={rowLabelSx}>{t('darkMode')}</Typography>
             <Switch checked={settings.theme === 'dark'} onChange={toggleDarkMode} onClick={(e) => e.stopPropagation()} sx={switchSx} />
           </Box>
 
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => setShowLanguage(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLanguage(true); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>🌐</Box>
+            <SettingIcon name="language" />
             <Typography sx={rowLabelSx}>{t('language')}</Typography>
             <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{currentLanguageName}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
@@ -135,7 +136,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         {isAdmin && (
           <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
             <Box sx={{ ...lastSettingRowSx, touchAction: 'manipulation' }} onPointerUp={openAdmin.onPointerUp} onClick={openAdmin.onClick}>
-              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
+              <SettingIcon name="admin" />
               <Typography sx={rowLabelSx}>{t('adminDashboard')}</Typography>
               <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
             </Box>
@@ -145,7 +146,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         {/* ניהול מנוי: מוסתר כשה-Freemium כבוי בשרת (FREEMIUM_ENABLED) */}
         {freemiumEnabled && <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
+            <SettingIcon name="subscription" />
             <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
             <SubscriptionRowBadge user={user} />
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
@@ -155,17 +156,17 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowHelp(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHelp(true); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>❓</Box>
+            <SettingIcon name="help" />
             <Typography sx={rowLabelSx}>{t('helpSupport')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setShowAbout(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowAbout(true); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>ℹ️</Box>
+            <SettingIcon name="about" />
             <Typography sx={rowLabelSx}>{t('about')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/privacy')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/privacy'); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>📋</Box>
+            <SettingIcon name="terms" />
             <Typography sx={rowLabelSx}>{t('termsAndPrivacy')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
@@ -212,12 +213,12 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         {/* מקבץ ניהול נתונים: ניקוי מטמון + מחיקת כל הנתונים */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} role="button" tabIndex={0} onClick={() => setConfirmClearCache(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setConfirmClearCache(true); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>🧹</Box>
+            <SettingIcon name="clearCache" />
             <Typography sx={rowLabelSx}>{t('clearCache')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
           <Box sx={dangerSettingRowSx} role="button" tabIndex={0} onClick={() => setConfirmDelete(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setConfirmDelete(true); } }}>
-            <Box component="span" sx={{ fontSize: 22 }}>🗑️</Box>
+            <SettingIcon name="delete" />
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>{t('deleteAllData')}</Typography>
           </Box>
         </Paper>

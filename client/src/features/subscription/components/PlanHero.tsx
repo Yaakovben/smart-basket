@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import CardGiftcardRoundedIcon from '@mui/icons-material/CardGiftcardRounded';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import type { SubscriptionStrings } from '../subscription.strings';
 import { PRO_LILAC, PRO_PURPLE } from '../subscription.styles';
@@ -110,9 +111,9 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       minHeight: 156, p: 2.5,
       display: 'flex', alignItems: 'center', gap: 2,
       background: isDark
-        ? 'radial-gradient(120% 90% at 100% 0%, rgba(236,72,153,0.28) 0%, transparent 55%), radial-gradient(90% 80% at 0% 100%, rgba(250,204,21,0.10) 0%, transparent 60%), linear-gradient(145deg, #2E1065 0%, #4C1D95 55%, #6D28D9 100%)'
-        : 'radial-gradient(120% 90% at 100% 0%, rgba(244,114,182,0.38) 0%, transparent 55%), radial-gradient(90% 80% at 0% 100%, rgba(250,204,21,0.16) 0%, transparent 60%), linear-gradient(145deg, #3B0F7A 0%, #5B21B6 50%, #8B5CF6 100%)',
-      boxShadow: '0 14px 34px rgba(76,29,149,0.35), inset 0 1px 0 rgba(255,255,255,0.18)',
+        ? 'radial-gradient(120% 90% at 100% 0%, rgba(129,140,248,0.30) 0%, transparent 55%), linear-gradient(145deg, #2E1065 0%, #4C1D95 50%, #312E81 100%)'
+        : 'radial-gradient(120% 90% at 100% 0%, rgba(165,180,252,0.35) 0%, transparent 55%), linear-gradient(145deg, #5B21B6 0%, #6D28D9 45%, #4338CA 100%)',
+      boxShadow: '0 12px 30px rgba(67,56,202,0.28), inset 0 1px 0 rgba(255,255,255,0.16)',
       border: '1px solid rgba(255,255,255,0.14)',
       color: '#fff',
     }}>
@@ -139,12 +140,13 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
           </Box>
           <Box sx={{ minWidth: 0 }}>
             <Box sx={{
-              display: 'inline-block', px: 1, py: '1px', borderRadius: '999px', mb: 0.4,
+              display: 'inline-flex', alignItems: 'center', gap: 0.4, px: 1, py: '1px', borderRadius: '999px', mb: 0.4,
               bgcolor: isPro ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.18)',
               color: isPro ? PRO_PURPLE : '#fff',
               fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
             }}>
-              {isTrial ? `🎁 ${s.trialBadge}` : isPro ? `✦ ${s.proBadge}` : trialEnded ? s.trialEndedBadge : s.freeBadge}
+              {isTrial && <CardGiftcardRoundedIcon sx={{ fontSize: 13 }} />}
+              {isTrial ? s.trialBadge : isPro ? s.proBadge : trialEnded ? s.trialEndedBadge : s.freeBadge}
             </Box>
             <Typography sx={{ fontSize: 20, fontWeight: 900, lineHeight: 1.2, letterSpacing: -0.2 }}>
               {isTrial ? s.trialTitle : isPro ? s.heroProTitle : trialEnded ? s.trialEndedTitle : s.heroFreeTitle}
