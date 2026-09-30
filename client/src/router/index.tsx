@@ -5,7 +5,7 @@ import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync, useFreemiumState } from "../global/hooks";
 import { installNativePushHandlers, resyncNativePush } from "../global/services/nativePush";
-import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner, MaintenanceApologyNotice } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
@@ -220,30 +220,6 @@ export const AppRouter = () => {
     }, WELCOME_PRO_DELAY_MS);
     return () => clearTimeout(timer);
   }, [freemiumEnabled, authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
-
-  // הודעת התנצלות חד-פעמית - מוצגת לכל משתמש בכניסה הראשונה אחרי הניתוק
-  // הכפוי החד-פעמי של כולם (force-logout-all.ts, עקב עבודות תשתית).
-  // לצמיתות ב-localStorage, פעם אחת בלבד per user, לא תלויה ב-createdAt.
-  const MAINTENANCE_APOLOGY_DELAY_MS = 3_000;
-  const [showMaintenanceApology, setShowMaintenanceApology] = useState(false);
-  useEffect(() => {
-    if (authLoading || !user?.id) return;
-    const key = `sb_maintenance_apology_shown_v1_${user.id}`;
-    try {
-      if (localStorage.getItem(key)) return;
-    } catch { return; /* localStorage חסום - מוותרים על ההודעה */ }
-
-    const timer = setTimeout(() => {
-      if (!canShowSecondaryPopup()) return; // פופאפ אחר כבר תפס את הסשן - יראה בכניסה הבאה
-      try {
-        if (localStorage.getItem(key)) return;
-        localStorage.setItem(key, '1');
-      } catch { return; }
-      markPopupShown('maintenance-apology');
-      setShowMaintenanceApology(true);
-    }, MAINTENANCE_APOLOGY_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [authLoading, user?.id]);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
@@ -654,7 +630,6 @@ export const AppRouter = () => {
         onReload={() => window.location.reload()}
         onDismiss={() => setUpdateAvailable(false)}
       />
-      <MaintenanceApologyNotice open={showMaintenanceApology} onClose={() => setShowMaintenanceApology(false)} />
       <WelcomeProDialog
         open={welcomePlan?.variant ?? null}
         months={welcomePlan?.months}
