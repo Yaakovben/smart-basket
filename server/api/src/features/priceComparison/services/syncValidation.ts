@@ -22,6 +22,8 @@ export const MAX_DROP_RATIO = 0.6;
 export const MIN_PREVIOUS_FOR_DROP_CHECK = 500;
 // לפחות חצי מהשורות צריכות להיות תקינות, אחרת מבנה הקובץ כנראה השתנה
 export const MIN_VALID_RATIO = 0.5;
+// חלק הקבצים שחייב להצליח כדי להחליף מבצעים שכבר שמורים (ראו validatePromoFeed)
+export const MIN_PROMO_FILES_RATIO_WITH_PREVIOUS = 0.9;
 
 export interface PriceFeedStats {
   total: number;
@@ -110,7 +112,11 @@ export function validatePromoFeed(input: {
   previousPromotions?: number;
 }): ValidationResult {
   if (input.filesTotal === 0) return { ok: false, reason: 'no_promo_files' };
-  if (input.filesOk / input.filesTotal < MIN_VALID_RATIO) {
+  // כשכבר יש מבצעים שמורים, מחליפים אותם רק בסבב כמעט מלא: סניף שהקובץ שלו נכשל
+  // נשאר בלי אף מבצע. ב-30.9.2026 סבב של 283 מתוך 429 קבצים בשופרסל התקבל, ומבצעים
+  // נעלמו משליש מהסניפים. עדיף המבצעים של הסבב הקודם.
+  const minRatio = (input.previousPromotions ?? 0) > 0 ? MIN_PROMO_FILES_RATIO_WITH_PREVIOUS : MIN_VALID_RATIO;
+  if (input.filesOk / input.filesTotal < minRatio) {
     return { ok: false, reason: `too_many_failed_files:${input.filesTotal - input.filesOk}/${input.filesTotal}` };
   }
   // רשת בלי אף מבצע תקף זה אפשרי (סופר ספיר מפרסמת קבצים ריקים), אבל רק אם גם קודם לא היו

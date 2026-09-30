@@ -127,6 +127,34 @@ async function listLatestPerStore(catID: number, prefix: 'PriceFull' | 'PromoFul
   return [...latest.values()];
 }
 
+// קישורי ההורדה של שופרסל חתומים לזמן מוגבל. הורדת כל קובצי המבצעים (429) לקחה
+// 49 דקות, ובאמצע פג התוקף: 146 קבצים נכשלו ב-403 (30.9.2026), ולסניפים שלהם לא
+// הוצגו מבצעים. כשקישור פג, מביאים את הרשימה מחדש (פעם אחת לכל הקבצים שנכשלו יחד)
+// ומורידים מהקישור הטרי של אותו סניף.
+const storeKey = (f: Pick<StoreFileUrl, 'subChainId' | 'storeId'>) => `${f.subChainId}-${f.storeId}`;
+const isExpiredLink = (err: unknown) =>
+  (err as { response?: { status?: number } })?.response?.status === 403 || /status code 403/.test(String((err as Error)?.message));
+
+function freshLinks(catID: number, prefix: 'PriceFull' | 'PromoFull', initial: StoreFileUrl[]) {
+  let urls = new Map(initial.map(f => [storeKey(f), f.url]));
+  let refreshing: Promise<void> | null = null;
+  const refresh = () => {
+    refreshing ??= listLatestPerStore(catID, prefix)
+      .then(list => { urls = new Map(list.map(f => [storeKey(f), f.url])); })
+      .finally(() => { refreshing = null; });
+    return refreshing;
+  };
+  return async (key: string): Promise<{ buf: Buffer; isGzipped: boolean }> => {
+    try {
+      return await retryDownload(() => downloadBuffer(urls.get(key)!));
+    } catch (err) {
+      if (!isExpiredLink(err)) throw err;
+      await refresh();
+      return retryDownload(() => downloadBuffer(urls.get(key)!));
+    }
+  };
+}
+
 // עד max סניפים, לסירוגין בין תתי-הרשתות (שלי, דיל, אקספרס, יש חסד...), כדי שכל
 // מותג יקבל מחירי סניף אמיתיים ולא רק מה שבמקרה בדף הראשון של הרשימה
 export function spreadAcrossSubChains<T extends { subChainId: string; storeId: string }>(files: T[], max: number): T[] {
@@ -266,15 +294,16 @@ export const shufersalAdapter: ChainAdapter = {
       // הם כ-600 אלף שורות, פחות מרמי לוי (כמיליון שורות מ-98 סניפים).
       const MAX_STORES = 100;
       const BATCH = 6;
-      const subset = spreadAcrossSubChains(files, MAX_STORES).map(f => f.url);
+      const subset = spreadAcrossSubChains(files, MAX_STORES).map(storeKey);
+      const download = freshLinks(CAT_PRICE_FULL, 'PriceFull', files);
       const allItems = new PriceRows();
       let fetched = 0;
       let lastError: string | undefined;
 
       for (let i = 0; i < subset.length; i += BATCH) {
         const batch = subset.slice(i, i + BATCH);
-        const results = await Promise.allSettled(batch.map(async (url) => {
-          const { buf, isGzipped } = await retryDownload(() => downloadBuffer(url));
+        const results = await Promise.allSettled(batch.map(async (key) => {
+          const { buf, isGzipped } = await download(key);
           return parseXmlBuffer(buf, isGzipped);
         }));
         for (const r of results) {
@@ -342,11 +371,12 @@ export const shufersalAdapter: ChainAdapter = {
 
   async listPromoFullFiles(): Promise<ChainFileRef[]> {
     const files = await listLatestPerStore(CAT_PROMO_FULL, 'PromoFull');
+    const download = freshLinks(CAT_PROMO_FULL, 'PromoFull', files);
     return files.map(f => ({
       fileName: f.name,
       storeId: f.storeId,
-      // הקישורים חתומים לזמן מוגבל. אם פג תוקף, ההורדה נכשלת ונספרת בבדיקת התקינות
-      download: async () => (await withRetry(() => downloadBuffer(f.url))).buf,
+      // הקישורים חתומים לזמן מוגבל: קישור שפג מתחדש מרשימה טרייה (freshLinks)
+      download: async () => (await download(storeKey(f))).buf,
     }));
   },
 };

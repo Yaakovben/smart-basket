@@ -52,6 +52,10 @@ test('מבצעים: יותר מחצי מהקבצים נכשלו, או מבצעי
   assert.equal(validatePromoFeed({ filesOk: 4, filesTotal: 10, promotions: 50 }).ok, false);
   assert.equal(validatePromoFeed({ filesOk: 10, filesTotal: 10, promotions: 0, previousPromotions: 20 }).ok, false);
   assert.equal(validatePromoFeed({ filesOk: 10, filesTotal: 10, promotions: 100, previousPromotions: 1000 }).ok, false);
+  // עם מבצעים שמורים: סבב חלקי (283 מתוך 429, שופרסל 30.9.2026) לא מחליף אותם
+  assert.equal(validatePromoFeed({ filesOk: 283, filesTotal: 429, promotions: 12393, previousPromotions: 15948 }).ok, false);
+  assert.equal(validatePromoFeed({ filesOk: 400, filesTotal: 429, promotions: 15000, previousPromotions: 15948 }).ok, true);
+  assert.equal(validatePromoFeed({ filesOk: 283, filesTotal: 429, promotions: 12393 }).ok, true);
   assert.equal(validatePromoFeed({ filesOk: 10, filesTotal: 10, promotions: 0, previousPromotions: 0 }).ok, true);
   assert.equal(validatePromoFeed({ filesOk: 9, filesTotal: 10, promotions: 800, previousPromotions: 1000 }).ok, true);
 });
