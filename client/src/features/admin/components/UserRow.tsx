@@ -25,14 +25,10 @@ interface UserRowProps {
   // מעדכן את רשימת המשתמשים ברמת הדשבורד - בלי זה כרטיס הסטטיסטיקה
   // "X Pro" בכותרת נשאר עם מספר ישן עד לרענון מלא (ראו useAdminDashboard).
   onUserPlanChanged: (userId: string, plan: 'free' | 'pro') => void;
-  // מצב הפתיחה מנוהל בטבלה: לחיצה רגילה פותחת לקוח אחד וסוגרת את השאר,
-  // לחיצה כפולה פותחת בנוסף לפתוחים (ראו UsersTable)
+  // מצב הפתיחה מנוהל בטבלה: לקוח אחד פתוח בכל פעם (ראו UsersTable)
   isExpanded: boolean;
-  onTap: (userId: string, mode: 'single' | 'multi') => void;
+  onTap: (userId: string) => void;
 }
-
-// שתי לחיצות בתוך הזמן הזה על אותו לקוח הן לחיצה כפולה
-const DOUBLE_TAP_MS = 280;
 
 export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted, onUserPlanChanged, isExpanded, onTap }: UserRowProps) => {
   const { t, settings } = useSettings();
@@ -63,19 +59,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
     }, 260);
   }, []);
 
-  // הלחיצה הראשונה פועלת מיד, בלי המתנה. לחיצה שנייה מהירה מסמנת לטבלה
-  // לבטל את הסגירה של האחרים ולפתוח בנוסף.
-  const lastTapRef = useRef(0);
-  const handleTap = useCallback(() => {
-    const now = Date.now();
-    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
-      lastTapRef.current = 0;
-      onTap(user.id, 'multi');
-      return;
-    }
-    lastTapRef.current = now;
-    onTap(user.id, 'single');
-  }, [onTap, user.id]);
+  const handleTap = useCallback(() => onTap(user.id), [onTap, user.id]);
 
   // כרטיס שנפתח נגלל לתוך המסך
   useEffect(() => {
@@ -99,7 +83,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
   return (
     <Paper ref={paperRef} sx={userRowPaperSx(isOnline, isDark, isRtl)}>
       {/* שורה ראשית */}
-      <Box onClick={handleTap} sx={{ ...userRowMainSx(isDark), touchAction: 'manipulation' } as object}>
+      <Box onClick={handleTap} sx={userRowMainSx(isDark)}>
         {/* אווטאר עם נקודת אונליין */}
         <Box sx={{ position: 'relative', flexShrink: 0 }}>
           <Box sx={avatarCircleSx(user.avatarColor, isOnline, isDark, !!user.avatarEmoji)}>

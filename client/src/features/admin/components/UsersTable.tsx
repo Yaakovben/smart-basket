@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { UserWithLastLogin } from '../types';
@@ -18,30 +18,11 @@ interface UsersTableProps {
 export const UsersTable = ({ users, activities, language, onlineUserIds, isDark, onUserDeleted, onUserPlanChanged }: UsersTableProps) => {
   const { t } = useSettings();
 
-  // אילו לקוחות פתוחים. לחיצה רגילה: פותחת את הלקוח וסוגרת את כל השאר, או
-  // סוגרת אותו אם כבר היה פתוח. לחיצה כפולה: פותחת בנוסף לפתוחים (או סוגרת
-  // רק אותו), בלי לגעת באחרים.
-  // הלחיצה הראשונה פועלת מיד, ולכן נשמר המצב שלפניה: אם מגיעה לחיצה שנייה
-  // (כפולה), חוזרים אליו ומוסיפים או מורידים רק את הלקוח הזה.
-  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
-  const beforeTapRef = useRef<{ userId: string; ids: ReadonlySet<string> } | null>(null);
-  const expandedRef = useRef(expandedIds);
-  expandedRef.current = expandedIds;
-  const handleRowTap = useCallback((userId: string, mode: 'single' | 'multi') => {
-    const prev = expandedRef.current;
-    let next: Set<string>;
-    if (mode === 'multi') {
-      const base = beforeTapRef.current?.userId === userId ? beforeTapRef.current.ids : prev;
-      next = new Set(base);
-      if (next.has(userId)) next.delete(userId); else next.add(userId);
-      beforeTapRef.current = null;
-    } else {
-      beforeTapRef.current = { userId, ids: prev };
-      if (prev.has(userId)) { next = new Set(prev); next.delete(userId); }
-      else next = new Set([userId]);
-    }
-    expandedRef.current = next;
-    setExpandedIds(next);
+  // לקוח אחד פתוח בכל פעם: לחיצה פותחת אותו וסוגרת את השאר, ולחיצה על
+  // הלקוח הפתוח סוגרת אותו
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const handleRowTap = useCallback((userId: string) => {
+    setExpandedId(prev => (prev === userId ? null : userId));
   }, []);
 
   const sortedUsers = useMemo(() => {
@@ -94,7 +75,7 @@ export const UsersTable = ({ users, activities, language, onlineUserIds, isDark,
           isDark={isDark}
           onUserDeleted={onUserDeleted}
           onUserPlanChanged={onUserPlanChanged}
-          isExpanded={expandedIds.has(user.id)}
+          isExpanded={expandedId === user.id}
           onTap={handleRowTap}
         />
       ))}
