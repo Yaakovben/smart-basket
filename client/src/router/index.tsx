@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync, useFreemiumState } from "../global/hooks";
 import { installNativePushHandlers, resyncNativePush } from "../global/services/nativePush";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner, MaintenanceApologyNotice } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
@@ -155,6 +155,9 @@ export const AppRouter = () => {
   const { lists, fetchError: listsFetchError, loading: listsLoading, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
   const { message: toast, toastType, toastKey, onUndo, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
+  // כש-Freemium כבוי בשרת: אין ברכת Pro ואין דף מנוי
+  const freemiumState = useFreemiumState();
+  const freemiumEnabled = freemiumState === true;
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'), t('offlineChangesSynced'));
@@ -185,7 +188,7 @@ export const AppRouter = () => {
   const WELCOME_PRO_DELAY_MS = 10_000;
   const [welcomePlan, setWelcomePlan] = useState<{ variant: PlanWelcomeVariant; months?: number; expiryDate?: string } | null>(null);
   useEffect(() => {
-    if (authLoading || !user?.id || user.plan !== 'pro') return;
+    if (!freemiumEnabled || authLoading || !user?.id || user.plan !== 'pro') return;
     // רכישה בחנות היא תשלום אמיתי (לא "הצוות הפעיל"). מנוי חנות מתחדש כל
     // תקופה ותאריך התפוגה זז, אז המפתח שלו לא תלוי בתאריך: ברכה פעם אחת בלבד.
     const variant: PlanWelcomeVariant = user.planSource === 'trial' ? 'trial'
@@ -216,7 +219,7 @@ export const AppRouter = () => {
       setWelcomePlan({ variant, months, expiryDate });
     }, WELCOME_PRO_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
+  }, [freemiumEnabled, authLoading, user?.id, user?.plan, user?.planSource, user?.planExpiresAt, appSettings.language]);
 
   // הודעת התנצלות חד-פעמית - מוצגת לכל משתמש בכניסה הראשונה אחרי הניתוק
   // הכפוי החד-פעמי של כולם (force-logout-all.ts, עקב עבודות תשתית).
@@ -577,7 +580,9 @@ export const AppRouter = () => {
           path="/subscription"
           element={
             <ProtectedRoute user={user}>
-              <ErrorBoundary><SubscriptionPage showToast={showToast} /></ErrorBoundary>
+              {freemiumState === null ? <PageSkeleton />
+                : freemiumEnabled ? <ErrorBoundary><SubscriptionPage showToast={showToast} /></ErrorBoundary>
+                : <Navigate to="/" replace />}
             </ProtectedRoute>
           }
         />

@@ -17,6 +17,7 @@ import { useFeedbackPopup } from '../hooks/useFeedbackPopup';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
 import { SubscriptionBanner } from '../../subscription/components/SubscriptionBanner';
+import { useFreemiumEnabled } from '../../../global/hooks/useFreemiumEnabled';
 import { HomeMenuSheet } from './HomeMenuSheet';
 import { HomeListContent } from './HomeListContent';
 import { PwaInstallPrompt } from './PwaInstallPrompt';
@@ -35,6 +36,7 @@ export const HomeComponent = memo(({
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
   const { t, settings, isGroupMuted, toggleGroupMute, updateNotifications } = useSettings();
+  const freemiumEnabled = useFreemiumEnabled();
   const isDark = settings.theme === 'dark';
 
   // ברכות וזמן - מחשבים פעם אחת בעת mount ולא בכל render.
@@ -154,7 +156,7 @@ export const HomeComponent = memo(({
         t={t}
       />
 
-      <SubscriptionBanner />
+      {freemiumEnabled && <SubscriptionBanner />}
 
       <HomeListContent
         contentRef={contentRef}

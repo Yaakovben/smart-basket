@@ -31,6 +31,12 @@ export interface SubscriptionStatus {
 }
 
 export const subscriptionApi = {
+  // ציבורי, בלי התחברות: האם ה-Freemium פועל בשרת. כבוי = כל ממשק המנוי מוסתר.
+  async getConfig(): Promise<{ freemiumEnabled: boolean }> {
+    const res = await apiClient.get<{ data: { freemiumEnabled: boolean } }>('/subscription/config');
+    return res.data.data;
+  },
+
   async getStatus(): Promise<SubscriptionStatus> {
     const res = await apiClient.get<{ data: SubscriptionStatus }>('/subscription');
     return res.data.data;

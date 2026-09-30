@@ -10,7 +10,7 @@ import { ConfirmModal, ClearableTextField, AvatarRing } from '../../../global/co
 import { getIconGradient } from '../../../global/theme/iconArt';
 import { formatDateShort } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { useReliableTap } from '../../../global/hooks';
+import { useReliableTap, useFreemiumEnabled } from '../../../global/hooks';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 import {
@@ -28,6 +28,7 @@ interface ProfilePageProps {
 export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
+  const freemiumEnabled = useFreemiumEnabled();
   const isDark = settings.theme === 'dark';
 
   const {
@@ -79,7 +80,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
               <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                 <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
-                {isProActive && (
+                {freemiumEnabled && isProActive && (
                   <Box aria-label="Pro" sx={{
                     position: 'absolute', bottom: -2, insetInlineEnd: -2, width: 26, height: 26, borderRadius: '50%',
                     background: 'linear-gradient(135deg, #FCD34D, #F59E0B)', border: '2.5px solid rgba(255,255,255,0.95)',
@@ -98,7 +99,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 {t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))}
               </Typography>
             )}
-            <ButtonBase
+            {freemiumEnabled && <ButtonBase
               onClick={() => navigate('/subscription')}
               sx={{
                 display: 'inline-flex', alignItems: 'center', gap: 0.6, mt: 1.25,
@@ -113,7 +114,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 ? `Pro${daysLeft !== null ? ` · ${daysLeft} ${t('daysShort')}` : ''}`
                 : t('upgradeToProShort')}
               <ChevronLeftRoundedIcon sx={{ fontSize: 15, opacity: 0.8 }} />
-            </ButtonBase>
+            </ButtonBase>}
           </>
         )}
       </Box>

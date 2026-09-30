@@ -3,6 +3,7 @@ import { logger } from '../config';
 import { User } from '../models';
 import { sendToUsers } from './push.service';
 import { daysLeft, reminderTitle } from './trialReminderText';
+import { env } from '../config/environment';
 
 // ===== תזכורות לסיום תקופת ה-Pro במתנה =====
 // משתמש חדש מקבל חודשי Pro במתנה (TRIAL_MONTHS). בלי תזכורת הוא היה מגלה
@@ -26,6 +27,8 @@ const ENDED_BODY = 'אפשר להמשיך להשתמש בחינם עם מגבל�
 export interface TrialReminderResult { reminded: number; ended: number }
 
 export async function runTrialReminders(now = new Date()): Promise<TrialReminderResult> {
+  // כשה-Freemium כבוי אין Pro במתנה, ואין על מה להזכיר
+  if (!env.FREEMIUM_ENABLED) return { reminded: 0, ended: 0 };
   // 1. מתקרבים לסוף: עוד מעט ימים, ועוד לא קיבלו תזכורת
   const soonFilter = {
     plan: 'pro',

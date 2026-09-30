@@ -11,6 +11,7 @@ import { AiAssistantIcon } from "../../../global/components";
 import type { AiStatus } from "../../../services/api/admin.api";
 import { getAiHealth, AI_HEALTH_LABEL } from "../helpers/aiStatusHelpers";
 import { SubscriptionHeaderIcon, FeedbackHeaderIcon } from "./SubscriptionHeaderIcon";
+import { useFreemiumEnabled } from "../../../global/hooks/useFreemiumEnabled";
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -50,6 +51,7 @@ export const AdminDashboardHeaderBar = ({
   onRefresh,
 }: AdminDashboardHeaderBarProps) => {
   const aiHealth = getAiHealth(aiStatus);
+  const freemiumEnabled = useFreemiumEnabled();
   return (
     <Box
       sx={{
@@ -107,7 +109,7 @@ export const AdminDashboardHeaderBar = ({
           <CampaignIcon sx={{ fontSize: 26 }} />
         </Box>
         {/* מנוי ומשוב: מספר הדברים החדשים מעל האייקון */}
-        <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />
+        {freemiumEnabled && <SubscriptionHeaderIcon onClick={onOpenSubscriptions} />}
         <FeedbackHeaderIcon onClick={onOpenFeedback} />
         {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
           וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה

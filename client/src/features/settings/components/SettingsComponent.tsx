@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, Paper, Switch, CircularProgress } from '@m
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { usePushNotifications } from '../../../global/hooks';
+import { usePushNotifications, useFreemiumEnabled } from '../../../global/hooks';
 import { SubscriptionRowBadge } from '../../subscription/components/SubscriptionRowBadge';
 import { useReliableTap } from '../../../global/hooks/useReliableTap';
 import type { User, ToastType } from '../../../global/types';
@@ -30,6 +30,7 @@ interface SettingsPageProps {
 export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, showToast }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
+  const freemiumEnabled = useFreemiumEnabled();
   const isDark = settings.theme === 'dark';
   // מקור אמת יחיד: השדה isAdmin של המשתמש המאומת (מהשרת). האדמין האמיתי
   // נאכף ממילא ב-middleware בשרת - זה רק שולט על נראות ה-UI.
@@ -141,15 +142,15 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
-        {/* ניהול מנוי */}
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+        {/* ניהול מנוי: מוסתר כשה-Freemium כבוי בשרת (FREEMIUM_ENABLED) */}
+        {freemiumEnabled && <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={lastSettingRowSx} role="button" tabIndex={0} onClick={() => navigate('/subscription')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/subscription'); } }}>
             <Box component="span" sx={{ fontSize: 22 }}>⭐</Box>
             <Typography sx={rowLabelSx}>{t('manageSubscription')}</Typography>
             <SubscriptionRowBadge user={user} />
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-        </Paper>
+        </Paper>}
 
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>

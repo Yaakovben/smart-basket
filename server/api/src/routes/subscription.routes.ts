@@ -10,6 +10,13 @@ import type { AuthRequest } from '../types';
 import type { Response } from 'express';
 
 const router = Router();
+
+// GET /api/subscription/config - ציבורי, בלי התחברות. האפליקציה מסתירה את כל
+// ממשק המנוי כשה-Freemium כבוי (FREEMIUM_ENABLED).
+router.get('/config', (_req, res) => {
+  res.json({ success: true, data: { freemiumEnabled: env.FREEMIUM_ENABLED } });
+});
+
 router.use(authenticate);
 
 // מקור המנוי כפי שמוצג ללקוח: חנות, ניסיון במתנה, או מענק ידני של אדמין

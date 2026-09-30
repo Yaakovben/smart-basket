@@ -163,6 +163,10 @@ const envSchema = Joi.object({
   // נרכש רק דרך App Store / Google Play (RevenueCat, למטה). המחיר נקבע בחנות.
   // חודשי Pro במתנה לכל משתמש חדש (0 = כבוי). חל רק על הרשמות חדשות.
   TRIAL_MONTHS: Joi.number().integer().min(0).max(12).default(3),
+  // מתג ראשי ל-Freemium. false (ברירת מחדל) = הכל חינמי: אין מגבלות, אין Pro
+  // במתנה ואין תזכורות, וכל ממשק המנוי מוסתר באפליקציה. true = המנוי פועל.
+  // ההפעלה היא רק שינוי של המשתנה בשרת, בלי שינוי קוד.
+  FREEMIUM_ENABLED: Joi.boolean().default(false),
 
   // ===== מנוי דרך חנויות האפליקציות (RevenueCat) =====
   // באפליקציה הנייטיב הרכישה עוברת דרך App Store / Google Play, ו-RevenueCat
@@ -234,6 +238,7 @@ export interface Environment {
   EMAIL_REPLY_TO: string;
   EMAIL_DAILY_LIMIT: number;
   TRIAL_MONTHS: number;
+  FREEMIUM_ENABLED: boolean;
   REVENUECAT_SECRET_KEY?: string;
   REVENUECAT_WEBHOOK_AUTH?: string;
   REVENUECAT_ENTITLEMENT_ID: string;
