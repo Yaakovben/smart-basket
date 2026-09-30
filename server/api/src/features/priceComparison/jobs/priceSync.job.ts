@@ -6,7 +6,7 @@ import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { warmScanCaches } from '../services/barcodeScan.service';
 import { geocodeAddress } from '../services/geocoder.service';
-import { coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName } from '../services/cityMatching';
+import { coordsConflictWithName, isCountryCentroid, isArtifactCity, exactCityFromStoreName, validateNearCity } from '../services/cityMatching';
 import { OFFICIAL_BRANCH_ADDRESSES } from '../data/official-branch-addresses.data';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
@@ -201,6 +201,12 @@ async function runNightlyGeocode(trigger: 'cron' | 'startup' | 'catch-up'): Prom
       return isArtifactCity(b.city) ? null : undefined;
     });
     if (citiesFixed > 0) logger.info(`[geocode-nightly] ${trigger}: fixed ${citiesFixed} branch city fields`);
+    // מיקום מנקודת החנות ב-OpenStreetMap, כשהכתובת זהה (לסניפים שהגיאוקודר לא מצא)
+    const adopted = await BranchDAL.adoptOsmCoords((lat, lng, city) => validateNearCity({ lat, lng }, city));
+    if (adopted > 0) {
+      invalidateBranchCache();
+      logger.info(`[geocode-nightly] ${trigger}: ${adopted} branches located from matching OSM store points`);
+    }
     // קודם מאפסים מיקומים שגויים שנשמרו בעבר, כדי שייכנסו לגיאוקודינג מחדש
     const reset = await BranchDAL.resetInvalidGeocodedCoords(b => isCountryCentroid(b.lat, b.lng) || coordsConflictWithName(b.lat, b.lng, b.storeName));
     if (reset > 0) {

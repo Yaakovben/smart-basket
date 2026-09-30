@@ -2,6 +2,7 @@ import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
 import { createBaseDal } from '../../../dal/base.dal';
 import { normStoreId } from '../services/storeId';
+import { addressKey } from '../services/addressKey';
 
 export interface UpsertBranchInput {
   chainId: ChainId;
@@ -132,6 +133,25 @@ export const BranchDAL = {
       updated++;
     }
     return updated;
+  },
+
+  // סניף רשמי בלי מיקום, שלאותה רשת יש נקודת חנות ב-OpenStreetMap באותו רחוב ומספר
+  // בית: המיקום של החנות במפה. רק כשיש התאמה אחת בדיוק, וכשהנקודה קרובה לעיר של
+  // הסניף (near). מחזיר כמה סניפים קיבלו מיקום.
+  async adoptOsmCoords(near: (lat: number, lng: number, city: string | undefined) => boolean): Promise<number> {
+    const all = await Branch.find({}, { chainId: 1, storeId: 1, address: 1, city: 1, lat: 1, lng: 1 }).lean();
+    const osm = all.filter(b => b.storeId.startsWith('osm-') && typeof b.lat === 'number' && typeof b.lng === 'number');
+    let adopted = 0;
+    for (const b of all) {
+      if (b.storeId.startsWith('osm-') || typeof b.lat === 'number') continue;
+      const key = addressKey(b.address);
+      if (!key) continue;
+      const hits = osm.filter(o => o.chainId === b.chainId && addressKey(o.address) === key && near(o.lat!, o.lng!, b.city));
+      if (hits.length !== 1) continue;
+      await Branch.updateOne({ _id: b._id }, { $set: { lat: hits[0].lat, lng: hits[0].lng, coordSource: 'geocoded' } });
+      adopted++;
+    }
+    return adopted;
   },
 
   // איחוד סניף שנשמר פעמיים (מזהה עם ובלי אפסים מובילים): נשאר מסמך אחד עם המזהה

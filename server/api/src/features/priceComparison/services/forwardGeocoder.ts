@@ -88,6 +88,34 @@ async function tryNominatim(q: string): Promise<GeocodeResult | null> {
   }
 }
 
+// חיפוש מובנה (רחוב ועיר בשדות נפרדים). מוצא כתובות שהחיפוש החופשי מחמיץ בעברית:
+// "אבני נזר 46, מודיעין עילית" (סניף שופרסל) החזיר בחיפוש חופשי תשובה ריקה, ובמובנה
+// את הבניין עצמו. המספר לפני שם הרחוב, כמקובל בחיפוש המובנה.
+export function structuredStreet(address: string): string {
+  const m = address.match(/^(.*?)\s+(\d+)\s*$/);
+  return m ? `${m[2]} ${m[1]}` : address;
+}
+
+async function tryNominatimStructured(street: string, city: string): Promise<GeocodeResult | null> {
+  await waitForNominatimSlot();
+  try {
+    const res = await axios.get<SearchHit[]>(NOMINATIM_URL, {
+      params: { street, city, country: 'Israel', format: 'json', limit: 1, 'accept-language': 'he' },
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 15_000,
+    });
+    const first = res.data?.[0];
+    if (!first || !isPreciseHit(first)) return null;
+    const lat = parseFloat(first.lat);
+    const lng = parseFloat(first.lon);
+    if (!inIsraelBounds(lat, lng)) return null;
+    return { lat, lng };
+  } catch (err) {
+    logger.warn(`[geocoder] nominatim structured failed for "${street}, ${city}": ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+}
+
 // LocationIQ - דורש API key. fallback ל-Nominatim. מסלול חינמי: 5K/יום, 2/שנייה.
 async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
   if (!env.LOCATIONIQ_API_KEY) return null;
@@ -202,6 +230,15 @@ export async function geocodeAddress(
     if (result && acceptable(result)) return result;
     if (result) {
       logger.warn(`[geocoder] rejected nominatim result for "${q}" - far from city "${effectiveCity}"`);
+    }
+  }
+  // חיפוש מובנה: הכתובת כרחוב והעיר בנפרד, ואז הרחוב בלי מספר הבית
+  if (cleanAddress && effectiveCity && !isJunkCity(effectiveCity)) {
+    const city = cleanCity(effectiveCity);
+    const streets = [structuredStreet(cleanAddress), cleanAddress.replace(/\s+\d+\s*$/, '').trim()];
+    for (const street of [...new Set(streets)].filter(Boolean)) {
+      const result = await tryNominatimStructured(street, city);
+      if (result && acceptable(result)) return result;
     }
   }
   // Nominatim לא מצא או החזיר תוצאה רחוקה - LocationIQ מדויק יותר לעברית.

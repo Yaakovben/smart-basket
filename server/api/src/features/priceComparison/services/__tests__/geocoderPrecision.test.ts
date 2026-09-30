@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isPreciseHit, poiMatchesStore, storeNameTokens } from '../forwardGeocoder';
+import { isPreciseHit, poiMatchesStore, storeNameTokens, structuredStreet } from '../forwardGeocoder';
 
 test('רק תוצאה ברמת רחוב או בניין, לא מרכז יישוב או מועצה', () => {
   assert.equal(isPreciseHit({ place_rank: 30 }), true);
@@ -22,4 +22,10 @@ test('חיפוש חנות לפי שם: חייבת להיות חנות ששמה �
   assert.equal(poiMatchesStore({ class: 'shop', name: 'נטו חיסכון' }, 'נטו חיסכון בת ים* ת.', 'בת ים'), true);
   assert.equal(poiMatchesStore({ class: 'shop', name: 'שופרסל דיל' }, 'נטו חיסכון בת ים* ת.', 'בת ים'), false);
   assert.equal(poiMatchesStore({ class: 'amenity', name: 'נטו חיסכון' }, 'נטו חיסכון בת ים* ת.', 'בת ים'), false);
+});
+
+test('רחוב לחיפוש המובנה: מספר הבית לפני שם הרחוב', () => {
+  assert.equal(structuredStreet('אבני נזר 46'), '46 אבני נזר');
+  assert.equal(structuredStreet('שד\' מדע 77'), '77 שד\' מדע');
+  assert.equal(structuredStreet('מרכז מסחרי'), 'מרכז מסחרי');
 });
