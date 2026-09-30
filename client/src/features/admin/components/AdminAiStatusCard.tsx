@@ -103,9 +103,32 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshError, onRefre
         )}
 
         {loading && !data && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
-            <ShimmerBlock height={160} radius={16} />
-            <ShimmerBlock height={160} radius={16} />
+          // אותו מבנה כמו התוכן: כרטיס תקציב יומי (כותרת, מספר ופס) ואז כרטיס לכל
+          // ספק (שם ותגית, סטטוס, ושורות נתונים), באותם ריפוד ורדיוס
+          <Box aria-busy>
+            <Box sx={{ mb: 1.5, p: 1.75, borderRadius: '30px', border: '1px solid', borderColor: 'divider', bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFF' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <ShimmerBlock width="38%" height={13} radius={6} />
+                <ShimmerBlock width={64} height={18} radius={6} />
+              </Box>
+              <ShimmerBlock height={8} radius={4} />
+            </Box>
+            {[0, 1].map(i => (
+              <Box key={i} sx={{ mb: 1.5, p: 2, borderRadius: '36px', border: '1px solid', borderColor: 'divider', bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFF' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <ShimmerBlock width={90} height={15} radius={7} />
+                  <ShimmerBlock width={48} height={16} radius={999} />
+                  <Box sx={{ flex: 1 }} />
+                  <ShimmerBlock width={56} height={11} radius={6} />
+                </Box>
+                {[0, 1, 2].map(j => (
+                  <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.9 }}>
+                    <ShimmerBlock width="34%" height={11} radius={6} />
+                    <ShimmerBlock width="18%" height={11} radius={6} />
+                  </Box>
+                ))}
+              </Box>
+            ))}
           </Box>
         )}
 

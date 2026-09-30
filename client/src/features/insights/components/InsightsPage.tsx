@@ -73,7 +73,7 @@ export const InsightsPage = memo(() => {
 
   const tStr = t as (k: string) => string;
 
-  if (loading) return <InsightsLoadingState isDark={isDark} />;
+  if (loading) return <InsightsLoadingState isDark={isDark} header={<InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />} />;
 
   // מסך שגיאה - חיבור נכשל. נפרד ממצב "משתמש חדש" שמטופל למטה.
   if (error) return <InsightsErrorState onBack={() => navigate(-1)} t={tStr} />;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import StorageIcon from '@mui/icons-material/Storage';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
-import { ShimmerBlock } from '../../../global/components';
+import { DbHealthSkeleton } from './DbHealthSkeleton';
 import { useDbHealth } from '../hooks/useDbHealth';
 import { useCloudinaryHealth } from '../hooks/useCloudinaryHealth';
 import { statusInfo, tierName } from '../helpers/dbHealthHelpers';
@@ -106,12 +106,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         {tab === 'mongo' && (
           <>
             {mongo.loading && !mongo.data && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
-                <ShimmerBlock height={140} radius={16} />
-                <ShimmerBlock height={68} radius={12} />
-                <ShimmerBlock height={68} radius={12} />
-                <ShimmerBlock height={68} radius={12} />
-              </Box>
+              <DbHealthSkeleton variant="mongo" isDark={isDark} />
             )}
             {mongo.data && status && (
               <>
@@ -128,11 +123,7 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         {tab === 'cloudinary' && (
           <>
             {cloud.loading && !cloud.data && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
-                <ShimmerBlock height={140} radius={16} />
-                <ShimmerBlock height={120} radius={12} />
-                <ShimmerBlock height={68} radius={12} />
-              </Box>
+              <DbHealthSkeleton variant="cloudinary" isDark={isDark} />
             )}
             {!cloud.loading || cloud.data ? <CloudinaryHealthContent data={cloud.data} isDark={isDark} /> : null}
           </>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Collapse, TextField, Button } from '@mui/material';
+import { ShimmerBlock } from '../../../global/components';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -179,10 +180,23 @@ export const UserRowExpandedContent = ({
       <Collapse in={showDetails}>
         <Box sx={{ mt: 1 }}>
           {detailsLoading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: '10px' }} />
-              ))}
+            // אותו מבנה כמו התוכן: שורת סיכום (רשימות, קבוצות, מוצרים) ושורה לכל רשימה
+            <Box aria-busy>
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 1, px: 0.5 }}>
+                {[56, 48, 60].map((w, i) => <ShimmerBlock key={i} width={w} height={11} radius={6} />)}
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                {[1, 2, 3].map(i => (
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.25, py: 1, borderRadius: '10px', border: '1px solid', borderColor: 'divider' }}>
+                    <ShimmerBlock width={28} height={28} radius={8} />
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <ShimmerBlock width={`${50 - i * 8}%`} height={12} radius={6} />
+                      <ShimmerBlock width="28%" height={9} radius={5} />
+                    </Box>
+                    <ShimmerBlock circle height={18} />
+                  </Box>
+                ))}
+              </Box>
             </Box>
           ) : userLists && userLists.length > 0 ? (
             <>

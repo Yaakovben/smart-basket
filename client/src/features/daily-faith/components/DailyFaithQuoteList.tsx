@@ -28,7 +28,7 @@ export const DailyFaithQuoteList = ({ loading, quotes, search, isDark, onDeleteR
     <Box sx={listScrollBoxSx}>
       {loading ? (
         <Box sx={{ py: 1 }}>
-          <ShimmerList count={5} rowHeight={62} gap={8} color="#FCD34D" />
+          <ShimmerList count={5} rowHeight={62} gap={8} color="#FCD34D" variant="text" />
         </Box>
       ) : quotes.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 5 }}>

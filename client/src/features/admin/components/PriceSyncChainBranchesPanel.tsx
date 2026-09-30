@@ -28,10 +28,26 @@ export const PriceSyncChainBranchesPanel = ({
     bgcolor: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
   }}>
     {isLoadingThis ? (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 1 }}>
-        <ShimmerBlock height={48} radius={10} />
-        <ShimmerBlock height={48} radius={10} />
-        <ShimmerBlock height={48} radius={10} />
+      // אותו מבנה כמו הרשימה: שורת כותרת עם כפתור, ושורות סניף (אריח, שם
+      // ותגית, כתובת ומזהה, ושני כפתורי פעולה)
+      <Box aria-busy>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
+          <ShimmerBlock width="40%" height={10} radius={5} />
+          <Box sx={{ flex: 1 }} />
+          <ShimmerBlock width={72} height={24} radius={8} />
+        </Box>
+        {[0, 1, 2].map(i => (
+          <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, p: 1 }}>
+            <ShimmerBlock width={26} height={26} radius={8} />
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <ShimmerBlock width="50%" height={12} radius={6} />
+              <ShimmerBlock width="70%" height={10} radius={5} />
+              <ShimmerBlock width="28%" height={9} radius={4} />
+            </Box>
+            <ShimmerBlock circle height={26} />
+            <ShimmerBlock circle height={26} />
+          </Box>
+        ))}
       </Box>
     ) : (
       // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.

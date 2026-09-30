@@ -13,7 +13,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useNavigate } from 'react-router-dom';
-import { ShimmerList, ShimmerBlock } from '../../../global/components';
+import { PriceSyncSkeleton } from './PriceSyncSkeleton';
 import { AdminSectionShell } from './AdminSectionShell';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePriceSyncStatus } from '../hooks/usePriceSyncStatus';
@@ -61,10 +61,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     <AdminSectionShell title="ניהול מאגר" onBack={onClose} isDark={isDark} onRefresh={load}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'clip' }}>
         {loading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, py: 1 }}>
-            <ShimmerBlock height={56} radius={12} />
-            <ShimmerList count={6} rowHeight={52} gap={8} />
-          </Box>
+          <PriceSyncSkeleton isDark={isDark} />
         ) : (
           <>
             {/* ===== כרטיסי סיכום: מחירים + סניפים + סניפים עם מיקום ===== */}
