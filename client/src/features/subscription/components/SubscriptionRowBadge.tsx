@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { User } from '../../../global/types';
 import { getSubscriptionStrings } from '../subscription.strings';
-import { PRO_SOFT, PRO_PURPLE } from '../subscription.styles';
+import { PRO_GRADIENT, PRO_GOLD } from '../subscription.styles';
 import { peekSubscriptionStatus, loadSubscriptionStatus, subscribeSubscriptionStatus } from '../subscriptionStatusStore';
 
 const DAY_MS = 86_400_000;
@@ -47,16 +47,20 @@ export const SubscriptionRowBadge = ({ user }: { user: User }) => {
   const days = snap.planExpiresAt
     ? Math.max(0, Math.ceil((new Date(snap.planExpiresAt).getTime() - Date.now()) / DAY_MS))
     : null;
+  const mark = snap.isTrial ? '🎁' : '✦';
   const label = isPro
-    ? `${snap.isTrial ? '🎁' : '✦'} Pro${days !== null ? ` · ${days} ${s.daysLeft}` : ''}`
+    ? ` Pro${days !== null ? ` · ${days} ${s.daysLeft}` : ''}`
     : s.trialEndedBadge;
 
   return (
     <Box component="span" sx={{
       px: 1.1, py: '3px', borderRadius: '999px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap',
-      bgcolor: isPro ? PRO_SOFT : 'action.selected',
-      color: isPro ? PRO_PURPLE : 'text.secondary',
+      background: isPro ? PRO_GRADIENT : undefined,
+      bgcolor: isPro ? undefined : 'action.selected',
+      color: isPro ? '#fff' : 'text.secondary',
+      boxShadow: isPro ? '0 1px 5px rgba(91,33,182,0.3)' : 'none',
     }}>
+      {isPro && <Box component="span" sx={{ color: PRO_GOLD }}>{mark}</Box>}
       {label}
     </Box>
   );

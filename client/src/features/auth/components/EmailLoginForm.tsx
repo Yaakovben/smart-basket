@@ -32,7 +32,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
             label={t('email')}
             value={email}
             onChange={e => handleEmailChange(e.target.value)}
-            placeholder="example@mail.com"
+            placeholder="name@example.com"
             autoComplete="email"
             size="small"
             disabled={emailChecked && !isGoogleAccount}

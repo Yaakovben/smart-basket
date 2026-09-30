@@ -7,6 +7,7 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
 import { cardSx, infoCardSx, pulse } from '../styles/AdminDashboard.styles';
+import { PRO_GRADIENT, PRO_GOLD, PRO_GOLD_GRADIENT } from '../../subscription/subscription.styles';
 
 interface AdminDashboardStatCardsProps {
   userFilter: UserFilter;
@@ -117,14 +118,14 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
       <Box
         sx={{
           ...infoCardSx(userFilter === 'pro'),
-          background: userFilter === 'pro' ? 'linear-gradient(135deg, #6D28D9, #9333EA)' : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+          background: PRO_GRADIENT,
           borderColor: userFilter === 'pro' ? '#fff' : 'rgba(255,255,255,0.35)',
           boxShadow: userFilter === 'pro' ? '0 6px 18px rgba(109,40,217,0.45)' : '0 4px 12px rgba(124,58,237,0.3)',
         }}
         onClick={() => onFilterClick('pro')}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-          <WorkspacePremiumIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.85)' }} />
+          <WorkspacePremiumIcon sx={{ fontSize: 14, color: PRO_GOLD }} />
           {loading
             ? <StatSkeleton />
             : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{proCount}</Typography>
@@ -132,7 +133,7 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
         </Box>
         <Box component="span" sx={{
           display: 'inline-block', mt: 0.4, px: 0.9, py: '1px', borderRadius: '999px',
-          bgcolor: '#fff', color: '#7C3AED', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
+          background: PRO_GOLD_GRADIENT, color: '#4C1D95', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
         }}>
           PRO
         </Box>

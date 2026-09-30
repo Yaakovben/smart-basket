@@ -176,7 +176,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 value={editProfile.email}
                 onChange={e => updateEditField('email', e.target.value)}
                 onClear={() => updateEditField('email', '')}
-                placeholder="example@email.com"
+                placeholder="name@example.com"
               />
             </Box>
 

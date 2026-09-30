@@ -8,6 +8,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import type { SubscriptionStatus } from '../../../services/api/subscription.api';
 import { peekSubscriptionStatus, loadSubscriptionStatus } from '../subscriptionStatusStore';
 import { getSubscriptionStrings } from '../subscription.strings';
+import { PRO_GRADIENT, PRO_GOLD } from '../subscription.styles';
 // אייקון לבן על אריח סגול - עקבי עם שאר המינוי
 
 const DAY_MS = 86_400_000;
@@ -76,9 +77,9 @@ export const SubscriptionBanner = () => {
       >
         <Box sx={{
           width: 36, height: 36, borderRadius: '11px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+          background: PRO_GRADIENT, boxShadow: '0 3px 10px rgba(91,33,182,0.3)',
         }}>
-          <StarRoundedIcon sx={{ fontSize: 21, color: '#fff' }} />
+          <StarRoundedIcon sx={{ fontSize: 21, color: PRO_GOLD }} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: isDark ? '#EDE9FE' : '#4C1D95', lineHeight: 1.25 }}>{title}</Typography>

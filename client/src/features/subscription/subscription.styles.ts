@@ -5,6 +5,11 @@ export const PRO_PURPLE_DARK = '#5B21B6';
 // גוון סגול בהיר לתגים/רקעים עדינים (לא זהב) - כל צבעי המינוי מגיעים ממשפחת הסגול
 export const PRO_SOFT = '#EDE9FE';
 export const PRO_LILAC = '#C4B5FD';
+// שפת הצבע של Pro בכל האפליקציה: סגול עמוק בגרדיאנט עם נגיעות זהב (כמו בכרטיס
+// המנוי). כל תגית, כרטיס ובאנר של Pro משתמשים באלה, כדי שהכל ייראה אותו דבר.
+export const PRO_GRADIENT = 'linear-gradient(135deg, #5B21B6 0%, #7C3AED 55%, #9333EA 100%)';
+export const PRO_GOLD = '#FCD34D';
+export const PRO_GOLD_GRADIENT = 'linear-gradient(135deg, #FDE68A, #F59E0B)';
 
 export const cardSx = (isDark: boolean): SxProps<Theme> => ({
   bgcolor: 'background.paper',

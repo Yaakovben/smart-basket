@@ -36,7 +36,12 @@ export const GoogleSignInButton = ({ loading, onClick, t }: GoogleSignInButtonPr
       }}
     >
       {loading ? (
-        <CircularProgress size={20} sx={{ color: 'text.secondary' }} />
+        // בזמן שהשרת מאמת (בעלייה קרה זה יכול לקחת כמה שניות): עיגול ומילים,
+        // ולא רק עיגול קטן שנראה כמו סימן מקרי בכפתור ריק
+        <>
+          <CircularProgress size={18} thickness={5} sx={{ color: '#0D9488' }} />
+          <span>{t('connectingMessage')}</span>
+        </>
       ) : (
         <>
           <GoogleLogo />

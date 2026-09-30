@@ -12,14 +12,14 @@ import { SubscriptionSkeleton } from '../components/SubscriptionSkeleton';
 import { PlanComparisonTable } from '../components/PlanComparisonTable';
 import { StoreCheckout } from '../components/StoreCheckout';
 import { AppOnlyCheckout } from '../components/AppOnlyCheckout';
-import { revealSx, PRO_PURPLE } from '../subscription.styles';
+import { revealSx, PRO_PURPLE, PRO_GRADIENT } from '../subscription.styles';
 import { isNativeApp } from '../../../global/services/storeBilling';
 
 // כותרת ייעודית בסגול המותג של המינוי - לא הגרדיאנט התכלת הכללי של האפליקציה
 // (COMMON_STYLES.gradients.header), שלא קשור לכלום כאן ויוצר חוסר עקביות
 // מול שאר העמוד שכולו בגוני סגול.
 const SUBSCRIPTION_HEADER_GRADIENT = {
-  light: 'linear-gradient(135deg, #5B21B6, #7C3AED)',
+  light: PRO_GRADIENT,
   dark: 'linear-gradient(135deg, #3B1670, #4C1D95)',
 };
 
