@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   PromoAccumulator, promoItemAppliesToStore, promoStoreIndex, promotionIsActive, promoUnitPrice,
-  encodeStoreBitmap, bitmapHas, bitmapCount, MAX_ITEMS_PER_PROMOTION,
+  encodeStoreBitmap, bitmapHas, bitmapCount, MAX_ITEMS_PER_PROMOTION, StoreSet,
 } from '../promoAggregation';
 import type { ParsedPromotion, ParsedPromoFile } from '../../chains/promoXmlParser';
 
@@ -113,4 +113,12 @@ test('פעיל לפי תאריכים, ומחיר ליחידה', () => {
   assert.equal(promotionIsActive({ startDate: new Date('2026-10-01'), endDate: undefined }, NOW), false);
   assert.equal(promotionIsActive({ startDate: undefined, endDate: new Date('2026-10-01') }, NOW), true);
   assert.equal(promoUnitPrice({ minQty: 3, price: 10 }), 3.33);
+});
+
+test('קבוצת סניפים כמפת ביטים: ספירה, בלי כפילות, וסדר עולה', () => {
+  const s = new StoreSet(3);
+  for (const i of [0, 3, 428, 9, 428]) s.add(i);
+  assert.equal(s.size, 4);
+  assert.deepEqual([...s], [0, 3, 9, 428]);
+  assert.equal(encodeStoreBitmap(s, 429), encodeStoreBitmap([0, 3, 9, 428], 429));
 });

@@ -80,6 +80,40 @@ export function bitmapCount(bitmap: string): number {
   return n;
 }
 
+// קבוצת סניפים כמפת ביטים: ביט לכל סניף. Set של מספרים עלה כ-10KB לפריט מבצע
+// שתקף ב-429 סניפי שופרסל, ובעשרות אלפי פריטים הסנכרון נפל על חוסר זיכרון
+// (30.9.2026). כאן כ-54 בתים לפריט.
+export class StoreSet implements Iterable<number> {
+  private bytes = new Uint8Array(8);
+  size = 0;
+
+  constructor(first?: number) {
+    if (first !== undefined) this.add(first);
+  }
+
+  add(index: number): void {
+    const byte = index >> 3;
+    if (byte >= this.bytes.length) {
+      const grown = new Uint8Array(Math.max(byte + 1, this.bytes.length * 2));
+      grown.set(this.bytes);
+      this.bytes = grown;
+    }
+    const bit = 1 << (index & 7);
+    if (!(this.bytes[byte] & bit)) {
+      this.bytes[byte] |= bit;
+      this.size++;
+    }
+  }
+
+  *[Symbol.iterator](): Iterator<number> {
+    for (let byte = 0; byte < this.bytes.length; byte++) {
+      const b = this.bytes[byte];
+      if (!b) continue;
+      for (let bit = 0; bit < 8; bit++) if (b & (1 << bit)) yield byte * 8 + bit;
+    }
+  }
+}
+
 // ===== צבירה =====
 
 // פריט מבצע שאפשר לחשב ממנו מחיר: יש מחיר כולל חיובי וכמות חיובית.
@@ -114,7 +148,7 @@ export interface PromoAccumulatorStats {
 interface PromoEntry {
   meta: PromoMeta;
   // מפתח פריט (ברקוד:כמות:מחיר) -> הפריט ואינדקסי הסניפים שבהם הוא תקף
-  items: Map<string, { item: Omit<PromoItem, 'stores'>; stores: Set<number> }>;
+  items: Map<string, { item: Omit<PromoItem, 'stores'>; stores: StoreSet }>;
 }
 
 export class PromoAccumulator {
@@ -182,7 +216,7 @@ export class PromoAccumulator {
       const key = `${item.barcode}:${item.minQty}:${item.price}`;
       const existing = entry.items.get(key);
       if (existing) existing.stores.add(storeIdx);
-      else entry.items.set(key, { item, stores: new Set([storeIdx]) });
+      else entry.items.set(key, { item, stores: new StoreSet(storeIdx) });
     }
   }
 
