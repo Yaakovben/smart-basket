@@ -111,28 +111,28 @@ export const AdminDashboardStatCards = ({ userFilter, onlineCount, stats, proCou
         </Typography>
       </Box>
 
-      {/* כרטיס Pro - לחיץ, מסנן לרשימת משתמשי Pro. סגול רך שמשתלב עם שאר
-          הכרטיסים: לבנדר בהיר ברובו אטום (סגול שקוף לגמרי מעל הטורקיז יוצא
-          עכור), ומספר ותגית בסגול מעומעם ולא בסגול הרווי. */}
+      {/* כרטיס Pro - לחיץ, מסנן לרשימת משתמשי Pro. סגול חי ואטום בגרדיאנט
+          (סגול שקוף מעל הטורקיז יוצא עכור), עם מספר ואייקון בלבן ותגית PRO
+          לבנה, כך שהוא בולט כמו כפתור. */}
       <Box
         sx={{
           ...infoCardSx(userFilter === 'pro'),
-          background: userFilter === 'pro' ? 'rgba(221,214,254,0.95)' : 'rgba(237,233,254,0.78)',
-          borderColor: userFilter === 'pro' ? '#A78BFA' : 'rgba(255,255,255,0.45)',
-          boxShadow: userFilter === 'pro' ? '0 4px 14px rgba(139,92,246,0.25)' : 'none',
+          background: userFilter === 'pro' ? 'linear-gradient(135deg, #6D28D9, #9333EA)' : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+          borderColor: userFilter === 'pro' ? '#fff' : 'rgba(255,255,255,0.35)',
+          boxShadow: userFilter === 'pro' ? '0 6px 18px rgba(109,40,217,0.45)' : '0 4px 12px rgba(124,58,237,0.3)',
         }}
         onClick={() => onFilterClick('pro')}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-          <WorkspacePremiumIcon sx={{ fontSize: 14, color: '#9F7AEA' }} />
+          <WorkspacePremiumIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.85)' }} />
           {loading
             ? <StatSkeleton />
-            : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#6D4FC2', lineHeight: 1 }}>{proCount}</Typography>
+            : <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{proCount}</Typography>
           }
         </Box>
         <Box component="span" sx={{
           display: 'inline-block', mt: 0.4, px: 0.9, py: '1px', borderRadius: '999px',
-          bgcolor: '#A78BFA', color: '#fff', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
+          bgcolor: '#fff', color: '#7C3AED', fontSize: 8.5, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1.5,
         }}>
           PRO
         </Box>
