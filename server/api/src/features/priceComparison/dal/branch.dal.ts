@@ -109,15 +109,26 @@ export const BranchDAL = {
   // כתובת מהאתר הרשמי של הרשת לסניף שבפורטל אין לו כתובת (data/official-branch-addresses).
   // מיקום אוטומטי ישן מתאפס, כדי שהגיאוקודינג ימקם לפי הכתובת האמיתית. מיקום ידני או
   // מהפורטל נשאר. מחזיר כמה סניפים עודכנו.
-  async applyOfficialAddresses(list: Array<{ chainId: string; storeId: string; address: string; city: string }>): Promise<number> {
+  // כתובת (ולפעמים מיקום) מהאתר הרשמי של הרשת. עם מיקום רשמי הוא נשמר כמקור רשמי
+  // ('portal'), כך שהגיאוקודר לא דורס אותו. בלי מיקום, מיקום מגיאוקודינג של הכתובת
+  // הקודמת מתאפס, כדי שיחושב מחדש מהכתובת הנכונה.
+  async applyOfficialAddresses(list: Array<{ chainId: string; storeId: string; address: string; city?: string; lat?: number; lng?: number }>): Promise<number> {
     let updated = 0;
     for (const a of list) {
       const b = await Branch.findOne({ chainId: a.chainId, storeId: normStoreId(a.storeId) }).lean();
-      if (!b || (b.address === a.address && b.city === a.city)) continue;
-      const resetCoords = b.coordSource !== 'manual' && b.coordSource !== 'portal';
-      await Branch.updateOne({ _id: b._id }, resetCoords
-        ? { $set: { address: a.address, city: a.city, coordSource: 'unknown' }, $unset: { lat: '', lng: '' } }
-        : { $set: { address: a.address, city: a.city } });
+      if (!b) continue;
+      const city = a.city ?? b.city;
+      const hasCoords = typeof a.lat === 'number' && typeof a.lng === 'number';
+      const sameCoords = !hasCoords || (b.lat === a.lat && b.lng === a.lng && b.coordSource === 'portal');
+      if (b.address === a.address && b.city === city && sameCoords) continue;
+      if (hasCoords && b.coordSource !== 'manual') {
+        await Branch.updateOne({ _id: b._id }, { $set: { address: a.address, city, lat: a.lat, lng: a.lng, coordSource: 'portal' } });
+      } else {
+        const resetCoords = !hasCoords && b.coordSource !== 'manual' && b.coordSource !== 'portal';
+        await Branch.updateOne({ _id: b._id }, resetCoords
+          ? { $set: { address: a.address, city, coordSource: 'unknown' }, $unset: { lat: '', lng: '' } }
+          : { $set: { address: a.address, city } });
+      }
       updated++;
     }
     return updated;
