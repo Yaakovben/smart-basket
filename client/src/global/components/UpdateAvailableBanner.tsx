@@ -29,8 +29,8 @@ export const UpdateAvailableBanner = ({ open, onReload, onDismiss }: Props) => {
       width: 'calc(100vw - 32px)', maxWidth: 380,
       display: 'flex', alignItems: 'center', gap: 1,
       px: 1.75, py: 1.1, borderRadius: '16px',
-      bgcolor: isDark ? '#1E1B2E' : '#fff',
-      border: '1.5px solid', borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.25)',
+      bgcolor: isDark ? '#16262A' : '#fff',
+      border: '1.5px solid', borderColor: isDark ? 'rgba(94,234,212,0.3)' : 'rgba(20,184,166,0.3)',
       boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
       animation: 'sbUpdateBannerIn 0.3s cubic-bezier(0.22,1,0.36,1) both',
       '@keyframes sbUpdateBannerIn': { from: { opacity: 0, transform: 'translateX(-50%) translateY(16px)' }, to: { opacity: 1, transform: 'translateX(-50%) translateY(0)' } },
@@ -38,7 +38,7 @@ export const UpdateAvailableBanner = ({ open, onReload, onDismiss }: Props) => {
     }}>
       <Box sx={{
         width: 34, height: 34, borderRadius: '10px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        bgcolor: isDark ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.1)', color: '#7C3AED',
+        bgcolor: isDark ? 'rgba(20,184,166,0.2)' : 'rgba(20,184,166,0.1)', color: '#0D9488',
       }}>
         <RefreshRoundedIcon sx={{ fontSize: 19 }} />
       </Box>
@@ -50,7 +50,7 @@ export const UpdateAvailableBanner = ({ open, onReload, onDismiss }: Props) => {
         onClick={onReload}
         sx={{
           flexShrink: 0, px: 1.5, py: 0.7, borderRadius: '10px', fontSize: 12.5, fontWeight: 800,
-          color: '#fff', bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' },
+          color: '#fff', bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' },
         }}
       >
         רענון
