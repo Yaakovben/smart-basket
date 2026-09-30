@@ -25,11 +25,17 @@ interface UserRowProps {
   // מעדכן את רשימת המשתמשים ברמת הדשבורד - בלי זה כרטיס הסטטיסטיקה
   // "X Pro" בכותרת נשאר עם מספר ישן עד לרענון מלא (ראו useAdminDashboard).
   onUserPlanChanged: (userId: string, plan: 'free' | 'pro') => void;
+  // מצב הפתיחה מנוהל בטבלה: לחיצה רגילה פותחת לקוח אחד וסוגרת את השאר,
+  // לחיצה כפולה פותחת בנוסף לפתוחים (ראו UsersTable)
+  isExpanded: boolean;
+  onTap: (userId: string, mode: 'single' | 'multi') => void;
 }
 
-export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted, onUserPlanChanged }: UserRowProps) => {
+// שתי לחיצות בתוך הזמן הזה על אותו לקוח הן לחיצה כפולה
+const DOUBLE_TAP_MS = 280;
+
+export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted, onUserPlanChanged, isExpanded, onTap }: UserRowProps) => {
   const { t, settings } = useSettings();
-  const [isExpanded, setIsExpanded] = useState(false);
   const { showDetails, userLists, detailsLoading, listsSummary, handleShowDetails } = useUserRowDetails(user.id);
   const isGoogle = user.registrationMethod === 'google';
   const isRtl = settings.language === 'he';
@@ -57,12 +63,26 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
     }, 260);
   }, []);
 
-  const toggleExpand = useCallback(() => {
-    setIsExpanded(prev => {
-      if (!prev) revealCard();
-      return !prev;
-    });
-  }, [revealCard]);
+  // לחיצה רגילה מחכה רגע קצר כדי לדעת שלא מגיעה לחיצה שנייה (לחיצה כפולה)
+  const lastTapRef = useRef(0);
+  const singleTimerRef = useRef(0);
+  const handleTap = useCallback(() => {
+    const now = Date.now();
+    window.clearTimeout(singleTimerRef.current);
+    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+      lastTapRef.current = 0;
+      onTap(user.id, 'multi');
+      return;
+    }
+    lastTapRef.current = now;
+    singleTimerRef.current = window.setTimeout(() => onTap(user.id, 'single'), DOUBLE_TAP_MS);
+  }, [onTap, user.id]);
+  useEffect(() => () => window.clearTimeout(singleTimerRef.current), []);
+
+  // כרטיס שנפתח נגלל לתוך המסך
+  useEffect(() => {
+    if (isExpanded) revealCard();
+  }, [isExpanded, revealCard]);
 
   // "פרטים נוספים" נפתח רק אחרי שהרשימות נטענו, ואז גוללים אליו
   useEffect(() => {
@@ -81,7 +101,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
   return (
     <Paper ref={paperRef} sx={userRowPaperSx(isOnline, isDark, isRtl)}>
       {/* שורה ראשית */}
-      <Box onClick={toggleExpand} sx={userRowMainSx(isDark)}>
+      <Box onClick={handleTap} sx={{ ...userRowMainSx(isDark), touchAction: 'manipulation' } as object}>
         {/* אווטאר עם נקודת אונליין */}
         <Box sx={{ position: 'relative', flexShrink: 0 }}>
           <Box sx={avatarCircleSx(user.avatarColor, isOnline, isDark, !!user.avatarEmoji)}>

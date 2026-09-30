@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { UserWithLastLogin } from '../types';
@@ -17,6 +17,22 @@ interface UsersTableProps {
 
 export const UsersTable = ({ users, activities, language, onlineUserIds, isDark, onUserDeleted, onUserPlanChanged }: UsersTableProps) => {
   const { t } = useSettings();
+
+  // אילו לקוחות פתוחים. לחיצה רגילה: פותחת את הלקוח וסוגרת את כל השאר, או
+  // סוגרת אותו אם כבר היה פתוח. לחיצה כפולה: פותחת בנוסף לפתוחים (או סוגרת
+  // רק אותו), בלי לגעת באחרים.
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const handleRowTap = useCallback((userId: string, mode: 'single' | 'multi') => {
+    setExpandedIds(prev => {
+      if (prev.has(userId)) {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      }
+      if (mode === 'single') return new Set([userId]);
+      return new Set(prev).add(userId);
+    });
+  }, []);
 
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
@@ -68,6 +84,8 @@ export const UsersTable = ({ users, activities, language, onlineUserIds, isDark,
           isDark={isDark}
           onUserDeleted={onUserDeleted}
           onUserPlanChanged={onUserPlanChanged}
+          isExpanded={expandedIds.has(user.id)}
+          onTap={handleRowTap}
         />
       ))}
     </Box>
