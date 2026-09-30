@@ -11,7 +11,7 @@ import { OFFICIAL_BRANCH_ADDRESSES } from '../data/official-branch-addresses.dat
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { CHAIN_NAMES } from '../data/chain-names.data';
 import { logger } from '../../../config/logger';
-import { israelDayStart } from '../../../utils/israelTime';
+import { israelDayStart, israelHour } from '../../../utils/israelTime';
 
 // כל chain adapter מזריק httpsAgent ייעודי (rejectUnauthorized: false) לבקשות
 // שצריכות זאת - ראו chains/insecureAgent.ts. אין יותר ביטול TLS גלובלי על
@@ -250,6 +250,26 @@ async function runOsmBranchSync(trigger: 'cron' | 'startup'): Promise<void> {
   } catch (err) {
     logger.error(`[osm-sync-job] ${trigger}: failed:`, err);
   }
+}
+
+// מהשעה הזו בישראל הפורטלים כבר פרסמו את קובצי היום (כמו ה-cron של 04:00)
+const TICK_FROM_HOUR = 4;
+
+// "דופק" מבחוץ (GitHub Actions כל 10 דקות בחלונות הסנכרון). בשרת החינמי של Render
+// התהליך נרדם אחרי רבע שעה בלי בקשות, ושרת רדום לא מריץ cron: ב-30.9.2026 לא רץ
+// אף סנכרון, והמחירים נשארו מאתמול. כל קריאה מעירה את השרת ומחזיקה אותו ער, ואם
+// יש רשתות בלי סנכרון מוצלח היום, מתחיל להן סנכרון ברקע. קריאה חוזרת בזמן סנכרון,
+// או כשהכל עדכני, לא עושה כלום, ולכן אין צורך בסיסמה.
+export async function runSyncTick(): Promise<{ started: boolean; pending: string[]; reason?: string }> {
+  if (syncInProgress) return { started: false, pending: [], reason: 'in_progress' };
+  if (israelHour() < TICK_FROM_HOUR) return { started: false, pending: [], reason: 'too_early' };
+  const pending = await chainsWithoutSuccessToday();
+  if (pending.length === 0) return { started: false, pending, reason: 'up_to_date' };
+  void (async () => {
+    await runSync('catch-up', pending);
+    await runNightlyGeocode('catch-up');
+  })();
+  return { started: true, pending };
 }
 
 export function startPriceSyncJob(): void {

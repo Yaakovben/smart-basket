@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getComparison, refreshPrices, refreshBranches } from '../controllers/sync.controller';
+import { getComparison, refreshPrices, refreshBranches, syncTick } from '../controllers/sync.controller';
 import { loadKnownBranchesSeed, getBranchesByChain, getBranchesNearby, getChainBranchOptions, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches } from '../controllers/branches.controller';
 import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
 import { testOsm } from '../controllers/diagnostics.controller';
@@ -11,6 +11,9 @@ import { authenticate, isAdmin, validate } from '../../../middleware';
 import { pricesValidator } from '../../../validators/prices.validator';
 
 const router = Router();
+
+// דופק מתוזמן מבחוץ (GitHub Actions): לפני האימות, כי אין לו משתמש
+router.post('/sync-tick', syncTick);
 
 router.use(authenticate);
 

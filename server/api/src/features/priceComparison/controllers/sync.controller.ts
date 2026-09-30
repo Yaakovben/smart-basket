@@ -8,6 +8,13 @@ import { BranchDAL } from '../dal/branch.dal';
 import { UserDAL } from '../../../dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
+import { runSyncTick } from '../jobs/priceSync.job';
+
+// POST /api/price-comparison/sync-tick - "דופק" מתוזמן מבחוץ, בלי התחברות (ראו
+// runSyncTick). מחזיר אם התחיל סנכרון ולאילו רשתות.
+export const syncTick = asyncHandler(async (_req, res: Response) => {
+  res.json({ success: true, data: await runSyncTick() });
+});
 import type { AuthRequest } from '../../../types';
 import { PlanLimitError } from '../../../errors';
 import { PLAN_LIMITS, isPro } from '../../../constants';

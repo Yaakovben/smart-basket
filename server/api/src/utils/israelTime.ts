@@ -31,6 +31,9 @@ export const israelDayStart = (now: Date = new Date()): Date => {
   return israelMidnight(p.year, p.month, p.day);
 };
 
+// השעה עכשיו בישראל (0 עד 23)
+export const israelHour = (now: Date = new Date()): number => israelParts(now).hour;
+
 // תחילת החודש הנוכחי בישראל (הראשון לחודש, 00:00)
 export const israelMonthStart = (now: Date = new Date()): Date => {
   const p = israelParts(now);
