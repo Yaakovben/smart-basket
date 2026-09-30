@@ -63,21 +63,19 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark,
     }, 260);
   }, []);
 
-  // לחיצה רגילה מחכה רגע קצר כדי לדעת שלא מגיעה לחיצה שנייה (לחיצה כפולה)
+  // הלחיצה הראשונה פועלת מיד, בלי המתנה. לחיצה שנייה מהירה מסמנת לטבלה
+  // לבטל את הסגירה של האחרים ולפתוח בנוסף.
   const lastTapRef = useRef(0);
-  const singleTimerRef = useRef(0);
   const handleTap = useCallback(() => {
     const now = Date.now();
-    window.clearTimeout(singleTimerRef.current);
     if (now - lastTapRef.current < DOUBLE_TAP_MS) {
       lastTapRef.current = 0;
       onTap(user.id, 'multi');
       return;
     }
     lastTapRef.current = now;
-    singleTimerRef.current = window.setTimeout(() => onTap(user.id, 'single'), DOUBLE_TAP_MS);
+    onTap(user.id, 'single');
   }, [onTap, user.id]);
-  useEffect(() => () => window.clearTimeout(singleTimerRef.current), []);
 
   // כרטיס שנפתח נגלל לתוך המסך
   useEffect(() => {
