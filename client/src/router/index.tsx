@@ -6,6 +6,7 @@ import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync, useFreemiumState } from "../global/hooks";
 import { installNativePushHandlers, resyncNativePush } from "../global/services/nativePush";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon, UpdateAvailableBanner } from "../global/components";
+import { CanonicalLink } from "../global/components/CanonicalLink";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
@@ -625,6 +626,7 @@ export const AppRouter = () => {
           דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
           useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
       <ConnectionStatusIcon />
+      <CanonicalLink />
       <UpdateAvailableBanner
         open={updateAvailable}
         onReload={() => window.location.reload()}
