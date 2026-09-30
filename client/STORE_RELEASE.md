@@ -315,7 +315,7 @@ shopping lists.
 | מסכי פתיחה: רקע טורקיז וסל במרכז, בכל הגדלים | iOS: `Splash.imageset`, אנדרואיד: `drawable-*` | מוכן |
 | אייקון להעלאה ל-App Store Connect (1024) | `resources/store/app-store-icon-1024.png` | מוכן |
 | אייקון להעלאה ל-Play Console (512) | `resources/store/play-store-icon-512.png` | מוכן |
-| גרפיקה ראשית ל-Google Play (1024x500) | | **חסר**, צריך לעצב |
+| גרפיקה ראשית ל-Google Play (1024x500): הבאנר בראש דף האפליקציה בחנות | `resources/store/play-feature-graphic-1024x500.png` | מוכן |
 
 ## צילומי מסך
 

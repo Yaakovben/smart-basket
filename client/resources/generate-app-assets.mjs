@@ -111,3 +111,28 @@ await out('resources/splash.png', splashSvg(2732, 2732), 2732, { opaque: true, i
 await out('resources/splash-dark.png', splashSvg(2732, 2732), 2732, { opaque: true, intrinsic: 2732 });
 await out('resources/store/app-store-icon-1024.png', iconSvg('square'), 1024, { opaque: true });
 await out('resources/store/play-store-icon-512.png', iconSvg('square'), 512, { opaque: true });
+
+// גרפיקה ראשית ל-Google Play (חובה, 1024x500): הבאנר בראש דף האפליקציה בחנות.
+// הלוגו בצד שמאל, השם והמשפט בעברית בצד ימין. גוגל עלולה לחתוך את השוליים
+// ולהציג כפתור הפעלה במרכז, ולכן התוכן החשוב רחוק מהקצוות. בטקסט עברי
+// (direction=rtl) הערך start הוא הקצה הימני, ולכן הוא מיושר לימין כמו השם.
+const featureGraphicSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>${defs}
+    <radialGradient id="glow" cx="80%" cy="10%" r="70%">
+      <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#5EEAD4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <rect width="1024" height="500" fill="url(#glow)"/>
+  <circle cx="930" cy="470" r="170" fill="#ffffff" opacity="0.06"/>
+  <circle cx="60" cy="40" r="120" fill="#ffffff" opacity="0.05"/>
+  <g transform="translate(84 92) scale(0.62)">
+    <rect x="0" y="0" width="512" height="512" rx="112" fill="#ffffff" opacity="0.14"/>
+    ${mark}
+  </g>
+  <text x="944" y="222" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="68" font-weight="800" fill="#ffffff">Smart Basket</text>
+  <text x="944" y="292" text-anchor="start" direction="rtl" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="600" fill="#ffffff" fill-opacity="0.92">רשימת קניות משותפת וחכמה</text>
+  <text x="944" y="342" text-anchor="start" direction="rtl" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="500" fill="#ffffff" fill-opacity="0.78">בזמן אמת, עם עוזר AI והשוואת מחירים</text>
+</svg>`;
+await out('resources/store/play-feature-graphic-1024x500.png', featureGraphicSvg, [1024, 500], { opaque: true, intrinsic: 1024 });
