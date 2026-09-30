@@ -269,7 +269,10 @@ export class PromoAccumulator {
 }
 
 // מחיר ליחידה במבצע, לתצוגה
-export const promoUnitPrice = (item: Pick<PromoItem, 'minQty' | 'price'>): number => cents(item.price / item.minQty) / 100;
+// מחיר ליחידה במבצע. כמות מתחת ל-1 היא מוצר שקיל (למשל 0.01 ק"ג), והמחיר שבקובץ כבר
+// לק"ג: חלוקה בכמות נתנה "5,900 ש"ח ליחידה" לשוקולד במשקל
+export const promoUnitPrice = (item: Pick<PromoItem, 'minQty' | 'price'>): number =>
+  item.minQty < 1 ? item.price : cents(item.price / item.minQty) / 100;
 
 // אינדקס הסניף במפות הביטים, מתוך סדר הסניפים של הסנכרון. undefined = אין מידע מבצעים לסניף
 export function promoStoreIndex(storeId: string, promoStoreIds: string[]): number | undefined {

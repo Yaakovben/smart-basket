@@ -172,8 +172,11 @@ const toScanPromo = (p: IPromotionDoc, item: IPromotionDoc['items'][number]): Sc
 
 // המבצע הטוב ביותר למוצר: לכלל הלקוחות קודם, ואז מחיר ליחידה נמוך. storeIdx =
 // רק מבצעים שתקפים בסניף הזה; undefined בלי סניף = כל פריט מבצע ברשת.
+// regular: המחיר הרגיל באותו הקשר (בסניף, או הנפוץ ברשת). מבצע שלא זול ממנו לא
+// מוצג: "2 ב-26" על טונה שמחירה הרגיל 11.90 מטעה את הלקוח (כ-2% מפריטי המבצע
+// בבדיקה של 30.9.2026, כשהמחיר הרגיל ירד מתחת למחיר המבצע)
 function bestPromo(
-  promos: IPromotionDoc[], barcode: string, storeIdx: number | undefined | 'any',
+  promos: IPromotionDoc[], barcode: string, storeIdx: number | undefined | 'any', regular: number,
 ): { promo: ScanPromo; allBranches: boolean } | null {
   let best: { promo: ScanPromo; allBranches: boolean } | null = null;
   for (const p of promos) {
@@ -183,6 +186,7 @@ function bestPromo(
       if (item.barcode !== barcode) continue;
       if (storeIdx !== 'any' && !promoItemAppliesToStore(item, storeIdx)) continue;
       const cand = { promo: toScanPromo(p, item), allBranches: item.stores === undefined };
+      if (cand.promo.unitPrice >= regular - 0.005) continue;
       if (!best
         || Number(cand.promo.clubOnly) < Number(best.promo.clubOnly)
         || (cand.promo.clubOnly === best.promo.clubOnly && cand.promo.unitPrice < best.promo.unitPrice)) {
@@ -231,7 +235,7 @@ async function loadProduct(barcode: string): Promise<PreparedProduct | null> {
   for (const d of docs) {
     const data = byChain.get(d.chainId)!;
     const typical = d.modalPrice ?? d.price;
-    const chainPromo = bestPromo(data.promos, barcode, 'any');
+    const chainPromo = bestPromo(data.promos, barcode, 'any', typical);
 
     // הסניפים הזולים מהמחיר ברוב הרשת, עם שם, בלי אזור אילת (פטור ממע"מ, ראו isVatFreeZone)
     const cheaper = [...data.exceptions.entries()].filter(([, p]) => p < typical).sort((a, b) => a[1] - b[1]);
@@ -369,7 +373,7 @@ export async function scanBarcodePrices(
       chainId: b.chainId, chainName: brand?.name ?? b.chainName, storeId: b.storeId, branchName: b.storeName,
       address: b.address, city: b.city, lat: b.lat, lng: b.lng, distanceKm: b.distanceKm, distanceM: b.distanceM,
       price: resolved.price, verified: resolved.verified,
-      promo: bestPromo(chain.promos, barcode, promoStoreIndex(b.storeId, chain.promoStoreIds))?.promo ?? null,
+      promo: bestPromo(chain.promos, barcode, promoStoreIndex(b.storeId, chain.promoStoreIds), resolved.price)?.promo ?? null,
     };
   };
 

@@ -113,6 +113,8 @@ test('פעיל לפי תאריכים, ומחיר ליחידה', () => {
   assert.equal(promotionIsActive({ startDate: new Date('2026-10-01'), endDate: undefined }, NOW), false);
   assert.equal(promotionIsActive({ startDate: undefined, endDate: new Date('2026-10-01') }, NOW), true);
   assert.equal(promoUnitPrice({ minQty: 3, price: 10 }), 3.33);
+  // מוצר שקיל: הכמות בק"ג והמחיר כבר לק"ג (שוקולד במשקל, קשת 30.9.2026)
+  assert.equal(promoUnitPrice({ minQty: 0.01, price: 59 }), 59);
 });
 
 test('קבוצת סניפים כמפת ביטים: ספירה, בלי כפילות, וסדר עולה', () => {
