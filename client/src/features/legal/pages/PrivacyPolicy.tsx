@@ -27,6 +27,9 @@ export const PrivacyPolicy = memo(() => {
   const { t, settings } = useSettings();
   const { language } = settings;
   const isDark = settings.theme === 'dark';
+  // חץ חזרה רק כשהגיעו לדף מתוך האפליקציה (הגדרות, מסך הכניסה). מי שפתח
+  // קישור ישיר, למשל מדף האפליקציה בחנות, לא בא מאף מסך, והחץ לא הוביל לשום מקום.
+  const cameFromApp = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
 
   return (
     <Box sx={{ height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
@@ -38,13 +41,15 @@ export const PrivacyPolicy = memo(() => {
         flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
-            onClick={() => navigate(-1)}
-            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-            aria-label={t('back')}
-          >
-            {language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
-          </IconButton>
+          {cameFromApp && (
+            <IconButton
+              onClick={() => navigate(-1)}
+              sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+              aria-label={t('back')}
+            >
+              {language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
+            </IconButton>
+          )}
           <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
             {t('termsAndPrivacy')}
           </Typography>
