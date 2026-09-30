@@ -159,8 +159,11 @@ export function getSyncProgress(): SyncProgress {
 
 // כתובת מקובץ הסניפים: "unknown", "0" או אתר אינטרנט אינם כתובת. ערך כזה לא נשמר,
 // כדי לא לדרוס כתובת אמיתית (למשל מהאתר הרשמי של נטו חיסכון) בכל סנכרון.
+// שאריות של תווי שורה מקודדים ("&#x0D;") שדור אלון משאירה בסוף הכתובת, ומכשילות חיפוש
+export const stripEncodedControls = (s: string): string => s.replace(/&#x0?[dDaA];|&#1[03];/g, ' ').replace(/\s+/g, ' ').trim();
+
 export function addressFromStoresFile(address: string | undefined): string | undefined {
-  const t = address?.trim();
+  const t = address ? stripEncodedControls(address) : undefined;
   if (!t || /^(unknown|0+|-|\?|www\.|https?:)/i.test(t)) return undefined;
   return t;
 }

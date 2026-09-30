@@ -172,7 +172,8 @@ export async function geocodeAddress(
   // ומשם הסניף. הרבה רשתות שמות שם פוסטל קוד או store ID בשדה city.
   // שם הסניף הוא רמז חזק (לדוגמה: storeName='עפולה' עם city='7700').
   // כתובת שהיא לא כתובת ("unknown", "0", אתר אינטרנט): לא שולחים לגיאוקודר
-  const cleanAddress = address && !/^\s*(unknown|0+|-|\?|www\.|https?:)/i.test(address) ? address : undefined;
+  const decoded = address?.replace(/&#x0?[dDaA];|&#1[03];/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleanAddress = decoded && !/^\s*(unknown|0+|-|\?|www\.|https?:)/i.test(decoded) ? decoded : undefined;
   let effectiveCity = isArtifactCity(city) ? undefined : city;
   // שם הסניף הוא בדיוק שם של יישוב: הוא הקובע, גם אם שדה העיר אחר (בעבר הושלם
   // שדה העיר מחיפוש הפוך של מיקום שגוי, למשל סניף "עכו" עם העיר ראשון לציון)
