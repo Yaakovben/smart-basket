@@ -118,6 +118,7 @@ export const PriceScanPage = () => {
             s={s} isDark={isDark} showIntro={showIdle}
             hasLocation={!!location} locationStatus={locationStatus}
             onEnableLocation={enableLocation}
+            onScan={() => setScannerOpen(true)}
             onSubmitBarcode={(code) => { haptic('medium'); void check(code); }}
             recent={recent.filter((r) => phase !== 'result' || r.barcode !== result?.barcode)}
             onClearRecent={clearRecent}
@@ -125,8 +126,9 @@ export const PriceScanPage = () => {
         </Box>
       </Box>
 
-      {/* כפתור הסריקה קבוע בתחתית, זמין תמיד בלי לגלול */}
-      <Box sx={{
+      {/* כפתור הסריקה קבוע בתחתית רק מתחת לתוצאה, כדי לסרוק מוצר נוסף בלי לגלול.
+          במסך הפתיחה הכפתור נמצא בתוך הכרטיס הראשי, ושניים רק העמיסו. */}
+      {phase === 'result' && <Box sx={{
         flexShrink: 0, px: 2, pt: 1.25, pb: 'calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))',
         borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default',
       }}>
@@ -136,9 +138,9 @@ export const PriceScanPage = () => {
         >
           {/* רווח קבוע בין האייקון לטקסט בכל כיוון כתיבה (startIcon נצמד לטקסט בעברית) */}
           <QrCodeScannerRoundedIcon sx={{ fontSize: 22 }} />
-          {phase === 'result' || phase === 'notFound' ? s.scanAnother : s.scan}
+          {s.scanAnother}
         </Button>
-      </Box>
+      </Box>}
 
       <Suspense fallback={null}>
         {scannerOpen && (
