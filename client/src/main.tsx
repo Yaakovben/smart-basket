@@ -1,6 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { CacheProvider } from '@emotion/react'
+import createCache from '@emotion/cache'
+import { prefixer } from 'stylis'
+import { hoverMediaPlugin } from './global/theme/hoverMediaPlugin'
 import './appHeight' // קובע --app-height / --nav-bottom (לא ב-<head>, ראו הקובץ)
 import './index.css'
 import App from './App.tsx'
@@ -149,12 +153,19 @@ if (typeof window !== 'undefined') {
 
 diagLog('boot', 'about to render React app');
 
+// מנוע הסגנונות של MUI עם תוסף אחד נוסף: אפקטי :hover רק במכשיר עם עכבר, כדי
+// שבטלפון כפתור לא יישאר מודגש אחרי נגיעה (ראו hoverMediaPlugin). prefixer הוא
+// ברירת המחדל של emotion, ו-prepend כמו ב-cache הרגיל של MUI.
+const emotionCache = createCache({ key: 'css', prepend: true, stylisPlugins: [hoverMediaPlugin, prefixer] })
+
 // רינדור האפליקציה
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <App />
-    </GoogleOAuthProvider>
+    <CacheProvider value={emotionCache}>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <App />
+      </GoogleOAuthProvider>
+    </CacheProvider>
   </StrictMode>,
 )
 

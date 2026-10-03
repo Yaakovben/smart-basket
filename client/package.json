@@ -25,6 +25,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@capgo/capacitor-social-login": "^8.5.11",
+    "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.7",
@@ -49,6 +50,7 @@
     "recharts": "^3.10.1",
     "simple-icons": "^16.19.0",
     "socket.io-client": "^4.8.3",
+    "stylis": "4.2.0",
     "workbox-routing": "^7.4.1"
   },
   "devDependencies": {
@@ -58,6 +60,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/stylis": "^4.2.7",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.23",
     "eslint": "^9.39.1",
