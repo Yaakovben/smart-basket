@@ -39,7 +39,8 @@ export const PrintListView = ({ list, pendingProducts }: PrintListViewProps) => 
       ) : (
         (Object.entries(grouped) as [Product['category'], Product[]][]).map(([category, products]) => (
           <div key={category} style={{ marginBottom: 14, breakInside: 'avoid' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
+            {/* data-pdf-break: נקודת חיתוך בין עמודים (ראו generateListPdf.ts) */}
+            <div data-pdf-break style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
               {CATEGORY_ICONS[category]} {t(CATEGORY_TRANSLATION_KEYS[category])}
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>

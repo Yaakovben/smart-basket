@@ -14,6 +14,17 @@
 
 const SOURCE_SELECTOR = '.print-list-view';
 const CAPTURE_WIDTH = 480; // רוחב קבוע לצילום - יחס דומה לעמוד צר, קריא במובייל
+// תקרת פיקסלים לצילום. Safari ב-iOS מגביל גודל canvas (כ-16 מיליון פיקסלים),
+// ומעליו הצילום נתקע ארוכות ובסוף יוצא ריק. רשימה ארוכה מצולמת ברזולוציה נמוכה
+// מעט יותר במקום להיכשל.
+const MAX_CANVAS_PIXELS = 10_000_000;
+const MAX_SCALE = 2;
+const MIN_SCALE = 0.8;
+// יחס עמוד A4: רשימה ארוכה מתחלקת לכמה עמודים, ולא עמוד אחד ענק (ל-PDF יש
+// גם מגבלת גובה עמוד)
+const PAGE_RATIO = 1.414;
+// אחרי הזמן הזה מוותרים ומציגים שגיאה, במקום מסך המתנה שלא נגמר
+const TIMEOUT_MS = 30_000;
 const OVERLAY_ID = 'pdf-generating-overlay';
 const OVERLAY_KEYFRAMES_ID = 'pdf-generating-overlay-keyframes';
 // אותו font stack בדיוק כמו ה-theme של האפליקציה (client/src/global/theme/theme.ts) -
@@ -63,9 +74,11 @@ function showOverlay(preparingText: string, isDark: boolean, onCancel: () => voi
 
   const overlay = document.createElement('div');
   overlay.id = OVERLAY_ID;
+  // רקע אטום לגמרי: מתחתיו גרסת ההדפסה נחשפת לרגע לצילום, ורקע שקוף-למחצה
+  // הראה אותה דרכו כפסים וקווים על כל המסך
   overlay.style.cssText = `
     position: fixed; inset: 0; z-index: 999999;
-    background: ${isDark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.55)'};
+    background: ${isDark ? '#0B1220' : '#0F172A'};
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
   `;
   overlay.addEventListener('click', onCancel);
@@ -138,6 +151,16 @@ function showOverlay(preparingText: string, isDark: boolean, onCancel: () => voi
   return overlay;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('pdf_timeout')), ms);
+    promise.then(
+      (v) => { window.clearTimeout(timer); resolve(v); },
+      (e) => { window.clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 export async function generateListPdf(
   fileNameBase: string,
   preparingText: string = 'מכין PDF...',
@@ -186,22 +209,65 @@ export async function generateListPdf(
 
     if (cancelled) return null;
 
-    const canvas = await html2canvas(sourceEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
-    // JPEG ולא PNG - הרקע לבן אחיד והתוכן הוא בעיקר טקסט/אייקונים, כך שאיכות
-    // JPEG גבוהה (0.85) נראית זהה כמעט לעין אבל במשקל קטן משמעותית (חשוב
-    // לשיתוף בוואטסאפ/הודעות - PNG ברזולוציה כפולה יצא מגה-בייטים בודדים).
-    const imgData = canvas.toDataURL('image/jpeg', 0.85);
-
-    // עמוד PDF ביחידות px, בדיוק בגודל התמונה - עמוד יחיד, בלי חישובי scale מיותרים.
-    // orientation חובה במפורש: jsPDF מניח 'portrait' כברירת מחדל ומחליף בשקט
-    // width/height כש-format מקבל מידות "landscape" (רחב מגבוה) בלי לציין
-    // orientation - בדיוק המקרה של רשימה קצרה (רחבה מגבוהה). בלי זה התמונה
-    // הייתה נדחסת ליחס-רוחב הפוך, מה שנראה כאילו חלק מהטקסט "נעלם" מהעמוד.
+    // נותנים למסך ההמתנה להצטייר לפני העבודה הכבדה
+    await new Promise<void>(r => requestAnimationFrame(() => r()));
     if (cancelled) return null;
 
-    const orientation = canvas.width >= canvas.height ? 'l' : 'p';
-    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height], orientation });
-    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+    // רזולוציה לפי אורך הרשימה, מתחת לתקרת הפיקסלים
+    const contentHeight = Math.max(1, sourceEl.scrollHeight);
+    const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.sqrt(MAX_CANVAS_PIXELS / (CAPTURE_WIDTH * contentHeight))));
+
+    // נקודות חיתוך אפשריות בין עמודים: סוף כל שורה וכל כותרת קטגוריה, כדי
+    // שעמוד לא ייחתך באמצע מוצר
+    const baseTop = sourceEl.getBoundingClientRect().top;
+    const breaks = Array.from(sourceEl.querySelectorAll<HTMLElement>('tr, [data-pdf-break]'))
+      .map(el => Math.round((el.getBoundingClientRect().bottom - baseTop) * scale))
+      .sort((a, b) => a - b);
+
+    const canvas = await withTimeout(html2canvas(sourceEl, {
+      backgroundColor: '#ffffff', scale, useCORS: true, logging: false,
+      // html2canvas משכפל את כל המסמך לפני הצילום. מדלגים על כל מה שלא
+      // שייך לרשימה (כל שאר האפליקציה), וזה הרבה יותר מהיר
+      ignoreElements: (el) => {
+        const tag = el.tagName;
+        if (tag === 'HEAD' || tag === 'STYLE' || tag === 'LINK' || tag === 'META' || tag === 'TITLE') return false;
+        return !(el.contains(sourceEl) || sourceEl.contains(el));
+      },
+    }), TIMEOUT_MS);
+    if (cancelled) return null;
+
+    // חלוקה לעמודים: כל עמוד ביחס A4, חיתוך בנקודת השבירה האחרונה שנכנסת בו
+    const pageHeight = Math.round(canvas.width * PAGE_RATIO);
+    const cuts: number[] = [];
+    let y = 0;
+    while (canvas.height - y > pageHeight) {
+      const limit = y + pageHeight;
+      const fit = breaks.filter(b => b > y + pageHeight * 0.5 && b <= limit);
+      const cut = fit.length ? fit[fit.length - 1] : limit;
+      cuts.push(cut);
+      y = cut;
+    }
+    cuts.push(canvas.height);
+
+    // JPEG ולא PNG - הרקע לבן אחיד והתוכן הוא בעיקר טקסט/אייקונים, כך שאיכות
+    // JPEG גבוהה (0.85) נראית זהה כמעט לעין אבל במשקל קטן משמעותית (חשוב
+    // לשיתוף בוואטסאפ/הודעות).
+    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, pageHeight], orientation: 'p' });
+    const page = document.createElement('canvas');
+    page.width = canvas.width;
+    page.height = pageHeight;
+    const ctx = page.getContext('2d');
+    if (!ctx) throw new Error('canvas_unavailable');
+    let from = 0;
+    cuts.forEach((to, i) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, page.width, page.height);
+      ctx.drawImage(canvas, 0, from, canvas.width, to - from, 0, 0, canvas.width, to - from);
+      if (i > 0) pdf.addPage([canvas.width, pageHeight], 'p');
+      pdf.addImage(page.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, canvas.width, pageHeight);
+      from = to;
+    });
+    if (cancelled) return null;
     const blob = pdf.output('blob') as Blob;
 
     return new File([blob], `${fileNameBase}.pdf`, { type: 'application/pdf' });
