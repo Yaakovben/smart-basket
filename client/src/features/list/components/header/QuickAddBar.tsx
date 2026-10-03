@@ -138,22 +138,26 @@ export const QuickAddBar = memo(({ list, onQuickAdd }: QuickAddBarProps) => {
           endAdornment: (() => {
             const ready = quickAddValue.trim().length >= 2;
             return (
+              // הכפתורים שומרים על מקומם גם כשהם מוסתרים (visibility ולא הסרה), כדי
+              // שהטקסט בשדה לא יזוז בכל הקשה כשכפתור מופיע או נעלם
               <InputAdornment position="end" sx={{ gap: 0.25 }}>
-                {quickAddValue.length > 2 && (
-                  <IconButton
-                    onClick={() => { haptic('light'); setQuickAddValue(''); }}
-                    size="small"
-                    sx={{ color: 'text.secondary', width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}
-                    aria-label={t('close')}
-                    tabIndex={-1}
-                  >
-                    <CloseIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                )}
-                {speechSupported && (!ready || isListening) && (
+                <IconButton
+                  onClick={() => { haptic('light'); setQuickAddValue(''); }}
+                  size="small"
+                  sx={{ color: 'text.secondary', width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 }, visibility: quickAddValue.length > 0 ? 'visible' : 'hidden' }}
+                  aria-label={t('close')}
+                  aria-hidden={quickAddValue.length === 0}
+                  tabIndex={-1}
+                >
+                  <CloseIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+                {speechSupported && (
                   <IconButton
                     onClick={toggleSpeech}
+                    aria-hidden={ready && !isListening}
+                    tabIndex={ready && !isListening ? -1 : 0}
                     sx={{
+                      visibility: !ready || isListening ? 'visible' : 'hidden',
                       width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
                       '@media (max-width: 360px)': { width: 28, height: 28 },
                       borderRadius: '10px',

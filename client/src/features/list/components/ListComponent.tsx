@@ -393,9 +393,15 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     ? categoryFilter
     : null;
 
-  // האם שורת/כפתור "סדר מוצרים" רלוונטיים כרגע - רק בטאב "לקנות", בלי
-  // חיפוש/סינון קטגוריה, ומ-2 מוצרים ומעלה.
-  const canReorder = filter === 'pending' && !search && !effectiveCategoryFilter && items.length > 1;
+  // שורות העזר שמעל הרשימה (קטגוריות, "N מוצרים" וכפתור הסידור, רמז הלחיצה
+  // הארוכה) תלויות בתוכן הטאב ולא בתוצאות החיפוש. אחרת כל הקשה בחיפוש הסתירה
+  // או החזירה שורה שלמה, וכל הרשימה קפצה למעלה ולמטה.
+  const tabTotal = filter === 'pending' ? pending.length : filter === 'purchased' ? purchased.length : pending.length + purchased.length;
+  // שורת "סדר מוצרים": בטאב "לקנות", בלי סינון קטגוריה, מ-2 מוצרים ומעלה
+  const showReorderRow = filter === 'pending' && !effectiveCategoryFilter && pending.length > 1;
+  // הכפתור עצמו פעיל רק בלי חיפוש (אי אפשר לסדר רשימה מסוננת). בחיפוש הוא
+  // נשאר במקומו מוסתר, כדי שהשורה לא תזוז.
+  const canReorder = showReorderRow && !search && items.length > 1;
 
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
@@ -513,28 +519,29 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         )}
 
         {/* רמז עדין על לחיצה ארוכה - מוצג רק אחרי שהסרת את רמז ההחלקה ויש פריטים */}
-        {!reorderMode && !showHint && items.length > 0 && <LongPressHint />}
+        {!reorderMode && !showHint && tabTotal > 0 && <LongPressHint />}
 
         {/* סינון לפי קטגוריה - כשלא במצב סידור, כפתור "סדר מוצרים" מוזרק
             כ-trailing לאותה שורה (בצד שמאל, קבוע, בלי לגלול) כדי שלא יפתח
             שורה נפרדת משלו רק בשביל זה. */}
-        {!reorderMode && items.length > 0 && activeCategories.length > 1 && (
+        {!reorderMode && activeCategories.length > 1 && (
           <CategoryFilterChips
             totalCount={items.length}
             activeCategories={activeCategories}
             categoryCounts={categoryCounts}
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
-            trailing={canReorder ? (
+            trailing={showReorderRow ? (
               // getReorderEntrySx - אותו כפתור סידור בדיוק כמו ברשימות
               // בעמוד הבית, בולט מעל הצ'יפים ולא מתמזג איתם.
               <Box
                 role="button"
-                tabIndex={0}
+                tabIndex={canReorder ? 0 : -1}
+                aria-hidden={!canReorder}
                 aria-label={t('reorderProducts')}
-                onClick={stableEnterReorder}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
-                sx={getReorderEntrySx(isDark)}
+                onClick={canReorder ? stableEnterReorder : undefined}
+                onKeyDown={(e) => { if (canReorder && (e.key === 'Enter' || e.key === ' ')) stableEnterReorder(); }}
+                sx={{ ...getReorderEntrySx(isDark), visibility: canReorder ? 'visible' : 'hidden' } as object}
               >
                 <SwapVertRoundedIcon />
               </Box>
@@ -545,7 +552,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         {/* שורת סידור מוצרים - עצמאית רק כשאין שורת קטגוריות לחבר אליה
             (קטגוריה יחידה) או במצב סידור פעיל (הצ'יפים ממילא מוסתרים אז).
             אחרת הכפתור כבר בפנים בשורת הצ'יפים למעלה (trailing). */}
-        {canReorder && (reorderMode || activeCategories.length <= 1) && (
+        {showReorderRow && (reorderMode || activeCategories.length <= 1) && (
           <Box sx={{ mb: 1, px: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: reorderMode ? 'primary.main' : 'text.secondary' }}>
@@ -571,11 +578,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
               ) : (
                 <Box
                   role="button"
-                  tabIndex={0}
+                  tabIndex={canReorder ? 0 : -1}
+                  aria-hidden={!canReorder}
                   aria-label={t('reorderProducts')}
-                  onClick={stableEnterReorder}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') stableEnterReorder(); }}
-                  sx={getReorderEntrySx(isDark)}
+                  onClick={canReorder ? stableEnterReorder : undefined}
+                  onKeyDown={(e) => { if (canReorder && (e.key === 'Enter' || e.key === ' ')) stableEnterReorder(); }}
+                  sx={{ ...getReorderEntrySx(isDark), visibility: canReorder ? 'visible' : 'hidden' } as object}
                 >
                   <SwapVertRoundedIcon />
                 </Box>
