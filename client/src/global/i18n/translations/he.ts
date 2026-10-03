@@ -162,6 +162,10 @@ export const he: Translations = {
   shareDetails: 'שתף את הפרטים להצטרפות לרשימה',
   groupCode: 'קוד רשימה',
   password: 'סיסמה',
+  // שני פרטים שונים להצטרפות: הקוד מזהה איזו רשימה, והסיסמה מאשרת שהוזמנת
+  joinPassword: 'סיסמת הצטרפות',
+  groupCodeHint: 'מזהה את הרשימה',
+  joinPasswordHint: 'מאשרת שהוזמנת',
   copy: 'העתק',
   copied: 'הועתק!',
   members: 'חברים',

@@ -10,10 +10,10 @@ export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   const lines = [
     `🛒 *הוזמנת לרשימת "${list.name}"*`,
     ``,
-    `📋 קוד: *${list.inviteCode}*`,
+    `📋 קוד רשימה: *${list.inviteCode}*`,
   ];
   if (list.password) {
-    lines.push(`🔑 סיסמה: *${list.password}*`);
+    lines.push(`🔑 סיסמת הצטרפות: *${list.password}*`);
   }
   lines.push(``, `👇 *לחץ להצטרפות:*`, joinUrl);
   return lines.join('\n');

@@ -187,12 +187,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.5, borderBottom: list.password ? '1px solid rgba(20,184,166,0.15)' : 'none', '@media (max-width: 360px)': { px: 1.5, py: 1 } }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('groupCode')}</Typography>
+                <Box>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('groupCode')}</Typography>
+                  <Typography sx={{ color: 'text.disabled', fontSize: 11, '@media (max-width: 360px)': { fontSize: 10 } }}>{t('groupCodeHint')}</Typography>
+                </Box>
                 <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.inviteCode}</Typography>
               </Box>
               {list.password && (
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.5, '@media (max-width: 360px)': { px: 1.5, py: 1 } }}>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('password')}</Typography>
+                  <Box>
+                    <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('joinPassword')}</Typography>
+                    <Typography sx={{ color: 'text.disabled', fontSize: 11, '@media (max-width: 360px)': { fontSize: 10 } }}>{t('joinPasswordHint')}</Typography>
+                  </Box>
                   <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.password}</Typography>
                 </Box>
               )}

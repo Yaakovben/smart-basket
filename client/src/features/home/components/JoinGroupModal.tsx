@@ -71,7 +71,7 @@ export const JoinGroupModal = ({
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('groupCodeHint')} · {t('sixChars')}</Typography>
         </Box>
         <TextField
           fullWidth
@@ -117,8 +117,8 @@ export const JoinGroupModal = ({
 
       <Box sx={{ mb: 2.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('fourDigits')}</Typography>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('joinPassword')}</Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('joinPasswordHint')} · {t('fourDigits')}</Typography>
         </Box>
         <TextField
           fullWidth
