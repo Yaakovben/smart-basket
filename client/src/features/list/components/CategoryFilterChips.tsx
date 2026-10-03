@@ -53,10 +53,12 @@ export const CategoryFilterChips = memo(({
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
   const COLLAPSE_DISTANCE = TRAILING_WIDTH;
   // אזור ההשתלבות בין הצ'יפים לכפתור: הצ'יפ הקרוב דועך בעדינות לפני הכפתור
-  // במקום להיתקל בו. TRAILING_CLEAR שקוף לגמרי (הכפתור ומרווח קטן),
-  // ואחריו TRAILING_SOFT של דעיכה רכה. שניהם מתכווצים יחד עם הכפתור.
-  const TRAILING_CLEAR = TRAILING_WIDTH + 2;
-  const TRAILING_SOFT = 10;
+  // במקום להיתקל בו. TRAILING_CLEAR שקוף לגמרי (בדיוק רוחב הכפתור), ואחריו
+  // TRAILING_SOFT של דעיכה קצרה. שניהם מתכווצים יחד עם הכפתור. קודם היו כאן
+  // עוד 2 פיקסלים ו-10 של דעיכה, והצ'יפים נראו מלאים רק 44 פיקסלים מהקצה:
+  // מרווח גדול מדי בין הכפתור לצ'יפים.
+  const TRAILING_CLEAR = TRAILING_WIDTH;
+  const TRAILING_SOFT = 6;
   // הדעיכה הרגילה בקצה הרצועה כשאין כפתור (כמו שהיה תמיד)
   const EDGE_SOFT = 12;
   const trailingRef = useRef<HTMLDivElement | null>(null);
@@ -176,7 +178,7 @@ export const CategoryFilterChips = memo(({
             המיכל הגלילה עצמו התברר לא אמין לחלוטין - גם עם רזרבה, גלילה
             "כמעט עד הסוף" (למשל flick קצר) יכלה לעצור כשעוד כמה פיקסלים
             מהצ'יפ האחרון מתחת לכפתור, ונראה כאילו הרשימה "שבורה"/לא גוללת. */}
-        {trailing && <Box sx={{ flexShrink: 0, width: 44, height: 1 }} aria-hidden="true" />}
+        {trailing && <Box sx={{ flexShrink: 0, width: TRAILING_WIDTH + 6, height: 1 }} aria-hidden="true" />}
       </Box>
       {trailing && (
         // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
