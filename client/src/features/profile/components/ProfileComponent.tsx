@@ -140,7 +140,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
 
             {/* Color Selection */}
             <Typography sx={{ ...labelSx, textAlign: 'center', mb: 1 }}>{t('color')}</Typography>
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 2.5 }}>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2.5 }}>
               {AVATAR_COLORS.map(c => (
                 <Box
                   key={c}
@@ -159,7 +159,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                   onClick={() => updateEditField('avatarEmoji', e)}
                   sx={emojiSwatchSx(editProfile.avatarEmoji === e)}
                 >
-                  {e || <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>-</Typography>}
+                  {/* בלי אמוג'י: האות הראשונה של השם, כמו שתוצג בפרופיל */}
+                  {e || <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'text.secondary' }}>{(editProfile.name || user.name).charAt(0)}</Typography>}
                 </Box>
               ))}
             </Box>

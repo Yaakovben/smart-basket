@@ -26,5 +26,6 @@ export interface UseProfileReturn {
 }
 
 // ===== קבועים =====
-export const AVATAR_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
-export const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'];
+export const AVATAR_COLORS = ['#14B8A6', '#0EA5E9', '#6366F1', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
+// '' = האות הראשונה של השם במקום אמוג'י
+export const AVATAR_EMOJIS = ['', '😊', '😎', '🤓', '🥳', '😇', '🦁', '🐻', '🐼', '🦊', '🐱', '🐶', '🦄', '🌸', '🌟', '⚡'];
