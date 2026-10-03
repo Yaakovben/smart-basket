@@ -177,10 +177,12 @@ const MonthlyTrendChart = memo(({ trend, currentMonthNum, currentYear, isDark, g
 });
 MonthlyTrendChart.displayName = 'MonthlyTrendChart';
 
-/* קומפוננטת פילוח לפי רשימה - עיצוב נקי וברור */
+/* פילוח לפי רשימה: השורות עצמן הן הסינון. לחיצה על רשימה מוציאה אותה מהסכום
+   (והיא מוצגת מעומעמת), ולחיצה נוספת מחזירה. האחוזים תמיד מתוך ההוצאה הכוללת,
+   כך שהם לא קופצים כשמסננים, והסדר מהגבוהה לנמוכה. קודם כל רשימה הופיעה
+   פעמיים (כפתור סינון ושורה), והאחוזים חושבו מחדש מתוך הסכום המסונן. */
 const ListBreakdownSection = memo(({
   listBreakdown,
-  filteredListBreakdown,
   filteredTotal,
   selectedListIds,
   isListSelected,
@@ -192,6 +194,10 @@ const ListBreakdownSection = memo(({
 }: ListBreakdownSectionProps) => {
   const allSelected = selectedListIds === null;
   const grandTotal = listBreakdown.reduce((s, l) => s + l.amount, 0);
+  const colorOf = (listId: string) => LIST_PALETTE[listBreakdown.findIndex(l => l.listId === listId) % LIST_PALETTE.length];
+  const rows = [...listBreakdown].sort((a, b) => b.amount - a.amount);
+  const selectedCount = allSelected ? listBreakdown.length : selectedListIds.size;
+  const divider = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
 
   return (
     <Paper
@@ -203,141 +209,85 @@ const ListBreakdownSection = memo(({
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
       }}
     >
-      {/* כותרת + סכום כולל */}
-      <Box sx={{
-        px: 2, pt: 1.75, pb: 1.5,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-      }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary' }}>
-          {t('listSpendingBreakdownTitle')}
-        </Typography>
-        <Box sx={{ textAlign: 'left' }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 900, color: '#0D9488', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+      {/* כותרת וסכום (של הרשימות הנבחרות) */}
+      <Box sx={{ px: 2, pt: 1.75, pb: 1.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, borderBottom: '1px solid', borderColor: divider }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary' }}>
+            {t('listSpendingBreakdownTitle')}
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
+            {allSelected
+              ? 'לחיצה על רשימה מוציאה אותה מהסכום'
+              : `${selectedCount} מתוך ${listBreakdown.length} רשימות`}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: 'end', flexShrink: 0 }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 900, color: '#0D9488', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
             {formatILS(allSelected ? grandTotal : filteredTotal)}
           </Typography>
           {!allSelected && (
-            <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: 0.2 }}>
-              מסונן
-            </Typography>
+            <Box
+              component="button"
+              onClick={() => { haptic('light'); setSelectedListIds(null); }}
+              sx={{ mt: 0.4, p: 0, border: 'none', bgcolor: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: '#0D9488' }}
+            >
+              הצג הכל
+            </Box>
           )}
         </Box>
       </Box>
 
-      {/* כפתורי סינון - ברורים ומובנים */}
-      <Box sx={{ px: 2, py: 1.25, display: 'flex', flexWrap: 'wrap', gap: 0.6, borderBottom: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
-        <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.disabled', alignSelf: 'center', mr: 0.25 }}>
-          סנן:
-        </Typography>
-        {/* כפתור הכל */}
-        <Box
-          component="button"
-          onClick={() => { haptic('light'); setSelectedListIds(null); }}
-          sx={{
-            display: 'inline-flex', alignItems: 'center', gap: 0.4,
-            px: 1.1, py: 0.45,
-            borderRadius: '20px', border: '1.5px solid',
-            cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
-            transition: 'all 0.18s ease',
-            bgcolor: allSelected ? '#0D9488' : 'transparent',
-            borderColor: '#0D9488',
-            color: allSelected ? '#fff' : '#0D9488',
-          }}
-        >
-          {allSelected && <CheckIcon sx={{ fontSize: 12 }} />}
-          הכל
-        </Box>
-
-        {/* כפתור לכל רשימה */}
-        {listBreakdown.map((list, idx) => {
-          const color = LIST_PALETTE[idx % LIST_PALETTE.length];
+      {/* שורה לכל רשימה: לחיצה מוציאה או מחזירה אותה */}
+      <Box sx={{ px: 1, py: 0.5 }}>
+        {rows.map((list, i) => {
+          const color = colorOf(list.listId);
           const selected = isListSelected(list.listId);
+          const pct = grandTotal > 0 ? Math.round((list.amount / grandTotal) * 100) : 0;
           return (
             <Box
               key={list.listId}
               component="button"
+              aria-pressed={selected}
               onClick={() => toggleList(list.listId)}
               sx={{
-                display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                px: 1.1, py: 0.45, maxWidth: 150,
-                borderRadius: '20px', border: '1.5px solid',
-                cursor: 'pointer', fontSize: 11.5, fontWeight: selected ? 700 : 500,
-                transition: 'all 0.18s ease',
-                bgcolor: selected ? color : 'transparent',
-                borderColor: color,
-                color: selected ? '#fff' : color,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                display: 'block', width: '100%', textAlign: 'start', font: 'inherit', color: 'inherit',
+                px: 1, py: 1.25, border: 'none', bgcolor: 'transparent', cursor: 'pointer', borderRadius: '12px',
+                borderBottom: i < rows.length - 1 ? '1px solid' : 'none', borderBottomColor: divider,
+                opacity: selected ? 1 : 0.42, transition: 'opacity 0.18s ease',
+                animation: `${slideIn} 0.3s ease ${i * 0.05}s both`,
+                '&:active': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' },
               }}
             >
-              {selected && <CheckIcon sx={{ fontSize: 12, flexShrink: 0 }} />}
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{list.icon} {list.name}</span>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                {/* סימון: עיגול צבעוני מלא עם וי כשנבחרה, טבעת ריקה כשלא */}
+                <Box sx={{
+                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: selected ? color : 'transparent', border: '1.5px solid', borderColor: color,
+                }}>
+                  {selected && <CheckIcon sx={{ fontSize: 12, color: '#fff' }} />}
+                </Box>
+                <Typography sx={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{list.icon}</Typography>
+                <Typography sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {list.name}
+                </Typography>
+                <Typography sx={{ fontSize: 15, fontWeight: 900, color: 'text.primary', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                  {formatILS(list.amount)}
+                </Typography>
+              </Box>
+              {/* פס ואחוז מתוך ההוצאה הכוללת, מיושרים מתחת לשם */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, paddingInlineStart: '26px' }}>
+                <Box sx={{ flex: 1, height: 6, borderRadius: '3px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                  <Box sx={{ height: '100%', borderRadius: '3px', bgcolor: color, width: `${pct}%`, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
+                </Box>
+                <Typography sx={{ width: 34, textAlign: 'end', fontSize: 11, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                  {pct}%
+                </Typography>
+              </Box>
             </Box>
           );
         })}
       </Box>
-
-      {/* שורות הרשימות */}
-      {filteredListBreakdown.length > 0 ? (
-        <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {filteredListBreakdown.map((list, i) => {
-            const origIdx = listBreakdown.findIndex(l => l.listId === list.listId);
-            const color = LIST_PALETTE[origIdx % LIST_PALETTE.length];
-            const base = allSelected ? grandTotal : filteredTotal;
-            const pct = base > 0 ? Math.round((list.amount / base) * 100) : 0;
-
-            return (
-              <Box
-                key={list.listId}
-                sx={{
-                  py: 1.4,
-                  borderBottom: i < filteredListBreakdown.length - 1 ? '1px solid' : 'none',
-                  borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                  animation: `${slideIn} 0.3s ease ${i * 0.05}s both`,
-                }}
-              >
-                {/* שורה עליונה: נקודת צבע + אייקון + שם + סכום */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.85 }}>
-                  {/* נקודת זיהוי צבעונית */}
-                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
-                  <Typography sx={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{list.icon}</Typography>
-                  <Typography sx={{
-                    flex: 1, fontSize: 14, fontWeight: 700, color: 'text.primary',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {list.name}
-                  </Typography>
-                  <Box sx={{ textAlign: 'left', flexShrink: 0 }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 900, color: 'text.primary', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                      {formatILS(list.amount)}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color, textAlign: 'center', mt: 0.1 }}>
-                      {pct}%
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* בר אופקי */}
-                <Box sx={{
-                  height: 6, borderRadius: 3,
-                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                  overflow: 'hidden', ml: 2.75,
-                }}>
-                  <Box sx={{
-                    height: '100%', borderRadius: 3, bgcolor: color,
-                    width: `${pct}%`,
-                    transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
-                  }} />
-                </Box>
-              </Box>
-            );
-          })}
-        </Box>
-      ) : (
-        <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
-          בחר לפחות רשימה אחת
-        </Typography>
-      )}
     </Paper>
   );
 });
