@@ -29,22 +29,25 @@ const pillSx = {
   fontSize: 12, fontWeight: 700, lineHeight: 1.4, color: '#fff',
 } as const;
 
-// ספירה מעלה חלקה עד הערך האמיתי (ללא אנימציה למי שביקש פחות תנועה).
-const useCountUp = (target: number | null, ms = 900): number | null => {
-  const [value, setValue] = useState<number | null>(target === null ? null : 0);
+// ספירה לאחור: המספר מתחיל מאורך התקופה המלאה ויורד עד הימים שנשארו, והטבעת
+// מתרוקנת יחד איתו. בלי אנימציה למי שביקש פחות תנועה.
+const useCountDown = (target: number | null, from: number, ms = 1400): number | null => {
+  const reduce = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const start = Math.max(from, target ?? 0);
+  const [value, setValue] = useState<number | null>(target === null ? null : reduce ? target : start);
   useEffect(() => {
-    if (target === null) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setValue(target); return; }
+    if (target === null || reduce) return;
     let raf = 0;
-    const start = performance.now();
+    const t0 = performance.now();
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / ms);
-      setValue(Math.round(target * (1 - Math.pow(1 - t, 3))));
+      const t = Math.min(1, (now - t0) / ms);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(start - (start - target) * eased));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, ms]);
+  }, [target, start, ms, reduce]);
   return target === null ? null : value;
 };
 
@@ -52,10 +55,11 @@ const useCountUp = (target: number | null, ms = 900): number | null => {
 // היחס הוא מתוך תקופת המתנה המלאה (בניסיון) או מתוך חודש (בכל מנוי אחר).
 const RING_SIZE = 84;
 const RING_STROKE = 6;
-const CountdownRing = ({ days, shown, total, caption }: { days: number; shown: number; total: number; caption: string }) => {
+const CountdownRing = ({ shown, total, caption }: { shown: number; total: number; caption: string }) => {
   const r = (RING_SIZE - RING_STROKE) / 2;
   const c = 2 * Math.PI * r;
-  const ratio = total > 0 ? Math.min(1, Math.max(0, days / total)) : 0;
+  // לפי המספר שמוצג כרגע, כך שהטבעת מתרוקנת יחד עם הספירה לאחור
+  const ratio = total > 0 ? Math.min(1, Math.max(0, shown / total)) : 0;
   const mid = RING_SIZE / 2;
   return (
     <Box sx={{ position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
@@ -73,7 +77,6 @@ const CountdownRing = ({ days, shown, total, caption }: { days: number; shown: n
             cx={mid} cy={mid} r={r} fill="none" stroke="url(#sbRingGold)" strokeWidth={RING_STROKE} strokeLinecap="round"
             strokeDasharray={c} strokeDashoffset={c * (1 - ratio)}
             sx={{
-              transition: 'stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)',
               // זוהר זהוב שפועם לאט: הטבעת מרגישה חיה
               animation: 'sbRingGlow 2.8s ease-in-out infinite',
               '@keyframes sbRingGlow': {
@@ -114,12 +117,12 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
   const sourceLabel = !isPro || isTrial ? null
     : status.planSource === 'store' ? s.sourceStore
     : s.sourceGranted;
-  const shownDays = useCountUp(daysLeft);
+  const ringTotalForCount = isTrial && status.trialMonths > 0 ? status.trialMonths * 30 : Math.max(30, daysLeft ?? 0);
+  const shownDays = useCountDown(daysLeft, ringTotalForCount);
   const expiryLabel = expires
     ? expires.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
   const showRing = isPro && daysLeft !== null && !autoRenews;
-  const ringTotal = isTrial && status.trialMonths > 0 ? status.trialMonths * 30 : Math.max(30, daysLeft ?? 0);
   const ringCaption = daysLeft === 0 ? s.expiresToday : daysLeft === 1 ? s.dayLeft : s.daysLeft;
 
   return (
@@ -212,7 +215,7 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       </Box>
 
       {showRing && daysLeft !== null && (
-        <CountdownRing days={daysLeft} shown={shownDays ?? daysLeft} total={ringTotal} caption={ringCaption} />
+        <CountdownRing shown={shownDays ?? daysLeft} total={ringTotalForCount} caption={ringCaption} />
       )}
     </Box>
   );
