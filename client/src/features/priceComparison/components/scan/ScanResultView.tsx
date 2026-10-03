@@ -9,6 +9,7 @@ import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import PlaceRoundedIcon from '@mui/icons-material/PlaceRounded';
 import LeaderboardRoundedIcon from '@mui/icons-material/LeaderboardRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { formatILS, formatDateShort, formatUpdatedAt, haptic } from '../../../../global/helpers';
 import type { Language } from '../../../../global/types';
 import type { LocationStatus } from '../../hooks/useUserLocation';
@@ -34,6 +35,8 @@ interface Props {
   onEnableLocation: () => void;
   onNavigate: (b: ScanNearbyBranch | ScanHere) => void;
 }
+
+interface NearbyGroup { key: string; rep: ScanNearbyBranch; others: ScanNearbyBranch[] }
 
 const branchLine = (b: { branchName: string; city: string }) => [b.branchName, b.city].filter(Boolean).join(', ');
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -62,11 +65,30 @@ export const ScanResultView = ({
 }: Props) => {
   const [sort, setSort] = useState<SortMode>('price');
   const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const nearby = useMemo(() => result.nearby ?? [], [result.nearby]);
-  const sortedNearby = useMemo(() => (
-    sort === 'price' ? nearby : [...nearby].sort((a, b) => a.distanceM - b.distanceM || a.price - b.price)
-  ), [nearby, sort]);
-  const nearbyMin = nearby.length ? Math.min(...nearby.map((b) => b.price)) : null;
+  // סניפים של אותה רשת באותו מחיר (בדרך כלל מחיר רשת שלא אומת לסניף) מוצגים
+  // כשורה אחת: הסניף הקרוב, ו"ועוד N סניפים". בלי זה אותה רשת חזרה שבע פעמים
+  // ברצף עם אותו מחיר, והרשימה הייתה ארוכה ומבלבלת.
+  const groups = useMemo<NearbyGroup[]>(() => {
+    const byKey = new Map<string, ScanNearbyBranch[]>();
+    for (const b of nearby) {
+      const key = `${b.chainId}|${b.chainName}|${b.price.toFixed(2)}|${b.verified ? 1 : 0}`;
+      const arr = byKey.get(key);
+      if (arr) arr.push(b); else byKey.set(key, [b]);
+    }
+    const list = [...byKey.entries()].map(([key, arr]) => {
+      const branches = [...arr].sort((x, y) => x.distanceM - y.distanceM);
+      return { key, rep: branches[0], others: branches.slice(1) };
+    });
+    return sort === 'price'
+      ? list.sort((x, y) => x.rep.price - y.rep.price || x.rep.distanceM - y.rep.distanceM)
+      : list.sort((x, y) => x.rep.distanceM - y.rep.distanceM || x.rep.price - y.rep.price);
+  }, [nearby, sort]);
+  const nearbyMin = groups.length ? Math.min(...groups.map((g) => g.rep.price)) : null;
+  // תווית "הכי זול באזור" רק כשיש הבדל במחירים. כשכל הסניפים באותו מחיר, שורה
+  // אחת אומרת את זה, במקום תווית על כל שורה שכבר לא אומרת כלום.
+  const allSamePrice = groups.length > 1 && nearbyMin !== null && groups.every((g) => g.rep.price <= nearbyMin + 0.005);
 
   const { cheapest, chains, here } = result;
   const parentName = (chainId: string) => chains.find((c) => c.chainId === chainId && !c.isBrand)?.chainName ?? '';
@@ -76,10 +98,13 @@ export const ScanResultView = ({
   const nationSaving = priciest ? round2(priciest.typicalPrice - cheapest.price) : 0;
   const minChainPrice = chains.length ? Math.min(...chains.map((c) => c.typicalPrice)) : 0;
   const maxChainPrice = priciest?.typicalPrice ?? 0;
-  // הסניף הזול בארץ נמצא ברשימת הסניפים הקרובים: אפשר לנווט אליו מהכרטיס הראשי
+  // סניף קרוב שאפשר לנווט אליו מהכרטיס הראשי: הסניף הזול בארץ עצמו אם הוא
+  // קרוב, וכשהזול הוא מחיר הרשת, הסניף הקרוב ביותר של אותה רשת באותו מחיר
   const cheapestNearby = cheapest.branch
     ? nearby.find((b) => b.chainId === cheapest.chainId && b.storeId === cheapest.branch!.storeId) ?? null
-    : null;
+    : [...nearby]
+      .filter((b) => b.chainId === cheapest.chainId && b.price <= cheapest.price + 0.005)
+      .sort((x, y) => x.distanceM - y.distanceM)[0] ?? null;
 
   const blocked = locationStatus === 'blocked';
   const updated = formatUpdatedAt(result.pricesAsOf, lang);
@@ -184,36 +209,72 @@ export const ScanResultView = ({
   );
 
   // ===== 2. הסניפים הקרובים אליך =====
-  const row = (b: ScanNearbyBranch) => {
+  const row = (g: NearbyGroup) => {
+    const b = g.rep;
     const promo = usefulPromo(b.promo, b.price);
-    const isCheapestHere = nearbyMin !== null && b.price <= nearbyMin + 0.005;
-    const isHere = !!(here && sameBranch(b, here));
+    const isCheapestHere = !allSamePrice && nearbyMin !== null && b.price <= nearbyMin + 0.005;
+    const diff = nearbyMin !== null ? round2(b.price - nearbyMin) : 0;
+    const isHere = !!(here && [b, ...g.others].some((x) => sameBranch(x, here)));
+    const open = expanded.has(g.key);
     return (
-      <ButtonBase
-        key={`${b.chainId}:${b.storeId}`}
-        onClick={() => { haptic('light'); onNavigate(b); }}
-        sx={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 1.25, p: 1.25, borderRadius: '14px', textAlign: 'start',
-          bgcolor: isCheapestHere ? alpha(SCAN_TEAL, isDark ? 0.12 : 0.07) : 'transparent',
-        }}
-      >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.chainName}</Typography>
-            {isCheapestHere && tag(s.nearbyCheapestTag, true)}
-            {isHere && tag(s.hereTag, false)}
+      <Box key={g.key} sx={{ borderRadius: '14px', bgcolor: isCheapestHere ? alpha(SCAN_TEAL, isDark ? 0.12 : 0.07) : 'transparent' }}>
+        <ButtonBase
+          onClick={() => { haptic('light'); onNavigate(b); }}
+          sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.25, p: 1.25, borderRadius: '14px', textAlign: 'start' }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.chainName}</Typography>
+              {isCheapestHere && tag(s.nearbyCheapestTag, true)}
+              {isHere && tag(s.hereTag, false)}
+            </Box>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {branchLine(b)} · {formatDistance(s, b.distanceM, b.distanceKm)}
+            </Typography>
+            {promo && <Box sx={{ mt: 0.4 }}><PromoChip s={s} promo={promo} /></Box>}
           </Box>
-          <Typography sx={{ fontSize: 12, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {branchLine(b)} · {formatDistance(s, b.distanceM, b.distanceKm)}
-          </Typography>
-          {promo && <Box sx={{ mt: 0.4 }}><PromoChip s={s} promo={promo} /></Box>}
-        </Box>
-        <Box sx={{ textAlign: 'end', flexShrink: 0 }}>
-          <Typography sx={{ fontSize: 16.5, fontWeight: 900, color: isCheapestHere ? SCAN_TEAL : 'text.primary' }}>{formatILS(b.price, 2)}</Typography>
-          {priceNote(b.verified)}
-        </Box>
-        <NavigationRoundedIcon sx={{ fontSize: 18, color: 'text.disabled', flexShrink: 0 }} />
-      </ButtonBase>
+          <Box sx={{ textAlign: 'end', flexShrink: 0 }}>
+            <Typography sx={{ fontSize: 16.5, fontWeight: 900, color: isCheapestHere ? SCAN_TEAL : 'text.primary' }}>{formatILS(b.price, 2)}</Typography>
+            {/* יקר מהזול באזור: בכמה. אחרת: האם המחיר אומת לסניף */}
+            {diff >= 0.01 && !allSamePrice
+              ? <Typography component="span" sx={{ fontSize: 10.5, fontWeight: 700, color: 'warning.main', display: 'block' }}>{s.moreThanCheapest(formatILS(diff, 2))}</Typography>
+              : priceNote(b.verified)}
+          </Box>
+          <NavigationRoundedIcon sx={{ fontSize: 18, color: 'text.disabled', flexShrink: 0 }} />
+        </ButtonBase>
+        {g.others.length > 0 && (
+          <>
+            <ButtonBase
+              onClick={() => {
+                haptic('light');
+                setExpanded((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(g.key)) next.delete(g.key); else next.add(g.key);
+                  return next;
+                });
+              }}
+              aria-expanded={open}
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.25, px: 1.25, pb: 1, mt: -0.5, color: SCAN_TEAL, borderRadius: '8px' }}
+            >
+              <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{s.sameChainMore(g.others.length)}</Typography>
+              <ExpandMoreRoundedIcon sx={{ fontSize: 18, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }} />
+            </ButtonBase>
+            {open && g.others.map((o) => (
+              <ButtonBase
+                key={`${o.chainId}:${o.storeId}`}
+                onClick={() => { haptic('light'); onNavigate(o); }}
+                sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1, px: 1.25, py: 0.9, borderTop: '1px solid', borderColor: 'divider', textAlign: 'start' }}
+              >
+                <Typography sx={{ flex: 1, minWidth: 0, fontSize: 12.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {branchLine(o)} · {formatDistance(s, o.distanceM, o.distanceKm)}
+                </Typography>
+                {here && sameBranch(o, here) && tag(s.hereTag, false)}
+                <NavigationRoundedIcon sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }} />
+              </ButtonBase>
+            ))}
+          </>
+        )}
+      </Box>
     );
   };
 
@@ -264,20 +325,23 @@ export const ScanResultView = ({
     nearbySection = (
       <Box sx={scanCardSx(isDark)}>
         <SectionHeader icon={<PlaceRoundedIcon sx={{ fontSize: 18 }} />} title={s.nearbyTitle}>
-          {nearby.length > 1 && sortChip('price', s.sortCheapest)}
-          {nearby.length > 1 && sortChip('distance', s.sortClosest)}
+          {groups.length > 1 && sortChip('price', s.sortCheapest)}
+          {groups.length > 1 && sortChip('distance', s.sortClosest)}
         </SectionHeader>
         {hereNote}
+        {allSamePrice && nearbyMin !== null && (
+          <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: SCAN_TEAL, px: 0.5, mb: 0.75 }}>{s.allSamePrice(formatILS(nearbyMin, 2))}</Typography>
+        )}
         {nearby.length === 0 ? (
           <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{s.noneNearby(result.nearbyRadiusKm ?? 25)}</Typography>
         ) : (
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-              {(showAll ? sortedNearby : sortedNearby.slice(0, NEARBY_PREVIEW)).map(row)}
+              {(showAll ? groups : groups.slice(0, NEARBY_PREVIEW)).map(row)}
             </Box>
-            {sortedNearby.length > NEARBY_PREVIEW && (
+            {groups.length > NEARBY_PREVIEW && (
               <Button fullWidth onClick={() => setShowAll((v) => !v)} sx={{ mt: 0.5, textTransform: 'none', fontWeight: 700, color: SCAN_TEAL }}>
-                {showAll ? s.showLess : s.showMore(sortedNearby.length - NEARBY_PREVIEW)}
+                {showAll ? s.showLess : s.showMore(groups.length - NEARBY_PREVIEW)}
               </Button>
             )}
           </>
