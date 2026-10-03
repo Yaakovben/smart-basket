@@ -1,5 +1,5 @@
 import { Dialog, DialogTitle, DialogContent, Box, Slide, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
@@ -7,7 +7,7 @@ import { haptic } from '../helpers';
 import { centeredDialogPaperSx } from '../styles/centeredDialog.styles';
 import { useReliableTap } from '../hooks/useReliableTap';
 import { useSettings } from '../context/SettingsContext';
-import { useKeyboardInset } from '../hooks/useKeyboardInset';
+import { useKeyboardViewport } from '../hooks/useKeyboardViewport';
 
 interface ModalProps {
   title: string;
@@ -42,9 +42,10 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
   // את התיקון הזה - כל מודל שמשתמש בו (כולל התראות) ירש את אותה בעיה.
   const { t } = useSettings();
   const closeTap = useReliableTap(handleClose);
-  // גיליון שצמוד לתחתית עולה מעל המקלדת באייפון, כדי שהשדה שמקלידים בו יישאר גלוי
-  const keyboardInset = useKeyboardInset();
-  const liftSheet = !centered && keyboardInset > 0;
+  // באייפון, כשהמקלדת פתוחה, אזור הדיאלוג ממוקם בדיוק על החלק הגלוי של המסך
+  // (מעל המקלדת), והגיליון יושב בתחתיתו. כך השדה שמקלידים בו נשאר גלוי, והגיליון
+  // לא קופץ לראש המסך ולא זז בכל הקשה (ראו useKeyboardViewport).
+  const keyboard = useKeyboardViewport();
 
   return (
     <Dialog
@@ -57,12 +58,14 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
         sx: centered ? { ...centeredDialogPaperSx, maxWidth: { xs: 'calc(100% - 32px)', sm: 480 }, bgcolor: 'background.paper' } : {
           m: 0,
           borderRadius: '20px 20px 0 0',
-          maxHeight: liftSheet ? `calc(100% - ${keyboardInset}px - 24px)` : '90vh',
-          mb: liftSheet ? `${keyboardInset}px` : 0,
-          transition: 'margin-bottom 0.2s ease',
+          // כשהמקלדת פתוחה הגיליון בגובה קבוע (כל האזור הגלוי שמעליה). אחרת כל
+          // הקשה ששינתה את התוכן (למשל הצעות שמופיעות ונעלמות בהוספת מוצר)
+          // הזיזה את הקצה העליון של הגיליון למעלה ולמטה.
+          ...(keyboard ? { height: 'calc(100% - 16px)', maxHeight: 'calc(100% - 16px)' } : { maxHeight: '90vh' }),
           maxWidth: { xs: '100%', sm: 480 },
           width: '100%',
-          pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom))',
+          // מעל המקלדת אין פס בית של האייפון, ולכן בלי השוליים שלו
+          pb: keyboard ? 0 : 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom))',
           bgcolor: 'background.paper',
           // מסכים זעירים - radius קטן יותר
           '@media (max-width: 360px)': { borderRadius: '16px 16px 0 0' },
@@ -74,6 +77,7 @@ export const Modal = ({ title, onClose, children, footer, centered = false }: Mo
       sx={{
         '& .MuiDialog-container': {
           alignItems: centered ? 'center' : 'flex-end',
+          ...(keyboard ? { position: 'absolute', left: 0, right: 0, top: `${keyboard.top}px`, height: `${keyboard.height}px` } : {}),
         },
         '& .MuiBackdrop-root': {
           backdropFilter: 'blur(4px)',
