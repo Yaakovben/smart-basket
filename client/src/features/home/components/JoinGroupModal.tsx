@@ -6,6 +6,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
+import { detectAppPlatform } from '../../../global/helpers/appPlatform';
 import { Modal } from '../../../global/components';
 import { checkmarkPopKeyframes, shakeKeyframes } from '../helpers/homeStyles';
 
@@ -55,8 +56,10 @@ export const JoinGroupModal = ({
 
       {/* רמז קטן, לא חוסם - רק כשהמודאל נפתח מקישור הצטרפות (JoinLanding),
           לא כשנפתח ידנית מהתפריט "הצטרף לרשימה". יושב מתחת לכותרת (הקשר
-          "איך הגעת לכאן") ולא נדחק בין סריקת ה-QR לכפתור ההצטרפות. */}
-      {joinedFromLink && (
+          "איך הגעת לכאן") ולא נדחק בין סריקת ה-QR לכפתור ההצטרפות.
+          ורק בדפדפן רגיל: באפליקציה שמותקנת (מסך הבית או מהחנות) "עדיף
+          להיכנס דרכה במקום בדפדפן" לא נכון, כי כבר נמצאים בה. */}
+      {joinedFromLink && detectAppPlatform() === 'browser' && (
         <Box sx={{
           mb: 2, px: 1.5, py: 0.85, borderRadius: '10px',
           bgcolor: 'rgba(20,184,166,0.08)',
