@@ -9,7 +9,6 @@ import { haptic, safeStorage } from '../../../global/helpers';
 
 const HINT_SHOW_DELAY_MS = 700;
 const HINT_AUTOHIDE_MS = 7000;
-const NEW_BADGE_KEY = 'sb_ai_fab_used';
 // כמה פעמים מציגים את הרמז הטקסטואלי "שאל את ה-AI" - לא בכל פתיחת דף
 // הבית (זה הציק), רק בפעמים הראשונות עד שהמשתמש כבר מכיר את הכפתור.
 const HINT_SHOWN_COUNT_KEY = 'sb_ai_fab_hint_count';
@@ -24,9 +23,6 @@ export const AiAssistantFab = () => {
   const isDark = settings.theme === 'dark';
   const { phase } = useConnectionStatus();
   const [showHint, setShowHint] = useState(false);
-  // תג "חדש" - נשאר עד שהמשתמש בפועל פותח את העוזר בפעם הראשונה, לא רק
-  // עד שרואה את הרמז הטקסטואלי (שנעלם אחרי 7ש' ועלול לפספס משתמש שלא שם לב).
-  const [showNewBadge, setShowNewBadge] = useState(() => safeStorage.get(NEW_BADGE_KEY) !== 'true');
 
   // רמז טקסט "שאל את ה-AI" - רק ב-HINT_MAX_SHOWS הפעמים הראשונות שדף הבית
   // נפתח (לא בכל פתיחה - זה כבר הציק), נעלם אחרי 7 שניות.
@@ -50,10 +46,6 @@ export const AiAssistantFab = () => {
       return;
     }
     setShowHint(false);
-    if (showNewBadge) {
-      setShowNewBadge(false);
-      safeStorage.set(NEW_BADGE_KEY, 'true');
-    }
     haptic('light');
     navigate('/assistant');
   };
@@ -128,28 +120,6 @@ export const AiAssistantFab = () => {
         }}
       >
         <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
-        {showNewBadge && (
-          <Box
-            aria-hidden="true"
-            sx={{
-              position: 'absolute', top: -8, insetInlineEnd: -10,
-              px: 0.6, py: 0.15, borderRadius: '999px',
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
-              border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
-              color: 'white', fontSize: 8.5, fontWeight: 800, lineHeight: 1.4,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
-              animation: 'aiNewBadgePulse 1.8s ease-out infinite',
-              '@keyframes aiNewBadgePulse': {
-                '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
-                '70%': { boxShadow: '0 0 0 6px rgba(139,92,246,0)' },
-                '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
-              },
-            }}
-          >
-            חדש
-          </Box>
-        )}
       </Box>
     </>,
     document.body

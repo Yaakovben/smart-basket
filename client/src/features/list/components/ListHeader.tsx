@@ -8,7 +8,7 @@ import SearchIcon from '@mui/icons-material/SearchRounded';
 import SearchOffIcon from '@mui/icons-material/SearchOffRounded';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { List, User, SavedList } from '../../../global/types';
-import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
+import { COMMON_STYLES } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -68,42 +68,11 @@ export const ListHeader = memo(({
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  // תג "חדש" על תפריט ה-⋮ - מודיע שיש פיצ'ר חדש בפנים (סריקת רשימה),
-  // נעלם לצמיתות בפעם הראשונה שהתפריט נפתח.
-  const [showMenuNewBadge, setShowMenuNewBadge] = useState(
-    () => !!onScanList && safeStorage.get('sb_scanlist_menu_seen') !== 'true'
-  );
-  // תג "חדש" נוסף, ממוקד יותר - יושב ממש על שורת "סריקת רשימה" בתוך התפריט,
-  // ונעלם רק כשהמשתמש בפועל לוחץ עליה (לא רק פותח את התפריט).
-  const [showScanItemNewBadge, setShowScanItemNewBadge] = useState(
-    () => !!onScanList && safeStorage.get('sb_scanlist_used') !== 'true'
-  );
-  const handleScanList = useCallback(() => {
-    if (showScanItemNewBadge) {
-      setShowScanItemNewBadge(false);
-      safeStorage.set('sb_scanlist_used', 'true');
-    }
-    onScanList?.();
-  }, [showScanItemNewBadge, onScanList]);
-
-  // תג "חדש" על כניסת "רשימות קבועות" המאוחדת - נעלם לצמיתות ברגע שהמשתמש לוחץ עליה.
-  const [showSavedListNewBadge, setShowSavedListNewBadge] = useState(
-    () => !!onSavedLists && safeStorage.get('sb_savedlist_used') !== 'true'
-  );
-  const handleOpenSavedLists = useCallback(() => {
-    if (showSavedListNewBadge) {
-      setShowSavedListNewBadge(false);
-      safeStorage.set('sb_savedlist_used', 'true');
-    }
-    onSavedLists?.();
-  }, [showSavedListNewBadge, onSavedLists]);
+  const handleScanList = useCallback(() => { onScanList?.(); }, [onScanList]);
+  const handleOpenSavedLists = useCallback(() => { onSavedLists?.(); }, [onSavedLists]);
   const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(e.currentTarget);
-    if (showMenuNewBadge) {
-      setShowMenuNewBadge(false);
-      safeStorage.set('sb_scanlist_menu_seen', 'true');
-    }
-  }, [showMenuNewBadge]);
+  }, []);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
@@ -213,30 +182,8 @@ export const ListHeader = memo(({
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
-          <IconButton onClick={handleOpenMenu} sx={{ ...glassButtonSx, position: 'relative' }} aria-label={t('groupSettings')}>
+          <IconButton onClick={handleOpenMenu} sx={glassButtonSx} aria-label={t('groupSettings')}>
             <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
-            {showMenuNewBadge && (
-              <Box
-                aria-hidden="true"
-                sx={{
-                  position: 'absolute', top: -6, insetInlineEnd: -8,
-                  px: 0.5, py: 0.1, borderRadius: '999px',
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
-                  border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
-                  color: 'white', fontSize: 7.5, fontWeight: 800, lineHeight: 1.4,
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
-                  animation: 'menuNewBadgePulse 1.8s ease-out infinite',
-                  '@keyframes menuNewBadgePulse': {
-                    '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
-                    '70%': { boxShadow: '0 0 0 5px rgba(139,92,246,0)' },
-                    '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
-                  },
-                }}
-              >
-                {t('new')}
-              </Box>
-            )}
           </IconButton>
         </Box>
       </Box>
@@ -248,9 +195,7 @@ export const ListHeader = memo(({
         onEdit={onEditList} onDelete={onDeleteList}
         onClearList={onClearList} onShoppingMode={onShoppingMode}
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
-        scanListIsNew={showScanItemNewBadge}
         onSavedLists={(savedLists.length > 0 || hasProducts) && onSavedLists ? handleOpenSavedLists : undefined}
-        savedListsIsNew={showSavedListNewBadge}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
