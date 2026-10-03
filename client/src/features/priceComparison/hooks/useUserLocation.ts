@@ -1,5 +1,5 @@
 /**
- * useUserLocation - הוק שמבקש מיקום מהמשתמש (navigator.geolocation) ומנהל
+ * useUserLocation - הוק שמבקש מיקום מהמשתמש (דרך global/services/geo) ומנהל
  * את מצב ההרשאה + caching בסשן.
  *
  * מצבים:
@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { safeStorage } from '../../../global/helpers';
+import { geoPermission, getGeoPosition, isGeoSupported, type GeoPosition } from '../../../global/services/geo';
 
 export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'blocked' | 'unavailable' | 'error';
 
@@ -61,9 +62,25 @@ const readInitialState = (): { location: UserLocation | null; status: LocationSt
   return { location: null, status: 'idle' };
 };
 
+// הרשאה שמאפשרת קריאה שקטה בלי חלון בקשה: granted, או unknown (דפדפן בלי
+// Permissions API למיקום) כשהמשתמש כבר אישר בעבר
+const canReadSilently = async (): Promise<boolean> => {
+  const perm = await geoPermission();
+  return perm === 'granted' || perm === 'unknown';
+};
+
 export function useUserLocation() {
   const [location, setLocation] = useState<UserLocation | null>(() => readInitialState().location);
   const [status, setStatus] = useState<LocationStatus>(() => readInitialState().status);
+
+  const saveGranted = useCallback((pos: GeoPosition) => {
+    const loc: UserLocation = { lat: pos.lat, lng: pos.lng };
+    setLocation(loc);
+    setStatus('granted');
+    safeStorage.setJSON<CachedLocation>(CACHE_KEY, { ...loc, at: Date.now() });
+    safeStorage.set(GRANTED_KEY, '1');
+    safeStorage.remove(DENIED_KEY);
+  }, []);
 
   // רענון שקט: לא משנה status (שלא יקפוץ "מבקש מיקום..."), רק מעדכן location.
   // אם הדפדפן ביטל הרשאה (err.code===1), זה מוחזר ל-denied.
@@ -76,38 +93,21 @@ export function useUserLocation() {
   // תמיכה ב-Permissions API ל-geolocation (חלק מגרסאות Safari) ממשיכים
   // להתנהגות הקודמת.
   const silentRefresh = useCallback(async () => {
-    if (!('geolocation' in navigator)) return;
-    if (navigator.permissions) {
-      try {
-        const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-        if (perm.state !== 'granted') return;
-      } catch {
-        // Permissions API לא תומך ב-geolocation בדפדפן הזה - ממשיכים כרגיל
+    if (!isGeoSupported() || !(await canReadSilently())) return;
+    try {
+      saveGranted(await getGeoPosition({ enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60 * 1000 }));
+    } catch (err) {
+      // אם המערכת ביטלה הרשאה אחרי שהמשתמש אישר - מוחקים את הדגל
+      if ((err as { code?: number }).code === 1) {
+        safeStorage.remove(GRANTED_KEY);
+        safeStorage.remove(CACHE_KEY);
+        setLocation(null);
+        setStatus('denied');
+        safeStorage.set(DENIED_KEY, '1');
       }
+      // שאר השגיאות (timeout, position unavailable) - לא משנים את ה-UI כדי לא להציק
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setLocation(loc);
-        setStatus('granted');
-        safeStorage.setJSON<CachedLocation>(CACHE_KEY, { ...loc, at: Date.now() });
-        safeStorage.set(GRANTED_KEY, '1');
-        safeStorage.remove(DENIED_KEY);
-      },
-      (err) => {
-        // אם הדפדפן ביטל הרשאה אחרי שהמשתמש אישר - מוחקים את הדגל ומחזירים ל-idle
-        if (err.code === 1) {
-          safeStorage.remove(GRANTED_KEY);
-          safeStorage.remove(CACHE_KEY);
-          setLocation(null);
-          setStatus('denied');
-          safeStorage.set(DENIED_KEY, '1');
-        }
-        // שאר השגיאות (timeout, position unavailable) - לא משנים את ה-UI כדי לא להציק
-      },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60 * 1000 }
-    );
-  }, []);
+  }, [saveGranted]);
 
   // הפעלה אוטומטית: אם המשתמש אישר בעבר אבל הקואורדינטות ישנות (או חסרות),
   // מרעננים ברקע. למשתמש חדש (status==='idle') לא מבקשים אוטומטית.
@@ -120,7 +120,7 @@ export function useUserLocation() {
   }, []);
 
   const requestLocation = useCallback(() => {
-    if (!('geolocation' in navigator)) {
+    if (!isGeoSupported()) {
       setStatus('unavailable');
       return;
     }
@@ -130,32 +130,23 @@ export function useUserLocation() {
     setStatus('requesting');
     // טיימסטמפ לזיהוי דחייה מיידית = הדפדפן חוסם לצמיתות ולא בכלל מציג prompt
     const requestedAt = Date.now();
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setLocation(loc);
-        setStatus('granted');
-        safeStorage.setJSON<CachedLocation>(CACHE_KEY, { ...loc, at: Date.now() });
-        safeStorage.set(GRANTED_KEY, '1');
-        safeStorage.remove(DENIED_KEY);
-      },
-      (err) => {
-        if (err.code === 1) {
-          // אם השגיאה הגיעה בפחות מ-300ms, זו דחייה אוטומטית של הדפדפן
-          // (לא בקש prompt מהמשתמש). זה אומר שהמיקום חסום בהגדרות הדפדפן
-          // ו'נסה שוב' לא יעזור - צריך לפתוח הגדרות אתר ידנית.
-          const wasInstant = Date.now() - requestedAt < 300;
-          setStatus(wasInstant ? 'blocked' : 'denied');
-          safeStorage.set(DENIED_KEY, '1');
-          safeStorage.remove(GRANTED_KEY);
-        } else {
-          setStatus('error');
-        }
-      },
+    getGeoPosition(
       // timeout מוגדל ל-15 שניות כדי לתת זמן ל-iOS PWA לסיים גם בקליטה איטית
-      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 5 * 60 * 1000 }
-    );
-  }, []);
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 5 * 60 * 1000 },
+    ).then(saveGranted).catch((err: { code?: number }) => {
+      if (err.code === 1) {
+        // אם השגיאה הגיעה בפחות מ-300ms, זו דחייה אוטומטית של הדפדפן
+        // (לא בקש prompt מהמשתמש). זה אומר שהמיקום חסום בהגדרות הדפדפן
+        // ו'נסה שוב' לא יעזור - צריך לפתוח הגדרות אתר ידנית.
+        const wasInstant = Date.now() - requestedAt < 300;
+        setStatus(wasInstant ? 'blocked' : 'denied');
+        safeStorage.set(DENIED_KEY, '1');
+        safeStorage.remove(GRANTED_KEY);
+      } else {
+        setStatus('error');
+      }
+    });
+  }, [saveGranted]);
 
   // איפוס denied + ניסיון התחברות מיידי. שימושי ב"נסה שוב" כשהמשתמש סירב
   // ואז שינה את ההרשאה בהגדרות הדפדפן/אפליקציה.
@@ -179,34 +170,18 @@ export function useUserLocation() {
       // אם המשתמש כעת ב-denied/error/unavailable - ננסה ברקע. אם זה כעת מאושר,
       // ייצא ל-granted; אם עדיין מסורב, נשארים באותו status.
       if (status === 'denied' || status === 'error') {
-        if (!('geolocation' in navigator)) return;
-        // כמו ב-silentRefresh: בודקים הרשאה אמיתית לפני קריאה שקטה, כדי
-        // שלא יופיע prompt נייטיבי מפתיע רק מזה שהמשתמש חזר לטאב.
-        if (navigator.permissions) {
-          try {
-            const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-            if (perm.state !== 'granted') return;
-          } catch {
-            // ממשיכים כרגיל אם אין תמיכה
-          }
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setLocation(loc);
-            setStatus('granted');
-            safeStorage.setJSON<CachedLocation>(CACHE_KEY, { ...loc, at: Date.now() });
-            safeStorage.set(GRANTED_KEY, '1');
-            safeStorage.remove(DENIED_KEY);
-          },
-          () => { /* שקט - נשארים באותו status */ },
-          { enableHighAccuracy: false, timeout: 8_000, maximumAge: 60_000 }
-        );
+        if (!isGeoSupported()) return;
+        // כמו ב-silentRefresh: רק כשההרשאה כבר ניתנת, כדי שלא יופיע חלון
+        // בקשה מפתיע רק מזה שהמשתמש חזר לאפליקציה. כאן נדרש granted מפורש.
+        if ((await geoPermission()) !== 'granted') return;
+        getGeoPosition({ enableHighAccuracy: false, timeout: 8_000, maximumAge: 60_000 })
+          .then(saveGranted)
+          .catch(() => { /* שקט - נשארים באותו status */ });
       }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [status]);
+  }, [status, saveGranted]);
 
   return { location, status, requestLocation, resetDenied, retryRequest };
 }

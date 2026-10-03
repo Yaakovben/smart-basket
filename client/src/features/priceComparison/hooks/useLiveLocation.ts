@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { UserLocation } from './useUserLocation';
+import { geoPermission, isGeoSupported, watchGeoPosition } from '../../../global/services/geo';
 
 export interface LiveLocation extends UserLocation {
   // רדיוס הדיוק במטרים, כפי שהמכשיר מדווח
@@ -16,33 +17,27 @@ export function useLiveLocation(stored: UserLocation | null, permitted: boolean)
   const [live, setLive] = useState<LiveLocation | null>(null);
 
   useEffect(() => {
-    if (!permitted || !('geolocation' in navigator)) return;
+    if (!permitted || !isGeoSupported()) return;
     let cancelled = false;
-    let watchId: number | null = null;
+    let stop: (() => void) | null = null;
 
     const start = async () => {
-      // לא מציגים בקשת הרשאה יזומה מתוך רקע: אם ההרשאה נחסמה, לא מבקשים
-      if (navigator.permissions) {
-        try {
-          const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-          if (perm.state === 'denied') return;
-        } catch { /* אין תמיכה ב-Permissions API לגיאולוקיישן - ממשיכים */ }
-      }
-      if (cancelled) return;
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          if (cancelled) return;
-          setLive({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, live: true });
-        },
-        () => { /* שגיאה זמנית (אין קליטת GPS בתוך בניין): נשארים עם המיקום האחרון */ },
+      // מעקב רק כשההרשאה כבר ניתנת. אם המערכת במצב "לשאול בכל פעם" (כך בדרך
+      // כלל באתר שמותקן למסך הבית באייפון), מעקב היה פותח חלון בקשה בכל כניסה
+      // לעמוד הסריקה. אז נשארים עם המיקום השמור. unknown: דפדפן בלי
+      // Permissions API למיקום, כמו קודם.
+      const perm = await geoPermission();
+      if (cancelled || (perm !== 'granted' && perm !== 'unknown')) return;
+      stop = watchGeoPosition(
         { enableHighAccuracy: true, maximumAge: 10_000, timeout: 20_000 },
+        (pos) => { if (!cancelled) setLive({ ...pos, live: true }); },
       );
     };
     void start();
 
     return () => {
       cancelled = true;
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      stop?.();
     };
   }, [permitted]);
 
