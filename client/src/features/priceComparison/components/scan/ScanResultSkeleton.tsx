@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { ShimmerBlock } from '../../../../global/components';
 import type { PriceScanStrings } from '../../priceScan.strings';
@@ -12,11 +11,10 @@ const STEP_MS = 1100;
 
 // המתנה לתוצאה: ברקוד מונפש עם קרן סריקה, רשימת שלבים שמתמלאת בהדרגה, וביטול
 // זמין תמיד. מתחת, שלד בצורת התוצאה עצמה, כדי שהמעבר לא יקפיץ את המסך.
-export const ScanResultSkeleton = ({ s, isDark, barcode, slow, onCancel }: {
+export const ScanResultSkeleton = ({ s, isDark, barcode, onCancel }: {
   s: PriceScanStrings;
   isDark: boolean;
   barcode: string | null;
-  slow: boolean;
   onCancel: () => void;
 }) => {
   const [step, setStep] = useState(0);
@@ -51,10 +49,10 @@ export const ScanResultSkeleton = ({ s, isDark, barcode, slow, onCancel }: {
           {barcode && (
             <Typography dir="ltr" sx={{ fontSize: 12, color: 'text.disabled', mt: 0.75, letterSpacing: 1.5 }}>{barcode}</Typography>
           )}
+          {/* אותה כותרת רגועה לאורך כל ההמתנה, בלי להדגיש שזה לוקח זמן */}
           <Typography sx={{ fontSize: 16, fontWeight: 900, mt: 1.25, textAlign: 'center' }}>
-            {slow ? s.loadingSlowTitle : s.loadingTitle}
+            {s.loadingTitle}
           </Typography>
-          {slow && <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mt: 0.25, textAlign: 'center' }}>{s.loadingSlow}</Typography>}
         </Box>
 
         {/* השלבים: מה כבר נבדק, ומה נבדק עכשיו */}
@@ -79,28 +77,25 @@ export const ScanResultSkeleton = ({ s, isDark, barcode, slow, onCancel }: {
                   {done && <CheckRoundedIcon sx={{ fontSize: 15, color: '#fff' }} />}
                 </Box>
                 <Typography sx={{ fontSize: 13.5, fontWeight: current ? 800 : 600, color: done ? 'text.secondary' : 'text.primary' }}>
-                  {label}
+                  {/* שלב שהסתיים בלי שלוש נקודות: הוא כבר לא "בתהליך" */}
+                  {done ? label.replace(/(\.\.\.|…)$/, '') : label}
                 </Typography>
               </Box>
             );
           })}
         </Box>
 
-        <Button
-          variant={slow ? 'contained' : 'text'} fullWidth onClick={onCancel}
-          sx={{
-            mt: 1.75, borderRadius: '12px', py: 0.9, gap: 1, textTransform: 'none', fontWeight: 800, fontSize: 14.5,
-            ...(slow
-              ? { bgcolor: 'error.main', color: '#fff', '&:hover': { bgcolor: 'error.dark' } }
-              : { color: 'text.secondary', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.04)' }),
-          }}
-        >
-          {/* רווח קבוע בין האייקון לטקסט (startIcon נצמד לטקסט בעברית) */}
-          <CloseRoundedIcon sx={{ fontSize: 20 }} />
-          {s.cancel}
-        </Button>
+        {/* ביטול זמין, אבל שקט: קישור טקסט קטן ולא כפתור בולט */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.25 }}>
+          <Button
+            variant="text" onClick={onCancel}
+            sx={{ textTransform: 'none', fontWeight: 600, fontSize: 13, color: 'text.disabled', minWidth: 0, px: 1.5, '&:hover': { bgcolor: 'transparent', color: 'text.secondary' } }}
+          >
+            {s.cancel}
+          </Button>
+        </Box>
       </Box>
-      {/* שלד בצורת התוצאה: הכי זול בארץ, ואז המומלץ קרוב */}
+      {/* שלד בצורת התוצאה: הסניף הכי זול, ואז הסניפים הקרובים */}
       <ShimmerBlock height={150} radius={22} />
       <ShimmerBlock height={170} radius={18} />
     </Box>

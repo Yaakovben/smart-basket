@@ -35,7 +35,7 @@ export const PriceScanPage = () => {
   const { location: storedLocation, status: locationStatus, requestLocation, resetDenied } = useUserLocation();
   // מיקום GPS חי ומדויק כל עוד העמוד פתוח, כדי לזהות את הסופר שהמשתמש עומד בו
   const location = useLiveLocation(storedLocation, locationStatus === 'granted');
-  const { barcode, phase, result, slow, timedOut, refreshing, recent, check, cancel, clearRecent } = usePriceScan(location);
+  const { barcode, phase, result, timedOut, refreshing, recent, check, cancel, clearRecent } = usePriceScan(location);
 
   const [scannerOpen, setScannerOpen] = useState(true);
 
@@ -85,7 +85,7 @@ export const PriceScanPage = () => {
 
       <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {phase === 'loading' && <ScanResultSkeleton s={s} isDark={isDark} barcode={barcode} slow={slow} onCancel={cancelCheck} />}
+          {phase === 'loading' && <ScanResultSkeleton s={s} isDark={isDark} barcode={barcode} onCancel={cancelCheck} />}
 
           {phase === 'notFound' && (
             <Box sx={{ ...scanCardSx(isDark), textAlign: 'center', py: 2.5 } as object}>
