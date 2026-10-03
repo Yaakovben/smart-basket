@@ -32,7 +32,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   const isDark = settings.theme === 'dark';
 
   const {
-    editProfile, confirmLogout, hasChanges, savingProfile,
+    editProfile, confirmLogout, hasChanges, savingProfile, nameError, emailError,
     setConfirmLogout,
     openEditProfile, handleSave, handleLogout, updateEditField, closeEdit
   } = useProfile({ user, onUpdateUser, onLogout });
@@ -174,6 +174,9 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 onChange={e => updateEditField('name', e.target.value)}
                 onClear={() => updateEditField('name', '')}
                 placeholder={t('name')}
+                required
+                error={!!nameError}
+                helperText={nameError ? t(nameError) : undefined}
               />
             </Box>
 
@@ -187,6 +190,11 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 onChange={e => updateEditField('email', e.target.value)}
                 onClear={() => updateEditField('email', '')}
                 placeholder="name@example.com"
+                type="email"
+                inputProps={{ dir: 'ltr', inputMode: 'email', autoComplete: 'email' }}
+                required
+                error={!!emailError}
+                helperText={emailError ? t(emailError) : undefined}
               />
             </Box>
 
@@ -195,7 +203,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               <Button variant="outlined" onClick={closeEdit} sx={{ flex: 1 }}>
                 {t('cancel')}
               </Button>
-              <Button variant="contained" fullWidth sx={{ flex: 2 }} onClick={handleSave} disabled={!hasChanges || savingProfile}>
+              <Button variant="contained" fullWidth sx={{ flex: 2 }} onClick={handleSave} disabled={!hasChanges || savingProfile || !!nameError || !!emailError}>
                 {savingProfile ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
               </Button>
             </Box>

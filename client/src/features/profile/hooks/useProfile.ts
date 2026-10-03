@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../../../global/types';
+import type { TranslationKeys } from '../../../global/i18n/translations';
+import { isValidEmail } from '../../auth/helpers/auth-helpers';
 import type { EditProfileForm, UseProfileReturn } from '../types/profile-types';
 
 // ===== קבועים =====
@@ -31,6 +33,19 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     );
   }, [editProfile, user]);
 
+  // שם ואימייל חובה: האימייל משמש לכניסה ולשחזור החשבון, אז אי אפשר להשאיר
+  // אותו ריק או לא תקין. כפתור השמירה נחסם והשגיאה מוצגת מתחת לשדה.
+  const nameError = useMemo<TranslationKeys | null>(() => {
+    if (!editProfile) return null;
+    return editProfile.name.trim() ? null : 'enterName';
+  }, [editProfile]);
+  const emailError = useMemo<TranslationKeys | null>(() => {
+    if (!editProfile) return null;
+    const email = editProfile.email.trim();
+    if (!email) return 'enterEmail';
+    return isValidEmail(email) ? null : 'invalidEmail';
+  }, [editProfile]);
+
   // ===== טיפולים =====
   const openEditProfile = useCallback(() => {
     setEditProfile({
@@ -42,10 +57,10 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
   }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
 
   const handleSave = useCallback(async () => {
-    if (editProfile && hasChanges) {
+    if (editProfile && hasChanges && !nameError && !emailError) {
       setSavingProfile(true);
       try {
-        await onUpdateUser(editProfile);
+        await onUpdateUser({ ...editProfile, name: editProfile.name.trim(), email: editProfile.email.trim() });
         setEditProfile(null);
       } catch {
         // שגיאה מטופלת ע"י ההורה - שמירת טופס פתוח
@@ -53,7 +68,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
         setSavingProfile(false);
       }
     }
-  }, [editProfile, hasChanges, onUpdateUser]);
+  }, [editProfile, hasChanges, nameError, emailError, onUpdateUser]);
 
   const handleLogout = useCallback(() => {
     onLogout();
@@ -76,6 +91,8 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     confirmLogout,
     hasChanges,
     savingProfile,
+    nameError,
+    emailError,
     setEditProfile,
     setConfirmLogout,
     openEditProfile,

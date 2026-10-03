@@ -1,3 +1,4 @@
+import type { TranslationKeys } from '../../../global/i18n/translations';
 // ===== טופס עריכת פרופיל =====
 export interface EditProfileForm {
   name: string;
@@ -12,6 +13,9 @@ export interface UseProfileReturn {
   confirmLogout: boolean;
   hasChanges: boolean;
   savingProfile: boolean;
+  // מפתח הודעת שגיאה לשדה (null = תקין)
+  nameError: TranslationKeys | null;
+  emailError: TranslationKeys | null;
   setEditProfile: (profile: EditProfileForm | null) => void;
   setConfirmLogout: (show: boolean) => void;
   openEditProfile: () => void;
