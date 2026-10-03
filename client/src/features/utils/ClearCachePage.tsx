@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import CachedIcon from '@mui/icons-material/Cached';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import ErrorIcon from '@mui/icons-material/ErrorRounded';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmptyRounded';
+import CachedIcon from '@mui/icons-material/CachedRounded';
 import { useSettings } from '../../global/context/SettingsContext';
 
 type StepStatus = 'pending' | 'running' | 'success' | 'error';

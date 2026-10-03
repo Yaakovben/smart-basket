@@ -1,9 +1,9 @@
 import { Box, Typography, Skeleton } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import PeopleIcon from '@mui/icons-material/People';
-import LoginIcon from '@mui/icons-material/Login';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import TrendingUpIcon from '@mui/icons-material/TrendingUpRounded';
+import PeopleIcon from '@mui/icons-material/PeopleRounded';
+import LoginIcon from '@mui/icons-material/LoginRounded';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonthRounded';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
 import { cardSx, infoCardSx, pulse } from '../styles/AdminDashboard.styles';

@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Box, Typography, Dialog, ButtonBase, TextField, Button, IconButton } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/SearchRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { priceComparisonApi, type ProductSearchResult } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';

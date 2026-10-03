@@ -1,5 +1,5 @@
 import { Box, Typography, Paper, InputAdornment, Button } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import SearchIcon from '@mui/icons-material/SearchRounded';
 import { ClearableTextField } from '../../../global/components';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { LoginActivity, Language } from '../../../global/types';

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import NearMeIcon from '@mui/icons-material/NearMe';
+import StorefrontIcon from '@mui/icons-material/StorefrontRounded';
+import NearMeIcon from '@mui/icons-material/NearMeRounded';
 import type { NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { TextAction } from './TextAction';

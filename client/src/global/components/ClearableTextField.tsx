@@ -1,5 +1,5 @@
 import { TextField, IconButton, InputAdornment, type TextFieldProps } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useSettings } from '../context/SettingsContext';
 
 interface ClearableTextFieldProps extends Omit<TextFieldProps, 'value'> {

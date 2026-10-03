@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import HomeIcon from '@mui/icons-material/Home';
+import HomeIcon from '@mui/icons-material/HomeRounded';
 import type { InsightsData } from '../../../../services/api';
 import { CATEGORY_ICONS } from '../../../../global/constants';
 import { haptic } from '../../../../global/helpers';

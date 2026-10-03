@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from '@mui/material';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import AddCircleIcon from '@mui/icons-material/AddCircleRounded';
 import { ShimmerBlock } from '../../../global/components';
 import { PriceSyncBranchAddForm } from './PriceSyncBranchAddForm';
 import { PriceSyncBranchRow } from './PriceSyncBranchRow';

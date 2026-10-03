@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddRoundedIcon from '@mui/icons-material/BookmarkAddRounded';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeftRounded';
 import { Modal } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';

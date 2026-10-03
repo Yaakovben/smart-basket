@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoRounded';
 import type { PriceMatch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { TextAction } from './TextAction';

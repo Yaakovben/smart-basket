@@ -1,9 +1,9 @@
 import { memo, useEffect, useState } from 'react';
 import { Box, Typography, Dialog, ButtonBase, IconButton } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import NearMeIcon from '@mui/icons-material/NearMe';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
+import StorefrontIcon from '@mui/icons-material/StorefrontRounded';
+import NearMeIcon from '@mui/icons-material/NearMeRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { ChainBranchOption } from '../types/priceComparison.types';
 import { priceComparisonApi, type UserLocation } from '../services/priceComparison.api';
 import { useSettings } from '../../../global/context/SettingsContext';

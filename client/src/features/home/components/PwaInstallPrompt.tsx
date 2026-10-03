@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Box, Typography, IconButton, Button } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { canShowSecondaryPopup, markPopupShown } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';

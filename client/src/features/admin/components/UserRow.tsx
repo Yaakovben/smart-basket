@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Typography, Paper, Collapse, IconButton } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';

@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { ShimmerList } from '../../../global/components/Shimmer';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { renderFaithText } from '../helpers/formatFaithText';

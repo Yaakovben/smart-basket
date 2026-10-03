@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -87,7 +88,7 @@ export const SelectionActionBar = memo(({
             transition: 'all 0.15s',
           }}
         >
-          <Typography sx={{ fontSize: 18, color: 'text.secondary', lineHeight: 1 }}>✕</Typography>
+          <CloseRoundedIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
         </Box>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>

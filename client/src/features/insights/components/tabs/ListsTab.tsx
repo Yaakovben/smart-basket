@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
+import HomeIcon from '@mui/icons-material/HomeRounded';
 import type { InsightsData } from '../../../../services/api';
 import type { PriceComparisonData } from '../../../priceComparison';
 import { haptic } from '../../../../global/helpers';

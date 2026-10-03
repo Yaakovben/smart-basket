@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
-import CloudOffIcon from '@mui/icons-material/CloudOff';
+import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import { adminApi } from '../../../services/api';
 import type { CloudinaryHealth } from '../../../services/api/admin.api';

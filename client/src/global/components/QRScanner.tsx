@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, Box, Typography, IconButton, Button } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
-import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
+import BarcodeScannerIcon from '@mui/icons-material/ViewWeekRounded';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibraryRounded';
 import FlashlightOnRoundedIcon from '@mui/icons-material/FlashlightOnRounded';
 import FlashlightOffRoundedIcon from '@mui/icons-material/FlashlightOffRounded';
 import { haptic } from '../helpers';

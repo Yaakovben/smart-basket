@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Box, Typography, IconButton, keyframes } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { safeStorage } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Drawer, Typography, IconButton, Button } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
 import { aiErrorText } from '../../../aiAssistant/helpers/aiErrorText';

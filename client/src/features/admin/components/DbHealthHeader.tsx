@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
 import type { ReactNode } from 'react';
 
 interface DbHealthHeaderProps {

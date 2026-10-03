@@ -1,11 +1,11 @@
 import { Box } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
-import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
-import AddToHomeScreenIcon from '@mui/icons-material/AddToHomeScreen';
-import LanguageIcon from '@mui/icons-material/Language';
-import EmailIcon from '@mui/icons-material/Email';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroidRounded';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphoneRounded';
+import AddToHomeScreenIcon from '@mui/icons-material/AddToHomeScreenRounded';
+import LanguageIcon from '@mui/icons-material/LanguageRounded';
+import EmailIcon from '@mui/icons-material/EmailRounded';
 import type { LoginActivity } from '../../../global/types';
 import { methodColor } from '../helpers/loginActivityHelpers';
 import { methodBadgeSx } from '../styles/UsersTable.styles';

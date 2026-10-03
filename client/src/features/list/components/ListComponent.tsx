@@ -1,6 +1,6 @@
 import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweepRounded';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';

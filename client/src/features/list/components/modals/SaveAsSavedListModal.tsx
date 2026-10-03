@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Box, Typography, Button, Chip, CircularProgress, Collapse, TextField, InputAdornment, IconButton } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -171,7 +172,7 @@ export const SaveAsSavedListModal = ({ products, onSave, onClose, onSaved }: Sav
         }}
         InputProps={{
           startAdornment: (
-            <InputAdornment position="start" sx={{ mr: 1.25 }}><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
+            <InputAdornment position="start" sx={{ mr: 1.25 }}><ShoppingCartRoundedIcon sx={{ fontSize: 20, color: 'primary.main' }} /></InputAdornment>
           ),
           endAdornment: (
             <InputAdornment position="end" sx={{ ml: 0.75 }}>

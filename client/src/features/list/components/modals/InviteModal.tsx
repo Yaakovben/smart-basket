@@ -1,12 +1,12 @@
 import { memo, useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Box, Typography, Button, IconButton, Avatar } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DownloadIcon from '@mui/icons-material/Download';
-import QrCode2Icon from '@mui/icons-material/QrCode2';
-import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import PersonAddIcon from '@mui/icons-material/PersonAddRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import QrCode2Icon from '@mui/icons-material/QrCode2Rounded';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyRounded';
 import type { List } from '../../../../global/types';
 import { haptic, COMMON_STYLES, generateInviteMessage, BRAND_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';

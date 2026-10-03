@@ -1,7 +1,9 @@
 import type { RefObject } from 'react';
 import { Box, Typography, TextField, Button, InputAdornment, Alert, CircularProgress } from '@mui/material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import PersonAddIcon from '@mui/icons-material/PersonAddRounded';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { Modal } from '../../../global/components';
@@ -95,8 +97,8 @@ export const JoinGroupModal = ({
               <InputAdornment position="start">
                 <Box
                   onClick={() => { onCodeChange(''); onClearError(); }}
-                  sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700, cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-                >✕</Box>
+                  sx={{ color: '#EF4444', display: 'flex', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+                ><CloseRoundedIcon sx={{ fontSize: 20 }} /></Box>
               </InputAdornment>
             ) : joinCode.length === 6 ? (
               <InputAdornment position="start">
@@ -106,7 +108,7 @@ export const JoinGroupModal = ({
                   fontWeight: 700,
                   animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                   ...checkmarkPopKeyframes
-                }}>✓</Box>
+                }}><CheckRoundedIcon sx={{ fontSize: 20, display: 'block' }} /></Box>
               </InputAdornment>
             ) : null
           }}
@@ -143,8 +145,8 @@ export const JoinGroupModal = ({
               <InputAdornment position="start">
                 <Box
                   onClick={() => { onPassChange(''); onClearError(); }}
-                  sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700, cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-                >✕</Box>
+                  sx={{ color: '#EF4444', display: 'flex', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+                ><CloseRoundedIcon sx={{ fontSize: 20 }} /></Box>
               </InputAdornment>
             ) : joinPass.length === 4 ? (
               <InputAdornment position="start">
@@ -154,7 +156,7 @@ export const JoinGroupModal = ({
                   fontWeight: 700,
                   animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                   ...checkmarkPopKeyframes
-                }}>✓</Box>
+                }}><CheckRoundedIcon sx={{ fontSize: 20, display: 'block' }} /></Box>
               </InputAdornment>
             ) : null
           }}

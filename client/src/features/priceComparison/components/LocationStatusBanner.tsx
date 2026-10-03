@@ -1,7 +1,7 @@
 import { Box, Typography, CircularProgress } from '@mui/material';
-import MyLocationIcon from '@mui/icons-material/MyLocation';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import LocationOffIcon from '@mui/icons-material/LocationOff';
+import MyLocationIcon from '@mui/icons-material/MyLocationRounded';
+import LocationOnIcon from '@mui/icons-material/LocationOnRounded';
+import LocationOffIcon from '@mui/icons-material/LocationOffRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { LocationStatus } from '../hooks/useUserLocation';

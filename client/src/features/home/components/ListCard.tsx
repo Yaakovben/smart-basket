@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, memo } from 'react';
 import { Box, Typography, Card, Chip, IconButton } from '@mui/material';
-import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOffRounded';
+import MoreVertIcon from '@mui/icons-material/MoreVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import type { List, Product } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';

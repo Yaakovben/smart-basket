@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Paper, Switch, CircularProgress } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeftRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications, useFreemiumEnabled } from '../../../global/hooks';
 import { SubscriptionRowBadge } from '../../subscription/components/SubscriptionRowBadge';

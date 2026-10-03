@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { ActivityIcon } from './UserMethodBadge';
 import { activityLabel } from '../helpers/loginActivityHelpers';

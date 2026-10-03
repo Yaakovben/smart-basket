@@ -1,7 +1,7 @@
 import { memo, useCallback } from 'react';
 import { Box, Typography, Collapse, keyframes } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import NearMeIcon from '@mui/icons-material/NearMe';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import NearMeIcon from '@mui/icons-material/NearMeRounded';
 import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';

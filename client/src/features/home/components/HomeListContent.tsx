@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Box, Typography, Button } from '@mui/material';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
-import CloudOffIcon from '@mui/icons-material/CloudOff';
+import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
 import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import type { List, User } from '../../../global/types';

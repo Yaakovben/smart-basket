@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AccessTimeIcon from '@mui/icons-material/AccessTimeRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../../global/helpers/dateFormatting';
 

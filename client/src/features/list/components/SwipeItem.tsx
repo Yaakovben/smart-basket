@@ -4,6 +4,10 @@ import { Box, Typography } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import CloudOffRoundedIcon from '@mui/icons-material/CloudOffRounded';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { isTempId } from '../helpers/list-helpers';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
@@ -356,15 +360,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         }}
       >
         <Box role="button" aria-label={t('delete')} onClick={(e) => { e.stopPropagation(); haptic('medium'); doDelete(); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
-          <span>🗑️</span>
+          <DeleteRoundedIcon sx={{ fontSize: 20 }} />
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
         <Box role="button" aria-label={t('edit')} onClick={(e) => { e.stopPropagation(); haptic('light'); doEdit(); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
-          <span>✏️</span>
+          <EditRoundedIcon sx={{ fontSize: 20 }} />
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
         </Box>
         <Box role="button" aria-label={isPurchased ? t('return') : t('purchased')} onClick={(e) => { e.stopPropagation(); haptic('light'); doToggle(); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
-          <span>{isPurchased ? '↩️' : '✓'}</span>
+          {isPurchased ? <UndoRoundedIcon sx={{ fontSize: 20 }} /> : <CheckRoundedIcon sx={{ fontSize: 20 }} />}
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
         </Box>
       </Box>

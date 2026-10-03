@@ -6,8 +6,8 @@
 import { memo } from 'react';
 import { siWaze, siGooglemaps } from 'simple-icons';
 import { Box, Typography, IconButton, Dialog } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import LocationOnIcon from '@mui/icons-material/LocationOnRounded';
 import type { NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 

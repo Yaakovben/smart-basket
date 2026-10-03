@@ -1,4 +1,5 @@
 import { Box, Typography, Button } from '@mui/material';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { LANGUAGES } from '../../../global/constants';
 import type { Language } from '../../../global/types';
@@ -26,7 +27,7 @@ export const LanguageModal = ({ onClose, onSelect }: LanguageModalProps) => {
                   <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary' }}>{lang.name}</Typography>
                   <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{lang.nameEn}</Typography>
                 </Box>
-                {isSelected && <Typography sx={{ fontSize: 20, color: 'primary.main' }}>✓</Typography>}
+                {isSelected && <CheckCircleRoundedIcon sx={{ fontSize: 22, color: 'primary.main' }} />}
               </Box>
             </Button>
           );

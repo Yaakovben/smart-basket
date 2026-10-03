@@ -1,6 +1,6 @@
 import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment, CircularProgress } from '@mui/material';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
 import { detectCategory } from '../../../../global/helpers/categoryDetector';

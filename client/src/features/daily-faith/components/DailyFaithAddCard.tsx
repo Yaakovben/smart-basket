@@ -1,6 +1,6 @@
 import { Box, Typography, Button, IconButton, CircularProgress, Collapse } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import AddIcon from '@mui/icons-material/AddRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import { ClearableTextField } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';

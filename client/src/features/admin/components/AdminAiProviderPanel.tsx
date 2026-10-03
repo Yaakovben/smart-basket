@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import type { AiProviderStatus } from '../../../services/api/admin.api';
 
 interface AdminAiProviderPanelProps {

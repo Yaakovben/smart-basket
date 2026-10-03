@@ -1,4 +1,7 @@
 import { Box, TextField, Typography, Button, CircularProgress, InputAdornment, Collapse } from '@mui/material';
+import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { ClearableTextField } from '../../../global/components';
 import { getPasswordStrength } from '../helpers/auth-helpers';
 import { LoginErrorAlert } from './LoginErrorAlert';
@@ -39,7 +42,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
             sx={{ mb: (emailSuggestion && !emailChecked) ? 0.5 : 2, mt: 2 }}
             inputProps={{ dir: 'ltr' }}
             InputProps={{
-              startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>,
+              startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ fontSize: 20, color: 'text.disabled' }} /></InputAdornment>,
               endAdornment: checkingEmail ? (
                 <InputAdornment position="end">
                   <CircularProgress size={18} sx={{ color: 'primary.main' }} />
@@ -93,7 +96,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
               autoFocus
               sx={{ mb: 2 }}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>👤</Box></InputAdornment>
+                startAdornment: <InputAdornment position="start"><PersonRoundedIcon sx={{ fontSize: 20, color: 'text.disabled' }} /></InputAdornment>
               }}
             />
           </Collapse>
@@ -112,7 +115,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
             disabled={isGoogleAccount}
             sx={{ mb: 2 }}
             InputProps={{
-              startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
+              startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ fontSize: 20, color: 'text.disabled' }} /></InputAdornment>
             }}
           />
 

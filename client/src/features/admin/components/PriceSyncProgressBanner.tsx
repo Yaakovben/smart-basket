@@ -1,5 +1,5 @@
 import { Box, Typography, LinearProgress, keyframes } from '@mui/material';
-import SyncIcon from '@mui/icons-material/Sync';
+import SyncIcon from '@mui/icons-material/SyncRounded';
 import type { PriceSyncStatus } from '../../priceComparison';
 
 const spin = keyframes`from{transform:rotate(0)}to{transform:rotate(360deg)}`;

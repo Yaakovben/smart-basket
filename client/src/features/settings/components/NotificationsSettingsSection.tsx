@@ -1,6 +1,9 @@
 import { Box, Typography, Switch, Collapse, CircularProgress } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import ExpandLessIcon from '@mui/icons-material/ExpandLessRounded';
+import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NotificationSettings } from '../../../global/types';
 import { nativePushBlockedHint } from '../../../global/helpers/pushBlockedHint';
@@ -71,7 +74,7 @@ export const NotificationsSettingsSection = ({
               המכשיר. באפליקציה isPwaInstalled תמיד true, ולכן הסבר "הוסף למסך הבית"
               לא מוצג שם (אפל דוחה אפליקציה שמפנה להתקנת אתר). */}
           <Box sx={sectionHeaderRowSx} onClick={togglePushExpanded}>
-            <Box sx={sectionIconBadgeSx(isDark, '#FEF3C7', 'rgba(245,158,11,0.15)')}>📲</Box>
+            <Box sx={sectionIconBadgeSx(isDark, '#FEF3C7', 'rgba(245,158,11,0.15)')}><PhoneIphoneRoundedIcon sx={{ fontSize: 20, color: '#D97706' }} /></Box>
             <Typography sx={sectionLabelSx}>
               {t('pushNotifications')}
             </Typography>
@@ -148,7 +151,7 @@ export const NotificationsSettingsSection = ({
 
           {/* List Notifications Section */}
           <Box sx={sectionHeaderRowWithMtSx} onClick={toggleGroupExpanded}>
-            <Box sx={sectionIconBadgeSx(isDark, '#E0E7FF', 'rgba(99,102,241,0.15)')}>👥</Box>
+            <Box sx={sectionIconBadgeSx(isDark, '#E0E7FF', 'rgba(99,102,241,0.15)')}><GroupsRoundedIcon sx={{ fontSize: 20, color: '#4F46E5' }} /></Box>
             <Typography sx={sectionLabelSx}>{t('groupNotifications')}</Typography>
             <Typography sx={sectionCountBadgeSx}>
               {[notifications.groupJoin, notifications.groupLeave, notifications.groupRemoved ?? true, notifications.groupDelete ?? true, notifications.listUpdate].filter(Boolean).length}/5
@@ -192,7 +195,7 @@ export const NotificationsSettingsSection = ({
           {/* Product Notifications Section */}
           <Box sx={sectionDividerSx} />
           <Box sx={sectionHeaderRowWithMtSx} onClick={toggleProductExpanded}>
-            <Box sx={sectionIconBadgeSx(isDark, '#F0FDF4', 'rgba(34,197,94,0.15)')}>📦</Box>
+            <Box sx={sectionIconBadgeSx(isDark, '#F0FDF4', 'rgba(34,197,94,0.15)')}><Inventory2RoundedIcon sx={{ fontSize: 19, color: '#16A34A' }} /></Box>
             <Typography sx={sectionLabelSx}>{t('productNotifications')}</Typography>
             <Typography sx={sectionCountBadgeSx}>
               {[notifications.productAdd, notifications.productDelete, notifications.productEdit, notifications.productPurchase].filter(Boolean).length}/4

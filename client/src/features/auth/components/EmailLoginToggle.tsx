@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUpRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 
 interface EmailLoginToggleProps {

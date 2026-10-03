@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import type { LocalNotification } from '../../../global/hooks';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';

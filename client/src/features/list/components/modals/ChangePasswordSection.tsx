@@ -1,6 +1,7 @@
 import { memo, useRef, useState } from 'react';
 import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import KeyRoundedIcon from '@mui/icons-material/KeyRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { focusWithKeyboard } from '../../../../global/helpers/focusWithKeyboard';
 import {
@@ -37,7 +38,7 @@ export const ChangePasswordSection = memo(({ value, onChange }: ChangePasswordSe
   return (
     <Paper ref={paperRef} elevation={0} sx={settingsCardSx(ACCENT, open, 2)}>
       <Box sx={settingsRowSx} onClick={toggle}>
-        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>🔑</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}><KeyRoundedIcon sx={{ fontSize: 21, color: ACCENT }} /></Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('changePassword')}</Typography>
           <Typography sx={rowHintSx}>{t('changePasswordHint')}</Typography>

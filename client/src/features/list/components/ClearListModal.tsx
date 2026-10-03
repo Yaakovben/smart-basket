@@ -1,9 +1,9 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweepRounded';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCartRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 

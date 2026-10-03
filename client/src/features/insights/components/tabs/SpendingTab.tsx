@@ -9,10 +9,10 @@ import { Box, Typography, Paper, Skeleton, keyframes } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import CheckIcon from '@mui/icons-material/Check';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
+import CheckIcon from '@mui/icons-material/CheckRounded';
+import TrendingUpIcon from '@mui/icons-material/TrendingUpRounded';
+import TrendingDownIcon from '@mui/icons-material/TrendingDownRounded';
+import TrendingFlatIcon from '@mui/icons-material/TrendingFlatRounded';
 import type { InsightsData } from '../../../../services/api';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../../global/constants';
 import { haptic } from '../../../../global/helpers';

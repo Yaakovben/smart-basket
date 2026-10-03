@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { settingsRowSx, rowLabelSx, rowHintSx, settingsCardSx, settingsIconBoxSx, SETTINGS_ACCENTS } from './listSettingsCardSx';
 
@@ -18,7 +19,7 @@ export const ConvertToPrivateSection = memo(({ onClick }: ConvertToPrivateSectio
   return (
     <Paper elevation={0} sx={settingsCardSx(ACCENT, false, 1)}>
       <Box sx={settingsRowSx} onClick={onClick}>
-        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>🔒</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}><LockRoundedIcon sx={{ fontSize: 21, color: ACCENT }} /></Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToPrivate')}</Typography>
           <Typography sx={rowHintSx}>{t('convertToPrivateHint')}</Typography>

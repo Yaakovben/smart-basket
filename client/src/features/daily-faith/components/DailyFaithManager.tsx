@@ -1,7 +1,7 @@
 import { Box, Typography, TextField, IconButton, InputAdornment, Collapse } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import ClearIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/SearchRounded';
+import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
+import ClearIcon from '@mui/icons-material/CloseRounded';
 import { AdminSectionShell } from '../../admin/components/AdminSectionShell';
 import { ConfirmModal } from '../../../global/components/ConfirmModal';
 import { useSettings } from '../../../global/context/SettingsContext';

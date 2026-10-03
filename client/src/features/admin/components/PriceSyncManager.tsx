@@ -8,10 +8,10 @@
  */
 
 import { Box, Typography, IconButton } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import PlaceIcon from '@mui/icons-material/Place';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import StorefrontIcon from '@mui/icons-material/StorefrontRounded';
+import PlaceIcon from '@mui/icons-material/PlaceRounded';
+import ScheduleIcon from '@mui/icons-material/ScheduleRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import { useNavigate } from 'react-router-dom';
 import { PriceSyncSkeleton } from './PriceSyncSkeleton';
 import { AdminSectionShell } from './AdminSectionShell';

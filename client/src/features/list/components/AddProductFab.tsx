@@ -1,6 +1,6 @@
 import { memo, useRef, useCallback } from 'react';
 import { Box, Fab } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from '@mui/icons-material/AddRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { FabPosition } from '../types/list-types';

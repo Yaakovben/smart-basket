@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Box, Typography, Chip, IconButton, Button, Collapse, TextField, InputAdornment } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import type { SavedList } from '../../../../global/types';
 import { Modal, ConfirmModal, ClearableTextField, IconTile } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -299,7 +300,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
                         }}
                         InputProps={{
                           startAdornment: (
-                            <InputAdornment position="start" sx={{ mr: 1.25 }}><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
+                            <InputAdornment position="start" sx={{ mr: 1.25 }}><ShoppingCartRoundedIcon sx={{ fontSize: 20, color: 'primary.main' }} /></InputAdornment>
                           ),
                           endAdornment: (
                             <InputAdornment position="end" sx={{ ml: 0.75 }}>

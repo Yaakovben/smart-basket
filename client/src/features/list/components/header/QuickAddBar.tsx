@@ -1,9 +1,10 @@
 import { memo, useState, useCallback, useRef, useMemo } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
+import AddIcon from '@mui/icons-material/AddRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import MicIcon from '@mui/icons-material/MicRounded';
+import MicOffIcon from '@mui/icons-material/MicOffRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import type { List } from '../../../../global/types';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -131,7 +132,7 @@ export const QuickAddBar = memo(({ list, onQuickAdd }: QuickAddBarProps) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Box sx={{ fontSize: 20 }}>🛒</Box>
+              <ShoppingCartRoundedIcon sx={{ fontSize: 21, color: 'primary.main' }} />
             </InputAdornment>
           ),
           endAdornment: (() => {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, IconButton, CircularProgress } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';

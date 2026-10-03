@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, Button, Typography, Box, Chip } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';

@@ -1,8 +1,8 @@
 import { useState, memo, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import SendIcon from '@mui/icons-material/Send';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import SendIcon from '@mui/icons-material/SendRounded';
 import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/helpers';

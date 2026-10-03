@@ -1,8 +1,8 @@
 import { Box, Typography, Collapse } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlineRounded';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { PriceChainStatus } from '../../priceComparison';
 import { humanizeError } from '../helpers/priceSyncHelpers';
 import { formatUpdatedAt } from '../../../global/helpers';

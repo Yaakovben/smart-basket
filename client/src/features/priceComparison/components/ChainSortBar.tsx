@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import MapOutlinedIcon from '@mui/icons-material/MapRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { SortMode } from '../helpers/priceComparisonCardHelpers';

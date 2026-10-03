@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { Box, Typography } from '@mui/material';
-import GroupIcon from '@mui/icons-material/Group';
+import GroupIcon from '@mui/icons-material/GroupRounded';
 import type { InsightsData } from '../../../../services/api';
 import type { PriceListGroup } from '../../../priceComparison/types/priceComparison.types';
 import { haptic } from '../../../../global/helpers';

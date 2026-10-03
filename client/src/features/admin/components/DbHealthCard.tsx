@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import StorageIcon from '@mui/icons-material/Storage';
-import CloudQueueIcon from '@mui/icons-material/CloudQueue';
+import StorageIcon from '@mui/icons-material/StorageRounded';
+import CloudQueueIcon from '@mui/icons-material/CloudQueueRounded';
 import { DbHealthSkeleton } from './DbHealthSkeleton';
 import { useDbHealth } from '../hooks/useDbHealth';
 import { useCloudinaryHealth } from '../hooks/useCloudinaryHealth';

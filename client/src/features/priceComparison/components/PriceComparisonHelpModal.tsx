@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import SearchIcon from '@mui/icons-material/Search';
-import VerifiedIcon from '@mui/icons-material/Verified';
+import StorefrontIcon from '@mui/icons-material/StorefrontRounded';
+import SearchIcon from '@mui/icons-material/SearchRounded';
+import VerifiedIcon from '@mui/icons-material/VerifiedRounded';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 

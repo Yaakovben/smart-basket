@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Typography, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { useSettings } from '../context/SettingsContext';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';

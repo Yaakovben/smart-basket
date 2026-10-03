@@ -1,5 +1,5 @@
 import { Button, Box } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
 
 interface PriceSyncRefreshActionsProps {
   onRefresh: () => void;

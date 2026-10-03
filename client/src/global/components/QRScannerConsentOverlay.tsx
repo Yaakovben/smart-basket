@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
-import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
+import BarcodeScannerIcon from '@mui/icons-material/ViewWeekRounded';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibraryRounded';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
 import {

@@ -1,7 +1,7 @@
 import { Paper, Typography, Box } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
+import TrendingUpIcon from '@mui/icons-material/TrendingUpRounded';
+import TrendingDownIcon from '@mui/icons-material/TrendingDownRounded';
+import TrendingFlatIcon from '@mui/icons-material/TrendingFlatRounded';
 import type { InsightsData } from '../../../../../services/api';
 import { useSettings } from '../../../../../global/context/SettingsContext';
 

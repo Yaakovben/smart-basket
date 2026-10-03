@@ -1,8 +1,8 @@
 import { Box, Typography } from '@mui/material';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import GroupIcon from '@mui/icons-material/Group';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ListAltIcon from '@mui/icons-material/ListAltRounded';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCartRounded';
+import GroupIcon from '@mui/icons-material/GroupRounded';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { AdminUserList } from '../../../services/api';
 import { listCardSx, listCardIconBoxSx, listCardNameSx, listCardProductCountSx } from '../styles/UsersTable.styles';

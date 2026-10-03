@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import InsightsIcon from '@mui/icons-material/Insights';
+import HomeOutlinedIcon from '@mui/icons-material/HomeRounded';
+import InsightsIcon from '@mui/icons-material/InsightsRounded';
 import { haptic } from '../../../global/helpers';
 
 interface InsightsBottomNavProps {

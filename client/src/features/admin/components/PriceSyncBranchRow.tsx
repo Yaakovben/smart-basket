@@ -1,7 +1,7 @@
 import { Box, Typography, IconButton } from '@mui/material';
-import PlaceIcon from '@mui/icons-material/Place';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DeleteIcon from '@mui/icons-material/Delete';
+import PlaceIcon from '@mui/icons-material/PlaceRounded';
+import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import { haptic } from '../../../global/helpers';
 import type { ChainBranch } from '../types/priceSync-types';
 

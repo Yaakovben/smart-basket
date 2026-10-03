@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { haptic } from '../../../../global/helpers';
 
 interface ActivitySectionProps {

@@ -1,6 +1,6 @@
 import { Dialog, Box, Typography, IconButton, Slide } from '@mui/material';
 import type { TransitionProps } from '@mui/material/transitions';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
 import { forwardRef } from 'react';
 import { BranchesMapView } from './BranchesMapView';
 import { useSettings } from '../../../global/context/SettingsContext';

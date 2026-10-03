@@ -1,6 +1,7 @@
 import { memo, useRef, useState } from 'react';
 import { Box, Typography, TextField, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { focusWithKeyboard } from '../../../../global/helpers/focusWithKeyboard';
 import {
@@ -36,7 +37,7 @@ export const ConvertToGroupSection = memo(({ password, onPasswordChange }: Conve
   return (
     <Paper ref={paperRef} elevation={0} sx={settingsCardSx(ACCENT, open)}>
       <Box sx={settingsRowSx} onClick={toggle}>
-        <Box component="span" sx={settingsIconBoxSx(ACCENT)}>👥</Box>
+        <Box component="span" sx={settingsIconBoxSx(ACCENT)}><GroupsRoundedIcon sx={{ fontSize: 21, color: ACCENT }} /></Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToGroup')}</Typography>
           <Typography sx={rowHintSx}>{t('convertToGroupHint')}</Typography>

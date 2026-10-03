@@ -1,7 +1,7 @@
 import { Box, Typography, IconButton, Tabs, Tab, Badge, InputAdornment } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import SearchIcon from '@mui/icons-material/Search';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import NotificationsIcon from '@mui/icons-material/NotificationsRounded';
+import SearchIcon from '@mui/icons-material/SearchRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { ClearableTextField, AvatarRing } from '../../../global/components';
 import type { User } from '../../../global/types';

@@ -1,10 +1,10 @@
 import { memo, useEffect, useState } from 'react';
 import { Box, Typography, Button, IconButton, Avatar, Chip, Menu, MenuItem, ListItemIcon, ListItemText, CircularProgress } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ShareIcon from '@mui/icons-material/Share';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import ShareIcon from '@mui/icons-material/ShareRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfRounded';
+import MoreVertIcon from '@mui/icons-material/MoreVertRounded';
 import type { List, Product } from '../../../../global/types';
 import { COMMON_STYLES, generateShareListMessage, BRAND_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';

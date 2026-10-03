@@ -1,9 +1,9 @@
 import { Box, Typography } from '@mui/material';
-import PublicIcon from '@mui/icons-material/Public';
-import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import EditLocationIcon from '@mui/icons-material/EditLocation';
-import LocationOffIcon from '@mui/icons-material/LocationOff';
+import PublicIcon from '@mui/icons-material/PublicRounded';
+import LocationSearchingIcon from '@mui/icons-material/LocationSearchingRounded';
+import VerifiedIcon from '@mui/icons-material/VerifiedRounded';
+import EditLocationIcon from '@mui/icons-material/EditLocationRounded';
+import LocationOffIcon from '@mui/icons-material/LocationOffRounded';
 import { AdminSectionShell } from './AdminSectionShell';
 
 // שורה במודאל ההסבר - לא מיוצא, משמשת רק את HelpModal

@@ -11,7 +11,7 @@
 
 import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import type { PriceComparisonData, NearestBranch, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';

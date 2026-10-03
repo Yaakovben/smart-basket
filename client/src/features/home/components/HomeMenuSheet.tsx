@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import AddIcon from '@mui/icons-material/AddRounded';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { MENU_OPTIONS } from '../../../global/helpers';
 

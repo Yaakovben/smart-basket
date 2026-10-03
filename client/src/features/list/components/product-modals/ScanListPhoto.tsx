@@ -2,10 +2,10 @@ import { useRef, useState } from 'react';
 import {
   Dialog, Box, Typography, IconButton, Button, TextField, Checkbox,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScannerRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic, CATEGORY_ICONS } from '../../../../global/helpers';
 import { parseOcrList, type OcrListItem } from '../../../../global/helpers/parseOcrList';
 import { ocrApi } from '../../../../services/api';

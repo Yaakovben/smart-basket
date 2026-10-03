@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Button, Paper, CircularProgress, ButtonBase } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import EditIcon from '@mui/icons-material/Edit';
-import LogoutIcon from '@mui/icons-material/Logout';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
+import LogoutIcon from '@mui/icons-material/LogoutRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { User } from '../../../global/types';

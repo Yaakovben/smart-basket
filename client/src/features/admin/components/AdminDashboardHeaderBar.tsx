@@ -1,11 +1,11 @@
 import { Box, Typography } from "@mui/material";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import StorageIcon from "@mui/icons-material/Storage";
-import CampaignIcon from "@mui/icons-material/Campaign";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForwardRounded";
+import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
+import AutoStoriesIcon from "@mui/icons-material/AutoStoriesRounded";
+import StorefrontIcon from "@mui/icons-material/StorefrontRounded";
+import StorageIcon from "@mui/icons-material/StorageRounded";
+import CampaignIcon from "@mui/icons-material/CampaignRounded";
+import RefreshIcon from "@mui/icons-material/RefreshRounded";
 import { headerIconButtonSx } from "../styles/AdminDashboard.styles";
 import { AiAssistantIcon } from "../../../global/components";
 import type { AiStatus } from "../../../services/api/admin.api";
