@@ -14,7 +14,7 @@ interface DbHealthHeaderProps {
 export const DbHealthHeader = ({ onClose, icon, title, meta }: DbHealthHeaderProps) => (
   <Box sx={{
     display: 'flex', alignItems: 'center', gap: 0.5,
-    px: 1, pe: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
+    px: 1, paddingInlineEnd: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
   }}>
     <IconButton onClick={onClose} aria-label="חזרה">
       <ArrowForwardIcon />

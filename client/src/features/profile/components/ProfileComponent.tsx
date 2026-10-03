@@ -110,9 +110,19 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               }}
             >
               {isProActive ? <StarRoundedIcon sx={{ fontSize: 15, color: '#FCD34D' }} /> : null}
-              {isProActive
-                ? `Pro${daysLeft !== null ? ` · ${daysLeft} ${t('daysShort')}` : ''}`
-                : t('upgradeToProShort')}
+              {isProActive ? (
+                <>
+                  Pro
+                  {/* מספר הימים בולט בזהב, כמו בתגית שבהגדרות */}
+                  {daysLeft !== null && (
+                    <>
+                      <Box component="span" sx={{ opacity: 0.6 }}>·</Box>
+                      <Box component="span" sx={{ color: '#FDE68A', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{daysLeft}</Box>
+                      <Box component="span" sx={{ fontWeight: 600, opacity: 0.9 }}>{t('daysShort')}</Box>
+                    </>
+                  )}
+                </>
+              ) : t('upgradeToProShort')}
               <ChevronLeftRoundedIcon sx={{ fontSize: 15, opacity: 0.8 }} />
             </ButtonBase>}
           </>

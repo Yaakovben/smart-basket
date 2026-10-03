@@ -140,7 +140,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr', consentDesc }: Q
               sx={{
                 color: torchOn ? '#111' : '#fff',
                 bgcolor: torchOn ? '#FDE047' : 'rgba(255,255,255,0.18)',
-                width: 36, height: 36, flexShrink: 0, ms: 'auto', me: 1,
+                width: 36, height: 36, flexShrink: 0, marginInlineStart: 'auto', marginInlineEnd: 1,
                 '&:hover': { bgcolor: torchOn ? '#FDE047' : 'rgba(255,255,255,0.28)' },
               }}
             >

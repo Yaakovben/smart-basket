@@ -16,6 +16,13 @@ interface Props {
 
 const DAY_MS = 86_400_000;
 
+// מיקום הניצוצות בכרטיס (באחוזים), כל אחד בקצב משלו
+const SPARKLES = [
+  { top: '14%', start: '52%', size: 14, delay: 0 },
+  { top: '70%', start: '44%', size: 11, delay: 1.1 },
+  { top: '30%', start: '88%', size: 12, delay: 2.2 },
+];
+
 // תגית סגלגלה אחידה לכל המידע הקטן בכרטיס (מקור המנוי)
 const pillSx = {
   px: 1.25, py: 0.4, borderRadius: '999px', border: '1px solid',
@@ -61,10 +68,20 @@ const CountdownRing = ({ days, shown, total, caption }: { days: number; shown: n
             </linearGradient>
           </defs>
           <circle cx={mid} cy={mid} r={r} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" strokeWidth={RING_STROKE} />
-          <circle
+          <Box
+            component="circle"
             cx={mid} cy={mid} r={r} fill="none" stroke="url(#sbRingGold)" strokeWidth={RING_STROKE} strokeLinecap="round"
             strokeDasharray={c} strokeDashoffset={c * (1 - ratio)}
-            style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)' }}
+            sx={{
+              transition: 'stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)',
+              // זוהר זהוב שפועם לאט: הטבעת מרגישה חיה
+              animation: 'sbRingGlow 2.8s ease-in-out infinite',
+              '@keyframes sbRingGlow': {
+                '0%, 100%': { filter: 'drop-shadow(0 0 2px rgba(253,230,138,0.35))' },
+                '50%': { filter: 'drop-shadow(0 0 7px rgba(253,230,138,0.75))' },
+              },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }}
           />
         </Box>
         <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -117,12 +134,32 @@ export const PlanHero = ({ status, s, isDark, locale }: Props) => {
       border: '1px solid rgba(255,255,255,0.14)',
       color: '#fff',
     }}>
-      {/* הברקה אלכסונית עדינה וקבועה, בלי תנועה */}
+      {/* ברק אלכסוני שעובר על הכרטיס מדי כמה שניות */}
       <Box aria-hidden sx={{
-        position: 'absolute', top: 0, bottom: 0, insetInlineStart: '38%', width: 70,
-        background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.09), transparent)',
-        transform: 'skewX(-18deg)', pointerEvents: 'none',
+        position: 'absolute', top: 0, bottom: 0, left: 0, width: 90,
+        background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.14), transparent)',
+        pointerEvents: 'none',
+        transform: 'translateX(-150%) skewX(-18deg)',
+        animation: 'sbHeroSheen 6s ease-in-out 0.8s infinite',
+        '@keyframes sbHeroSheen': {
+          '0%': { transform: 'translateX(-150%) skewX(-18deg)' },
+          '30%, 100%': { transform: 'translateX(600%) skewX(-18deg)' },
+        },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none', display: 'none' },
       }} />
+      {/* ניצוצות זהובים שמנצנצים, רק כש-Pro פעיל */}
+      {isPro && SPARKLES.map((sp, i) => (
+        <AutoAwesomeRoundedIcon key={i} aria-hidden sx={{
+          position: 'absolute', top: sp.top, insetInlineStart: sp.start, fontSize: sp.size,
+          color: '#FDE68A', opacity: 0, pointerEvents: 'none',
+          animation: `sbTwinkle 3.2s ease-in-out ${sp.delay}s infinite`,
+          '@keyframes sbTwinkle': {
+            '0%, 100%': { opacity: 0, transform: 'scale(0.6) rotate(0deg)' },
+            '50%': { opacity: 0.85, transform: 'scale(1) rotate(20deg)' },
+          },
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none', opacity: 0.5 },
+        }} />
+      ))}
       <Box aria-hidden sx={{ position: 'absolute', top: -46, insetInlineEnd: -36, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
 
       <Box sx={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.75 }}>

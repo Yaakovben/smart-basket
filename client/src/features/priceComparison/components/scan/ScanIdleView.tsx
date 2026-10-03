@@ -102,7 +102,7 @@ export const ScanIdleView = ({
             component="form"
             onSubmit={(e) => { e.preventDefault(); submit(); }}
             sx={{
-              display: 'flex', alignItems: 'center', gap: 1, p: 0.5, ps: 1.5, borderRadius: '14px', bgcolor: 'background.paper',
+              display: 'flex', alignItems: 'center', gap: 1, p: 0.5, paddingInlineStart: 1.5, borderRadius: '14px', bgcolor: 'background.paper',
               border: '1.5px solid', borderColor: invalid ? 'error.main' : alpha(SCAN_TEAL, 0.45),
             }}
           >
