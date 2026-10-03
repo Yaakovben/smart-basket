@@ -94,4 +94,9 @@ export const OFFICIAL_BRANCH_ADDRESSES: OfficialBranchAddress[] = [
   { chainId: 'yohananof', storeId: '59', siteName: "אור עקיבא – השיקמים", address: "השיקמים 8, אור עקיבא", city: 'אור עקיבא', lat: 32.504443, lng: 34.91805 },
   { chainId: 'yohananof', storeId: '60', siteName: "בית שאן", address: "שדרות מנחם בגין 1, בית שאן", city: 'בית שאן', lat: 32.498675, lng: 35.506551 },
   { chainId: 'yohananof', storeId: '73', siteName: "חולון - המרכבה", address: "המרכבה 9, חולון", city: 'חולון', lat: 32.017275, lng: 34.807389 },
+  // רמי לוי שער בנימין: בפורטל בלי מיקום, ובמקומו הוצג עותק מ-OpenStreetMap ("רמי לוי
+  // שיווק השקמה") עם מחיר רשת בלבד ועיר שגויה ("ג'בע בדואים"). המיקום מנקודת החנות
+  // ב-OpenStreetMap (way 506265677), שאליה הוביל הניווט לסניף, כפי שאומת במקום ב-3.10.2026.
+  // הכתובת כפי שבפורטל.
+  { chainId: 'rami_levy', storeId: '8', siteName: 'רמי לוי שיווק השקמה (שער בנימין)', address: 'מרכז מסחרי מטה בנמין', lat: 31.865587, lng: 35.260301 },
 ];
